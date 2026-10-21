@@ -4,148 +4,202 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PP - Planer Pracy (Serwis HVAC)</title>
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              900: '#064e3b'
+            }
+          }
+        }
+      }
+    }
+  </script>
   <!-- Leaflet CSS & JS dla Mapy -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Firebase SDK (Compat) do obsługi bazy online na GitHub Pages -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <style>
-    .leaflet-container { font-family: inherit; z-index: 10; background-color: #e2e8f0; }
+    .leaflet-container { font-family: 'Inter', sans-serif; z-index: 10; }
+    body { transition: background-color 0.2s ease, color 0.2s ease; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col md:flex-row">
+<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 font-sans min-h-screen flex flex-col md:flex-row antialiased">
 
   <!-- NOTIFICATION TOAST -->
-  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden items-center gap-3 px-4 py-3 rounded-xl shadow-xl border bg-slate-900 text-white border-slate-700 transition-all">
-    <span id="toast-msg" class="text-sm font-medium">Komunikat</span>
+  <div id="toast" class="fixed bottom-20 md:bottom-6 right-6 z-50 hidden items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border bg-zinc-900 text-white dark:bg-zinc-800 border-zinc-700 transition-all text-sm font-semibold">
+    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+    <span id="toast-msg">Komunikat</span>
   </div>
 
-  <!-- LEFT SIDEBAR -->
-  <aside class="w-full md:w-64 lg:w-72 bg-slate-950 text-white shadow-xl md:min-h-screen md:sticky md:top-0 md:h-screen flex flex-col justify-between border-b md:border-b-0 md:border-r border-slate-800 z-30 shrink-0">
-    <div class="p-4 sm:p-5 space-y-6">
-      <div class="flex items-center gap-3.5 cursor-pointer" onclick="switchTab('dashboard')">
-        <div class="relative w-11 h-11 rounded-xl bg-gradient-to-br from-sky-500 to-blue-700 flex items-center justify-center shadow-md shadow-sky-500/20 border border-sky-400/30 shrink-0">
-          <span class="text-xl font-black text-white tracking-tighter">PP</span>
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="text-lg font-extrabold tracking-tight text-white">PP</span>
-            <span class="text-[11px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded bg-sky-500/20 text-sky-300">Planer</span>
+  <!-- LEFT SIDEBAR (Desktop) / TOP-BOTTOM BAR (Mobile) -->
+  <aside class="w-full md:w-64 lg:w-72 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 shadow-sm md:min-h-screen md:sticky md:top-0 md:h-screen flex flex-col justify-between border-b md:border-b-0 md:border-r border-zinc-200 dark:border-zinc-800 z-40 shrink-0">
+    <div class="p-3 sm:p-5 space-y-4 md:space-y-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('dashboard')">
+          <div class="relative w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-md shadow-emerald-600/20 shrink-0">
+            <span class="text-lg sm:text-xl font-black text-white tracking-tighter">PP</span>
           </div>
-          <p class="text-[11px] text-slate-400 mt-0.5">Serwis HVAC</p>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-base sm:text-lg font-extrabold tracking-tight text-zinc-900 dark:text-white">PP</span>
+              <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">Planer</span>
+            </div>
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">Serwis HVAC</p>
+          </div>
         </div>
+        <!-- Przycisk trybu ciemnego -->
+        <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 transition" title="Przełącz motyw jasny/ciemny">
+          <i data-lucide="moon" id="dark-mode-icon" class="w-4 h-4"></i>
+        </button>
       </div>
 
-      <nav class="flex md:flex-col gap-1.5 overflow-x-auto md:overflow-visible pb-1 md:pb-0" id="nav-tabs">
-        <button onclick="switchTab('dashboard')" id="nav-btn-dashboard" class="nav-btn w-full flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition bg-sky-600 text-white shadow-md">
-          <div class="flex items-center gap-3"><i data-lucide="layout-dashboard" class="w-4 h-4"></i><span>Pulpit (Start)</span></div>
-          <span id="badge-urgent" class="bg-rose-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full hidden">0</span>
+      <!-- Nawigacja w kolejności: 1. Pulpit, 2. Mapa i Planer, 3. Klienci, 4. Urządzenia, 5. Historia i Statystyki -->
+      <nav class="flex md:flex-col gap-1.5 overflow-x-auto md:overflow-visible pb-1 md:pb-0 shrink-0 no-scrollbar" id="nav-tabs">
+        <button onclick="switchTab('dashboard')" id="nav-btn-dashboard" class="nav-btn flex-1 md:flex-none flex items-center justify-center md:justify-between gap-2.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition bg-emerald-600 text-white shadow-sm">
+          <div class="flex items-center gap-2.5"><i data-lucide="layout-dashboard" class="w-4 h-4 shrink-0"></i><span class="whitespace-nowrap">Pulpit</span></div>
+          <span id="badge-urgent" class="bg-rose-500 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded-full hidden">0</span>
         </button>
-        <button onclick="switchTab('clients')" id="nav-btn-clients" class="nav-btn w-full flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-slate-300 hover:bg-slate-900">
-          <div class="flex items-center gap-3"><i data-lucide="users" class="w-4 h-4"></i><span>Klienci</span></div>
-          <span id="badge-clients" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">0</span>
+
+        <button onclick="switchTab('map_planner')" id="nav-btn-map_planner" class="nav-btn flex-1 md:flex-none flex items-center justify-center md:justify-between gap-2.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+          <div class="flex items-center gap-2.5"><i data-lucide="map-pin" class="w-4 h-4 shrink-0"></i><span class="whitespace-nowrap">Mapa i Planer</span></div>
+          <span id="badge-today" class="bg-amber-500 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded-full hidden">0</span>
         </button>
-        <button onclick="switchTab('devices_db')" id="nav-btn-devices_db" class="nav-btn w-full flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-slate-300 hover:bg-slate-900">
-          <div class="flex items-center gap-3"><i data-lucide="wrench" class="w-4 h-4"></i><span>Baza Urządzeń</span></div>
-          <span id="badge-catalog" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">0</span>
+
+        <button onclick="switchTab('clients')" id="nav-btn-clients" class="nav-btn flex-1 md:flex-none flex items-center justify-center md:justify-between gap-2.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+          <div class="flex items-center gap-2.5"><i data-lucide="users" class="w-4 h-4 shrink-0"></i><span class="whitespace-nowrap">Klienci</span></div>
+          <span id="badge-clients" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hidden sm:inline">0</span>
         </button>
-        <button onclick="switchTab('map')" id="nav-btn-map" class="nav-btn w-full flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-slate-300 hover:bg-slate-900">
-          <div class="flex items-center gap-3"><i data-lucide="map" class="w-4 h-4"></i><span>Mapa Klientów</span></div>
+
+        <button onclick="switchTab('devices_db')" id="nav-btn-devices_db" class="nav-btn flex-1 md:flex-none flex items-center justify-center md:justify-between gap-2.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+          <div class="flex items-center gap-2.5"><i data-lucide="wrench" class="w-4 h-4 shrink-0"></i><span class="whitespace-nowrap">Urządzenia</span></div>
+          <span id="badge-catalog" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hidden sm:inline">0</span>
         </button>
-        <button onclick="switchTab('planner')" id="nav-btn-planner" class="nav-btn w-full flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-slate-300 hover:bg-slate-900">
-          <div class="flex items-center gap-3"><i data-lucide="calendar" class="w-4 h-4"></i><span>Planer i Trasa</span></div>
-          <span id="badge-today" class="bg-amber-400 text-slate-950 text-[11px] font-extrabold px-2 py-0.5 rounded-full hidden">0</span>
+
+        <button onclick="switchTab('history')" id="nav-btn-history" class="nav-btn flex-1 md:flex-none flex items-center justify-center md:justify-between gap-2.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+          <div class="flex items-center gap-2.5"><i data-lucide="bar-chart-3" class="w-4 h-4 shrink-0"></i><span class="whitespace-nowrap">Historia i Statystyki</span></div>
         </button>
       </nav>
+    </div>
+
+    <div onclick="openFirebaseModal()" id="cloud-status" class="cursor-pointer hover:border-emerald-500 transition flex p-3.5 mx-3 mb-3 md:m-4 rounded-2xl bg-zinc-100 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-400 items-center justify-between" title="Kliknij, aby skonfigurować bazę online Firebase">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-amber-500" id="cloud-dot"></span>
+        <span id="cloud-txt" class="font-bold">Tryb lokalny (Offline)</span>
+      </div>
+      <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">Chmura ⚙️</span>
     </div>
   </aside>
 
   <!-- MAIN AREA -->
-  <div class="flex-1 flex flex-col min-w-0">
-    <header class="bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-3.5 sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3">
+  <div class="flex-1 flex flex-col min-w-0 pb-12 md:pb-0">
+    <header class="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 py-3.5 sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 id="header-title" class="text-base sm:text-lg font-extrabold text-slate-900">Pulpit główny</h1>
-        <p id="header-date" class="text-xs text-slate-500">Dzisiaj</p>
+        <h1 id="header-title" class="text-base sm:text-lg font-extrabold text-zinc-900 dark:text-white">Pulpit główny</h1>
+        <p id="header-date" class="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Dzisiaj</p>
       </div>
-      <div class="flex items-center gap-2 ml-auto">
-        <button onclick="openScheduleModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5">
-          <i data-lucide="calendar" class="w-4 h-4 text-sky-600"></i><span>Zaplanuj wizytę</span>
+      <div class="flex items-center gap-2 ml-auto overflow-x-auto py-1 max-w-full">
+        <button onclick="openScheduleModal()" class="bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition">
+          <i data-lucide="calendar-plus" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i><span>Zaplanuj wizytę</span>
         </button>
-        <button onclick="openAddDeviceModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm">
+        <button onclick="openAddDeviceModal()" class="bg-teal-600 hover:bg-teal-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm shrink-0 transition">
           <i data-lucide="wrench" class="w-4 h-4"></i><span>+ Dodaj urządzenie</span>
         </button>
-        <button onclick="openClientModal()" class="bg-sky-600 hover:bg-sky-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm">
-          <i data-lucide="plus" class="w-4 h-4"></i><span>Dodaj klienta</span>
+        <button onclick="openClientModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm shrink-0 transition">
+          <i data-lucide="user-plus" class="w-4 h-4"></i><span>Dodaj klienta</span>
         </button>
       </div>
     </header>
 
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <main class="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
       
-      <!-- TAB: DASHBOARD -->
+      <!-- 1. TAB: DASHBOARD (PULPIT) -->
       <div id="tab-dashboard" class="tab-content space-y-6">
-        <div id="empty-state" class="bg-white rounded-2xl p-8 text-center border border-slate-200 shadow-sm hidden">
-          <i data-lucide="wrench" class="w-12 h-12 text-sky-600 mx-auto mb-3"></i>
-          <h2 class="text-xl font-bold text-slate-900">Witaj w PP — Planer Pracy!</h2>
-          <p class="text-sm text-slate-600 max-w-lg mx-auto mt-1 mb-5">Twoja baza jest pusta. Dodaj klienta lub wgraj przykładowe dane.</p>
-          <button onclick="seedSampleData()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm">Wczytaj przykładową bazę</button>
+        <div id="empty-state" class="bg-white dark:bg-zinc-900 rounded-2xl p-8 text-center border border-zinc-200 dark:border-zinc-800 shadow-sm hidden">
+          <div class="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3">
+            <i data-lucide="wrench" class="w-7 h-7"></i>
+          </div>
+          <h2 class="text-xl font-extrabold text-zinc-900 dark:text-white">Witaj w PP — Planer Pracy!</h2>
+          <p class="text-sm text-zinc-600 dark:text-zinc-400 max-w-lg mx-auto mt-1 mb-5">Twoja baza serwisowa jest jeszcze pusta. Dodaj pierwszego klienta lub załaduj zestaw przykładowych klientów z Wielkopolski.</p>
+          <button onclick="seedSampleData()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm transition">Wczytaj przykładową bazę</button>
         </div>
 
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div onclick="switchTab('planner')" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm cursor-pointer hover:border-sky-400">
-            <span class="text-xs font-bold uppercase text-slate-400">Plan na dzisiaj</span>
-            <div id="stat-today" class="text-2xl font-extrabold text-slate-900 mt-1">0 wizyt</div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div onclick="switchTab('map_planner')" class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm cursor-pointer hover:border-emerald-500 transition">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-400">Plan na dzisiaj</span>
+            <div id="stat-today" class="text-xl sm:text-2xl font-extrabold text-zinc-900 dark:text-white mt-1">0 wizyt</div>
           </div>
-          <div onclick="filterAndSwitchClients('overdue')" class="bg-white p-4 rounded-2xl border border-rose-200 shadow-sm cursor-pointer">
-            <span class="text-xs font-bold uppercase text-rose-500">Przeglądy po terminie</span>
-            <div id="stat-overdue" class="text-2xl font-extrabold text-rose-600 mt-1">0 urz.</div>
+          <div onclick="filterAndSwitchClients('overdue')" class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-rose-200 dark:border-rose-900/50 shadow-sm cursor-pointer hover:border-rose-500 transition">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-rose-500">Po terminie</span>
+            <div id="stat-overdue" class="text-xl sm:text-2xl font-extrabold text-rose-600 dark:text-rose-400 mt-1">0 urz.</div>
           </div>
-          <div onclick="filterAndSwitchClients('soon')" class="bg-white p-4 rounded-2xl border border-amber-200 shadow-sm cursor-pointer">
-            <span class="text-xs font-bold uppercase text-amber-600">Kończące się (30 dni)</span>
-            <div id="stat-soon" class="text-2xl font-extrabold text-amber-600 mt-1">0 urz.</div>
+          <div onclick="filterAndSwitchClients('soon')" class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-amber-200 dark:border-amber-900/50 shadow-sm cursor-pointer hover:border-amber-500 transition">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-amber-600">W ciągu 30 dni</span>
+            <div id="stat-soon" class="text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">0 urz.</div>
           </div>
-          <div onclick="filterAndSwitchClients('all')" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm cursor-pointer">
-            <span class="text-xs font-bold uppercase text-slate-400">Wszyscy Klienci</span>
-            <div id="stat-clients" class="text-2xl font-extrabold text-slate-900 mt-1">0</div>
+          <div onclick="filterAndSwitchClients('all')" class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm cursor-pointer hover:border-emerald-500 transition">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-400">Wszyscy Klienci</span>
+            <div id="stat-clients" class="text-xl sm:text-2xl font-extrabold text-zinc-900 dark:text-white mt-1">0</div>
           </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div class="lg:col-span-7 space-y-6">
             <!-- TODAY VISITS -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <div class="px-5 py-4 bg-slate-900 text-white flex justify-between items-center">
-                <h2 id="today-panel-title" class="text-base font-bold">Plan pracy na dzisiaj</h2>
-                <button id="today-route-btn" onclick="openTodayRoute()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs px-3 py-2 rounded-xl hidden items-center gap-1.5 shadow">
+            <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+              <div class="px-5 py-4 bg-zinc-900 dark:bg-zinc-800/90 text-white flex justify-between items-center flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="calendar-check" class="w-4 h-4 text-emerald-400"></i>
+                  <h2 id="today-panel-title" class="text-sm sm:text-base font-bold">Plan pracy na dzisiaj</h2>
+                </div>
+                <button id="today-route-btn" onclick="openTodayRoute()" class="bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-extrabold text-xs px-3.5 py-2 rounded-xl hidden items-center gap-1.5 shadow transition">
                   <i data-lucide="navigation" class="w-3.5 h-3.5"></i> Trasa Google Maps
                 </button>
               </div>
               <div id="today-visits-list" class="p-4 space-y-2.5"></div>
             </div>
 
-            <!-- URGENT INSPECTIONS -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <div class="px-5 py-4 border-b bg-amber-50/70 flex justify-between items-center">
-                <h2 class="text-base font-bold text-slate-900">Kończące się terminy przeglądów i gwarancji</h2>
-                <button id="toggle-urgent-btn" onclick="toggleUrgentList()" class="px-3 py-1 bg-white border rounded-xl text-xs font-bold hidden">Rozwiń pełną listę</button>
+            <!-- URGENT INSPECTIONS (MAX 5 + EXPAND) -->
+            <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+              <div class="px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-amber-50/60 dark:bg-amber-950/20 flex justify-between items-center flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="bell-ring" class="w-4 h-4 text-amber-600 dark:text-amber-400"></i>
+                  <h2 class="text-sm sm:text-base font-bold text-zinc-900 dark:text-white">Kończące się terminy przeglądów i gwarancji</h2>
+                </div>
+                <button id="toggle-urgent-btn" onclick="toggleUrgentList()" class="px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold hidden text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 transition">Rozwiń pełną listę</button>
               </div>
-              <div id="urgent-list" class="divide-y divide-slate-100"></div>
+              <div id="urgent-list" class="divide-y divide-zinc-100 dark:divide-zinc-800"></div>
             </div>
           </div>
 
           <div class="lg:col-span-5 space-y-6">
             <!-- CALENDAR -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+            <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
               <div class="flex justify-between items-center mb-4">
-                <h2 id="cal-month-label" class="text-base font-bold text-slate-900">Kalendarz</h2>
+                <h2 id="cal-month-label" class="text-base font-extrabold text-zinc-900 dark:text-white">Kalendarz</h2>
                 <div class="flex items-center gap-1.5">
-                  <button onclick="changeMonth(-1)" class="p-1.5 border rounded-lg"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-                  <button onclick="changeMonth(1)" class="p-1.5 border rounded-lg"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                  <button onclick="changeMonth(-1)" class="p-1.5 border border-zinc-300 dark:border-zinc-700 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                  <button onclick="changeMonth(1)" class="p-1.5 border border-zinc-300 dark:border-zinc-700 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
                 </div>
               </div>
-              <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-slate-400 pb-2">
+              <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-zinc-400 pb-2">
                 <div>Pon</div><div>Wt</div><div>Śr</div><div>Czw</div><div>Pt</div><div>Sob</div><div>Ndz</div>
               </div>
               <div id="calendar-grid" class="grid grid-cols-7 gap-1.5"></div>
@@ -154,210 +208,360 @@
         </div>
       </div>
 
-      <!-- TAB: CLIENTS -->
+      <!-- 2. TAB: MAPA I PLANER (POŁĄCZONE) -->
+      <div id="tab-map_planner" class="tab-content space-y-5 hidden">
+        <!-- Pasek sterowania datą, trybem planera i warstwą mapy -->
+        <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-wrap justify-between items-center gap-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="inline-flex rounded-xl bg-zinc-100 dark:bg-zinc-800 p-1 border border-zinc-200 dark:border-zinc-700">
+              <button onclick="setPlannerMode('day')" id="planner-mode-day" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white shadow-sm transition">Mapa + Plan Dnia</button>
+              <button onclick="setPlannerMode('week')" id="planner-mode-week" class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-zinc-700 dark:text-zinc-300 transition">Widok Tygodnia</button>
+            </div>
+
+            <div class="flex items-center gap-1.5 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-xl border border-zinc-200 dark:border-zinc-700">
+              <button onclick="shiftDate(-1)" class="p-1.5 rounded-lg hover:bg-white dark:hover:bg-zinc-700 transition" title="Poprzedni dzień/tydzień"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+              <input type="date" id="planner-date-input" onchange="onPlannerDateChange(this.value)" class="bg-transparent px-2 py-0.5 text-xs font-extrabold outline-none text-zinc-900 dark:text-white">
+              <button onclick="shiftDate(1)" class="p-1.5 rounded-lg hover:bg-white dark:hover:bg-zinc-700 transition" title="Następny dzień/tydzień"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="inline-flex rounded-xl bg-zinc-100 dark:bg-zinc-800 p-1 border border-zinc-200 dark:border-zinc-700">
+              <button onclick="setMapTile('street')" id="map-btn-street" class="px-3 py-1 rounded-lg text-xs font-bold bg-zinc-900 text-white">Mapa Ulic</button>
+              <button onclick="setMapTile('voyager')" id="map-btn-voyager" class="px-3 py-1 rounded-lg text-xs font-bold text-zinc-600 dark:text-zinc-300">Jasna</button>
+              <button onclick="setMapTile('satellite')" id="map-btn-satellite" class="px-3 py-1 rounded-lg text-xs font-bold text-zinc-600 dark:text-zinc-300">Satelita</button>
+            </div>
+            <button onclick="refreshMap()" class="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs font-bold hover:bg-emerald-100 transition flex items-center gap-1.5">
+              <i data-lucide="LocateFixed" class="w-3.5 h-3.5"></i> Wyśrodkuj
+            </button>
+          </div>
+        </div>
+
+        <!-- Połączony układ: Mapa po lewej (7 kolumn), Planer dnia po prawej (5 kolumn) -->
+        <div id="planner-day-view" class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          <!-- MAPA KLIENTÓW Z DODAWANIEM DO PLANU DNIA -->
+          <div class="lg:col-span-7 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+            <div class="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 flex flex-wrap justify-between items-center gap-2 bg-zinc-50 dark:bg-zinc-800/40">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-extrabold text-zinc-800 dark:text-zinc-100">Kliknij pinezkę klienta na mapie, aby dodać go do planu dnia</span>
+              </div>
+              <div class="flex items-center gap-3 text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-sky-500 inline-block"></span> W planie dnia</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-600 inline-block"></span> Po terminie</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> Wkrótce</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> OK</span>
+              </div>
+            </div>
+            <div id="map-container" style="height: 540px; width: 100%;"></div>
+          </div>
+
+          <!-- PANEL PLANU DNIA OBOK MAPY -->
+          <div class="lg:col-span-5 space-y-4">
+            <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-5 space-y-4">
+              <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                <div>
+                  <h2 id="planner-day-title" class="text-base font-extrabold text-zinc-900 dark:text-white">Plan Dnia</h2>
+                  <p class="text-xs text-zinc-500 dark:text-zinc-400">Ułóż wizyty wg godzin lub dodaj klienta bezpośrednio z mapy</p>
+                </div>
+                <button onclick="openScheduleModal()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1 shrink-0">
+                  <i data-lucide="plus" class="w-3.5 h-3.5"></i> Dodaj
+                </button>
+              </div>
+
+              <!-- Szybkie dodawanie wybranego klienta z mapy -->
+              <div id="quick-map-schedule-box" class="hidden p-3.5 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 space-y-2.5">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Wybrano z mapy:</span>
+                    <h4 id="quick-map-client-name" class="text-sm font-bold text-zinc-900 dark:text-white">Klient</h4>
+                    <p id="quick-map-client-addr" class="text-xs text-zinc-600 dark:text-zinc-400"></p>
+                  </div>
+                  <button onclick="closeQuickMapBox()" class="text-zinc-400 hover:text-zinc-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="text-[10px] font-bold text-zinc-500">Godzina wizyty</label>
+                    <input type="time" id="quick-map-time" value="09:00" class="w-full px-2.5 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold">
+                  </div>
+                  <div>
+                    <label class="text-[10px] font-bold text-zinc-500">Usługa</label>
+                    <input type="text" id="quick-map-service" value="Przegląd okresowy" class="w-full px-2.5 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs">
+                  </div>
+                </div>
+                <button onclick="confirmQuickMapSchedule()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm transition">
+                  + Wstaw do planu na ten dzień
+                </button>
+              </div>
+
+              <div id="planner-visits-list" class="space-y-2.5 max-h-[360px] overflow-y-auto pr-1"></div>
+            </div>
+
+            <!-- Karta eksportu trasy do Google Maps -->
+            <div class="bg-zinc-900 dark:bg-zinc-900 text-white rounded-2xl shadow-lg p-5 space-y-3 border border-zinc-800">
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-extrabold flex items-center gap-2">
+                  <i data-lucide="navigation" class="w-4 h-4 text-emerald-400"></i> Nawigacja Google Maps
+                </h3>
+                <span class="text-[11px] px-2 py-0.5 rounded bg-zinc-800 text-emerald-400 font-bold">Start: GPS</span>
+              </div>
+              <p class="text-xs text-zinc-400">Uwzględnia ustalone godziny wizyt, startuje z Twojej bieżącej lokalizacji i pomija wykonane zlecenia.</p>
+              <div id="planner-route-action"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Widok całego tygodnia -->
+        <div id="planner-week-view" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-3 hidden"></div>
+      </div>
+
+      <!-- 3. TAB: CLIENTS (KLIENCI) -->
       <div id="tab-clients" class="tab-content space-y-4 hidden">
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col xl:flex-row gap-3 justify-between items-center">
+        <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col xl:flex-row gap-3 justify-between items-center">
           <div class="relative flex-1 w-full">
-            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-            <input type="text" id="client-search-input" oninput="renderClients()" placeholder="Szukaj klienta po nazwisku, adresie, telefonie lub urządzeniu..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-sky-500">
+            <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+            <input type="text" id="client-search-input" oninput="renderClients()" placeholder="Szukaj klienta po nazwisku, adresie, telefonie lub modelu urządzenia..." class="w-full pl-10 pr-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:border-emerald-500 text-zinc-800 dark:text-zinc-100">
           </div>
           <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto">
-            <select id="device-filter-select" onchange="renderClients()" class="bg-slate-50 border rounded-xl px-3 py-2 text-xs font-medium outline-none">
+            <select id="device-filter-select" onchange="renderClients()" class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold outline-none text-zinc-800 dark:text-zinc-100">
               <option value="all">Wszystkie urządzenia</option>
               <option value="heat_pump">🔥 Pompy ciepła</option>
               <option value="ac">❄️ Klimatyzacja</option>
               <option value="ventilation">💨 Wentylacja</option>
             </select>
-            <button onclick="exportClientsCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5">
-              <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Eksport CSV
+            <button onclick="exportClientsCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
+              <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Eksport Excel (CSV)
             </button>
             <input type="file" id="csv-file-input" accept=".csv" onchange="importClientsCSV(event)" class="hidden">
-            <button onclick="document.getElementById('csv-file-input').click()" class="bg-slate-100 hover:bg-slate-200 border text-slate-700 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5">
+            <button onclick="document.getElementById('csv-file-input').click()" class="bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
               <i data-lucide="upload" class="w-4 h-4"></i> Import CSV
             </button>
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <table class="w-full text-left border-collapse">
+        <div id="clients-mobile-container" class="space-y-3 md:hidden"></div>
+
+        <div class="hidden md:block bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 overflow-x-auto">
+          <table class="w-full text-left border-collapse min-w-[720px]">
             <thead>
-              <tr class="bg-slate-900 text-slate-200 text-[11px] uppercase tracking-wider font-bold">
-                <th class="py-3 px-4">Klient</th>
-                <th class="py-3 px-4">Adres</th>
-                <th class="py-3 px-4">Telefon</th>
-                <th class="py-3 px-4">Urządzenia klienta (Terminy i Gwarancje)</th>
-                <th class="py-3 px-4 text-right">Akcje</th>
+              <tr class="bg-zinc-900 dark:bg-zinc-800 text-zinc-100 text-[11px] uppercase tracking-wider font-bold">
+                <th class="py-3.5 px-4">Klient</th>
+                <th class="py-3.5 px-4">Adres</th>
+                <th class="py-3.5 px-4">Telefon (Kliknij aby zadzwonić)</th>
+                <th class="py-3.5 px-4">Urządzenia klienta (Terminy i Gwarancje)</th>
+                <th class="py-3.5 px-4 text-right">Akcje</th>
               </tr>
             </thead>
-            <tbody id="clients-table-body" class="divide-y divide-slate-200 text-xs sm:text-sm"></tbody>
+            <tbody id="clients-table-body" class="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs sm:text-sm"></tbody>
           </table>
         </div>
       </div>
 
-      <!-- TAB: DEVICES DB -->
+      <!-- 4. TAB: DEVICES DB (URZĄDZENIA) -->
       <div id="tab-devices_db" class="tab-content space-y-6 hidden">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div class="lg:col-span-4 bg-white rounded-2xl shadow-sm border p-5 space-y-4">
-            <h2 class="text-sm font-bold text-slate-900">Dodaj model do Bazy Urządzeń</h2>
+          <div class="lg:col-span-4 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-5 space-y-4 h-fit">
+            <h2 class="text-sm font-extrabold text-zinc-900 dark:text-white">Dodaj nowy model do Bazy Urządzeń</h2>
             <form onsubmit="handleSaveCatalogItem(event)" class="space-y-3">
-              <select id="catalog-type" class="w-full px-3 py-2 border rounded-xl text-sm outline-none">
+              <select id="catalog-type" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none text-zinc-800 dark:text-zinc-100">
                 <option value="heat_pump">🔥 Pompa ciepła</option>
                 <option value="ac">❄️ Klimatyzacja</option>
                 <option value="ventilation">💨 Wentylacja / Rekuperacja</option>
               </select>
-              <input type="text" id="catalog-brand" required placeholder="Producent (np. Panasonic)" class="w-full px-3 py-2 border rounded-xl text-sm outline-none">
-              <input type="text" id="catalog-model" required placeholder="Model i moc (np. Aquarea 9kW)" class="w-full px-3 py-2 border rounded-xl text-sm outline-none">
-              <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-sm">+ Dodaj model</button>
+              <input type="text" id="catalog-brand" required placeholder="Producent (np. Panasonic)" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none text-zinc-800 dark:text-zinc-100">
+              <input type="text" id="catalog-model" required placeholder="Model i moc (np. Aquarea 9kW)" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none text-zinc-800 dark:text-zinc-100">
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] font-bold text-zinc-500 mb-1">Domyślna gwarancja (msc)</label>
+                  <input type="number" id="catalog-warranty" value="60" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none text-zinc-800 dark:text-zinc-100">
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-zinc-500 mb-1">Przeglądy co (msc)</label>
+                  <input type="number" id="catalog-interval" value="12" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none text-zinc-800 dark:text-zinc-100">
+                </div>
+              </div>
+              <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-sm shadow-sm transition">+ Dodaj model do katalogu</button>
             </form>
           </div>
-          <div class="lg:col-span-8 bg-white rounded-2xl shadow-sm border overflow-hidden">
+          <div class="lg:col-span-8 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-5 space-y-4">
+            <div class="flex justify-between items-center flex-wrap gap-3">
+              <div class="relative flex-1 min-w-[200px]">
+                <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                <input type="text" id="catalog-search" oninput="renderCatalog()" placeholder="Szukaj modelu lub producenta..." class="w-full pl-9 pr-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none text-zinc-800 dark:text-zinc-100">
+              </div>
+              <select id="catalog-sort" onchange="renderCatalog()" class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold outline-none text-zinc-800 dark:text-zinc-100">
+                <option value="brand">Segreguj: Producent A-Z</option>
+                <option value="type">Segreguj: Typ urządzenia</option>
+                <option value="warranty">Segreguj: Długość gwarancji</option>
+              </select>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead>
+                  <tr class="bg-zinc-900 dark:bg-zinc-800 text-zinc-100 text-[11px] uppercase font-bold">
+                    <th class="py-3 px-4">Typ</th>
+                    <th class="py-3 px-4">Producent i Model</th>
+                    <th class="py-3 px-4">Domyślne parametry</th>
+                    <th class="py-3 px-4 text-right">Akcje</th>
+                  </tr>
+                </thead>
+                <tbody id="catalog-table-body" class="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs sm:text-sm"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. TAB: HISTORY & STATS (HISTORIA I STATYSTYKI) -->
+      <div id="tab-history" class="tab-content space-y-6 hidden">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <span class="text-xs font-bold uppercase text-zinc-400">Wykonane przeglądy (ogółem)</span>
+            <div id="stat-history-total" class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">0</div>
+          </div>
+          <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <span class="text-xs font-bold uppercase text-zinc-400">Zamontowane urządzenia w bazie</span>
+            <div id="stat-devices-total" class="text-2xl font-extrabold text-teal-600 dark:text-teal-400 mt-1">0</div>
+          </div>
+          <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <span class="text-xs font-bold uppercase text-zinc-400">Obsługiwane miejscowości</span>
+            <div id="stat-cities-total" class="text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">0</div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-5 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-base font-extrabold text-zinc-900 dark:text-white">Rejestr i historia wszystkich przeglądów</h2>
+            <div class="flex flex-wrap gap-2 flex-1 max-w-md">
+              <div class="relative flex-1">
+                <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                <input type="text" id="history-search" oninput="renderHistoryTable()" placeholder="Filtruj historię (klient, miasto, model, notatka)..." class="w-full pl-9 pr-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none text-zinc-800 dark:text-zinc-100">
+              </div>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
             <table class="w-full text-left">
               <thead>
-                <tr class="bg-slate-900 text-slate-200 text-[11px] uppercase font-bold">
-                  <th class="py-3 px-4">Typ</th>
-                  <th class="py-3 px-4">Model</th>
-                  <th class="py-3 px-4 text-right">Akcje</th>
+                <tr class="bg-zinc-900 dark:bg-zinc-800 text-zinc-100 text-[11px] uppercase font-bold">
+                  <th class="py-3 px-4">Data</th>
+                  <th class="py-3 px-4">Klient i Miasto</th>
+                  <th class="py-3 px-4">Urządzenie</th>
+                  <th class="py-3 px-4">Wykonawca</th>
+                  <th class="py-3 px-4">Notatka serwisowa</th>
                 </tr>
               </thead>
-              <tbody id="catalog-table-body" class="divide-y text-xs sm:text-sm"></tbody>
+              <tbody id="history-table-body" class="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs sm:text-sm"></tbody>
             </table>
           </div>
         </div>
-      </div>
-
-      <!-- TAB: MAP -->
-      <div id="tab-map" class="tab-content space-y-4 hidden">
-        <div class="bg-white p-4 rounded-2xl shadow-sm border flex justify-between items-center flex-wrap gap-3">
-          <div class="flex gap-2">
-            <button onclick="setMapTile('street')" id="map-btn-street" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white">Mapa Ulic</button>
-            <button onclick="setMapTile('voyager')" id="map-btn-voyager" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100">Jasna Carto</button>
-            <button onclick="setMapTile('satellite')" id="map-btn-satellite" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100">Satelita</button>
-          </div>
-          <button onclick="refreshMap()" class="px-3 py-1.5 bg-sky-50 text-sky-700 border rounded-xl text-xs font-bold">Wyśrodkuj mapę</button>
-        </div>
-        <div class="bg-white rounded-2xl shadow-sm border overflow-hidden relative">
-          <div id="map-container" style="height: 560px; width: 100%;"></div>
-        </div>
-      </div>
-
-      <!-- TAB: PLANNER -->
-      <div id="tab-planner" class="tab-content space-y-6 hidden">
-        <div class="bg-white p-4 rounded-2xl shadow-sm border flex justify-between items-center flex-wrap gap-3">
-          <div class="flex gap-2">
-            <button onclick="setPlannerMode('day')" id="planner-mode-day" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-600 text-white">Plan Dnia</button>
-            <button onclick="setPlannerMode('week')" id="planner-mode-week" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100">Plan Tygodnia</button>
-          </div>
-          <div class="flex items-center gap-2">
-            <button onclick="shiftDate(-1)" class="p-1.5 border rounded-lg"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-            <input type="date" id="planner-date-input" onchange="onPlannerDateChange(this.value)" class="bg-slate-50 border px-2 py-1 rounded-lg text-xs font-bold outline-none">
-            <button onclick="shiftDate(1)" class="p-1.5 border rounded-lg"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
-          </div>
-        </div>
-
-        <div id="planner-day-view" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border p-5 space-y-4">
-            <h2 id="planner-day-title" class="text-base font-bold text-slate-900">Wizyty w dniu</h2>
-            <div id="planner-visits-list" class="space-y-3"></div>
-          </div>
-          <div class="bg-slate-900 text-white rounded-2xl shadow-lg p-5 space-y-4 h-fit">
-            <h3 class="text-base font-bold">Trasa Google Maps</h3>
-            <p class="text-xs text-slate-400">Startuje z Twojej lokalizacji GPS i automatycznie uwzględnia kolejność godzinową.</p>
-            <div id="planner-route-action"></div>
-          </div>
-        </div>
-
-        <div id="planner-week-view" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-3 hidden"></div>
       </div>
 
     </main>
   </div>
 
   <!-- MODAL: CLIENT (ADD / EDIT) -->
-  <div id="modal-client" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 id="modal-client-title" class="text-base font-bold">Nowy klient</h3>
+  <div id="modal-client" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-2xl w-full shadow-2xl p-5 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto border border-zinc-200 dark:border-zinc-800">
+      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
+        <h3 id="modal-client-title" class="text-base font-extrabold">Nowy klient</h3>
         <button onclick="closeModal('modal-client')"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
       <form onsubmit="handleSaveClient(event)" class="space-y-4">
         <input type="hidden" id="edit-client-id">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Imię i nazwisko</label>
-            <input type="text" id="client-name" required class="w-full px-3 py-2 border rounded-xl text-sm outline-none focus:border-sky-500">
+            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Imię i nazwisko</label>
+            <input type="text" id="client-name" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:border-emerald-500">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Telefon</label>
-            <input type="text" id="client-phone" required class="w-full px-3 py-2 border rounded-xl text-sm outline-none focus:border-sky-500">
+            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Telefon</label>
+            <input type="text" id="client-phone" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:border-emerald-500">
           </div>
         </div>
         <div class="grid grid-cols-3 gap-3">
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Kod pocztowy</label>
-            <input type="text" id="client-postal" placeholder="60-101" class="w-full px-3 py-2 border rounded-xl text-sm outline-none focus:border-sky-500">
+            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Kod pocztowy</label>
+            <input type="text" id="client-postal" placeholder="60-101" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Miasto</label>
-            <input type="text" id="client-city" required class="w-full px-3 py-2 border rounded-xl text-sm outline-none focus:border-sky-500">
+            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Miasto</label>
+            <input type="text" id="client-city" onblur="autoGeocodeClientAddress()" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
           </div>
-          <div class="col-span-2 sm:col-span-1">
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Ulica i numer</label>
-            <input type="text" id="client-street" required class="w-full px-3 py-2 border rounded-xl text-sm outline-none focus:border-sky-500">
+          <div class="col-span-3 sm:col-span-1">
+            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Ulica i numer (auto-GPS)</label>
+            <input type="text" id="client-street" onblur="autoGeocodeClientAddress()" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
           </div>
         </div>
-        <div class="flex items-center gap-3">
-          <div class="flex-1"><label class="block text-xs font-semibold text-slate-600 mb-1">Szerokość GPS (Lat)</label><input type="number" step="any" id="client-lat" class="w-full px-3 py-2 border rounded-xl text-sm bg-slate-50"></div>
-          <div class="flex-1"><label class="block text-xs font-semibold text-slate-600 mb-1">Długość GPS (Lng)</label><input type="number" step="any" id="client-lng" class="w-full px-3 py-2 border rounded-xl text-sm bg-slate-50"></div>
-          <div class="pt-5"><button type="button" onclick="geocodeAddress()" class="bg-sky-600 hover:bg-sky-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold">Pobierz GPS</button></div>
-        </div>
+        <input type="hidden" id="client-lat">
+        <input type="hidden" id="client-lng">
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Notatki serwisowe</label>
-          <textarea id="client-notes" rows="2" class="w-full px-3 py-2 border rounded-xl text-sm outline-none"></textarea>
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Notatki serwisowe</label>
+          <textarea id="client-notes" rows="2" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none"></textarea>
         </div>
 
-        <div class="border-t pt-3">
+        <div class="border-t border-zinc-200 dark:border-zinc-800 pt-3">
           <div class="flex justify-between items-center mb-2">
-            <h4 class="text-xs font-bold uppercase text-slate-500">Urządzenia klienta</h4>
-            <button type="button" onclick="addDeviceFieldInModal()" class="text-xs font-bold text-sky-600 hover:underline">+ Dodaj kolejne urządzenie</button>
+            <h4 class="text-xs font-extrabold uppercase text-zinc-500">Urządzenia klienta</h4>
+            <button type="button" onclick="addDeviceFieldInModal()" class="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 hover:underline">+ Dodaj kolejne urządzenie</button>
           </div>
           <div id="modal-devices-container" class="space-y-3"></div>
         </div>
 
-        <div class="flex justify-end gap-2 pt-3 border-t">
-          <button type="button" onclick="closeModal('modal-client')" class="px-4 py-2 border rounded-xl text-sm">Anuluj</button>
-          <button type="submit" class="px-5 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-sm font-semibold">Zapisz klienta</button>
+        <div class="flex justify-end gap-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+          <button type="button" onclick="closeModal('modal-client')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-semibold">Anuluj</button>
+          <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold">Zapisz klienta</button>
         </div>
       </form>
     </div>
   </div>
 
   <!-- MODAL: ADD DEVICE TO CLIENT -->
-  <div id="modal-add-device" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl p-6 space-y-4">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="text-base font-bold">Przypisz urządzenie do klienta</h3>
+  <div id="modal-add-device" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-lg w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800">
+      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
+        <h3 class="text-base font-extrabold">Przypisz urządzenie do klienta</h3>
         <button onclick="closeModal('modal-add-device')"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
       <form onsubmit="handleSaveAssignedDevice(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Wybierz klienta</label>
-          <input type="text" id="search-client-for-dev" oninput="renderClientDropdown()" placeholder="Wyszukaj klienta..." class="w-full px-3 py-2 border rounded-xl text-sm mb-1 outline-none">
-          <select id="select-client-target" size="4" required class="w-full border rounded-xl text-sm p-1 outline-none bg-slate-50"></select>
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">1. Wyszukaj i wybierz klienta</label>
+          <input type="text" id="search-client-for-dev" oninput="renderClientDropdown()" placeholder="Wpisz nazwisko, telefon lub miasto..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm mb-1.5 outline-none">
+          <select id="select-client-target" size="4" required class="w-full border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm p-1.5 outline-none bg-zinc-50 dark:bg-zinc-800"></select>
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Wybierz model z Bazy Urządzeń</label>
-          <input type="text" id="search-catalog-for-dev" oninput="renderCatalogDropdown()" placeholder="Wyszukaj model..." class="w-full px-3 py-2 border rounded-xl text-sm mb-1 outline-none">
-          <select id="select-catalog-target" size="4" onchange="onCatalogModelSelected(this.value)" class="w-full border rounded-xl text-sm p-1 outline-none bg-slate-50"></select>
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">2. Wybierz model z Bazy Urządzeń (automatycznie uzupełni gwarancję i przegląd)</label>
+          <input type="text" id="search-catalog-for-dev" oninput="renderCatalogDropdown()" placeholder="Wyszukaj model w bazie..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm mb-1.5 outline-none">
+          <select id="select-catalog-target" size="4" onchange="onCatalogModelSelected(this.value)" class="w-full border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm p-1.5 outline-none bg-zinc-50 dark:bg-zinc-800"></select>
         </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Model urządzenia</label>
-          <input type="text" id="assigned-dev-model" required class="w-full px-3 py-2 border rounded-xl text-sm outline-none">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div class="sm:col-span-1">
+            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Typ</label>
+            <select id="assigned-dev-type" class="w-full px-2.5 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none">
+              <option value="heat_pump">🔥 Pompa ciepła</option>
+              <option value="ac">❄️ Klimatyzacja</option>
+              <option value="ventilation">💨 Wentylacja</option>
+            </select>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Pełna nazwa modelu</label>
+            <input type="text" id="assigned-dev-model" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
+          </div>
         </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1">Data montażu</label><input type="date" id="assigned-dev-install" required class="w-full px-3 py-2 border rounded-xl text-sm outline-none"></div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1">Gwarancja (miesiące)</label><input type="number" id="assigned-dev-warranty" value="60" required class="w-full px-3 py-2 border rounded-xl text-sm outline-none"></div>
+        <div class="grid grid-cols-3 gap-2.5">
+          <div>
+            <label class="block text-[11px] font-bold text-zinc-600 dark:text-zinc-400 mb-1">Data montażu</label>
+            <input type="date" id="assigned-dev-install" onchange="recalcAssignedNextInspection()" required class="w-full px-2.5 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-zinc-600 dark:text-zinc-400 mb-1">Gwarancja (msc)</label>
+            <input type="number" id="assigned-dev-warranty" value="60" required class="w-full px-2.5 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-zinc-600 dark:text-zinc-400 mb-1">Interwał (msc)</label>
+            <input type="number" id="assigned-dev-interval" value="12" onchange="recalcAssignedNextInspection()" required class="w-full px-2.5 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none">
+          </div>
         </div>
-        <div class="flex justify-end gap-2 pt-3 border-t">
+        <div class="flex justify-end gap-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+          <button type="button" onclick="closeModal('modal-add-device')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-semibold">Anuluj</button>
           <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold">Przypisz urządzenie</button>
         </div>
       </form>
@@ -365,10 +569,10 @@
   </div>
 
   <!-- MODAL: INSPECTIONS -->
-  <div id="modal-inspections" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 id="modal-insp-title" class="text-base font-bold">Przeglądy i historia</h3>
+  <div id="modal-inspections" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-xl w-full shadow-2xl p-5 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto border border-zinc-200 dark:border-zinc-800">
+      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
+        <h3 id="modal-insp-title" class="text-base font-extrabold">Przeglądy i historia</h3>
         <button onclick="closeModal('modal-inspections')"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
       <div id="modal-insp-body" class="space-y-4"></div>
@@ -376,42 +580,89 @@
   </div>
 
   <!-- MODAL: SCHEDULE VISIT -->
-  <div id="modal-schedule" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl p-6 space-y-4">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="text-base font-bold">Zaplanuj wizytę serwisową</h3>
+  <div id="modal-schedule" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-md w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800">
+      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
+        <h3 class="text-base font-extrabold">Zaplanuj wizytę serwisową</h3>
         <button onclick="closeModal('modal-schedule')"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
       <form onsubmit="handleSaveVisit(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Wyszukaj i wybierz klienta</label>
-          <input type="text" id="visit-client-search" oninput="renderVisitClientDropdown()" placeholder="Wpisz nazwisko lub miasto..." class="w-full px-3 py-2 border rounded-xl text-sm mb-1 outline-none">
-          <select id="visit-client-select" size="4" required class="w-full border rounded-xl text-sm p-1 outline-none bg-slate-50"></select>
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Wyszukaj i wybierz klienta</label>
+          <input type="text" id="visit-client-search" oninput="renderVisitClientDropdown()" placeholder="Wpisz nazwisko, ulicę lub miasto..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm mb-1.5 outline-none">
+          <select id="visit-client-select" size="4" required class="w-full border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm p-1.5 outline-none bg-zinc-50 dark:bg-zinc-800"></select>
         </div>
         <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1">Data wizyty</label><input type="date" id="visit-date" required class="w-full px-3 py-2 border rounded-xl text-sm outline-none"></div>
-          <div><label class="block text-xs font-semibold text-slate-600 mb-1">Godzina</label><input type="time" id="visit-time" value="09:00" required class="w-full px-3 py-2 border rounded-xl text-sm outline-none"></div>
+          <div><label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Data wizyty</label><input type="date" id="visit-date" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none"></div>
+          <div><label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Godzina</label><input type="time" id="visit-time" value="09:00" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none"></div>
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Rodzaj usługi</label>
-          <input type="text" id="visit-type" value="Przegląd okresowy / Gwarancyjny" required class="w-full px-3 py-2 border rounded-xl text-sm outline-none">
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Rodzaj usługi</label>
+          <input type="text" id="visit-type" value="Przegląd okresowy / Gwarancyjny" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
         </div>
-        <div class="flex justify-end gap-2 pt-3 border-t">
-          <button type="submit" class="px-5 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-sm font-semibold">Zaplanuj wizytę</button>
+        <div class="flex justify-end gap-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+          <button type="button" onclick="closeModal('modal-schedule')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-semibold">Anuluj</button>
+          <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold">Dodaj do planu</button>
         </div>
       </form>
     </div>
   </div>
 
-  <script>
-    // --- APP STATE & STORAGE ---
-    const LS_CLIENTS = 'pp_hvac_clients_v2';
-    const LS_APPOINTMENTS = 'pp_hvac_appointments_v2';
-    const LS_CATALOG = 'pp_hvac_catalog_v2';
+  <!-- MODAL: FIREBASE CLOUD CONFIG -->
+  <div id="modal-firebase" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-lg w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="cloud" class="w-5 h-5 text-emerald-600"></i>
+          <h3 class="text-base font-extrabold">Połączenie z bazą online (Firebase)</h3>
+        </div>
+        <button onclick="closeModal('modal-firebase')"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+        Wklej tutaj obiekt <strong>firebaseConfig</strong> skopiowany z darmowej konsoli Google Firebase (lub sam JSON), aby zsynchronizować program <strong>PP</strong> między komputerem a telefonami na GitHub Pages.
+      </p>
+      <div>
+        <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Obiekt konfiguracyjny Firebase (JSON lub kod JS)</label>
+        <textarea id="firebase-config-input" rows="7" placeholder='{
+  "apiKey": "AIzaSy...",
+  "authDomain": "twoj-projekt.firebaseapp.com",
+  "projectId": "twoj-projekt",
+  "storageBucket": "twoj-projekt.appspot.com",
+  "messagingSenderId": "123456789",
+  "appId": "1:123456789:web:abcdef"
+}' class="w-full p-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-mono outline-none focus:border-emerald-500"></textarea>
+      </div>
+      <div class="flex flex-wrap justify-between items-center gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+        <button type="button" onclick="disconnectFirebase()" class="px-3 py-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl text-xs font-bold">Rozłącz chmurę (Tryb lokalny)</button>
+        <div class="flex gap-2">
+          <button type="button" onclick="closeModal('modal-firebase')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Zamknij</button>
+          <button type="button" onclick="saveAndConnectFirebase()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-sm">Połącz i Synchronizuj</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    let clients = JSON.parse(localStorage.getItem(LS_CLIENTS) || '[]');
-    let appointments = JSON.parse(localStorage.getItem(LS_APPOINTMENTS) || '[]');
-    let catalog = JSON.parse(localStorage.getItem(LS_CATALOG) || '[]');
+  <script>
+    // ============================================================================
+    // KONFIGURACJA FIREBASE (MOŻESZ WKLEIĆ NA STAŁE TUTAJ LUB W OKIENKU W APLIKACJI)
+    // ============================================================================
+    const HARDCODED_FIREBASE_CONFIG = null; 
+    // Przykład:
+    // const HARDCODED_FIREBASE_CONFIG = {
+    //   apiKey: "AIzaSy...",
+    //   authDomain: "pp-serwis.firebaseapp.com",
+    //   projectId: "pp-serwis",
+    //   storageBucket: "pp-serwis.appspot.com",
+    //   messagingSenderId: "123456789",
+    //   appId: "1:123456789:web:abc123"
+    // };
+
+    let firestoreDb = null;
+    let isCloudConnected = false;
+
+    window.clientsData = [];
+    window.appointmentsData = [];
+    window.catalogData = [];
 
     let currentTab = 'dashboard';
     let selectedDate = new Date().toISOString().split('T')[0];
@@ -421,8 +672,39 @@
     let mapTileLayer = null;
     let mapMarkersGroup = null;
     let currentMapTileStyle = 'street';
+    let isDarkMode = false;
+    let quickMapSelectedClientId = null;
 
-    // Helper: YYYY-MM-DD
+    function toggleDarkMode() {
+      isDarkMode = !isDarkMode;
+      const html = document.documentElement;
+      const icon = document.getElementById('dark-mode-icon');
+      if (isDarkMode) {
+        html.classList.add('dark');
+        icon.setAttribute('data-lucide', 'sun');
+        localStorage.setItem('pp_dark_mode', 'true');
+      } else {
+        html.classList.remove('dark');
+        icon.setAttribute('data-lucide', 'moon');
+        localStorage.setItem('pp_dark_mode', 'false');
+      }
+      lucide.createIcons();
+    }
+
+    function initDarkMode() {
+      const saved = localStorage.getItem('pp_dark_mode');
+      const icon = document.getElementById('dark-mode-icon');
+      if (saved === 'true') {
+        isDarkMode = true;
+        document.documentElement.classList.add('dark');
+        if (icon) icon.setAttribute('data-lucide', 'sun');
+      } else {
+        isDarkMode = false;
+        document.documentElement.classList.remove('dark');
+        if (icon) icon.setAttribute('data-lucide', 'moon');
+      }
+    }
+
     function toYMD(d) {
       const year = d.getFullYear();
       const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -451,54 +733,21 @@
       setTimeout(() => {
         t.classList.remove('flex');
         t.classList.add('hidden');
-      }, 3500);
+      }, 3200);
     }
 
-    // Initial Seed if empty
-    if (catalog.length === 0) {
-      catalog = [
-        { id: 'cat_1', deviceType: 'heat_pump', brand: 'Panasonic', model: 'Aquarea T-CAP 9kW', defaultWarrantyMonths: 60, defaultIntervalMonths: 12 },
-        { id: 'cat_2', deviceType: 'heat_pump', brand: 'Daikin', model: 'Altherma 3 R 8kW', defaultWarrantyMonths: 60, defaultIntervalMonths: 12 },
-        { id: 'cat_3', deviceType: 'ac', brand: 'Gree', model: 'Amber Prestige 3.5kW', defaultWarrantyMonths: 60, defaultIntervalMonths: 12 },
-        { id: 'cat_4', deviceType: 'ventilation', brand: 'Zehnder', model: 'ComfoAir Q350 TR', defaultWarrantyMonths: 24, defaultIntervalMonths: 12 }
-      ];
-      localStorage.setItem(LS_CATALOG, JSON.stringify(catalog));
-    }
-
-    if (clients.length === 0) {
-      const today = new Date();
-      const shift = (days) => { const d = new Date(today); d.setDate(d.getDate() + days); return toYMD(d); };
-      clients = [
-        {
-          id: 'c_1', name: 'Jan Kowalski', phone: '+48 601 234 567', city: 'Poznań', postalCode: '60-101', street: 'ul. Słoneczna 15', lat: 52.3942, lng: 16.8824, notes: 'Pompa w kotłowni.',
-          devices: [
-            { id: 'd_1', deviceType: 'heat_pump', deviceModel: 'Panasonic Aquarea 9kW', installDate: '2024-10-15', warrantyMonths: 60, lastInspectionDate: '2025-10-15', nextInspectionDate: shift(10), inspectionIntervalMonths: 12, remindersCanceled: false, inspectionHistory: [] }
-          ]
-        },
-        {
-          id: 'c_2', name: 'Anna Nowak', phone: '+48 605 889 112', city: 'Swarzędz', postalCode: '62-020', street: 'ul. Kwiatowa 8', lat: 52.4115, lng: 17.0789, notes: 'Dzwonić 30 min przed.',
-          devices: [
-            { id: 'd_2', deviceType: 'ac', deviceModel: 'Gree Amber 3.5kW', installDate: '2024-04-10', warrantyMonths: 60, lastInspectionDate: '2024-04-10', nextInspectionDate: shift(-5), inspectionIntervalMonths: 12, remindersCanceled: false, inspectionHistory: [] }
-          ]
-        }
-      ];
-      localStorage.setItem(LS_CLIENTS, JSON.stringify(clients));
-    }
-
-    // --- DEVICE INFO HELPER ---
     function getDeviceInfo(type) {
       switch (type) {
-        case 'heat_pump': return { label: 'Pompa ciepła', short: 'Pompa ciepła', bg: 'bg-orange-50', border: 'border-orange-200', color: '#ea580c' };
-        case 'ac': return { label: 'Klimatyzacja', short: 'Klimatyzacja', bg: 'bg-sky-50', border: 'border-sky-200', color: '#0284c7' };
-        case 'ventilation': return { label: 'Wentylacja / Rekuperacja', short: 'Rekuperacja', bg: 'bg-emerald-50', border: 'border-emerald-200', color: '#059669' };
-        default: return { label: 'Urządzenie HVAC', short: 'HVAC', bg: 'bg-slate-100', border: 'border-slate-300', color: '#475569' };
+        case 'heat_pump': return { label: 'Pompa ciepła', short: 'Pompa ciepła', bg: 'bg-orange-50 dark:bg-orange-950/40', border: 'border-orange-200 dark:border-orange-900', color: '#ea580c' };
+        case 'ac': return { label: 'Klimatyzacja', short: 'Klimatyzacja', bg: 'bg-sky-50 dark:bg-sky-950/40', border: 'border-sky-200 dark:border-sky-900', color: '#0284c7' };
+        case 'ventilation': return { label: 'Wentylacja / Rekuperacja', short: 'Rekuperacja', bg: 'bg-teal-50 dark:bg-teal-950/40', border: 'border-teal-200 dark:border-teal-900', color: '#0d9488' };
+        default: return { label: 'Urządzenie HVAC', short: 'HVAC', bg: 'bg-zinc-100 dark:bg-zinc-800', border: 'border-zinc-300 dark:border-zinc-700', color: '#52525b' };
       }
     }
 
-    // --- ENRICHED CLIENTS ---
     function getEnrichedClients() {
       const now = new Date(); now.setHours(0,0,0,0);
-      return clients.map(c => {
+      return (window.clientsData || []).map(c => {
         const devices = (c.devices || []).map(dev => {
           const install = new Date((dev.installDate || '2025-01-01') + 'T12:00:00');
           const warrantyEnd = new Date(install); warrantyEnd.setMonth(warrantyEnd.getMonth() + Number(dev.warrantyMonths || 60));
@@ -524,49 +773,200 @@
         const anyOverdue = activeDevs.some(d => d.status.isOverdue);
         const anySoon = activeDevs.some(d => d.status.isSoon);
         const anyUnderWarranty = devices.some(d => d.status.isUnderWarranty);
-        let mostUrgent = devices[0];
-        if (activeDevs.length > 0) {
-          mostUrgent = [...activeDevs].sort((a,b) => a.status.daysToInspection - b.status.daysToInspection)[0];
-        }
 
-        return { ...c, devices, anyOverdue, anySoon, anyUnderWarranty, mostUrgent };
+        return { ...c, devices, anyOverdue, anySoon, anyUnderWarranty };
       });
     }
 
-    // --- NAVIGATION ---
+    function updateCloudBadge(online, text) {
+      const dot = document.getElementById('cloud-dot');
+      const txt = document.getElementById('cloud-txt');
+      if (!dot || !txt) return;
+      if (online) {
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
+        txt.innerText = text || 'Chmura Firebase (Online)';
+      } else {
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500';
+        txt.innerText = text || 'Tryb lokalny (Offline)';
+      }
+    }
+
+    function openFirebaseModal() {
+      const saved = localStorage.getItem('pp_firebase_config_json') || '';
+      document.getElementById('firebase-config-input').value = saved;
+      document.getElementById('modal-firebase').classList.remove('hidden');
+      document.getElementById('modal-firebase').classList.add('flex');
+    }
+
+    function parseFirebaseInput(rawText) {
+      let cleaned = rawText.trim();
+      const firstBrace = cleaned.indexOf('{');
+      const lastBrace = cleaned.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1) {
+        cleaned = cleaned.slice(firstBrace, lastBrace + 1);
+      }
+      // Zamiana kluczy bez cudzysłowów z domyślnego kodu JS Firebase na poprawny JSON
+      cleaned = cleaned.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
+      cleaned = cleaned.replace(/,\s*}/g, '}');
+      return JSON.parse(cleaned);
+    }
+
+    function saveAndConnectFirebase() {
+      const raw = document.getElementById('firebase-config-input').value;
+      try {
+        const cfg = parseFirebaseInput(raw);
+        if (!cfg.apiKey || !cfg.projectId) {
+          showToast('Brakuje klucza apiKey lub projectId w konfiguracji!');
+          return;
+        }
+        localStorage.setItem('pp_firebase_config_json', JSON.stringify(cfg, null, 2));
+        closeModal('modal-firebase');
+        initFirebaseConnection(cfg, true);
+      } catch (e) {
+        showToast('Nieprawidłowy format konfiguracji! Skopiuj cały obiekt { ... } z Firebase.');
+      }
+    }
+
+    function disconnectFirebase() {
+      localStorage.removeItem('pp_firebase_config_json');
+      isCloudConnected = false;
+      firestoreDb = null;
+      updateCloudBadge(false, 'Tryb lokalny (Offline)');
+      closeModal('modal-firebase');
+      showToast('Rozłączono chmurę. Aplikacja działa teraz lokalnie.');
+    }
+
+    function initFirebaseConnection(configObj, pushLocalIfEmpty = false) {
+      if (!window.firebase) return;
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(configObj);
+        }
+        firestoreDb = firebase.firestore();
+        isCloudConnected = true;
+        updateCloudBadge(true, 'Chmura Firebase (Online)');
+
+        firestoreDb.collection('pp_state').doc('main').onSnapshot((docSnap) => {
+          if (docSnap.exists) {
+            const data = docSnap.data();
+            window.clientsData = data.clients || [];
+            window.appointmentsData = data.appointments || [];
+            window.catalogData = data.catalog || [];
+            localStorage.setItem('pp_hvac_clients_v4', JSON.stringify(window.clientsData));
+            localStorage.setItem('pp_hvac_appointments_v4', JSON.stringify(window.appointmentsData));
+            localStorage.setItem('pp_hvac_catalog_v4', JSON.stringify(window.catalogData));
+            refreshAllViews();
+          } else if (pushLocalIfEmpty) {
+            persistData();
+          }
+        }, (err) => {
+          console.error('Błąd Firestore:', err);
+          updateCloudBadge(false, 'Błąd autoryzacji Firestore');
+          showToast('Sprawdź reguły (Rules) w Firestore!');
+        });
+
+        if (pushLocalIfEmpty) {
+          showToast('Połączono z bazą Firebase Online!');
+        }
+      } catch (err) {
+        console.error(err);
+        updateCloudBadge(false, 'Błąd połączenia');
+      }
+    }
+
+    function refreshAllViews() {
+      renderDashboard();
+      if (currentTab === 'map_planner') {
+        renderPlanner();
+        renderMapMarkers();
+        if (!document.getElementById('planner-week-view').classList.contains('hidden')) renderWeekView();
+      }
+      if (currentTab === 'clients') renderClients();
+      if (currentTab === 'devices_db') renderCatalog();
+      if (currentTab === 'history') renderHistoryTable();
+    }
+
+    function loadLocalData() {
+      window.clientsData = JSON.parse(localStorage.getItem('pp_hvac_clients_v4') || '[]');
+      window.appointmentsData = JSON.parse(localStorage.getItem('pp_hvac_appointments_v4') || '[]');
+      window.catalogData = JSON.parse(localStorage.getItem('pp_hvac_catalog_v4') || '[]');
+
+      if (window.catalogData.length === 0) {
+        window.catalogData = [
+          { id: 'cat_1', deviceType: 'heat_pump', brand: 'Panasonic', model: 'Aquarea T-CAP 9kW', defaultWarrantyMonths: 60, defaultIntervalMonths: 12 },
+          { id: 'cat_2', deviceType: 'heat_pump', brand: 'Daikin', model: 'Altherma 3 R 8kW', defaultWarrantyMonths: 60, defaultIntervalMonths: 12 },
+          { id: 'cat_3', deviceType: 'ac', brand: 'Gree', model: 'Amber Prestige 3.5kW', defaultWarrantyMonths: 60, defaultIntervalMonths: 12 },
+          { id: 'cat_4', deviceType: 'ventilation', brand: 'Zehnder', model: 'ComfoAir Q350 TR', defaultWarrantyMonths: 24, defaultIntervalMonths: 12 }
+        ];
+        localStorage.setItem('pp_hvac_catalog_v4', JSON.stringify(window.catalogData));
+      }
+      renderDashboard();
+
+      // Automatyczne łączenie z chmurą jeśli wpisano konfigurację
+      const savedConfigStr = localStorage.getItem('pp_firebase_config_json');
+      if (HARDCODED_FIREBASE_CONFIG) {
+        initFirebaseConnection(HARDCODED_FIREBASE_CONFIG, false);
+      } else if (savedConfigStr) {
+        try {
+          initFirebaseConnection(JSON.parse(savedConfigStr), false);
+        } catch (e) {}
+      }
+    }
+
+    function persistData() {
+      localStorage.setItem('pp_hvac_clients_v4', JSON.stringify(window.clientsData));
+      localStorage.setItem('pp_hvac_appointments_v4', JSON.stringify(window.appointmentsData));
+      localStorage.setItem('pp_hvac_catalog_v4', JSON.stringify(window.catalogData));
+
+      if (isCloudConnected && firestoreDb) {
+        firestoreDb.collection('pp_state').doc('main').set({
+          clients: window.clientsData,
+          appointments: window.appointmentsData,
+          catalog: window.catalogData,
+          updatedAt: new Date().toISOString()
+        }).catch(err => console.error('Błąd zapisu do chmury:', err));
+      }
+    }
+
     function switchTab(tabId) {
       currentTab = tabId;
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+      const target = document.getElementById(`tab-${tabId}`);
+      if (target) target.classList.remove('hidden');
 
       document.querySelectorAll('.nav-btn').forEach(el => {
-        el.classList.remove('bg-sky-600', 'text-white', 'shadow-md');
-        el.classList.add('text-slate-300', 'hover:bg-slate-900');
+        el.classList.remove('bg-emerald-600', 'text-white', 'shadow-sm', 'font-bold');
+        el.classList.add('text-zinc-600', 'dark:text-zinc-300', 'hover:bg-zinc-100', 'dark:hover:bg-zinc-800', 'font-semibold');
       });
       const activeBtn = document.getElementById(`nav-btn-${tabId}`);
       if (activeBtn) {
-        activeBtn.classList.remove('text-slate-300', 'hover:bg-slate-900');
-        activeBtn.classList.add('bg-sky-600', 'text-white', 'shadow-md');
+        activeBtn.classList.remove('text-zinc-600', 'dark:text-zinc-300', 'hover:bg-zinc-100', 'dark:hover:bg-zinc-800', 'font-semibold');
+        activeBtn.classList.add('bg-emerald-600', 'text-white', 'shadow-sm', 'font-bold');
       }
 
-      const titles = { dashboard: 'Pulpit główny', clients: 'Baza Klientów', devices_db: 'Baza Urządzeń HVAC', map: 'Interaktywna Mapa Klientów', planner: 'Planer i Trasa' };
+      const titles = {
+        dashboard: 'Pulpit główny',
+        map_planner: 'Mapa Klientów i Planer Dnia',
+        clients: 'Baza Klientów',
+        devices_db: 'Baza Urządzeń HVAC',
+        history: 'Historia i Statystyki Zleceń'
+      };
       document.getElementById('header-title').innerText = titles[tabId] || 'PP';
 
       if (tabId === 'dashboard') renderDashboard();
+      if (tabId === 'map_planner') {
+        renderPlanner();
+        setTimeout(initMap, 120);
+      }
       if (tabId === 'clients') renderClients();
       if (tabId === 'devices_db') renderCatalog();
-      if (tabId === 'map') setTimeout(initMap, 150);
-      if (tabId === 'planner') renderPlanner();
+      if (tabId === 'history') renderHistoryTable();
     }
 
-    function filterAndSwitchClients(filterType) {
+    function filterAndSwitchClients() {
       switchTab('clients');
-      const select = document.getElementById('device-filter-select');
-      if (select) select.value = 'all';
-      renderClients();
     }
 
-    // --- RENDER DASHBOARD ---
     function renderDashboard() {
       const enriched = getEnrichedClients();
       const todayYMD = toYMD(new Date());
@@ -588,10 +988,22 @@
 
       urgentItems.sort((a,b) => a.status.daysToInspection - b.status.daysToInspection);
 
-      document.getElementById('stat-today').innerText = `${appointments.filter(a => a.date === todayYMD).length} wizyt`;
+      const todayVisits = (window.appointmentsData || []).filter(a => a.date === todayYMD).sort((a,b) => (a.time||'00:00').localeCompare(b.time||'00:00'));
+
+      document.getElementById('stat-today').innerText = `${todayVisits.length} wizyt`;
       document.getElementById('stat-overdue').innerText = `${overdueCount} urz.`;
       document.getElementById('stat-soon').innerText = `${soonCount} urz.`;
       document.getElementById('stat-clients').innerText = `${enriched.length}`;
+      document.getElementById('badge-clients').innerText = enriched.length;
+      document.getElementById('badge-catalog').innerText = (window.catalogData || []).length;
+
+      const todayBadge = document.getElementById('badge-today');
+      if (todayVisits.length > 0) {
+        todayBadge.innerText = todayVisits.length;
+        todayBadge.classList.remove('hidden');
+      } else {
+        todayBadge.classList.add('hidden');
+      }
 
       const urgentBadge = document.getElementById('badge-urgent');
       const totalUrgent = overdueCount + soonCount;
@@ -602,21 +1014,18 @@
         urgentBadge.classList.add('hidden');
       }
 
-      // Empty state
       if (enriched.length === 0) {
         document.getElementById('empty-state').classList.remove('hidden');
       } else {
         document.getElementById('empty-state').classList.add('hidden');
       }
 
-      // Today visits
-      const todayVisits = appointments.filter(a => a.date === todayYMD).sort((a,b) => (a.time||'00:00').localeCompare(b.time||'00:00'));
       const visitsContainer = document.getElementById('today-visits-list');
       const routeBtn = document.getElementById('today-route-btn');
       document.getElementById('today-panel-title').innerText = `Plan pracy na dzisiaj (${formatDatePL(todayYMD)})`;
 
       if (todayVisits.length === 0) {
-        visitsContainer.innerHTML = `<p class="text-center py-6 text-sm text-slate-500">Brak zaplanowanych wyjazdów na dzisiaj.</p>`;
+        visitsContainer.innerHTML = `<p class="text-center py-6 text-sm text-zinc-500">Brak zaplanowanych wyjazdów na dzisiaj. Przejdź do zakładki „Mapa i Planer”, aby ułożyć trasę.</p>`;
         routeBtn.classList.add('hidden');
       } else {
         const pendingForRoute = todayVisits.filter(v => v.status !== 'completed');
@@ -631,16 +1040,16 @@
           const client = enriched.find(c => c.id === v.clientId);
           const isDone = v.status === 'completed';
           return `
-            <div class="p-3.5 rounded-xl border bg-slate-50 flex justify-between items-center gap-3">
+            <div class="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 flex justify-between items-center gap-3">
               <div>
-                <div class="flex items-center gap-2">
-                  <span class="text-xs font-extrabold text-sky-700 bg-sky-100 px-2 py-0.5 rounded">${v.time}</span>
-                  <span class="font-bold text-sm text-slate-900">${client ? client.name : 'Klient'}</span>
-                  <span class="text-[11px] font-semibold bg-slate-200 px-2 py-0.5 rounded">${v.serviceType}</span>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs font-extrabold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-md">${v.time}</span>
+                  <span class="font-bold text-sm text-zinc-900 dark:text-white ${isDone ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</span>
+                  <span class="text-[11px] font-semibold bg-zinc-200 dark:bg-zinc-700 px-2 py-0.5 rounded text-zinc-700 dark:text-zinc-300">${v.serviceType}</span>
                 </div>
-                ${client ? `<div class="text-xs text-slate-600 mt-1">📍 ${client.city}, ${client.street} • 📞 ${client.phone}</div>` : ''}
+                ${client ? `<div class="text-xs text-zinc-600 dark:text-zinc-400 mt-1">📍 ${client.city}, ${client.street} • <a href="tel:${client.phone}" class="text-emerald-600 dark:text-emerald-400 font-bold underline">📞 ${client.phone}</a></div>` : ''}
               </div>
-              <button onclick="toggleVisitStatus('${v.id}')" class="px-3 py-1.5 rounded-xl text-xs font-bold ${isDone ? 'bg-emerald-600 text-white' : 'bg-white border text-slate-700'}">
+              <button onclick="toggleVisitStatus('${v.id}')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${isDone ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200'}">
                 ${isDone ? 'Wykonano' : 'Oznacz'}
               </button>
             </div>
@@ -648,33 +1057,33 @@
         }).join('');
       }
 
-      // Urgent inspections list
       const urgentListEl = document.getElementById('urgent-list');
       const toggleBtn = document.getElementById('toggle-urgent-btn');
       if (urgentItems.length > 5) {
         toggleBtn.classList.remove('hidden');
-        toggleBtn.innerText = showAllUrgent ? 'Zwiń do 5' : `Rozwiń pełną listę (${urgentItems.length})`;
+        toggleBtn.innerText = showAllUrgent ? 'Pokaż tylko 5' : `Rozwiń pełną listę (${urgentItems.length})`;
       } else {
         toggleBtn.classList.add('hidden');
       }
 
       const displayUrgent = showAllUrgent ? urgentItems : urgentItems.slice(0, 5);
       if (displayUrgent.length === 0) {
-        urgentListEl.innerHTML = `<div class="p-6 text-center text-sm text-slate-500">Wszystkie urządzenia mają aktualne przeglądy!</div>`;
+        urgentListEl.innerHTML = `<div class="p-6 text-center text-sm text-zinc-500">Wszystkie urządzenia mają aktualne przeglądy!</div>`;
       } else {
         urgentListEl.innerHTML = displayUrgent.map(({ client, device, status }) => `
-          <div class="p-4 hover:bg-slate-50 space-y-2">
-            <div class="flex justify-between items-center">
+          <div class="p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/40 space-y-2 transition">
+            <div class="flex justify-between items-center flex-wrap gap-2">
               <div>
-                <span class="font-bold text-sm text-slate-900">${client.name}</span>
-                <span class="text-xs ml-2 font-semibold text-slate-600">(${device.deviceModel})</span>
-                <div class="text-xs ${status.isOverdue ? 'text-rose-600' : 'text-amber-600'} font-semibold mt-0.5">
-                  ${status.isOverdue ? `Po terminie o ${Math.abs(status.daysToInspection)} dni` : `Przegląd za ${status.daysToInspection} dni`}
+                <span class="font-bold text-sm text-zinc-900 dark:text-white">${client.name}</span>
+                <span class="text-xs ml-2 font-semibold text-zinc-500 dark:text-zinc-400">(${device.deviceModel})</span>
+                <div class="text-xs ${status.isOverdue ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400'} font-bold mt-0.5">
+                  ${status.isOverdue ? `Po terminie o ${Math.abs(status.daysToInspection)} dni` : `Przegląd za ${status.daysToInspection} dni`} • 📞 <a href="tel:${client.phone}" class="underline">${client.phone}</a>
                 </div>
               </div>
-              <div class="flex gap-2">
-                <button onclick="openInspectionModal('${client.id}', '${device.id}')" class="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-bold">Wbij przegląd</button>
-                <button onclick="skipInspection('${client.id}', '${device.id}')" class="px-3 py-1.5 bg-amber-100 text-amber-900 rounded-xl text-xs font-bold">Przesuń (+1r)</button>
+              <div class="flex gap-1.5 flex-wrap">
+                <button onclick="openInspectionModal('${client.id}', '${device.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold">Wbij przegląd</button>
+                <button onclick="skipInspection('${client.id}', '${device.id}')" class="px-2.5 py-1.5 bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 rounded-xl text-xs font-bold">Anuluj aktualny (+1r)</button>
+                <button onclick="toggleReminders('${client.id}', '${device.id}')" class="px-2.5 py-1.5 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-bold">Anuluj</button>
               </div>
             </div>
           </div>
@@ -690,7 +1099,6 @@
       renderDashboard();
     }
 
-    // --- CALENDAR WIDGET ---
     function renderCalendar() {
       const year = calMonthDate.getFullYear();
       const month = calMonthDate.getMonth();
@@ -703,17 +1111,17 @@
       document.getElementById('cal-month-label').innerText = `${monthNames[month]} ${year}`;
 
       let html = '';
-      for (let i = 0; i < startOffset; i++) html += `<div class="h-14 bg-slate-50 rounded-xl"></div>`;
+      for (let i = 0; i < startOffset; i++) html += `<div class="h-14 bg-zinc-50 dark:bg-zinc-800/30 rounded-xl opacity-40"></div>`;
       for (let d = 1; d <= daysCount; d++) {
         const dObj = new Date(year, month, d);
         const ymd = toYMD(dObj);
-        const dayVisits = appointments.filter(a => a.date === ymd);
+        const dayVisits = (window.appointmentsData || []).filter(a => a.date === ymd);
         const isToday = ymd === toYMD(new Date());
 
         html += `
-          <button onclick="selectDateFromCalendar('${ymd}')" class="h-14 rounded-xl p-1.5 flex flex-col justify-between items-center border text-left ${isToday ? 'bg-sky-50 border-sky-400 font-bold' : 'bg-white border-slate-200 hover:border-slate-300'}">
-            <span class="text-xs font-bold">${d}</span>
-            ${dayVisits.length > 0 ? `<span class="px-1.5 rounded-full text-[10px] bg-sky-600 text-white font-extrabold">${dayVisits.length}</span>` : ''}
+          <button onclick="selectDateFromCalendar('${ymd}')" class="h-14 rounded-xl p-1.5 flex flex-col justify-between items-center border text-left transition ${isToday ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 font-bold' : 'bg-white dark:bg-zinc-800/60 border-zinc-200 dark:border-zinc-800 hover:border-emerald-400'}">
+            <span class="text-xs font-bold text-zinc-800 dark:text-zinc-200">${d}</span>
+            ${dayVisits.length > 0 ? `<span class="px-1.5 rounded-full text-[10px] bg-emerald-600 text-white font-extrabold">${dayVisits.length}</span>` : ''}
           </button>
         `;
       }
@@ -727,113 +1135,21 @@
 
     function selectDateFromCalendar(ymd) {
       selectedDate = ymd;
-      switchTab('planner');
+      switchTab('map_planner');
     }
 
-    // --- RENDER CLIENTS ---
-    function renderClients() {
-      const enriched = getEnrichedClients();
-      const query = (document.getElementById('client-search-input')?.value || '').toLowerCase().trim();
-      const deviceFilter = document.getElementById('device-filter-select')?.value || 'all';
-
-      const filtered = enriched.filter(c => {
-        const matchText = !query || c.name.toLowerCase().includes(query) || c.city.toLowerCase().includes(query) || c.street.toLowerCase().includes(query) || c.phone.toLowerCase().includes(query) || c.devices.some(d => d.deviceModel.toLowerCase().includes(query));
-        const matchDev = deviceFilter === 'all' || c.devices.some(d => d.deviceType === deviceFilter);
-        return matchText && matchDev;
-      });
-
-      document.getElementById('badge-clients').innerText = enriched.length;
-      const tbody = document.getElementById('clients-table-body');
-
-      if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-slate-500">Brak klientów w bazie.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = filtered.map(c => `
-        <tr class="hover:bg-sky-50/40 transition">
-          <td class="py-3 px-4 font-bold text-slate-900">${c.name} ${c.devices.length > 1 ? `<span class="ml-1 text-[11px] bg-slate-900 text-white px-2 py-0.5 rounded-full">${c.devices.length} urz.</span>` : ''}</td>
-          <td class="py-3 px-4 text-slate-600">${c.city}, ${c.street}</td>
-          <td class="py-3 px-4"><a href="tel:${c.phone}" class="text-sky-600 font-semibold">${c.phone}</a></td>
-          <td class="py-2.5 px-4">
-            <div class="flex flex-wrap gap-2">
-              ${c.devices.map(dev => {
-                const info = getDeviceInfo(dev.deviceType);
-                const st = dev.status;
-                return `
-                  <div onclick="openInspectionModal('${c.id}', '${dev.id}')" class="inline-flex items-center gap-2 px-2.5 py-1 rounded-xl border text-xs cursor-pointer ${info.bg} ${info.border}">
-                    <span class="font-bold text-slate-900">${dev.deviceModel}</span>
-                    ${st.isOverdue ? '<span class="px-1.5 rounded bg-rose-600 text-white text-[10px] font-bold">Po terminie</span>' : st.isSoon ? `<span class="px-1.5 rounded bg-amber-500 text-white text-[10px] font-bold">Za ${st.daysToInspection}d</span>` : '<span class="px-1.5 rounded bg-white text-emerald-800 border text-[10px]">OK</span>'}
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          </td>
-          <td class="py-3 px-4 text-right">
-            <div class="inline-flex items-center gap-1">
-              <button onclick="openAddDeviceModalForClient('${c.id}')" class="px-2.5 py-1.5 bg-emerald-50 text-emerald-800 border rounded-lg text-xs font-bold">+ Urz.</button>
-              <button onclick="openInspectionModal('${c.id}')" class="px-2.5 py-1.5 bg-amber-50 text-amber-800 border rounded-lg text-xs font-bold">Przeglądy</button>
-              <button onclick="openEditClientModal('${c.id}')" class="p-1.5 text-slate-500 hover:bg-slate-100 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-              <button onclick="deleteClient('${c.id}')" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-            </div>
-          </td>
-        </tr>
-      `).join('');
-      lucide.createIcons();
-    }
-
-    // --- DEVICES CATALOG ---
-    function renderCatalog() {
-      document.getElementById('badge-catalog').innerText = catalog.length;
-      const tbody = document.getElementById('catalog-table-body');
-      tbody.innerHTML = catalog.map(item => `
-        <tr class="hover:bg-slate-50">
-          <td class="py-3 px-4 font-bold">${getDeviceInfo(item.deviceType).short}</td>
-          <td class="py-3 px-4">${item.brand} ${item.model}</td>
-          <td class="py-3 px-4 text-right">
-            <button onclick="deleteCatalogItem('${item.id}')" class="text-rose-500 hover:bg-rose-50 p-1.5 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-          </td>
-        </tr>
-      `).join('');
-      lucide.createIcons();
-    }
-
-    function handleSaveCatalogItem(e) {
-      e.preventDefault();
-      const newItem = {
-        id: `cat_${Date.now()}`,
-        deviceType: document.getElementById('catalog-type').value,
-        brand: document.getElementById('catalog-brand').value.trim(),
-        model: document.getElementById('catalog-model').value.trim(),
-        defaultWarrantyMonths: 60,
-        defaultIntervalMonths: 12
-      };
-      catalog.push(newItem);
-      localStorage.setItem(LS_CATALOG, JSON.stringify(catalog));
-      renderCatalog();
-      showToast("Dodano model do Bazy Urządzeń!");
-      e.target.reset();
-    }
-
-    function deleteCatalogItem(id) {
-      if (confirm('Usunąć model z bazy?')) {
-        catalog = catalog.filter(i => i.id !== id);
-        localStorage.setItem(LS_CATALOG, JSON.stringify(catalog));
-        renderCatalog();
-        showToast("Usunięto model.");
-      }
-    }
-
-    // --- MAP (LEAFLET) ---
     function initMap() {
       const container = document.getElementById('map-container');
+      if (!container) return;
       if (!mapInstance) {
-        mapInstance = L.map(container, { center: [52.237, 19.017], zoom: 6 });
+        mapInstance = L.map(container, { center: [52.4064, 16.9252], zoom: 9 });
         setMapTile('street', false);
         mapMarkersGroup = L.layerGroup().addTo(mapInstance);
       }
-      setTimeout(() => mapInstance.invalidateSize(), 150);
-      renderMapMarkers();
+      setTimeout(() => {
+        mapInstance.invalidateSize();
+        renderMapMarkers();
+      }, 150);
     }
 
     function setMapTile(styleKey, doRefresh = true) {
@@ -841,7 +1157,9 @@
       ['street', 'voyager', 'satellite'].forEach(k => {
         const btn = document.getElementById(`map-btn-${k}`);
         if (btn) {
-          btn.className = k === styleKey ? 'px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white' : 'px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100';
+          btn.className = k === styleKey
+            ? 'px-3 py-1 rounded-lg text-xs font-bold bg-zinc-900 dark:bg-emerald-600 text-white shadow-sm'
+            : 'px-3 py-1 rounded-lg text-xs font-bold text-zinc-600 dark:text-zinc-300';
         }
       });
 
@@ -849,8 +1167,10 @@
       if (styleKey === 'voyager') url = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
       if (styleKey === 'satellite') url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 
-      if (mapTileLayer) mapInstance.removeLayer(mapTileLayer);
-      mapTileLayer = L.tileLayer(url, { maxZoom: 19 }).addTo(mapInstance);
+      if (mapInstance) {
+        if (mapTileLayer) mapInstance.removeLayer(mapTileLayer);
+        mapTileLayer = L.tileLayer(url, { maxZoom: 19 }).addTo(mapInstance);
+      }
       if (doRefresh) renderMapMarkers();
     }
 
@@ -859,6 +1179,11 @@
       mapMarkersGroup.clearLayers();
       const enriched = getEnrichedClients();
       const bounds = [];
+      const dayVisitsClientIds = new Set(
+        (window.appointmentsData || [])
+          .filter(a => a.date === selectedDate)
+          .map(a => a.clientId)
+      );
 
       enriched.forEach(c => {
         const lat = parseFloat(c.lat);
@@ -866,21 +1191,77 @@
         if (isNaN(lat) || isNaN(lng)) return;
         bounds.push([lat, lng]);
 
-        const color = c.anyOverdue ? '#e11d48' : c.anySoon ? '#d97706' : '#10b981';
+        const isScheduledToday = dayVisitsClientIds.has(c.id);
+        const color = isScheduledToday
+          ? '#0284c7'
+          : c.anyOverdue
+            ? '#e11d48'
+            : c.anySoon
+              ? '#d97706'
+              : '#10b981';
+
         const svg = `
-          <div style="background-color:${color};width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 4px 10px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;">
-            <div style="width:8px;height:8px;background:#fff;border-radius:50%;transform:rotate(45deg);"></div>
+          <div style="background-color:${color};width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;">
+            <div style="width:9px;height:9px;background:#fff;border-radius:50%;transform:rotate(45deg);"></div>
           </div>
         `;
-        const icon = L.divIcon({ className: 'custom-pin', html: svg, iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32] });
+        const icon = L.divIcon({ className: 'custom-pin', html: svg, iconSize: [34, 34], iconAnchor: [17, 34], popupAnchor: [0, -34] });
         const marker = L.marker([lat, lng], { icon });
-        marker.bindPopup(`<strong>${c.name}</strong><br>${c.city}, ${c.street}<br>Urządzeń: ${c.devices.length}`);
+
+        const popupHtml = `
+          <div style="min-width:190px;font-family:'Inter',sans-serif;">
+            <div style="font-weight:800;font-size:13px;color:#18181b;">${c.name}</div>
+            <div style="font-size:11px;color:#52525b;margin-top:2px;">📍 ${c.city}, ${c.street}</div>
+            <div style="margin-top:4px;"><a href="tel:${c.phone}" style="color:#059669;font-weight:700;font-size:12px;text-decoration:underline;">📞 ${c.phone}</a></div>
+            <button onclick="selectClientFromMapForPlanner('${c.id}')" style="margin-top:8px;width:100%;background:#059669;color:#fff;border:none;padding:6px 10px;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;">
+              + Dodaj do planu (${formatDatePL(selectedDate)})
+            </button>
+          </div>
+        `;
+        marker.bindPopup(popupHtml);
         mapMarkersGroup.addLayer(marker);
       });
 
       if (bounds.length > 0 && mapInstance) {
-        mapInstance.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+        mapInstance.fitBounds(bounds, { padding: [45, 45], maxZoom: 12 });
       }
+    }
+
+    function selectClientFromMapForPlanner(clientId) {
+      const client = (window.clientsData || []).find(c => c.id === clientId);
+      if (!client) return;
+      quickMapSelectedClientId = clientId;
+      document.getElementById('quick-map-client-name').innerText = client.name;
+      document.getElementById('quick-map-client-addr').innerText = `📍 ${client.city}, ${client.street} • 📞 ${client.phone}`;
+      document.getElementById('quick-map-schedule-box').classList.remove('hidden');
+      if (mapInstance) mapInstance.closePopup();
+    }
+
+    function closeQuickMapBox() {
+      quickMapSelectedClientId = null;
+      document.getElementById('quick-map-schedule-box').classList.add('hidden');
+    }
+
+    function confirmQuickMapSchedule() {
+      if (!quickMapSelectedClientId) return;
+      const time = document.getElementById('quick-map-time').value || '09:00';
+      const serviceType = document.getElementById('quick-map-service').value || 'Przegląd okresowy';
+
+      window.appointmentsData.push({
+        id: 'v_' + Date.now(),
+        clientId: quickMapSelectedClientId,
+        date: selectedDate,
+        time,
+        serviceType,
+        status: 'planned'
+      });
+
+      persistData();
+      closeQuickMapBox();
+      renderPlanner();
+      renderMapMarkers();
+      renderDashboard();
+      showToast(`Dodano klienta z mapy na ${formatDatePL(selectedDate)} o ${time}!`);
     }
 
     function refreshMap() {
@@ -890,14 +1271,19 @@
       }
     }
 
-    // --- PLANER & ROUTE ---
     function setPlannerMode(mode) {
-      document.getElementById('planner-mode-day').className = mode === 'day' ? 'px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-600 text-white' : 'px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100';
-      document.getElementById('planner-mode-week').className = mode === 'week' ? 'px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-600 text-white' : 'px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100';
+      document.getElementById('planner-mode-day').className = mode === 'day'
+        ? 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white shadow-sm transition'
+        : 'px-3.5 py-1.5 rounded-lg text-xs font-bold text-zinc-700 dark:text-zinc-300 transition';
+      document.getElementById('planner-mode-week').className = mode === 'week'
+        ? 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white shadow-sm transition'
+        : 'px-3.5 py-1.5 rounded-lg text-xs font-bold text-zinc-700 dark:text-zinc-300 transition';
 
       if (mode === 'day') {
         document.getElementById('planner-day-view').classList.remove('hidden');
         document.getElementById('planner-week-view').classList.add('hidden');
+        renderPlanner();
+        setTimeout(refreshMap, 120);
       } else {
         document.getElementById('planner-day-view').classList.add('hidden');
         document.getElementById('planner-week-view').classList.remove('hidden');
@@ -905,42 +1291,56 @@
       }
     }
 
-    function shiftDate(days) {
+    function shiftDate(dir) {
+      const isWeekMode = !document.getElementById('planner-week-view').classList.contains('hidden');
+      const step = isWeekMode ? dir * 7 : dir;
       const d = new Date(selectedDate + 'T12:00:00');
-      d.setDate(d.getDate() + days);
+      d.setDate(d.getDate() + step);
       selectedDate = toYMD(d);
+      document.getElementById('planner-date-input').value = selectedDate;
       renderPlanner();
+      renderMapMarkers();
+      if (isWeekMode) renderWeekView();
     }
 
     function onPlannerDateChange(val) {
+      if (!val) return;
       selectedDate = val;
       renderPlanner();
+      renderMapMarkers();
+      if (!document.getElementById('planner-week-view').classList.contains('hidden')) {
+        renderWeekView();
+      }
     }
 
     function renderPlanner() {
       document.getElementById('planner-date-input').value = selectedDate;
-      document.getElementById('planner-day-title').innerText = `Wizyty w dniu ${formatDatePL(selectedDate)}`;
+      document.getElementById('planner-day-title').innerText = `Plan Dnia: ${formatDatePL(selectedDate)}`;
 
-      const dayVisits = appointments.filter(a => a.date === selectedDate).sort((a,b) => (a.time||'00:00').localeCompare(b.time||'00:00'));
+      const dayVisits = (window.appointmentsData || [])
+        .filter(a => a.date === selectedDate)
+        .sort((a,b) => (a.time||'00:00').localeCompare(b.time||'00:00'));
       const listEl = document.getElementById('planner-visits-list');
 
       if (dayVisits.length === 0) {
-        listEl.innerHTML = `<p class="text-sm text-slate-500 py-6 text-center">Brak zaplanowanych wizyt w tym dniu.</p>`;
-        document.getElementById('planner-route-action').innerHTML = `<div class="text-xs text-slate-400 text-center py-4">Brak punktów trasy.</div>`;
+        listEl.innerHTML = `<div class="text-xs text-zinc-500 py-8 text-center border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">Brak zaplanowanych wizyt w tym dniu.<br>Kliknij pinezkę klienta na mapie obok, aby dodać wyjazd!</div>`;
+        document.getElementById('planner-route-action').innerHTML = `<div class="text-xs text-zinc-400 text-center py-3">Dodaj wizyty do planu dnia, aby uruchomić trasę.</div>`;
       } else {
         listEl.innerHTML = dayVisits.map(v => {
-          const client = clients.find(c => c.id === v.clientId);
+          const client = (window.clientsData || []).find(c => c.id === v.clientId);
           const isDone = v.status === 'completed';
           return `
-            <div class="p-4 rounded-xl border bg-slate-50 flex justify-between items-center">
-              <div>
-                <span class="text-xs font-extrabold text-sky-700 bg-sky-100 px-2 py-0.5 rounded">${v.time}</span>
-                <h3 class="text-sm font-bold text-slate-900 mt-1">${client ? client.name : 'Klient'}</h3>
-                <p class="text-xs text-slate-600">📍 ${client ? client.city + ', ' + client.street : ''}</p>
+            <div class="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 flex justify-between items-center gap-2">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-extrabold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded">${v.time}</span>
+                  <h3 class="text-sm font-bold text-zinc-900 dark:text-white truncate ${isDone ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</h3>
+                </div>
+                <p class="text-xs text-zinc-600 dark:text-zinc-400 mt-1 truncate">📍 ${client ? client.city + ', ' + client.street : ''} • <a href="tel:${client?.phone}" class="text-emerald-600 dark:text-emerald-400 font-semibold underline">📞 ${client?.phone || ''}</a></p>
               </div>
-              <div class="flex items-center gap-2">
-                <button onclick="toggleVisitStatus('${v.id}')" class="px-3 py-1.5 rounded-xl text-xs font-bold ${isDone ? 'bg-emerald-600 text-white' : 'bg-white border text-slate-700'}">${isDone ? 'Wykonana' : 'Oznacz'}</button>
-                <button onclick="deleteVisit('${v.id}')" class="text-rose-500 hover:bg-rose-50 p-1.5 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button onclick="toggleVisitStatus('${v.id}')" class="px-2.5 py-1.5 rounded-xl text-xs font-bold ${isDone ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200'}">${isDone ? 'Wykonana' : 'Oznacz'}</button>
+                <button onclick="deleteVisit('${v.id}')" class="text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 p-1.5 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
               </div>
             </div>
           `;
@@ -949,12 +1349,12 @@
         const pending = dayVisits.filter(v => v.status !== 'completed');
         if (pending.length > 0) {
           document.getElementById('planner-route-action').innerHTML = `
-            <button onclick="openRouteForDate('${selectedDate}')" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 shadow">
-              <i data-lucide="navigation" class="w-5 h-5"></i> Eksportuj trasę (${pending.length})
+            <button onclick="openRouteForDate('${selectedDate}')" class="w-full bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 shadow transition text-xs sm:text-sm">
+              <i data-lucide="navigation" class="w-4 h-4"></i> Wyznacz trasę Google Maps (${pending.length} pkt)
             </button>
           `;
         } else {
-          document.getElementById('planner-route-action').innerHTML = `<div class="text-xs text-slate-400 text-center py-4">Wszystkie dzisiejsze wizyty wykonane!</div>`;
+          document.getElementById('planner-route-action').innerHTML = `<div class="text-xs text-emerald-400 font-bold text-center py-3">Wszystkie wizyty z tego dnia zostały wykonane!</div>`;
         }
       }
       lucide.createIcons();
@@ -972,18 +1372,26 @@
       for (let i = 0; i < 7; i++) {
         const d = new Date(monday); d.setDate(monday.getDate() + i);
         const ymd = toYMD(d);
-        const dayVisits = appointments.filter(a => a.date === ymd).sort((a,b)=>(a.time||'00:00').localeCompare(b.time||'00:00'));
+        const isSelected = ymd === selectedDate;
+        const dayVisits = (window.appointmentsData || []).filter(a => a.date === ymd).sort((a,b)=>(a.time||'00:00').localeCompare(b.time||'00:00'));
 
         html += `
-          <div class="bg-white rounded-2xl border p-3 space-y-2">
-            <div class="text-xs font-bold text-slate-900 border-b pb-1">${dayNames[i]} (${d.toLocaleDateString('pl-PL', {day:'2-digit', month:'2-digit'})})</div>
-            <div class="space-y-1.5">
-              ${dayVisits.length === 0 ? '<div class="text-[11px] text-slate-400 py-2 text-center">Brak</div>' : dayVisits.map(v => {
-                const client = clients.find(c => c.id === v.clientId);
+          <div class="bg-white dark:bg-zinc-900 rounded-2xl border ${isSelected ? 'border-emerald-500 ring-1 ring-emerald-500/30' : 'border-zinc-200 dark:border-zinc-800'} p-3.5 space-y-2.5">
+            <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-2">
+              <span class="text-xs font-extrabold text-zinc-900 dark:text-white">${dayNames[i]}</span>
+              <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">${d.toLocaleDateString('pl-PL', {day:'2-digit', month:'2-digit'})}</span>
+            </div>
+            <div class="space-y-2">
+              ${dayVisits.length === 0 ? '<div class="text-[11px] text-zinc-400 py-4 text-center">Brak wyjazdów</div>' : dayVisits.map(v => {
+                const client = (window.clientsData || []).find(c => c.id === v.clientId);
                 return `
-                  <div class="p-2 bg-slate-50 rounded-lg text-xs flex justify-between items-center">
-                    <div><span class="font-bold text-sky-700">${v.time}</span> <span class="font-medium">${client ? client.name : ''}</span></div>
-                    <button onclick="deleteVisit('${v.id}')" class="text-rose-500"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                  <div class="p-2.5 bg-zinc-50 dark:bg-zinc-800 rounded-xl text-xs space-y-1 border border-zinc-200/60 dark:border-zinc-700">
+                    <div class="flex justify-between items-center">
+                      <span class="font-extrabold text-emerald-700 dark:text-emerald-300">${v.time}</span>
+                      <button onclick="deleteVisit('${v.id}')" class="text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950 p-1 rounded" title="Usuń wyjazd"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </div>
+                    <div class="font-bold text-zinc-900 dark:text-white truncate">${client ? client.name : 'Klient'}</div>
+                    ${client ? `<div class="text-[10px] text-zinc-500 truncate">📍 ${client.city}</div>` : ''}
                   </div>
                 `;
               }).join('')}
@@ -996,27 +1404,229 @@
     }
 
     function openRouteForDate(dateStr) {
-      const dayVisits = appointments.filter(a => a.date === dateStr && a.status !== 'completed').sort((a,b)=>(a.time||'00:00').localeCompare(b.time||'00:00'));
+      const dayVisits = (window.appointmentsData || [])
+        .filter(a => a.date === dateStr && a.status !== 'completed')
+        .sort((a,b) => (a.time||'00:00').localeCompare(b.time||'00:00'));
       if (dayVisits.length === 0) return;
 
       const addrs = dayVisits.map(v => {
-        const c = clients.find(cl => cl.id === v.clientId);
+        const c = (window.clientsData || []).find(cl => cl.id === v.clientId);
         return c ? `${c.street}, ${c.postalCode || ''} ${c.city}, Polska`.trim() : null;
       }).filter(Boolean);
 
       if (addrs.length === 0) return;
       const dest = encodeURIComponent(addrs[addrs.length - 1]);
       const wps = addrs.slice(0, -1);
-      let url = `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`;
-      if (wps.length > 0) url += `&waypoints=${wps.map(a => encodeURIComponent(a)).join('|')}`;
-      window.open(url, '_blank');
+
+      const launchUrl = (originParam = '') => {
+        let url = `https://www.google.com/maps/dir/?api=1${originParam}&destination=${dest}&travelmode=driving`;
+        if (wps.length > 0) url += `&waypoints=${wps.map(a => encodeURIComponent(a)).join('|')}`;
+        window.open(url, '_blank');
+      };
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          pos => launchUrl(`&origin=${pos.coords.latitude},${pos.coords.longitude}`),
+          () => launchUrl(''),
+          { timeout: 2200 }
+        );
+      } else {
+        launchUrl('');
+      }
     }
 
     function openTodayRoute() {
       openRouteForDate(toYMD(new Date()));
     }
 
-    // --- CLIENT MODAL & ACTIONS ---
+    function renderClients() {
+      const enriched = getEnrichedClients();
+      const query = (document.getElementById('client-search-input')?.value || '').toLowerCase().trim();
+      const deviceFilter = document.getElementById('device-filter-select')?.value || 'all';
+
+      const filtered = enriched.filter(c => {
+        const matchText = !query || c.name.toLowerCase().includes(query) || c.city.toLowerCase().includes(query) || c.street.toLowerCase().includes(query) || c.phone.toLowerCase().includes(query) || c.devices.some(d => d.deviceModel.toLowerCase().includes(query));
+        const matchDev = deviceFilter === 'all' || c.devices.some(d => d.deviceType === deviceFilter);
+        return matchText && matchDev;
+      });
+
+      document.getElementById('badge-clients').innerText = enriched.length;
+      
+      const tbody = document.getElementById('clients-table-body');
+      const mobileContainer = document.getElementById('clients-mobile-container');
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-zinc-500">Brak klientów spełniających kryteria.</td></tr>`;
+        mobileContainer.innerHTML = `<div class="p-8 text-center text-zinc-500 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800">Brak klientów w bazie.</div>`;
+        return;
+      }
+
+      mobileContainer.innerHTML = filtered.map(c => `
+        <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-3">
+          <div class="flex justify-between items-start gap-2">
+            <div>
+              <h3 class="font-extrabold text-zinc-900 dark:text-white text-base">${c.name}</h3>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400">📍 ${c.city}, ${c.street}</p>
+            </div>
+            <a href="tel:${c.phone}" class="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-bold flex items-center gap-1 shrink-0 shadow-sm">
+              📞 ${c.phone}
+            </a>
+          </div>
+          <div class="space-y-1.5 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+            ${c.devices.map(dev => {
+              const info = getDeviceInfo(dev.deviceType);
+              const st = dev.status;
+              return `
+                <div onclick="openInspectionModal('${c.id}', '${dev.id}')" class="flex items-center justify-between p-2 rounded-xl border text-xs cursor-pointer ${info.bg} ${info.border}">
+                  <span class="font-bold text-zinc-900 dark:text-white">${dev.deviceModel}</span>
+                  ${st.isOverdue ? '<span class="px-1.5 rounded bg-rose-600 text-white text-[10px] font-bold">Po terminie</span>' : st.isSoon ? `<span class="px-1.5 rounded bg-amber-500 text-white text-[10px] font-bold">Za ${st.daysToInspection}d</span>` : '<span class="px-1.5 rounded bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-300 border text-[10px] font-bold">OK</span>'}
+                </div>
+              `;
+            }).join('')}
+          </div>
+          <div class="flex justify-end gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800 flex-wrap">
+            <button onclick="openAddDeviceModalForClient('${c.id}')" class="px-3 py-1.5 bg-teal-50 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-900 rounded-xl text-xs font-bold">+ Urz.</button>
+            <button onclick="openInspectionModal('${c.id}')" class="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900 rounded-xl text-xs font-bold">Przeglądy</button>
+            <button onclick="openEditClientModal('${c.id}')" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-xl text-xs font-bold">Edytuj</button>
+            <button onclick="deleteClient('${c.id}')" class="px-3 py-1.5 bg-rose-50 dark:bg-rose-950/40 text-rose-600 rounded-xl text-xs font-bold">Usuń</button>
+          </div>
+        </div>
+      `).join('');
+
+      tbody.innerHTML = filtered.map(c => `
+        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition">
+          <td class="py-3.5 px-4 font-bold text-zinc-900 dark:text-white">${c.name} ${c.devices.length > 1 ? `<span class="ml-1 text-[11px] bg-zinc-900 dark:bg-zinc-700 text-white px-2 py-0.5 rounded-full">${c.devices.length} urz.</span>` : ''}</td>
+          <td class="py-3.5 px-4 text-zinc-600 dark:text-zinc-300">${c.city}, ${c.street}</td>
+          <td class="py-3.5 px-4"><a href="tel:${c.phone}" class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold hover:underline">📞 ${c.phone}</a></td>
+          <td class="py-2.5 px-4">
+            <div class="flex flex-wrap gap-2">
+              ${c.devices.map(dev => {
+                const info = getDeviceInfo(dev.deviceType);
+                const st = dev.status;
+                return `
+                  <div onclick="openInspectionModal('${c.id}', '${dev.id}')" class="inline-flex items-center gap-2 px-2.5 py-1 rounded-xl border text-xs cursor-pointer ${info.bg} ${info.border}">
+                    <span class="font-bold text-zinc-900 dark:text-white">${dev.deviceModel}</span>
+                    ${st.isOverdue ? '<span class="px-1.5 rounded bg-rose-600 text-white text-[10px] font-bold">Po terminie</span>' : st.isSoon ? `<span class="px-1.5 rounded bg-amber-500 text-white text-[10px] font-bold">Za ${st.daysToInspection}d</span>` : '<span class="px-1.5 rounded bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-300 border text-[10px] font-bold">OK</span>'}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </td>
+          <td class="py-3.5 px-4 text-right">
+            <div class="inline-flex items-center gap-1">
+              <button onclick="openAddDeviceModalForClient('${c.id}')" class="px-2.5 py-1.5 bg-teal-50 dark:bg-teal-950 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800 rounded-lg text-xs font-bold">+ Urz.</button>
+              <button onclick="openInspectionModal('${c.id}')" class="px-2.5 py-1.5 bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-lg text-xs font-bold">Przeglądy</button>
+              <button onclick="openEditClientModal('${c.id}')" class="p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+              <button onclick="deleteClient('${c.id}')" class="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function renderCatalog() {
+      const q = (document.getElementById('catalog-search')?.value || '').toLowerCase();
+      const sort = document.getElementById('catalog-sort')?.value || 'brand';
+
+      let list = [...(window.catalogData || [])];
+      if (q) {
+        list = list.filter(item => `${item.brand} ${item.model}`.toLowerCase().includes(q));
+      }
+
+      list.sort((a, b) => {
+        if (sort === 'brand') return (a.brand || '').localeCompare(b.brand || '');
+        if (sort === 'warranty') return (b.defaultWarrantyMonths || 60) - (a.defaultWarrantyMonths || 60);
+        return (a.deviceType || '').localeCompare(b.deviceType || '');
+      });
+
+      document.getElementById('badge-catalog').innerText = (window.catalogData || []).length;
+      const tbody = document.getElementById('catalog-table-body');
+      tbody.innerHTML = list.map(item => `
+        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
+          <td class="py-3 px-4 font-bold text-zinc-900 dark:text-white">${getDeviceInfo(item.deviceType).short}</td>
+          <td class="py-3 px-4 text-zinc-700 dark:text-zinc-200 font-semibold">${item.brand} ${item.model}</td>
+          <td class="py-3 px-4 text-zinc-500 text-xs">Gwarancja: <strong>${item.defaultWarrantyMonths || 60} msc</strong> • Przegląd: co <strong>${item.defaultIntervalMonths || 12} msc</strong></td>
+          <td class="py-3 px-4 text-right">
+            <button onclick="openAddDeviceModalWithCatalog('${item.id}')" class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs font-bold mr-2">+ Przypisz klientowi</button>
+            <button onclick="deleteCatalogItem('${item.id}')" class="text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 p-1.5 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+          </td>
+        </tr>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function handleSaveCatalogItem(e) {
+      e.preventDefault();
+      const newItem = {
+        id: 'cat_' + Date.now(),
+        deviceType: document.getElementById('catalog-type').value,
+        brand: document.getElementById('catalog-brand').value.trim(),
+        model: document.getElementById('catalog-model').value.trim(),
+        defaultWarrantyMonths: Number(document.getElementById('catalog-warranty').value) || 60,
+        defaultIntervalMonths: Number(document.getElementById('catalog-interval').value) || 12
+      };
+      window.catalogData.push(newItem);
+      persistData();
+      renderCatalog();
+      showToast("Dodano nowy model do Bazy Urządzeń!");
+      e.target.reset();
+    }
+
+    function deleteCatalogItem(id) {
+      window.catalogData = window.catalogData.filter(x => x.id !== id);
+      persistData();
+      renderCatalog();
+      showToast("Usunięto model z katalogu.");
+    }
+
+    function renderHistoryTable() {
+      const q = (document.getElementById('history-search')?.value || '').toLowerCase();
+      let allHistory = [];
+      let totalDevices = 0;
+      const citiesSet = new Set();
+
+      (window.clientsData || []).forEach(c => {
+        if (c.city) citiesSet.add(c.city.trim().toLowerCase());
+        (c.devices || []).forEach(d => {
+          totalDevices++;
+          (d.inspectionHistory || []).forEach(h => {
+            allHistory.push({
+              ...h,
+              clientName: c.name,
+              clientCity: c.city,
+              deviceModel: d.deviceModel
+            });
+          });
+        });
+      });
+
+      allHistory.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+      document.getElementById('stat-history-total').innerText = allHistory.length;
+      document.getElementById('stat-devices-total').innerText = totalDevices;
+      document.getElementById('stat-cities-total').innerText = citiesSet.size;
+
+      const filtered = allHistory.filter(h => !q || h.clientName.toLowerCase().includes(q) || (h.clientCity||'').toLowerCase().includes(q) || h.deviceModel.toLowerCase().includes(q) || (h.technician||'').toLowerCase().includes(q) || (h.notes||'').toLowerCase().includes(q));
+
+      const tbody = document.getElementById('history-table-body');
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-zinc-400">Brak wpisów w historii zleceń.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(h => `
+        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
+          <td class="py-3 px-4 font-bold text-emerald-600 dark:text-emerald-400">${formatDatePL(h.date)}</td>
+          <td class="py-3 px-4 font-bold text-zinc-900 dark:text-white">${h.clientName} <span class="text-xs text-zinc-400 font-normal">(${h.clientCity})</span></td>
+          <td class="py-3 px-4 text-zinc-700 dark:text-zinc-300 font-medium">${h.deviceModel}</td>
+          <td class="py-3 px-4 text-zinc-600 dark:text-zinc-400">${h.technician || 'Serwis PP'}</td>
+          <td class="py-3 px-4 text-zinc-600 dark:text-zinc-300">${h.notes}</td>
+        </tr>
+      `).join('');
+      lucide.createIcons();
+    }
+
     let editingClientId = null;
 
     function openClientModal() {
@@ -1039,7 +1649,7 @@
     }
 
     function openEditClientModal(clientId) {
-      const c = clients.find(x => x.id === clientId);
+      const c = (window.clientsData || []).find(x => x.id === clientId);
       if (!c) return;
       editingClientId = clientId;
       document.getElementById('modal-client-title').innerText = 'Edycja klienta';
@@ -1066,30 +1676,32 @@
       const today = toYMD(new Date());
 
       const div = document.createElement('div');
-      div.className = 'p-3 bg-slate-50 border rounded-xl space-y-2 relative';
+      div.className = 'p-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl space-y-2 relative';
       div.dataset.devId = id;
       div.innerHTML = `
         <div class="flex justify-between items-center">
-          <select class="dev-type px-2 py-1 border rounded-lg text-xs font-bold outline-none bg-white">
+          <select class="dev-type px-2.5 py-1 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs font-bold outline-none bg-white dark:bg-zinc-800">
             <option value="heat_pump" ${data?.deviceType === 'heat_pump' ? 'selected' : ''}>🔥 Pompa ciepła</option>
             <option value="ac" ${data?.deviceType === 'ac' ? 'selected' : ''}>❄️ Klimatyzacja</option>
             <option value="ventilation" ${data?.deviceType === 'ventilation' ? 'selected' : ''}>💨 Wentylacja</option>
           </select>
-          <button type="button" onclick="this.closest('.p-3').remove()" class="text-rose-500 text-xs font-bold">Usuń urządzenie</button>
+          <button type="button" onclick="this.closest('.p-3').remove()" class="text-rose-500 text-xs font-bold">Usuń</button>
         </div>
-        <input type="text" class="dev-model w-full px-2.5 py-1.5 border rounded-lg text-xs outline-none bg-white" placeholder="Model (np. Panasonic Aquarea 9kW)" value="${data?.deviceModel || ''}" required>
+        <input type="text" class="dev-model w-full px-2.5 py-1.5 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none bg-white dark:bg-zinc-800" placeholder="Model (np. Panasonic Aquarea 9kW)" value="${data?.deviceModel || ''}" required>
         <div class="grid grid-cols-2 gap-2">
-          <div><label class="text-[10px] text-slate-500">Data montażu</label><input type="date" class="dev-install w-full px-2.5 py-1.5 border rounded-lg text-xs bg-white" value="${data?.installDate || today}"></div>
-          <div><label class="text-[10px] text-slate-500">Gwarancja (miesiące)</label><input type="number" class="dev-warranty w-full px-2.5 py-1.5 border rounded-lg text-xs bg-white" value="${data?.warrantyMonths || 60}"></div>
+          <div><label class="text-[10px] font-bold text-zinc-500">Data montażu</label><input type="date" class="dev-install w-full px-2.5 py-1.5 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs bg-white dark:bg-zinc-800" value="${data?.installDate || today}"></div>
+          <div><label class="text-[10px] font-bold text-zinc-500">Gwarancja (msc)</label><input type="number" class="dev-warranty w-full px-2.5 py-1.5 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs bg-white dark:bg-zinc-800" value="${data?.warrantyMonths || 60}"></div>
         </div>
       `;
       container.appendChild(div);
     }
 
-    async function geocodeAddress() {
-      const city = document.getElementById('client-city').value;
-      const street = document.getElementById('client-street').value;
-      const postal = document.getElementById('client-postal').value;
+    async function autoGeocodeClientAddress() {
+      const city = document.getElementById('client-city')?.value || '';
+      const street = document.getElementById('client-street')?.value || '';
+      const postal = document.getElementById('client-postal')?.value || '';
+      if (!city && !street) return;
+
       const query = `${street}, ${postal} ${city}, Polska`.trim();
       try {
         const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`);
@@ -1097,41 +1709,42 @@
         if (data && data.length > 0) {
           document.getElementById('client-lat').value = parseFloat(data[0].lat).toFixed(5);
           document.getElementById('client-lng').value = parseFloat(data[0].lon).toFixed(5);
-          showToast("Pobrano współrzędne GPS!");
-        } else {
-          showToast("Nie znaleziono adresu.");
         }
-      } catch (e) {
-        showToast("Błąd geokodowania.");
-      }
+      } catch (e) {}
     }
 
-    function handleSaveClient(e) {
+    async function handleSaveClient(e) {
       e.preventDefault();
+      await autoGeocodeClientAddress();
+
       const devEls = document.querySelectorAll('#modal-devices-container > div');
       const devices = [];
       const today = toYMD(new Date());
+      const existingClient = editingClientId ? (window.clientsData || []).find(x => x.id === editingClientId) : null;
 
       devEls.forEach(el => {
+        const devId = el.dataset.devId || `dev_${Date.now()}`;
+        const prevDev = existingClient?.devices?.find(d => d.id === devId);
         const type = el.querySelector('.dev-type').value;
         const model = el.querySelector('.dev-model').value.trim();
         const install = el.querySelector('.dev-install').value || today;
         const warranty = Number(el.querySelector('.dev-warranty').value) || 60;
         devices.push({
-          id: el.dataset.devId || `dev_${Date.now()}`,
+          id: devId,
           deviceType: type,
           deviceModel: model || 'Urządzenie HVAC',
           installDate: install,
           warrantyMonths: warranty,
-          lastInspectionDate: install,
-          nextInspectionDate: addMonths(install, 12),
-          inspectionIntervalMonths: 12,
-          remindersCanceled: false,
-          inspectionHistory: []
+          lastInspectionDate: prevDev?.lastInspectionDate || install,
+          nextInspectionDate: prevDev?.nextInspectionDate || addMonths(install, 12),
+          inspectionIntervalMonths: prevDev?.inspectionIntervalMonths || 12,
+          remindersCanceled: prevDev?.remindersCanceled || false,
+          inspectionHistory: prevDev?.inspectionHistory || []
         });
       });
 
       const clientData = {
+        id: editingClientId || ('c_' + Date.now()),
         name: document.getElementById('client-name').value.trim(),
         phone: document.getElementById('client-phone').value.trim(),
         postalCode: document.getElementById('client-postal').value.trim(),
@@ -1144,36 +1757,57 @@
       };
 
       if (editingClientId) {
-        clients = clients.map(c => c.id === editingClientId ? { ...c, ...clientData } : c);
+        window.clientsData = window.clientsData.map(x => x.id === editingClientId ? clientData : x);
         showToast("Zaktualizowano dane klienta.");
       } else {
-        const newClient = { id: `client_${Date.now()}`, ...clientData };
-        clients.push(newClient);
-        showToast("Dodano nowego klienta.");
+        window.clientsData.push(clientData);
+        showToast("Dodano nowego klienta i pobrano współrzędne GPS.");
       }
 
-      localStorage.setItem(LS_CLIENTS, JSON.stringify(clients));
+      persistData();
       closeModal('modal-client');
       renderDashboard();
+      if (currentTab === 'clients') renderClients();
+      if (currentTab === 'map_planner') renderMapMarkers();
     }
 
     function deleteClient(id) {
-      if (confirm('Usunąć klienta oraz jego urządzenia i wizyty?')) {
-        clients = clients.filter(c => c.id !== id);
-        appointments = appointments.filter(a => a.clientId !== id);
-        localStorage.setItem(LS_CLIENTS, JSON.stringify(clients));
-        localStorage.setItem(LS_APPOINTMENTS, JSON.stringify(appointments));
-        renderDashboard();
-        showToast("Usunięto klienta.");
+      window.clientsData = window.clientsData.filter(x => x.id !== id);
+      window.appointmentsData = window.appointmentsData.filter(x => x.clientId !== id);
+      persistData();
+      renderDashboard();
+      if (currentTab === 'clients') renderClients();
+      showToast("Usunięto klienta z bazy.");
+    }
+
+    function openAddDeviceModalForClient(preClientId = '') {
+      openAddDeviceModal();
+      if (preClientId) {
+        setTimeout(() => {
+          const sel = document.getElementById('select-client-target');
+          if (sel) sel.value = preClientId;
+        }, 50);
       }
     }
 
-    // --- ASSIGN DEVICE MODAL ---
-    function openAddDeviceModalForClient(preClientId = '') {
-      renderClientDropdown(preClientId);
+    function openAddDeviceModalWithCatalog(catId) {
+      openAddDeviceModal();
+      setTimeout(() => {
+        const sel = document.getElementById('select-catalog-target');
+        if (sel) {
+          sel.value = catId;
+          onCatalogModelSelected(catId);
+        }
+      }, 50);
+    }
+
+    function openAddDeviceModal() {
+      renderClientDropdown();
       renderCatalogDropdown();
       document.getElementById('assigned-dev-model').value = '';
       document.getElementById('assigned-dev-install').value = toYMD(new Date());
+      document.getElementById('assigned-dev-warranty').value = 60;
+      document.getElementById('assigned-dev-interval').value = 12;
       document.getElementById('modal-add-device').classList.remove('hidden');
       document.getElementById('modal-add-device').classList.add('flex');
     }
@@ -1181,82 +1815,90 @@
     function renderClientDropdown(selectedId = '') {
       const q = (document.getElementById('search-client-for-dev')?.value || '').toLowerCase();
       const sel = document.getElementById('select-client-target');
-      const filtered = clients.filter(c => !q || c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q));
-      sel.innerHTML = filtered.map(c => `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${c.name} (${c.city}, ul. ${c.street})</option>`).join('');
+      if (!sel) return;
+      const filtered = (window.clientsData || []).filter(c => !q || c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q) || (c.phone||'').toLowerCase().includes(q));
+      sel.innerHTML = filtered.map((c, i) => `<option value="${c.id}" ${(c.id === selectedId || i === 0) ? 'selected' : ''}>${c.name} — ${c.city}, ${c.street}</option>`).join('');
     }
 
     function renderCatalogDropdown() {
       const q = (document.getElementById('search-catalog-for-dev')?.value || '').toLowerCase();
       const sel = document.getElementById('select-catalog-target');
-      const filtered = catalog.filter(i => !q || `${i.brand} ${i.model}`.toLowerCase().includes(q));
-      sel.innerHTML = filtered.map(i => `<option value="${i.id}">${i.brand} ${i.model}</option>`).join('');
+      if (!sel) return;
+      const filtered = (window.catalogData || []).filter(i => !q || `${i.brand} ${i.model}`.toLowerCase().includes(q));
+      sel.innerHTML = filtered.map(i => `<option value="${i.id}">${getDeviceInfo(i.deviceType).short}: ${i.brand} ${i.model} (${i.defaultWarrantyMonths || 60}msc gw.)</option>`).join('');
     }
 
     function onCatalogModelSelected(catId) {
-      const item = catalog.find(i => i.id === catId);
+      const item = (window.catalogData || []).find(i => i.id === catId);
       if (item) {
+        document.getElementById('assigned-dev-type').value = item.deviceType || 'heat_pump';
         document.getElementById('assigned-dev-model').value = `${item.brand} ${item.model}`;
         document.getElementById('assigned-dev-warranty').value = item.defaultWarrantyMonths || 60;
+        document.getElementById('assigned-dev-interval').value = item.defaultIntervalMonths || 12;
       }
     }
+
+    function recalcAssignedNextInspection() {}
 
     function handleSaveAssignedDevice(e) {
       e.preventDefault();
       const clientId = document.getElementById('select-client-target').value;
+      const type = document.getElementById('assigned-dev-type').value || 'heat_pump';
       const model = document.getElementById('assigned-dev-model').value.trim();
       const install = document.getElementById('assigned-dev-install').value;
       const warranty = Number(document.getElementById('assigned-dev-warranty').value) || 60;
+      const interval = Number(document.getElementById('assigned-dev-interval').value) || 12;
 
-      const client = clients.find(c => c.id === clientId);
-      if (!client) return;
+      const client = (window.clientsData || []).find(c => c.id === clientId);
+      if (!client) {
+        showToast("Wybierz klienta z listy!");
+        return;
+      }
 
       const newDev = {
         id: `dev_${Date.now()}`,
-        deviceType: 'heat_pump',
+        deviceType: type,
         deviceModel: model || 'Urządzenie HVAC',
         installDate: install,
         warrantyMonths: warranty,
         lastInspectionDate: install,
-        nextInspectionDate: addMonths(install, 12),
-        inspectionIntervalMonths: 12,
+        nextInspectionDate: addMonths(install, interval),
+        inspectionIntervalMonths: interval,
         remindersCanceled: false,
         inspectionHistory: []
       };
 
       client.devices = [...(client.devices || []), newDev];
-      localStorage.setItem(LS_CLIENTS, JSON.stringify(clients));
+      persistData();
       closeModal('modal-add-device');
       renderDashboard();
-      showToast("Przypisano urządzenie do klienta!");
+      if (currentTab === 'clients') renderClients();
+      showToast("Przypisano urządzenie do klienta wraz z okresem gwarancji!");
     }
 
-    // --- INSPECTION MODAL ---
-    let activeInspectionClient = null;
-
-    function openInspectionModal(clientId, focusDevId = null) {
+    function openInspectionModal(clientId) {
       const c = getEnrichedClients().find(x => x.id === clientId);
       if (!c) return;
-      activeInspectionClient = c;
 
       document.getElementById('modal-insp-title').innerText = `Przeglądy: ${c.name}`;
       const body = document.getElementById('modal-insp-body');
 
       body.innerHTML = c.devices.map(d => `
-        <div class="p-4 bg-slate-50 border rounded-xl space-y-3">
-          <div class="flex justify-between items-center">
+        <div class="p-4 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl space-y-3">
+          <div class="flex justify-between items-center flex-wrap gap-2">
             <div>
-              <h4 class="font-bold text-slate-900">${d.deviceModel}</h4>
-              <p class="text-xs text-slate-500">Następny przegląd: <span class="font-semibold text-slate-800">${d.status.nextInspectionFormatted}</span></p>
+              <h4 class="font-extrabold text-zinc-900 dark:text-white">${d.deviceModel}</h4>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400">Następny przegląd: <span class="font-bold text-zinc-800 dark:text-zinc-200">${d.status.nextInspectionFormatted}</span> • Gwarancja do: <span class="font-bold">${d.status.warrantyEndFormatted}</span></p>
             </div>
-            <div class="flex gap-1.5">
+            <div class="flex gap-1.5 flex-wrap">
               <button onclick="registerInspection('${c.id}', '${d.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold">Wbij przegląd</button>
-              <button onclick="skipInspection('${c.id}', '${d.id}')" class="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-xl text-xs font-bold">Przesuń (+1r)</button>
-              <button onclick="toggleReminders('${c.id}', '${d.id}')" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold">${d.status.remindersCanceled ? 'Wznów' : 'Anuluj przypomnienia'}</button>
+              <button onclick="skipInspection('${c.id}', '${d.id}')" class="px-3 py-1.5 bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 rounded-xl text-xs font-bold">Anuluj aktualny (+1r)</button>
+              <button onclick="toggleReminders('${c.id}', '${d.id}')" class="px-3 py-1.5 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-bold">${d.status.remindersCanceled ? 'Wznów przypomnienia' : 'Anuluj'}</button>
             </div>
           </div>
-          <div class="text-xs space-y-1 pt-2 border-t">
-            <span class="font-bold text-slate-600">Historia przeglądów:</span>
-            ${(!d.inspectionHistory || d.inspectionHistory.length === 0) ? '<p class="text-slate-400">Brak wpisów w historii.</p>' : d.inspectionHistory.map(h => `<div class="bg-white p-2 rounded border flex justify-between"><span>📅 ${formatDatePL(h.date)} (${h.technician})</span><span>${h.notes}</span></div>`).join('')}
+          <div class="text-xs space-y-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-700">
+            <span class="font-bold text-zinc-600 dark:text-zinc-400">Trwała historia przeglądów:</span>
+            ${(!d.inspectionHistory || d.inspectionHistory.length === 0) ? '<p class="text-zinc-400">Brak wpisów w historii.</p>' : d.inspectionHistory.map(h => `<div class="bg-white dark:bg-zinc-900 p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 flex justify-between"><span>📅 <strong>${formatDatePL(h.date)}</strong> (${h.technician})</span><span>${h.notes}</span></div>`).join('')}
           </div>
         </div>
       `).join('');
@@ -1267,68 +1909,76 @@
 
     function registerInspection(clientId, devId) {
       const today = toYMD(new Date());
-      const nextYear = addMonths(today, 12);
-      clients = clients.map(c => {
-        if (c.id !== clientId) return c;
-        const devices = c.devices.map(d => {
-          if (d.id !== devId) return d;
-          const history = d.inspectionHistory || [];
-          return {
-            ...d,
-            lastInspectionDate: today,
-            nextInspectionDate: nextYear,
-            remindersCanceled: false,
-            inspectionHistory: [{ id: `h_${Date.now()}`, date: today, technician: 'Serwis PP', notes: 'Przegląd okresowy' }, ...history]
-          };
-        });
-        return { ...c, devices };
+      const client = (window.clientsData || []).find(c => c.id === clientId);
+      if (!client) return;
+
+      client.devices = client.devices.map(d => {
+        if (d.id !== devId) return d;
+        const interval = Number(d.inspectionIntervalMonths || 12);
+        const nextYear = addMonths(today, interval);
+        const history = d.inspectionHistory || [];
+        return {
+          ...d,
+          lastInspectionDate: today,
+          nextInspectionDate: nextYear,
+          remindersCanceled: false,
+          inspectionHistory: [{ id: `h_${Date.now()}`, date: today, technician: 'Serwis PP', notes: 'Przegląd okresowy wykonany' }, ...history]
+        };
       });
-      localStorage.setItem(LS_CLIENTS, JSON.stringify(clients));
+
+      persistData();
       showToast("Zarejestrowano wykonany przegląd!");
       openInspectionModal(clientId);
       renderDashboard();
+      if (currentTab === 'clients') renderClients();
+      if (currentTab === 'history') renderHistoryTable();
     }
 
     function skipInspection(clientId, devId) {
       const today = toYMD(new Date());
-      clients = clients.map(c => {
-        if (c.id !== clientId) return c;
-        const devices = c.devices.map(d => {
-          if (d.id !== devId) return d;
-          const baseDate = d.nextInspectionDate && d.nextInspectionDate > today ? d.nextInspectionDate : today;
-          const shifted = addMonths(baseDate, 12);
-          const history = d.inspectionHistory || [];
-          return {
-            ...d,
-            nextInspectionDate: shifted,
-            inspectionHistory: [{ id: `h_${Date.now()}`, date: today, technician: 'System', notes: `Przesunięto termin na ${formatDatePL(shifted)}` }, ...history]
-          };
-        });
-        return { ...c, devices };
+      const client = (window.clientsData || []).find(c => c.id === clientId);
+      if (!client) return;
+
+      client.devices = client.devices.map(d => {
+        if (d.id !== devId) return d;
+        const interval = Number(d.inspectionIntervalMonths || 12);
+        const baseDate = d.nextInspectionDate && d.nextInspectionDate > today ? d.nextInspectionDate : today;
+        const shifted = addMonths(baseDate, interval);
+        const history = d.inspectionHistory || [];
+        return {
+          ...d,
+          nextInspectionDate: shifted,
+          inspectionHistory: [{ id: `h_${Date.now()}`, date: today, technician: 'System PP', notes: `Anulowano bieżący przegląd — przesunięto na ${formatDatePL(shifted)}` }, ...history]
+        };
       });
-      localStorage.setItem(LS_CLIENTS, JSON.stringify(clients));
-      showToast("Przesunięto termin przeglądu o rok.");
+
+      persistData();
+      showToast("Przesunięto termin przeglądu o kolejny rok.");
       renderDashboard();
-      try { openInspectionModal(clientId); } catch(e){}
+      if (currentTab === 'clients') renderClients();
+      if (!document.getElementById('modal-inspections').classList.contains('hidden')) {
+        openInspectionModal(clientId);
+      }
     }
 
     function toggleReminders(clientId, devId) {
-      clients = clients.map(c => {
-        if (c.id !== clientId) return c;
-        const devices = c.devices.map(d => {
-          if (d.id !== devId) return d;
-          const current = Boolean(d.remindersCanceled);
-          return { ...d, remindersCanceled: !current };
-        });
-        return { ...c, devices };
+      const client = (window.clientsData || []).find(c => c.id === clientId);
+      if (!client) return;
+
+      client.devices = client.devices.map(d => {
+        if (d.id !== devId) return d;
+        return { ...d, remindersCanceled: !Boolean(d.remindersCanceled) };
       });
-      localStorage.setItem(LS_CLIENTS, JSON.stringify(clients));
-      showToast("Zmieniono status przypomnień.");
+
+      persistData();
+      showToast("Zmieniono status przypomnień dla urządzenia.");
       renderDashboard();
-      try { openInspectionModal(clientId); } catch(e){}
+      if (currentTab === 'clients') renderClients();
+      if (!document.getElementById('modal-inspections').classList.contains('hidden')) {
+        openInspectionModal(clientId);
+      }
     }
 
-    // --- SCHEDULE VISIT MODAL ---
     function openScheduleModal() {
       renderVisitClientDropdown();
       document.getElementById('visit-date').value = selectedDate;
@@ -1339,8 +1989,9 @@
     function renderVisitClientDropdown() {
       const q = (document.getElementById('visit-client-search')?.value || '').toLowerCase();
       const sel = document.getElementById('visit-client-select');
-      const filtered = clients.filter(c => !q || c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q));
-      sel.innerHTML = filtered.map(c => `<option value="${c.id}">${c.name} (${c.city}, ul. ${c.street})</option>`).join('');
+      if (!sel) return;
+      const filtered = (window.clientsData || []).filter(c => !q || c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q) || (c.street||'').toLowerCase().includes(q));
+      sel.innerHTML = filtered.map((c, idx) => `<option value="${c.id}" ${idx === 0 ? 'selected' : ''}>${c.name} (${c.city}, ${c.street})</option>`).join('');
     }
 
     function handleSaveVisit(e) {
@@ -1350,31 +2001,44 @@
       const time = document.getElementById('visit-time').value;
       const serviceType = document.getElementById('visit-type').value;
 
-      const newVisit = { id: `visit_${Date.now()}`, clientId, date, time, serviceType, status: 'planned' };
-      appointments.push(newVisit);
-      localStorage.setItem(LS_APPOINTMENTS, JSON.stringify(appointments));
+      const newVisit = { id: 'v_' + Date.now(), clientId, date, time, serviceType, status: 'planned' };
+      window.appointmentsData.push(newVisit);
+      persistData();
 
       closeModal('modal-schedule');
       renderDashboard();
+      if (currentTab === 'map_planner') {
+        renderPlanner();
+        renderMapMarkers();
+        if (!document.getElementById('planner-week-view').classList.contains('hidden')) renderWeekView();
+      }
       showToast("Zaplanowano wizytę!");
     }
 
     function toggleVisitStatus(id) {
-      appointments = appointments.map(a => a.id === id ? { ...a, status: a.status === 'completed' ? 'planned' : 'completed' } : a);
-      localStorage.setItem(LS_APPOINTMENTS, JSON.stringify(appointments));
+      const visit = (window.appointmentsData || []).find(a => a.id === id);
+      if (!visit) return;
+      visit.status = visit.status === 'completed' ? 'planned' : 'completed';
+      persistData();
       renderDashboard();
-      if (currentTab === 'planner') renderPlanner();
+      if (currentTab === 'map_planner') {
+        renderPlanner();
+        renderMapMarkers();
+      }
     }
 
     function deleteVisit(id) {
-      appointments = appointments.filter(a => a.id !== id);
-      localStorage.setItem(LS_APPOINTMENTS, JSON.stringify(appointments));
+      window.appointmentsData = window.appointmentsData.filter(a => a.id !== id);
+      persistData();
       renderDashboard();
-      if (currentTab === 'planner') renderPlanner();
-      showToast("Usunięto wizytę.");
+      if (currentTab === 'map_planner') {
+        renderPlanner();
+        renderMapMarkers();
+        if (!document.getElementById('planner-week-view').classList.contains('hidden')) renderWeekView();
+      }
+      showToast("Usunięto wizytę z planu.");
     }
 
-    // --- CSV EXPORT & IMPORT ---
     function exportClientsCSV() {
       const enriched = getEnrichedClients();
       if (enriched.length === 0) { showToast("Brak klientów do eksportu."); return; }
@@ -1398,7 +2062,7 @@
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      showToast("Wyeksportowano bazę klientów do pliku CSV!");
+      showToast("Wyeksportowano bazę klientów do pliku Excel CSV!");
     }
 
     function importClientsCSV(e) {
@@ -1437,16 +2101,18 @@
 
           const key = `${name.toLowerCase()}|${(phone||'').toLowerCase()}`;
           if (!map.has(key)) {
-            map.set(key, { name, phone, postalCode: postal, city: city || 'Poznań', street, lat: parseFloat(lat)||52.4, lng: parseFloat(lng)||16.9, notes, devices: [dev] });
+            map.set(key, { id: 'c_' + Math.random(), name, phone, postalCode: postal, city: city || 'Poznań', street, lat: parseFloat(lat)||52.4064, lng: parseFloat(lng)||16.9252, notes, devices: [dev] });
           } else {
             map.get(key).devices.push(dev);
           }
         }
 
-        const imported = Array.from(map.values()).map(c => ({ id: `client_${Date.now()}_${Math.random()}`, ...c }));
-        clients = [...clients, ...imported];
-        localStorage.setItem(LS_CLIENTS, JSON.stringify(clients));
+        map.forEach(clientData => {
+          window.clientsData.push(clientData);
+        });
+        persistData();
         renderDashboard();
+        if (currentTab === 'clients') renderClients();
         showToast("Pomyślnie zaimportowano klientów z pliku CSV!");
       });
     }
@@ -1454,15 +2120,20 @@
     function seedSampleData() {
       const today = new Date();
       const shift = days => { const d = new Date(today); d.setDate(d.getDate() + days); return toYMD(d); };
-      clients = [
-        { name: 'Jan Kowalski', phone: '+48 601 234 567', city: 'Poznań', postalCode: '60-101', street: 'ul. Słoneczna 15', lat: 52.3942, lng: 16.8824, notes: 'Pompa ciepła', devices: [{ id: 'd1', deviceType: 'heat_pump', deviceModel: 'Panasonic Aquarea 9kW', installDate: '2024-10-15', warrantyMonths: 60, lastInspectionDate: '2025-10-15', nextInspectionDate: shift(10), inspectionIntervalMonths: 12, remindersCanceled: false, inspectionHistory: [] }] },
-        { name: 'Karolina Wójcik', phone: '+48 603 112 233', city: 'Tarnowo Podgórne', postalCode: '62-080', street: 'ul. Polna 3', lat: 52.4632, lng: 16.6854, notes: 'Klimatyzacja w biurze', devices: [{ id: 'd2', deviceType: 'ac', deviceModel: 'Daikin Altherma', installDate: '2024-03-10', warrantyMonths: 60, lastInspectionDate: '2024-03-10', nextInspectionDate: shift(-3), inspectionIntervalMonths: 12, remindersCanceled: false, inspectionHistory: [] }] }
+      const sampleClients = [
+        { id: 'c_1', name: 'Jan Kowalski', phone: '+48 601 234 567', city: 'Poznań', postalCode: '60-101', street: 'ul. Słoneczna 15', lat: 52.3942, lng: 16.8824, notes: 'Pompa ciepła w kotłowni', devices: [{ id: 'd1', deviceType: 'heat_pump', deviceModel: 'Panasonic Aquarea T-CAP 9kW', installDate: '2024-10-15', warrantyMonths: 60, lastInspectionDate: '2025-10-15', nextInspectionDate: shift(10), inspectionIntervalMonths: 12, remindersCanceled: false, inspectionHistory: [{ id: 'h1', date: '2025-10-15', technician: 'Serwis PP', notes: 'Pierwszy przegląd roczny i czyszczenie filtrów.' }] }] },
+        { id: 'c_2', name: 'Karolina Wójcik', phone: '+48 603 112 233', city: 'Tarnowo Podgórne', postalCode: '62-080', street: 'ul. Polna 3', lat: 52.4632, lng: 16.6854, notes: 'Klimatyzacja w salonie', devices: [{ id: 'd2', deviceType: 'ac', deviceModel: 'Gree Amber Prestige 3.5kW', installDate: '2024-03-10', warrantyMonths: 60, lastInspectionDate: '2024-03-10', nextInspectionDate: shift(-4), inspectionIntervalMonths: 12, remindersCanceled: false, inspectionHistory: [] }] },
+        { id: 'c_3', name: 'Piotr Wiśniewski', phone: '+48 502 331 908', city: 'Swarzędz', postalCode: '62-020', street: 'ul. Kwiatowa 12', lat: 52.4115, lng: 17.0789, notes: 'Rekuperacja na poddaszu', devices: [{ id: 'd3', deviceType: 'ventilation', deviceModel: 'Zehnder ComfoAir Q350 TR', installDate: '2025-01-20', warrantyMonths: 24, lastInspectionDate: '2025-01-20', nextInspectionDate: shift(18), inspectionIntervalMonths: 12, remindersCanceled: false, inspectionHistory: [] }] }
       ];
-      appointments = [{ id: 'v1', clientId: clients[0].id, date: toYMD(new Date()), time: '09:00', serviceType: 'Przegląd okresowy', status: 'planned' }];
-      localStorage.setItem(LS_CLIENTS, JSON.stringify(clients));
-      localStorage.setItem(LS_APPOINTMENTS, JSON.stringify(appointments));
+
+      window.clientsData = sampleClients;
+      window.appointmentsData = [
+        { id: 'v_1', clientId: 'c_1', date: toYMD(new Date()), time: '09:00', serviceType: 'Przegląd okresowy', status: 'planned' },
+        { id: 'v_2', clientId: 'c_2', date: toYMD(new Date()), time: '11:30', serviceType: 'Serwis klimatyzacji', status: 'planned' }
+      ];
+      persistData();
       renderDashboard();
-      showToast("Wczytano przykładową bazę!");
+      showToast("Wczytano przykładową bazę klientów!");
     }
 
     function closeModal(id) {
@@ -1470,9 +2141,9 @@
       document.getElementById(id).classList.add('hidden');
     }
 
-    // INIT
     window.onload = function() {
-      renderDashboard();
+      initDarkMode();
+      loadLocalData();
       lucide.createIcons();
     };
   </script>
