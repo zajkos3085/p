@@ -233,6 +233,15 @@
               <input type="date" id="planner-date-input" onchange="onPlannerDateChange(this.value)" class="bg-transparent px-2 py-0.5 text-xs font-extrabold outline-none text-zinc-900 dark:text-white">
               <button onclick="shiftDate(1)" class="p-1.5 rounded-lg hover:bg-white dark:hover:bg-zinc-700 transition" title="Następny dzień/tydzień"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
             </div>
+
+            <!-- Filtr pracowników w planerze -->
+            <div class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 rounded-xl border border-zinc-200 dark:border-zinc-700">
+              <i data-lucide="hard-hat" class="w-3.5 h-3.5 text-emerald-600"></i>
+              <select id="planner-worker-filter" onchange="onWorkerFilterChange(this.value)" class="bg-transparent text-xs font-extrabold outline-none text-zinc-900 dark:text-white py-0.5">
+                <option value="all">Wszyscy pracownicy</option>
+              </select>
+              <button onclick="openWorkersModal()" class="ml-1 px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 hover:bg-emerald-600 hover:text-white text-[10px] font-bold transition" title="Zarządzaj listą pracowników">+ Ekipa</button>
+            </div>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
@@ -294,10 +303,26 @@
                     <input type="time" id="quick-map-time" value="09:00" class="w-full px-2.5 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold">
                   </div>
                   <div>
-                    <label class="text-[10px] font-bold text-zinc-500">Usługa</label>
-                    <input type="text" id="quick-map-service" value="Przegląd okresowy" class="w-full px-2.5 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs">
+                    <label class="text-[10px] font-bold text-zinc-500">Przypisany pracownik</label>
+                    <select id="quick-map-worker" class="w-full px-2.5 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold"></select>
                   </div>
                 </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <label class="text-[10px] font-bold text-zinc-500">Urządzenie klienta</label>
+                    <select id="quick-map-device" class="w-full px-2.5 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-semibold"></select>
+                  </div>
+                  <div>
+                    <label class="text-[10px] font-bold text-zinc-500">Rodzaj pracy</label>
+                    <select id="quick-map-service-preset" onchange="onServicePresetChange('quick')" class="w-full px-2.5 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold">
+                      <option value="Przegląd">🛠️ Przegląd</option>
+                      <option value="Serwis">⚡ Serwis / Awaria</option>
+                      <option value="Montaż">🏗️ Montaż</option>
+                      <option value="custom">✏️ Wpisz ręcznie...</option>
+                    </select>
+                  </div>
+                </div>
+                <input type="text" id="quick-map-service-custom" placeholder="Wpisz własny opis pracy..." class="hidden w-full px-2.5 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs">
                 <button onclick="confirmQuickMapSchedule()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm transition">
                   + Wstaw do planu na ten dzień
                 </button>
@@ -338,8 +363,8 @@
               <option value="ac">❄️ Klimatyzacja</option>
               <option value="ventilation">💨 Wentylacja</option>
             </select>
-            <button onclick="exportClientsCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
-              <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Eksport Excel (CSV)
+            <button onclick="requestExportClientsCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
+              <i data-lucide="lock" class="w-3.5 h-3.5"></i> Eksport Excel (CSV)
             </button>
             <input type="file" id="csv-file-input" accept=".csv" onchange="importClientsCSV(event)" class="hidden">
             <button onclick="document.getElementById('csv-file-input').click()" class="bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
@@ -423,29 +448,61 @@
 
       <!-- 5. TAB: HISTORY & STATS (HISTORIA I STATYSTYKI) -->
       <div id="tab-history" class="tab-content space-y-6 hidden">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <!-- Główne liczniki KPI -->
+        <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4">
           <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <span class="text-xs font-bold uppercase text-zinc-400">Wykonane przeglądy (ogółem)</span>
+            <span class="text-[11px] font-bold uppercase text-zinc-400">Wykonane przeglądy</span>
             <div id="stat-history-total" class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">0</div>
           </div>
           <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <span class="text-xs font-bold uppercase text-zinc-400">Zamontowane urządzenia w bazie</span>
-            <div id="stat-devices-total" class="text-2xl font-extrabold text-teal-600 dark:text-teal-400 mt-1">0</div>
+            <span class="text-[11px] font-bold uppercase text-zinc-400">Zaplanowane wyjazdy</span>
+            <div id="stat-visits-planned" class="text-2xl font-extrabold text-sky-600 dark:text-sky-400 mt-1">0</div>
           </div>
           <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <span class="text-xs font-bold uppercase text-zinc-400">Obsługiwane miejscowości</span>
-            <div id="stat-cities-total" class="text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">0</div>
+            <span class="text-[11px] font-bold uppercase text-zinc-400">Zrealizowane wizyty</span>
+            <div id="stat-visits-completed" class="text-2xl font-extrabold text-teal-600 dark:text-teal-400 mt-1">0</div>
+          </div>
+          <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <span class="text-[11px] font-bold uppercase text-zinc-400">Wszystkie urządzenia</span>
+            <div id="stat-devices-total" class="text-2xl font-extrabold text-zinc-900 dark:text-white mt-1">0</div>
+          </div>
+          <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <span class="text-[11px] font-bold uppercase text-zinc-400">Na gwarancji / Obce</span>
+            <div id="stat-warranty-breakdown" class="text-lg font-extrabold text-amber-600 dark:text-amber-400 mt-1">0 / 0</div>
+          </div>
+          <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <span class="text-[11px] font-bold uppercase text-zinc-400">Miejscowości</span>
+            <div id="stat-cities-total" class="text-2xl font-extrabold text-purple-600 dark:text-purple-400 mt-1">0</div>
+          </div>
+        </div>
+
+        <!-- Rozbudowane karty analityczne: Struktura urządzeń, Rodzaje zleceń, Ranking ekipy -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 space-y-3 shadow-sm">
+            <h3 class="text-xs font-extrabold uppercase tracking-wider text-zinc-400">Podział bazy wg typu urządzeń</h3>
+            <div id="stats-device-types-bars" class="space-y-3 pt-1"></div>
+          </div>
+          <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 space-y-3 shadow-sm">
+            <h3 class="text-xs font-extrabold uppercase tracking-wider text-zinc-400">Struktura prac w Planerze (Przegląd / Serwis / Montaż)</h3>
+            <div id="stats-service-types-bars" class="space-y-3 pt-1"></div>
+          </div>
+          <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 space-y-3 shadow-sm">
+            <h3 class="text-xs font-extrabold uppercase tracking-wider text-zinc-400">Obciążenie i aktywność pracowników</h3>
+            <div id="stats-workers-bars" class="space-y-2.5 pt-1"></div>
           </div>
         </div>
 
         <div class="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-5 space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-3">
-            <h2 class="text-base font-extrabold text-zinc-900 dark:text-white">Rejestr i historia wszystkich przeglądów</h2>
-            <div class="flex flex-wrap gap-2 flex-1 max-w-md">
-              <div class="relative flex-1">
+            <h2 class="text-base font-extrabold text-zinc-900 dark:text-white">Rejestr i historia wszystkich przeglądów oraz serwisów</h2>
+            <div class="flex flex-wrap gap-2 flex-1 max-w-xl">
+              <div class="relative flex-1 min-w-[180px]">
                 <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
-                <input type="text" id="history-search" oninput="renderHistoryTable()" placeholder="Filtruj historię (klient, miasto, model, notatka)..." class="w-full pl-9 pr-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none text-zinc-800 dark:text-zinc-100">
+                <input type="text" id="history-search" oninput="renderHistoryTable()" placeholder="Szukaj (klient, miasto, model, notatka)..." class="w-full pl-9 pr-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none text-zinc-800 dark:text-zinc-100">
               </div>
+              <select id="history-worker-filter" onchange="renderHistoryTable()" class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold outline-none text-zinc-800 dark:text-zinc-100">
+                <option value="all">Wszyscy wykonawcy</option>
+              </select>
             </div>
           </div>
           <div class="overflow-x-auto">
@@ -470,7 +527,7 @@
 
   <!-- MODAL: CLIENT (ADD / EDIT) -->
   <div id="modal-client" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-2xl w-full shadow-2xl p-5 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto border border-zinc-200 dark:border-zinc-800">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-2xl w-full shadow-2xl p-5 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto border border-zinc-200 dark:border-zinc-800">
       <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
         <h3 id="modal-client-title" class="text-base font-extrabold">Nowy klient</h3>
         <button onclick="closeModal('modal-client')"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -490,19 +547,45 @@
         <div class="grid grid-cols-3 gap-3">
           <div>
             <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Kod pocztowy</label>
-            <input type="text" id="client-postal" placeholder="60-101" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
+            <input type="text" id="client-postal" onblur="autoGeocodeClientAddress()" placeholder="60-101" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
           </div>
           <div>
-            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Miasto</label>
+            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Miejscowość</label>
             <input type="text" id="client-city" onblur="autoGeocodeClientAddress()" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
           </div>
           <div class="col-span-3 sm:col-span-1">
-            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Ulica i numer (auto-GPS)</label>
-            <input type="text" id="client-street" onblur="autoGeocodeClientAddress()" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
+            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Ulica i nr domu</label>
+            <input type="text" id="client-street" onblur="autoGeocodeClientAddress()" required placeholder="np. Słoneczna 15" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
           </div>
         </div>
-        <input type="hidden" id="client-lat">
-        <input type="hidden" id="client-lng">
+
+        <!-- Dokładna weryfikacja pinezki GPS na mini-mapie -->
+        <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500" id="gps-status-dot"></span>
+              <span id="gps-status-text" class="text-[11px] font-bold text-zinc-600 dark:text-zinc-300">Współrzędne GPS pobierają się automatycznie po wpisaniu adresu</span>
+            </div>
+            <button type="button" onclick="toggleClientPickerMap()" class="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1">
+              📍 Korekta pinezki na mapie
+            </button>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[10px] font-bold text-zinc-400">Szerokość geogr. (Lat)</label>
+              <input type="number" step="0.00001" id="client-lat" onchange="updatePickerMarkerFromInputs()" class="w-full px-2.5 py-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs font-mono">
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-zinc-400">Długość geogr. (Lng)</label>
+              <input type="number" step="0.00001" id="client-lng" onchange="updatePickerMarkerFromInputs()" class="w-full px-2.5 py-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs font-mono">
+            </div>
+          </div>
+          <div id="client-picker-map-wrap" class="hidden pt-1">
+            <p class="text-[11px] text-zinc-500 mb-1">Kliknij dokładnie w budynek klienta na mapie lub przeciągnij pinezkę:</p>
+            <div id="client-picker-map" style="height: 210px; width: 100%;" class="rounded-xl border border-zinc-300 dark:border-zinc-700"></div>
+          </div>
+        </div>
+
         <div>
           <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Notatki serwisowe</label>
           <textarea id="client-notes" rows="2" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none"></textarea>
@@ -510,7 +593,7 @@
 
         <div class="border-t border-zinc-200 dark:border-zinc-800 pt-3">
           <div class="flex justify-between items-center mb-2">
-            <h4 class="text-xs font-extrabold uppercase text-zinc-500">Urządzenia klienta</h4>
+            <h4 class="text-xs font-extrabold uppercase text-zinc-500">Urządzenia klienta (z katalogu lub własne)</h4>
             <button type="button" onclick="addDeviceFieldInModal()" class="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 hover:underline">+ Dodaj kolejne urządzenie</button>
           </div>
           <div id="modal-devices-container" class="space-y-3"></div>
@@ -526,7 +609,7 @@
 
   <!-- MODAL: ADD DEVICE TO CLIENT -->
   <div id="modal-add-device" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-lg w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-lg w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800 max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
         <h3 class="text-base font-extrabold">Przypisz urządzenie do klienta</h3>
         <button onclick="closeModal('modal-add-device')"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -538,7 +621,7 @@
           <select id="select-client-target" size="4" required class="w-full border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm p-1.5 outline-none bg-zinc-50 dark:bg-zinc-800"></select>
         </div>
         <div>
-          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">2. Wybierz model z Bazy Urządzeń (automatycznie uzupełni gwarancję i przegląd)</label>
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">2. Wybierz model z Bazy Urządzeń (lub wpisz poniżej)</label>
           <input type="text" id="search-catalog-for-dev" oninput="renderCatalogDropdown()" placeholder="Wyszukaj model w bazie..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm mb-1.5 outline-none">
           <select id="select-catalog-target" size="4" onchange="onCatalogModelSelected(this.value)" class="w-full border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm p-1.5 outline-none bg-zinc-50 dark:bg-zinc-800"></select>
         </div>
@@ -556,18 +639,24 @@
             <input type="text" id="assigned-dev-model" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
           </div>
         </div>
-        <div class="grid grid-cols-3 gap-2.5">
+
+        <label class="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 cursor-pointer text-xs font-bold text-amber-900 dark:text-amber-300">
+          <input type="checkbox" id="assigned-dev-no-install" onchange="toggleAssignedInstallDate(this.checked)" class="rounded text-emerald-600">
+          <span>Obce urządzenie / Brak daty montażu (nie montowane przez nas)</span>
+        </label>
+
+        <div id="assigned-dev-dates-box" class="grid grid-cols-3 gap-2.5">
           <div>
             <label class="block text-[11px] font-bold text-zinc-600 dark:text-zinc-400 mb-1">Data montażu</label>
-            <input type="date" id="assigned-dev-install" onchange="recalcAssignedNextInspection()" required class="w-full px-2.5 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none">
+            <input type="date" id="assigned-dev-install" class="w-full px-2.5 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none">
           </div>
           <div>
             <label class="block text-[11px] font-bold text-zinc-600 dark:text-zinc-400 mb-1">Gwarancja (msc)</label>
-            <input type="number" id="assigned-dev-warranty" value="60" required class="w-full px-2.5 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none">
+            <input type="number" id="assigned-dev-warranty" value="60" class="w-full px-2.5 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none">
           </div>
           <div>
             <label class="block text-[11px] font-bold text-zinc-600 dark:text-zinc-400 mb-1">Interwał (msc)</label>
-            <input type="number" id="assigned-dev-interval" value="12" onchange="recalcAssignedNextInspection()" required class="w-full px-2.5 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none">
+            <input type="number" id="assigned-dev-interval" value="12" class="w-full px-2.5 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none">
           </div>
         </div>
         <div class="flex justify-end gap-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
@@ -591,30 +680,91 @@
 
   <!-- MODAL: SCHEDULE VISIT -->
   <div id="modal-schedule" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-md w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-md w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800 max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
-        <h3 class="text-base font-extrabold">Zaplanuj wizytę serwisową</h3>
+        <h3 class="text-base font-extrabold">Zaplanuj zlecenie / wizytę</h3>
         <button onclick="closeModal('modal-schedule')"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
-      <form onsubmit="handleSaveVisit(event)" class="space-y-4">
+      <form onsubmit="handleSaveVisit(event)" class="space-y-3.5">
         <div>
-          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Wyszukaj i wybierz klienta</label>
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">1. Wyszukaj i wybierz klienta</label>
           <input type="text" id="visit-client-search" oninput="renderVisitClientDropdown()" placeholder="Wpisz nazwisko, ulicę lub miasto..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm mb-1.5 outline-none">
-          <select id="visit-client-select" size="4" required class="w-full border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm p-1.5 outline-none bg-zinc-50 dark:bg-zinc-800"></select>
+          <select id="visit-client-select" size="4" onchange="renderVisitDeviceDropdown()" required class="w-full border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm p-1.5 outline-none bg-zinc-50 dark:bg-zinc-800"></select>
         </div>
+
+        <div>
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">2. Urządzenie, którego dotyczy wyjazd</label>
+          <select id="visit-device-select" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none"></select>
+        </div>
+
         <div class="grid grid-cols-2 gap-3">
           <div><label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Data wizyty</label><input type="date" id="visit-date" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none"></div>
           <div><label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Godzina</label><input type="time" id="visit-time" value="09:00" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none"></div>
         </div>
-        <div>
-          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Rodzaj usługi</label>
-          <input type="text" id="visit-type" value="Przegląd okresowy / Gwarancyjny" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Rodzaj pracy</label>
+            <select id="visit-type-preset" onchange="onServicePresetChange('modal')" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none">
+              <option value="Przegląd">🛠️ Przegląd</option>
+              <option value="Serwis">⚡ Serwis / Awaria</option>
+              <option value="Montaż">🏗️ Montaż</option>
+              <option value="custom">✏️ Wpisz ręcznie...</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Przypisany pracownik</label>
+            <select id="visit-worker-select" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none"></select>
+          </div>
         </div>
+
+        <div id="visit-type-custom-wrap" class="hidden">
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Własny opis usługi / zlecenia</label>
+          <input type="text" id="visit-type-custom" placeholder="np. Czyszczenie wymiennika i dopuszczenie glikolu" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
+        </div>
+
         <div class="flex justify-end gap-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
           <button type="button" onclick="closeModal('modal-schedule')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-semibold">Anuluj</button>
           <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold">Dodaj do planu</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- MODAL: PASSWORD FOR CSV EXPORT -->
+  <div id="modal-export-password" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-sm w-full shadow-2xl p-5 space-y-4 border border-zinc-200 dark:border-zinc-800">
+      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="lock" class="w-4 h-4 text-emerald-600"></i>
+          <h3 class="text-sm font-extrabold">Autoryzacja eksportu danych</h3>
+        </div>
+        <button onclick="closeModal('modal-export-password')"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <form onsubmit="confirmExportPassword(event)" class="space-y-3">
+        <p class="text-xs text-zinc-500 dark:text-zinc-400">Podaj hasło zabezpieczające, aby pobrać bazę klientów do pliku Excel (CSV):</p>
+        <input type="password" id="export-password-input" required placeholder="Wpisz hasło..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-bold tracking-widest text-center outline-none focus:border-emerald-500">
+        <p id="export-password-error" class="text-xs text-rose-600 font-bold text-center hidden">Nieprawidłowe hasło! Spróbuj ponownie.</p>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('modal-export-password')" class="px-3.5 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Anuluj</button>
+          <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold">Odblokuj i Pobierz</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: WORKERS MANAGEMENT -->
+  <div id="modal-workers" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-md w-full shadow-2xl p-5 space-y-4 border border-zinc-200 dark:border-zinc-800">
+      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
+        <h3 class="text-base font-extrabold">Pracownicy i ekipy serwisowe</h3>
+        <button onclick="closeModal('modal-workers')"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form onsubmit="handleAddWorker(event)" class="flex gap-2">
+        <input type="text" id="new-worker-name" required placeholder="Imię / nazwa ekipy (np. Tomek)" class="flex-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
+        <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold">+ Dodaj</button>
+      </form>
+      <div id="workers-list-container" class="space-y-2 max-h-60 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800"></div>
     </div>
   </div>
 
@@ -716,9 +866,11 @@ service cloud.firestore {
     window.clientsData = [];
     window.appointmentsData = [];
     window.catalogData = [];
+    window.workersData = [];
 
     let currentTab = 'dashboard';
     let selectedDate = new Date().toISOString().split('T')[0];
+    let selectedWorkerFilter = 'all';
     let calMonthDate = new Date();
     let showAllUrgent = false;
     let mapInstance = null;
@@ -727,6 +879,10 @@ service cloud.firestore {
     let currentMapTileStyle = 'street';
     let isDarkMode = false;
     let quickMapSelectedClientId = null;
+
+    // Mini-mapa w oknie klienta do precyzyjnego ustawiania pinezki
+    let clientPickerMap = null;
+    let clientPickerMarker = null;
 
     function toggleDarkMode() {
       isDarkMode = !isDarkMode;
@@ -802,17 +958,23 @@ service cloud.firestore {
       const now = new Date(); now.setHours(0,0,0,0);
       return (window.clientsData || []).map(c => {
         const devices = (c.devices || []).map(dev => {
+          const noInstallDate = Boolean(dev.noInstallDate) || !dev.installDate;
           const install = new Date((dev.installDate || '2025-01-01') + 'T12:00:00');
-          const warrantyEnd = new Date(install); warrantyEnd.setMonth(warrantyEnd.getMonth() + Number(dev.warrantyMonths || 60));
-          const daysToWarranty = Math.ceil((warrantyEnd - now) / (1000*60*60*24));
-          const nextInsp = new Date((dev.nextInspectionDate || addMonths(dev.installDate, 12)) + 'T12:00:00');
+          const warrantyEnd = new Date(install);
+          warrantyEnd.setMonth(warrantyEnd.getMonth() + Number(dev.warrantyMonths || 60));
+          const daysToWarranty = noInstallDate ? -1 : Math.ceil((warrantyEnd - now) / (1000*60*60*24));
+
+          const baseNext = dev.nextInspectionDate || addMonths(dev.installDate || toYMD(new Date()), dev.inspectionIntervalMonths || 12);
+          const nextInsp = new Date(baseNext + 'T12:00:00');
           const daysToInspection = Math.ceil((nextInsp - now) / (1000*60*60*24));
           const canceled = Boolean(dev.remindersCanceled);
           return {
             ...dev,
+            noInstallDate,
             status: {
-              warrantyEndFormatted: formatDatePL(toYMD(warrantyEnd)),
-              isUnderWarranty: daysToWarranty >= 0,
+              noInstallDate,
+              warrantyEndFormatted: noInstallDate ? 'Brak (Obce)' : formatDatePL(toYMD(warrantyEnd)),
+              isUnderWarranty: !noInstallDate && daysToWarranty >= 0,
               nextInspectionFormatted: formatDatePL(toYMD(nextInsp)),
               daysToInspection,
               remindersCanceled: canceled,
@@ -985,30 +1147,33 @@ service cloud.firestore {
           const cloudData = docSnap.data();
           const cloudClients = cloudData.clients || [];
 
-          // Jeśli w chmurze są już klienci, pobieramy ich na to urządzenie
           if (cloudClients.length > 0 || (window.clientsData || []).length === 0) {
             window.clientsData = cloudClients;
             window.appointmentsData = cloudData.appointments || [];
             window.catalogData = cloudData.catalog || window.catalogData;
+            if (Array.isArray(cloudData.workers) && cloudData.workers.length > 0) {
+              window.workersData = cloudData.workers;
+            }
             localStorage.setItem('pp_hvac_clients_v4', JSON.stringify(window.clientsData));
             localStorage.setItem('pp_hvac_appointments_v4', JSON.stringify(window.appointmentsData));
             localStorage.setItem('pp_hvac_catalog_v4', JSON.stringify(window.catalogData));
+            localStorage.setItem('pp_hvac_workers_v4', JSON.stringify(window.workersData));
             refreshAllViews();
           } else if ((window.clientsData || []).length > 0 && cloudClients.length === 0) {
-            // Jeśli na tym urządzeniu mamy już klientów, a w chmurze było pusto -> wysyłamy naszych klientów do chmury
             await docRef.set({
               clients: window.clientsData,
               appointments: window.appointmentsData,
               catalog: window.catalogData,
+              workers: window.workersData,
               updatedAt: new Date().toISOString()
             });
           }
         } else {
-          // Dokument jeszcze nie istnieje w chmurze -> tworzymy go i zapisujemy obecny stan
           await docRef.set({
             clients: window.clientsData || [],
             appointments: window.appointmentsData || [],
             catalog: window.catalogData || [],
+            workers: window.workersData || [],
             updatedAt: new Date().toISOString()
           });
         }
@@ -1034,9 +1199,13 @@ service cloud.firestore {
             if (Array.isArray(data.catalog) && data.catalog.length > 0) {
               window.catalogData = data.catalog;
             }
+            if (Array.isArray(data.workers) && data.workers.length > 0) {
+              window.workersData = data.workers;
+            }
             localStorage.setItem('pp_hvac_clients_v4', JSON.stringify(window.clientsData));
             localStorage.setItem('pp_hvac_appointments_v4', JSON.stringify(window.appointmentsData));
             localStorage.setItem('pp_hvac_catalog_v4', JSON.stringify(window.catalogData));
+            localStorage.setItem('pp_hvac_workers_v4', JSON.stringify(window.workersData));
             refreshAllViews();
           }
         }, (err) => {
@@ -1065,6 +1234,7 @@ service cloud.firestore {
           clients: window.clientsData || [],
           appointments: window.appointmentsData || [],
           catalog: window.catalogData || [],
+          workers: window.workersData || [],
           updatedAt: new Date().toISOString()
         });
         showToast(`Wysłano bazę (${window.clientsData.length} klientów) do chmury!`);
@@ -1087,9 +1257,13 @@ service cloud.firestore {
           window.clientsData = data.clients || [];
           window.appointmentsData = data.appointments || [];
           window.catalogData = data.catalog || window.catalogData;
+          if (Array.isArray(data.workers) && data.workers.length > 0) {
+            window.workersData = data.workers;
+          }
           localStorage.setItem('pp_hvac_clients_v4', JSON.stringify(window.clientsData));
           localStorage.setItem('pp_hvac_appointments_v4', JSON.stringify(window.appointmentsData));
           localStorage.setItem('pp_hvac_catalog_v4', JSON.stringify(window.catalogData));
+          localStorage.setItem('pp_hvac_workers_v4', JSON.stringify(window.workersData));
           refreshAllViews();
           showToast(`Pobrano z chmury (${window.clientsData.length} klientów)!`);
         } else {
@@ -1103,6 +1277,7 @@ service cloud.firestore {
     }
 
     function refreshAllViews() {
+      populateWorkerSelects();
       renderDashboard();
       if (currentTab === 'map_planner') {
         renderPlanner();
@@ -1118,6 +1293,7 @@ service cloud.firestore {
       window.clientsData = JSON.parse(localStorage.getItem('pp_hvac_clients_v4') || '[]');
       window.appointmentsData = JSON.parse(localStorage.getItem('pp_hvac_appointments_v4') || '[]');
       window.catalogData = JSON.parse(localStorage.getItem('pp_hvac_catalog_v4') || '[]');
+      window.workersData = JSON.parse(localStorage.getItem('pp_hvac_workers_v4') || '[]');
 
       if (window.catalogData.length === 0) {
         window.catalogData = [
@@ -1128,6 +1304,13 @@ service cloud.firestore {
         ];
         localStorage.setItem('pp_hvac_catalog_v4', JSON.stringify(window.catalogData));
       }
+
+      if (window.workersData.length === 0) {
+        window.workersData = ['Serwisant 1 (Główny)', 'Serwisant 2', 'Ekipa Montażowa'];
+        localStorage.setItem('pp_hvac_workers_v4', JSON.stringify(window.workersData));
+      }
+
+      populateWorkerSelects();
       renderDashboard();
 
       // Automatyczne łączenie z chmurą jeśli wpisano konfigurację
@@ -1145,12 +1328,14 @@ service cloud.firestore {
       localStorage.setItem('pp_hvac_clients_v4', JSON.stringify(window.clientsData));
       localStorage.setItem('pp_hvac_appointments_v4', JSON.stringify(window.appointmentsData));
       localStorage.setItem('pp_hvac_catalog_v4', JSON.stringify(window.catalogData));
+      localStorage.setItem('pp_hvac_workers_v4', JSON.stringify(window.workersData));
 
       if (isCloudConnected && firestoreDb) {
         firestoreDb.collection('pp_state').doc('main').set({
           clients: window.clientsData,
           appointments: window.appointmentsData,
           catalog: window.catalogData,
+          workers: window.workersData,
           updatedAt: new Date().toISOString()
         }).catch(err => {
           console.error('Błąd zapisu do chmury:', err);
@@ -1159,6 +1344,85 @@ service cloud.firestore {
           showToast('Uwaga: Chmura odrzuciła zapis! Kliknij Chmura ⚙️');
         });
       }
+    }
+
+    function populateWorkerSelects() {
+      const workers = window.workersData || ['Serwisant 1'];
+      const filterEl = document.getElementById('planner-worker-filter');
+      if (filterEl) {
+        const prev = filterEl.value || selectedWorkerFilter;
+        filterEl.innerHTML = `<option value="all">Wszyscy pracownicy (${workers.length})</option>` +
+          workers.map(w => `<option value="${w}">${w}</option>`).join('');
+        filterEl.value = workers.includes(prev) || prev === 'all' ? prev : 'all';
+      }
+
+      const visitWorkerEl = document.getElementById('visit-worker-select');
+      if (visitWorkerEl) {
+        visitWorkerEl.innerHTML = workers.map(w => `<option value="${w}">${w}</option>`).join('');
+      }
+
+      const quickWorkerEl = document.getElementById('quick-map-worker');
+      if (quickWorkerEl) {
+        quickWorkerEl.innerHTML = workers.map(w => `<option value="${w}">${w}</option>`).join('');
+      }
+
+      const histWorkerEl = document.getElementById('history-worker-filter');
+      if (histWorkerEl) {
+        const prevH = histWorkerEl.value || 'all';
+        histWorkerEl.innerHTML = `<option value="all">Wszyscy wykonawcy</option>` +
+          workers.map(w => `<option value="${w}">${w}</option>`).join('');
+        histWorkerEl.value = prevH;
+      }
+    }
+
+    function onWorkerFilterChange(val) {
+      selectedWorkerFilter = val || 'all';
+      renderPlanner();
+      renderMapMarkers();
+      if (!document.getElementById('planner-week-view').classList.contains('hidden')) {
+        renderWeekView();
+      }
+    }
+
+    function openWorkersModal() {
+      renderWorkersListInModal();
+      document.getElementById('modal-workers').classList.remove('hidden');
+      document.getElementById('modal-workers').classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function renderWorkersListInModal() {
+      const container = document.getElementById('workers-list-container');
+      if (!container) return;
+      container.innerHTML = (window.workersData || []).map((w, idx) => `
+        <div class="py-2.5 flex justify-between items-center text-sm">
+          <span class="font-bold text-zinc-800 dark:text-zinc-100">👷 ${w}</span>
+          ${window.workersData.length > 1 ? `<button onclick="removeWorker(${idx})" class="text-xs font-bold text-rose-600 hover:underline">Usuń</button>` : ''}
+        </div>
+      `).join('');
+    }
+
+    function handleAddWorker(e) {
+      e.preventDefault();
+      const input = document.getElementById('new-worker-name');
+      const name = (input.value || '').trim();
+      if (!name) return;
+      if (!window.workersData.includes(name)) {
+        window.workersData.push(name);
+        persistData();
+        populateWorkerSelects();
+        renderWorkersListInModal();
+        showToast(`Dodano pracownika: ${name}`);
+      }
+      input.value = '';
+    }
+
+    function removeWorker(idx) {
+      window.workersData.splice(idx, 1);
+      persistData();
+      populateWorkerSelects();
+      renderWorkersListInModal();
+      renderPlanner();
     }
 
     function switchTab(tabId) {
@@ -1271,6 +1535,7 @@ service cloud.firestore {
 
         visitsContainer.innerHTML = todayVisits.map(v => {
           const client = enriched.find(c => c.id === v.clientId);
+          const dev = client?.devices?.find(d => d.id === v.deviceId);
           const isDone = v.status === 'completed';
           return `
             <div class="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 flex justify-between items-center gap-3">
@@ -1278,8 +1543,10 @@ service cloud.firestore {
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="text-xs font-extrabold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-md">${v.time}</span>
                   <span class="font-bold text-sm text-zinc-900 dark:text-white ${isDone ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</span>
-                  <span class="text-[11px] font-semibold bg-zinc-200 dark:bg-zinc-700 px-2 py-0.5 rounded text-zinc-700 dark:text-zinc-300">${v.serviceType}</span>
+                  <span class="text-[11px] font-bold bg-zinc-200 dark:bg-zinc-700 px-2 py-0.5 rounded text-zinc-800 dark:text-zinc-200">${v.serviceType}</span>
+                  ${v.workerName ? `<span class="text-[10px] font-extrabold bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 px-2 py-0.5 rounded">👷 ${v.workerName}</span>` : ''}
                 </div>
+                ${dev ? `<div class="text-[11px] font-semibold text-teal-700 dark:text-teal-300 mt-0.5">🔧 Urządzenie: ${dev.deviceModel}</div>` : ''}
                 ${client ? `<div class="text-xs text-zinc-600 dark:text-zinc-400 mt-1">📍 ${client.city}, ${client.street} • <a href="tel:${client.phone}" class="text-emerald-600 dark:text-emerald-400 font-bold underline">📞 ${client.phone}</a></div>` : ''}
               </div>
               <button onclick="toggleVisitStatus('${v.id}')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${isDone ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200'}">
@@ -1466,6 +1733,21 @@ service cloud.firestore {
       quickMapSelectedClientId = clientId;
       document.getElementById('quick-map-client-name').innerText = client.name;
       document.getElementById('quick-map-client-addr').innerText = `📍 ${client.city}, ${client.street} • 📞 ${client.phone}`;
+
+      const devSel = document.getElementById('quick-map-device');
+      if (devSel) {
+        const devs = client.devices || [];
+        devSel.innerHTML = devs.length > 0
+          ? devs.map(d => `<option value="${d.id}">${getDeviceInfo(d.deviceType).short}: ${d.deviceModel}</option>`).join('')
+          : `<option value="">Ogólne / Brak urządzenia</option>`;
+      }
+
+      populateWorkerSelects();
+      if (selectedWorkerFilter !== 'all') {
+        const wSel = document.getElementById('quick-map-worker');
+        if (wSel) wSel.value = selectedWorkerFilter;
+      }
+
       document.getElementById('quick-map-schedule-box').classList.remove('hidden');
       if (mapInstance) mapInstance.closePopup();
     }
@@ -1475,14 +1757,42 @@ service cloud.firestore {
       document.getElementById('quick-map-schedule-box').classList.add('hidden');
     }
 
+    function onServicePresetChange(source) {
+      if (source === 'quick') {
+        const val = document.getElementById('quick-map-service-preset').value;
+        const customInput = document.getElementById('quick-map-service-custom');
+        if (val === 'custom') {
+          customInput.classList.remove('hidden');
+          customInput.focus();
+        } else {
+          customInput.classList.add('hidden');
+        }
+      } else {
+        const val = document.getElementById('visit-type-preset').value;
+        const wrap = document.getElementById('visit-type-custom-wrap');
+        if (val === 'custom') {
+          wrap.classList.remove('hidden');
+          document.getElementById('visit-type-custom').focus();
+        } else {
+          wrap.classList.add('hidden');
+        }
+      }
+    }
+
     function confirmQuickMapSchedule() {
       if (!quickMapSelectedClientId) return;
       const time = document.getElementById('quick-map-time').value || '09:00';
-      const serviceType = document.getElementById('quick-map-service').value || 'Przegląd okresowy';
+      const preset = document.getElementById('quick-map-service-preset').value;
+      const customVal = (document.getElementById('quick-map-service-custom').value || '').trim();
+      const serviceType = preset === 'custom' ? (customVal || 'Serwis') : preset;
+      const deviceId = document.getElementById('quick-map-device').value || '';
+      const workerName = document.getElementById('quick-map-worker').value || (window.workersData?.[0] || 'Serwisant 1');
 
       window.appointmentsData.push({
         id: 'v_' + Date.now(),
         clientId: quickMapSelectedClientId,
+        deviceId,
+        workerName,
         date: selectedDate,
         time,
         serviceType,
@@ -1494,7 +1804,7 @@ service cloud.firestore {
       renderPlanner();
       renderMapMarkers();
       renderDashboard();
-      showToast(`Dodano klienta z mapy na ${formatDatePL(selectedDate)} o ${time}!`);
+      showToast(`Dodano zlecenie (${serviceType}) na ${formatDatePL(selectedDate)} o ${time}!`);
     }
 
     function refreshMap() {
@@ -1551,25 +1861,29 @@ service cloud.firestore {
       document.getElementById('planner-day-title').innerText = `Plan Dnia: ${formatDatePL(selectedDate)}`;
 
       const dayVisits = (window.appointmentsData || [])
-        .filter(a => a.date === selectedDate)
+        .filter(a => a.date === selectedDate && (selectedWorkerFilter === 'all' || a.workerName === selectedWorkerFilter))
         .sort((a,b) => (a.time||'00:00').localeCompare(b.time||'00:00'));
       const listEl = document.getElementById('planner-visits-list');
 
       if (dayVisits.length === 0) {
-        listEl.innerHTML = `<div class="text-xs text-zinc-500 py-8 text-center border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">Brak zaplanowanych wizyt w tym dniu.<br>Kliknij pinezkę klienta na mapie obok, aby dodać wyjazd!</div>`;
+        listEl.innerHTML = `<div class="text-xs text-zinc-500 py-8 text-center border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">Brak zaplanowanych wizyt dla wybranego filtra.<br>Kliknij pinezkę klienta na mapie obok lub użyj przycisku „+ Zlecenie” w bazie klientów!</div>`;
         document.getElementById('planner-route-action').innerHTML = `<div class="text-xs text-zinc-400 text-center py-3">Dodaj wizyty do planu dnia, aby uruchomić trasę.</div>`;
       } else {
         listEl.innerHTML = dayVisits.map(v => {
           const client = (window.clientsData || []).find(c => c.id === v.clientId);
+          const dev = client?.devices?.find(d => d.id === v.deviceId);
           const isDone = v.status === 'completed';
           return `
             <div class="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 flex justify-between items-center gap-2">
               <div class="min-w-0">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5 flex-wrap">
                   <span class="text-xs font-extrabold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded">${v.time}</span>
                   <h3 class="text-sm font-bold text-zinc-900 dark:text-white truncate ${isDone ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</h3>
+                  <span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200">${v.serviceType || 'Przegląd'}</span>
+                  ${v.workerName ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300">👷 ${v.workerName}</span>` : ''}
                 </div>
-                <p class="text-xs text-zinc-600 dark:text-zinc-400 mt-1 truncate">📍 ${client ? client.city + ', ' + client.street : ''} • <a href="tel:${client?.phone}" class="text-emerald-600 dark:text-emerald-400 font-semibold underline">📞 ${client?.phone || ''}</a></p>
+                ${dev ? `<div class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5 truncate">🔧 ${dev.deviceModel}</div>` : ''}
+                <p class="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5 truncate">📍 ${client ? client.city + ', ' + client.street : ''} • <a href="tel:${client?.phone}" class="text-emerald-600 dark:text-emerald-400 font-semibold underline">📞 ${client?.phone || ''}</a></p>
               </div>
               <div class="flex items-center gap-1.5 shrink-0">
                 <button onclick="toggleVisitStatus('${v.id}')" class="px-2.5 py-1.5 rounded-xl text-xs font-bold ${isDone ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200'}">${isDone ? 'Wykonana' : 'Oznacz'}</button>
@@ -1606,7 +1920,9 @@ service cloud.firestore {
         const d = new Date(monday); d.setDate(monday.getDate() + i);
         const ymd = toYMD(d);
         const isSelected = ymd === selectedDate;
-        const dayVisits = (window.appointmentsData || []).filter(a => a.date === ymd).sort((a,b)=>(a.time||'00:00').localeCompare(b.time||'00:00'));
+        const dayVisits = (window.appointmentsData || [])
+          .filter(a => a.date === ymd && (selectedWorkerFilter === 'all' || a.workerName === selectedWorkerFilter))
+          .sort((a,b)=>(a.time||'00:00').localeCompare(b.time||'00:00'));
 
         html += `
           <div class="bg-white dark:bg-zinc-900 rounded-2xl border ${isSelected ? 'border-emerald-500 ring-1 ring-emerald-500/30' : 'border-zinc-200 dark:border-zinc-800'} p-3.5 space-y-2.5">
@@ -1617,13 +1933,16 @@ service cloud.firestore {
             <div class="space-y-2">
               ${dayVisits.length === 0 ? '<div class="text-[11px] text-zinc-400 py-4 text-center">Brak wyjazdów</div>' : dayVisits.map(v => {
                 const client = (window.clientsData || []).find(c => c.id === v.clientId);
+                const dev = client?.devices?.find(d => d.id === v.deviceId);
                 return `
                   <div class="p-2.5 bg-zinc-50 dark:bg-zinc-800 rounded-xl text-xs space-y-1 border border-zinc-200/60 dark:border-zinc-700">
                     <div class="flex justify-between items-center">
-                      <span class="font-extrabold text-emerald-700 dark:text-emerald-300">${v.time}</span>
+                      <span class="font-extrabold text-emerald-700 dark:text-emerald-300">${v.time} • ${v.serviceType || 'Wizyta'}</span>
                       <button onclick="deleteVisit('${v.id}')" class="text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950 p-1 rounded" title="Usuń wyjazd"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                     </div>
                     <div class="font-bold text-zinc-900 dark:text-white truncate">${client ? client.name : 'Klient'}</div>
+                    ${dev ? `<div class="text-[10px] text-teal-600 dark:text-teal-400 font-semibold truncate">🔧 ${dev.deviceModel}</div>` : ''}
+                    ${v.workerName ? `<div class="text-[10px] text-sky-600 dark:text-sky-400 font-bold truncate">👷 ${v.workerName}</div>` : ''}
                     ${client ? `<div class="text-[10px] text-zinc-500 truncate">📍 ${client.city}</div>` : ''}
                   </div>
                 `;
@@ -1638,7 +1957,7 @@ service cloud.firestore {
 
     function openRouteForDate(dateStr) {
       const dayVisits = (window.appointmentsData || [])
-        .filter(a => a.date === dateStr && a.status !== 'completed')
+        .filter(a => a.date === dateStr && a.status !== 'completed' && (selectedWorkerFilter === 'all' || a.workerName === selectedWorkerFilter))
         .sort((a,b) => (a.time||'00:00').localeCompare(b.time||'00:00'));
       if (dayVisits.length === 0) return;
 
@@ -1711,13 +2030,14 @@ service cloud.firestore {
               const st = dev.status;
               return `
                 <div onclick="openInspectionModal('${c.id}', '${dev.id}')" class="flex items-center justify-between p-2 rounded-xl border text-xs cursor-pointer ${info.bg} ${info.border}">
-                  <span class="font-bold text-zinc-900 dark:text-white">${dev.deviceModel}</span>
+                  <span class="font-bold text-zinc-900 dark:text-white">${dev.deviceModel} ${st.noInstallDate ? '<span class="text-[10px] font-normal text-zinc-500">(Obce)</span>' : ''}</span>
                   ${st.isOverdue ? '<span class="px-1.5 rounded bg-rose-600 text-white text-[10px] font-bold">Po terminie</span>' : st.isSoon ? `<span class="px-1.5 rounded bg-amber-500 text-white text-[10px] font-bold">Za ${st.daysToInspection}d</span>` : '<span class="px-1.5 rounded bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-300 border text-[10px] font-bold">OK</span>'}
                 </div>
               `;
             }).join('')}
           </div>
           <div class="flex justify-end gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800 flex-wrap">
+            <button onclick="createOrderFromClient('${c.id}')" class="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-sm">+ Zlecenie</button>
             <button onclick="openAddDeviceModalForClient('${c.id}')" class="px-3 py-1.5 bg-teal-50 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-900 rounded-xl text-xs font-bold">+ Urz.</button>
             <button onclick="openInspectionModal('${c.id}')" class="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900 rounded-xl text-xs font-bold">Przeglądy</button>
             <button onclick="openEditClientModal('${c.id}')" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-xl text-xs font-bold">Edytuj</button>
@@ -1738,7 +2058,7 @@ service cloud.firestore {
                 const st = dev.status;
                 return `
                   <div onclick="openInspectionModal('${c.id}', '${dev.id}')" class="inline-flex items-center gap-2 px-2.5 py-1 rounded-xl border text-xs cursor-pointer ${info.bg} ${info.border}">
-                    <span class="font-bold text-zinc-900 dark:text-white">${dev.deviceModel}</span>
+                    <span class="font-bold text-zinc-900 dark:text-white">${dev.deviceModel} ${st.noInstallDate ? '<span class="text-[10px] font-normal text-zinc-500">(Obce)</span>' : ''}</span>
                     ${st.isOverdue ? '<span class="px-1.5 rounded bg-rose-600 text-white text-[10px] font-bold">Po terminie</span>' : st.isSoon ? `<span class="px-1.5 rounded bg-amber-500 text-white text-[10px] font-bold">Za ${st.daysToInspection}d</span>` : '<span class="px-1.5 rounded bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-300 border text-[10px] font-bold">OK</span>'}
                   </div>
                 `;
@@ -1747,6 +2067,7 @@ service cloud.firestore {
           </td>
           <td class="py-3.5 px-4 text-right">
             <div class="inline-flex items-center gap-1">
+              <button onclick="createOrderFromClient('${c.id}')" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-sm" title="Utwórz zlecenie w Planerze">+ Zlecenie</button>
               <button onclick="openAddDeviceModalForClient('${c.id}')" class="px-2.5 py-1.5 bg-teal-50 dark:bg-teal-950 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800 rounded-lg text-xs font-bold">+ Urz.</button>
               <button onclick="openInspectionModal('${c.id}')" class="px-2.5 py-1.5 bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-lg text-xs font-bold">Przeglądy</button>
               <button onclick="openEditClientModal('${c.id}')" class="p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
@@ -1756,6 +2077,11 @@ service cloud.firestore {
         </tr>
       `).join('');
       lucide.createIcons();
+    }
+
+    function createOrderFromClient(clientId) {
+      switchTab('map_planner');
+      openScheduleModal(clientId);
     }
 
     function renderCatalog() {
@@ -1815,14 +2141,24 @@ service cloud.firestore {
 
     function renderHistoryTable() {
       const q = (document.getElementById('history-search')?.value || '').toLowerCase();
+      const workerFilter = document.getElementById('history-worker-filter')?.value || 'all';
+      const enriched = getEnrichedClients();
+
       let allHistory = [];
       let totalDevices = 0;
+      let underWarrantyCount = 0;
+      let externalDevicesCount = 0;
+      const devTypeCounts = { heat_pump: 0, ac: 0, ventilation: 0 };
       const citiesSet = new Set();
 
-      (window.clientsData || []).forEach(c => {
+      enriched.forEach(c => {
         if (c.city) citiesSet.add(c.city.trim().toLowerCase());
         (c.devices || []).forEach(d => {
           totalDevices++;
+          devTypeCounts[d.deviceType] = (devTypeCounts[d.deviceType] || 0) + 1;
+          if (d.status.noInstallDate) externalDevicesCount++;
+          else if (d.status.isUnderWarranty) underWarrantyCount++;
+
           (d.inspectionHistory || []).forEach(h => {
             allHistory.push({
               ...h,
@@ -1836,15 +2172,97 @@ service cloud.firestore {
 
       allHistory.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
+      const plannedVisits = (window.appointmentsData || []).filter(a => a.status !== 'completed').length;
+      const completedVisits = (window.appointmentsData || []).filter(a => a.status === 'completed').length;
+
       document.getElementById('stat-history-total').innerText = allHistory.length;
+      document.getElementById('stat-visits-planned').innerText = plannedVisits;
+      document.getElementById('stat-visits-completed').innerText = completedVisits;
       document.getElementById('stat-devices-total').innerText = totalDevices;
+      document.getElementById('stat-warranty-breakdown').innerText = `${underWarrantyCount} gw. / ${externalDevicesCount} obce`;
       document.getElementById('stat-cities-total').innerText = citiesSet.size;
 
-      const filtered = allHistory.filter(h => !q || h.clientName.toLowerCase().includes(q) || (h.clientCity||'').toLowerCase().includes(q) || h.deviceModel.toLowerCase().includes(q) || (h.technician||'').toLowerCase().includes(q) || (h.notes||'').toLowerCase().includes(q));
+      // 1. Paski typów urządzeń
+      const devBarsEl = document.getElementById('stats-device-types-bars');
+      if (devBarsEl) {
+        const items = [
+          { label: '🔥 Pompy ciepła', count: devTypeCounts.heat_pump || 0, color: 'bg-orange-500' },
+          { label: '❄️ Klimatyzacja', count: devTypeCounts.ac || 0, color: 'bg-sky-500' },
+          { label: '💨 Wentylacja / Rekuperacja', count: devTypeCounts.ventilation || 0, color: 'bg-teal-500' }
+        ];
+        devBarsEl.innerHTML = items.map(it => {
+          const pct = totalDevices > 0 ? Math.round((it.count / totalDevices) * 100) : 0;
+          return `
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs font-bold">
+                <span>${it.label}</span>
+                <span>${it.count} szt. (${pct}%)</span>
+              </div>
+              <div class="w-full h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                <div class="${it.color} h-full rounded-full" style="width:${pct}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 2. Paski rodzajów zleceń
+      const srvBarsEl = document.getElementById('stats-service-types-bars');
+      if (srvBarsEl) {
+        let przeglady = 0, serwisy = 0, montaze = 0;
+        (window.appointmentsData || []).forEach(a => {
+          const s = (a.serviceType || '').toLowerCase();
+          if (s.includes('monta')) montaze++;
+          else if (s.includes('serwis') || s.includes('awaria')) serwisy++;
+          else przeglady++;
+        });
+        const totalSrv = Math.max(1, przeglady + serwisy + montaze);
+        const srvItems = [
+          { label: '🛠️ Przeglądy okresowe', count: przeglady, color: 'bg-emerald-500' },
+          { label: '⚡ Serwisy i awarie', count: serwisy, color: 'bg-rose-500' },
+          { label: '🏗️ Montaże', count: montaze, color: 'bg-amber-500' }
+        ];
+        srvBarsEl.innerHTML = srvItems.map(it => {
+          const pct = Math.round((it.count / totalSrv) * 100);
+          return `
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs font-bold">
+                <span>${it.label}</span>
+                <span>${it.count} zleceń</span>
+              </div>
+              <div class="w-full h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                <div class="${it.color} h-full rounded-full" style="width:${pct}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 3. Aktywność pracowników
+      const wrkBarsEl = document.getElementById('stats-workers-bars');
+      if (wrkBarsEl) {
+        const workers = window.workersData || ['Serwisant 1'];
+        wrkBarsEl.innerHTML = workers.map(w => {
+          const assigned = (window.appointmentsData || []).filter(a => a.workerName === w).length;
+          const done = (window.appointmentsData || []).filter(a => a.workerName === w && a.status === 'completed').length;
+          return `
+            <div class="flex justify-between items-center p-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/70 dark:border-zinc-700 text-xs">
+              <span class="font-bold">👷 ${w}</span>
+              <span class="font-extrabold text-emerald-600 dark:text-emerald-400">${done} wyk. / ${assigned} zapl.</span>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const filtered = allHistory.filter(h => {
+        const matchText = !q || h.clientName.toLowerCase().includes(q) || (h.clientCity||'').toLowerCase().includes(q) || h.deviceModel.toLowerCase().includes(q) || (h.technician||'').toLowerCase().includes(q) || (h.notes||'').toLowerCase().includes(q);
+        const matchWorker = workerFilter === 'all' || (h.technician || '') === workerFilter;
+        return matchText && matchWorker;
+      });
 
       const tbody = document.getElementById('history-table-body');
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-zinc-400">Brak wpisów w historii zleceń.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-zinc-400">Brak wpisów spełniających kryteria.</td></tr>`;
         return;
       }
 
@@ -1853,7 +2271,7 @@ service cloud.firestore {
           <td class="py-3 px-4 font-bold text-emerald-600 dark:text-emerald-400">${formatDatePL(h.date)}</td>
           <td class="py-3 px-4 font-bold text-zinc-900 dark:text-white">${h.clientName} <span class="text-xs text-zinc-400 font-normal">(${h.clientCity})</span></td>
           <td class="py-3 px-4 text-zinc-700 dark:text-zinc-300 font-medium">${h.deviceModel}</td>
-          <td class="py-3 px-4 text-zinc-600 dark:text-zinc-400">${h.technician || 'Serwis PP'}</td>
+          <td class="py-3 px-4 text-zinc-600 dark:text-zinc-400 font-semibold">👷 ${h.technician || 'Serwis PP'}</td>
           <td class="py-3 px-4 text-zinc-600 dark:text-zinc-300">${h.notes}</td>
         </tr>
       `).join('');
@@ -1871,9 +2289,10 @@ service cloud.firestore {
       document.getElementById('client-postal').value = '';
       document.getElementById('client-city').value = 'Poznań';
       document.getElementById('client-street').value = '';
-      document.getElementById('client-lat').value = '52.4064';
-      document.getElementById('client-lng').value = '16.9252';
+      document.getElementById('client-lat').value = '52.40640';
+      document.getElementById('client-lng').value = '16.92520';
       document.getElementById('client-notes').value = '';
+      document.getElementById('client-picker-map-wrap').classList.add('hidden');
 
       document.getElementById('modal-devices-container').innerHTML = '';
       addDeviceFieldInModal();
@@ -1895,6 +2314,7 @@ service cloud.firestore {
       document.getElementById('client-lat').value = c.lat || 52.4064;
       document.getElementById('client-lng').value = c.lng || 16.9252;
       document.getElementById('client-notes').value = c.notes || '';
+      document.getElementById('client-picker-map-wrap').classList.add('hidden');
 
       const container = document.getElementById('modal-devices-container');
       container.innerHTML = '';
@@ -1907,48 +2327,188 @@ service cloud.firestore {
       const container = document.getElementById('modal-devices-container');
       const id = data?.id || `dev_${Date.now()}_${Math.random().toString(36).slice(2,5)}`;
       const today = toYMD(new Date());
+      const noInstall = Boolean(data?.noInstallDate);
+
+      const catalogOptions = `<option value="">-- Wybierz z Bazy Urządzeń lub wpisz ręcznie poniżej --</option>` +
+        (window.catalogData || []).map(cat =>
+          `<option value="${cat.id}">${getDeviceInfo(cat.deviceType).short}: ${cat.brand} ${cat.model} (${cat.defaultWarrantyMonths || 60}m gw.)</option>`
+        ).join('');
 
       const div = document.createElement('div');
-      div.className = 'p-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl space-y-2 relative';
+      div.className = 'p-3.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl space-y-2.5 relative';
       div.dataset.devId = id;
       div.innerHTML = `
-        <div class="flex justify-between items-center">
-          <select class="dev-type px-2.5 py-1 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs font-bold outline-none bg-white dark:bg-zinc-800">
+        <div class="flex justify-between items-center gap-2">
+          <select onchange="onModalDeviceCatalogPick(this)" class="dev-cat-picker flex-1 px-2.5 py-1.5 border border-emerald-300 dark:border-emerald-800 rounded-lg text-xs font-bold outline-none bg-emerald-50/60 dark:bg-emerald-950/40 text-zinc-800 dark:text-zinc-100">
+            ${catalogOptions}
+          </select>
+          <button type="button" onclick="this.closest('[data-dev-id]').remove()" class="text-rose-500 text-xs font-bold px-2">Usuń</button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <select class="dev-type px-2.5 py-1.5 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs font-bold outline-none bg-white dark:bg-zinc-800">
             <option value="heat_pump" ${data?.deviceType === 'heat_pump' ? 'selected' : ''}>🔥 Pompa ciepła</option>
             <option value="ac" ${data?.deviceType === 'ac' ? 'selected' : ''}>❄️ Klimatyzacja</option>
             <option value="ventilation" ${data?.deviceType === 'ventilation' ? 'selected' : ''}>💨 Wentylacja</option>
           </select>
-          <button type="button" onclick="this.closest('.p-3').remove()" class="text-rose-500 text-xs font-bold">Usuń</button>
+          <input type="text" class="dev-model sm:col-span-2 w-full px-2.5 py-1.5 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none bg-white dark:bg-zinc-800 font-semibold" placeholder="Model (np. Panasonic Aquarea 9kW)" value="${data?.deviceModel || ''}" required>
         </div>
-        <input type="text" class="dev-model w-full px-2.5 py-1.5 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none bg-white dark:bg-zinc-800" placeholder="Model (np. Panasonic Aquarea 9kW)" value="${data?.deviceModel || ''}" required>
-        <div class="grid grid-cols-2 gap-2">
+        <label class="flex items-center gap-2 text-[11px] font-bold text-amber-800 dark:text-amber-300 cursor-pointer pt-0.5">
+          <input type="checkbox" class="dev-no-install rounded" ${noInstall ? 'checked' : ''} onchange="toggleModalDevDates(this)">
+          <span>Obce urządzenie / Brak daty montażu (nie montowane przez nas)</span>
+        </label>
+        <div class="dev-dates-row grid grid-cols-2 gap-2 ${noInstall ? 'hidden' : ''}">
           <div><label class="text-[10px] font-bold text-zinc-500">Data montażu</label><input type="date" class="dev-install w-full px-2.5 py-1.5 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs bg-white dark:bg-zinc-800" value="${data?.installDate || today}"></div>
-          <div><label class="text-[10px] font-bold text-zinc-500">Gwarancja (msc)</label><input type="number" class="dev-warranty w-full px-2.5 py-1.5 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs bg-white dark:bg-zinc-800" value="${data?.warrantyMonths || 60}"></div>
+          <div><label class="text-[10px] font-bold text-zinc-500">Gwarancja (msc)</label><input type="number" class="dev-warranty w-full px-2.5 py-1.5 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs bg-white dark:bg-zinc-800" value="${data?.warrantyMonths ?? 60}"></div>
         </div>
       `;
       container.appendChild(div);
     }
 
-    async function autoGeocodeClientAddress() {
-      const city = document.getElementById('client-city')?.value || '';
-      const street = document.getElementById('client-street')?.value || '';
-      const postal = document.getElementById('client-postal')?.value || '';
-      if (!city && !street) return;
+    function onModalDeviceCatalogPick(selectEl) {
+      const catId = selectEl.value;
+      if (!catId) return;
+      const item = (window.catalogData || []).find(x => x.id === catId);
+      if (!item) return;
+      const wrapper = selectEl.closest('[data-dev-id]');
+      if (!wrapper) return;
+      wrapper.querySelector('.dev-type').value = item.deviceType || 'heat_pump';
+      wrapper.querySelector('.dev-model').value = `${item.brand} ${item.model}`.trim();
+      wrapper.querySelector('.dev-warranty').value = item.defaultWarrantyMonths || 60;
+    }
 
-      const query = `${street}, ${postal} ${city}, Polska`.trim();
+    function toggleModalDevDates(checkboxEl) {
+      const wrapper = checkboxEl.closest('[data-dev-id]');
+      if (!wrapper) return;
+      const datesRow = wrapper.querySelector('.dev-dates-row');
+      if (checkboxEl.checked) {
+        datesRow.classList.add('hidden');
+      } else {
+        datesRow.classList.remove('hidden');
+      }
+    }
+
+    // Ulepszone, wieloetapowe geokodowanie polskich adresów + obsługa mini-mapy
+    function cleanPolishStreet(rawStreet) {
+      return (rawStreet || '')
+        .replace(/^(ul\.|ulica|al\.|aleja|os\.|osiedle|pl\.|plac)\s+/i, '')
+        .trim();
+    }
+
+    async function autoGeocodeClientAddress() {
+      const city = (document.getElementById('client-city')?.value || '').trim();
+      const rawStreet = (document.getElementById('client-street')?.value || '').trim();
+      const postal = (document.getElementById('client-postal')?.value || '').trim();
+      if (!city && !rawStreet) return;
+
+      const streetClean = cleanPolishStreet(rawStreet);
+      const statusTxt = document.getElementById('gps-status-text');
+      const statusDot = document.getElementById('gps-status-dot');
+      if (statusTxt) statusTxt.innerText = 'Szukam dokładnej lokalizacji budynku...';
+
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`);
-        const data = await res.json();
+        // Krok 1: Strukturalne zapytanie Nominatim (najdokładniejsze dla ulic i numerów domów w Polsce)
+        const params1 = new URLSearchParams({
+          format: 'json',
+          limit: '1',
+          countrycodes: 'pl',
+          city: city,
+          street: streetClean
+        });
+        if (postal) params1.set('postalcode', postal);
+
+        let res = await fetch(`https://nominatim.openstreetmap.org/search?${params1.toString()}`);
+        let data = await res.json();
+
+        // Krok 2: Jeśli brak wyniku (np. wieś bez nazw ulic, gdzie numer domu jest w polu ulicy), zapytanie pełnotekstowe
+        if (!data || data.length === 0) {
+          const q2 = `${streetClean}, ${postal ? postal + ' ' : ''}${city}, Polska`.trim();
+          res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=pl&limit=1&q=${encodeURIComponent(q2)}`);
+          data = await res.json();
+        }
+
+        // Krok 3: Zapasowe wyszukanie środka miejscowości
+        if (!data || data.length === 0) {
+          const q3 = `${postal ? postal + ' ' : ''}${city}, Polska`.trim();
+          res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=pl&limit=1&q=${encodeURIComponent(q3)}`);
+          data = await res.json();
+          if (data && data.length > 0 && statusTxt) {
+            statusTxt.innerText = `Ustawiono na miejscowość: ${city} (kliknij „Korekta pinezki”, aby wskazać dokładny dom)`;
+            if (statusDot) statusDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500';
+          }
+        } else {
+          if (statusTxt) statusTxt.innerText = `Namierzono adres GPS: ${city}, ${streetClean}`;
+          if (statusDot) statusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500';
+        }
+
         if (data && data.length > 0) {
-          document.getElementById('client-lat').value = parseFloat(data[0].lat).toFixed(5);
-          document.getElementById('client-lng').value = parseFloat(data[0].lon).toFixed(5);
+          const lat = parseFloat(data[0].lat).toFixed(5);
+          const lng = parseFloat(data[0].lon).toFixed(5);
+          document.getElementById('client-lat').value = lat;
+          document.getElementById('client-lng').value = lng;
+          updatePickerMarkerFromInputs();
         }
       } catch (e) {}
     }
 
+    function toggleClientPickerMap() {
+      const wrap = document.getElementById('client-picker-map-wrap');
+      if (!wrap) return;
+      const isHidden = wrap.classList.contains('hidden');
+      if (isHidden) {
+        wrap.classList.remove('hidden');
+        setTimeout(initClientPickerMap, 100);
+      } else {
+        wrap.classList.add('hidden');
+      }
+    }
+
+    function initClientPickerMap() {
+      const container = document.getElementById('client-picker-map');
+      if (!container) return;
+      const lat = parseFloat(document.getElementById('client-lat').value) || 52.4064;
+      const lng = parseFloat(document.getElementById('client-lng').value) || 16.9252;
+
+      if (!clientPickerMap) {
+        clientPickerMap = L.map(container, { center: [lat, lng], zoom: 15 });
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(clientPickerMap);
+        clientPickerMarker = L.marker([lat, lng], { draggable: true }).addTo(clientPickerMap);
+
+        clientPickerMarker.on('dragend', function(e) {
+          const pos = e.target.getLatLng();
+          document.getElementById('client-lat').value = pos.lat.toFixed(5);
+          document.getElementById('client-lng').value = pos.lng.toFixed(5);
+        });
+
+        clientPickerMap.on('click', function(e) {
+          clientPickerMarker.setLatLng(e.latlng);
+          document.getElementById('client-lat').value = e.latlng.lat.toFixed(5);
+          document.getElementById('client-lng').value = e.latlng.lng.toFixed(5);
+        });
+      } else {
+        clientPickerMap.invalidateSize();
+        clientPickerMap.setView([lat, lng], 15);
+        clientPickerMarker.setLatLng([lat, lng]);
+      }
+    }
+
+    function updatePickerMarkerFromInputs() {
+      if (!clientPickerMap || !clientPickerMarker) return;
+      const lat = parseFloat(document.getElementById('client-lat').value);
+      const lng = parseFloat(document.getElementById('client-lng').value);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        clientPickerMarker.setLatLng([lat, lng]);
+        clientPickerMap.panTo([lat, lng]);
+      }
+    }
+
     async function handleSaveClient(e) {
       e.preventDefault();
-      await autoGeocodeClientAddress();
+      // Jeśli współrzędne są nadal domyślne dla centrum Poznania, spróbuj automatycznie pobrać GPS przed zapisem
+      const curLat = parseFloat(document.getElementById('client-lat').value);
+      const curLng = parseFloat(document.getElementById('client-lng').value);
+      if (!editingClientId && Math.abs(curLat - 52.4064) < 0.0001 && Math.abs(curLng - 16.9252) < 0.0001) {
+        await autoGeocodeClientAddress();
+      }
 
       const devEls = document.querySelectorAll('#modal-devices-container > div');
       const devices = [];
@@ -1960,18 +2520,21 @@ service cloud.firestore {
         const prevDev = existingClient?.devices?.find(d => d.id === devId);
         const type = el.querySelector('.dev-type').value;
         const model = el.querySelector('.dev-model').value.trim();
-        const install = el.querySelector('.dev-install').value || today;
-        const warranty = Number(el.querySelector('.dev-warranty').value) || 60;
+        const noInstallDate = Boolean(el.querySelector('.dev-no-install')?.checked);
+        const install = noInstallDate ? '' : (el.querySelector('.dev-install').value || today);
+        const warranty = noInstallDate ? 0 : (Number(el.querySelector('.dev-warranty').value) || 60);
+
         devices.push({
           id: devId,
           deviceType: type,
           deviceModel: model || 'Urządzenie HVAC',
+          noInstallDate,
           installDate: install,
           warrantyMonths: warranty,
-          lastInspectionDate: prevDev?.lastInspectionDate || install,
-          nextInspectionDate: prevDev?.nextInspectionDate || addMonths(install, 12),
+          lastInspectionDate: prevDev?.lastInspectionDate || install || today,
+          nextInspectionDate: prevDev?.nextInspectionDate || addMonths(install || today, 12),
           inspectionIntervalMonths: prevDev?.inspectionIntervalMonths || 12,
-          remindersCanceled: prevDev?.remindersCanceled || false,
+          remindersCanceled: prevDev?.remindersCanceled ?? noInstallDate,
           inspectionHistory: prevDev?.inspectionHistory || []
         });
       });
@@ -1994,7 +2557,7 @@ service cloud.firestore {
         showToast("Zaktualizowano dane klienta.");
       } else {
         window.clientsData.push(clientData);
-        showToast("Dodano nowego klienta i pobrano współrzędne GPS.");
+        showToast("Dodano nowego klienta i zapisano współrzędne GPS.");
       }
 
       persistData();
@@ -2038,6 +2601,8 @@ service cloud.firestore {
       renderClientDropdown();
       renderCatalogDropdown();
       document.getElementById('assigned-dev-model').value = '';
+      document.getElementById('assigned-dev-no-install').checked = false;
+      toggleAssignedInstallDate(false);
       document.getElementById('assigned-dev-install').value = toYMD(new Date());
       document.getElementById('assigned-dev-warranty').value = 60;
       document.getElementById('assigned-dev-interval').value = 12;
@@ -2045,29 +2610,45 @@ service cloud.firestore {
       document.getElementById('modal-add-device').classList.add('flex');
     }
 
-    function renderClientDropdown(selectedId = '') {
+    function renderClientDropdown() {
       const q = (document.getElementById('search-client-for-dev')?.value || '').toLowerCase();
       const sel = document.getElementById('select-client-target');
       if (!sel) return;
-      const filtered = (window.clientsData || []).filter(c => !q || c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q) || (c.phone||'').toLowerCase().includes(q));
-      sel.innerHTML = filtered.map((c, i) => `<option value="${c.id}" ${(c.id === selectedId || i === 0) ? 'selected' : ''}>${c.name} — ${c.city}, ${c.street}</option>`).join('');
+      const filtered = (window.clientsData || []).filter(c =>
+        !q || c.name.toLowerCase().includes(q) || (c.city || '').toLowerCase().includes(q) || (c.phone || '').toLowerCase().includes(q)
+      );
+      sel.innerHTML = filtered.map((c, idx) =>
+        `<option value="${c.id}" ${idx === 0 ? 'selected' : ''}>${c.name} (${c.city}, ${c.street})</option>`
+      ).join('');
     }
 
     function renderCatalogDropdown() {
       const q = (document.getElementById('search-catalog-for-dev')?.value || '').toLowerCase();
       const sel = document.getElementById('select-catalog-target');
       if (!sel) return;
-      const filtered = (window.catalogData || []).filter(i => !q || `${i.brand} ${i.model}`.toLowerCase().includes(q));
-      sel.innerHTML = filtered.map(i => `<option value="${i.id}">${getDeviceInfo(i.deviceType).short}: ${i.brand} ${i.model} (${i.defaultWarrantyMonths || 60}msc gw.)</option>`).join('');
+      const filtered = (window.catalogData || []).filter(item =>
+        !q || `${item.brand} ${item.model}`.toLowerCase().includes(q)
+      );
+      sel.innerHTML = filtered.map(item =>
+        `<option value="${item.id}">${getDeviceInfo(item.deviceType).short}: ${item.brand} ${item.model} (${item.defaultWarrantyMonths || 60}m gw.)</option>`
+      ).join('');
     }
 
     function onCatalogModelSelected(catId) {
-      const item = (window.catalogData || []).find(i => i.id === catId);
-      if (item) {
-        document.getElementById('assigned-dev-type').value = item.deviceType || 'heat_pump';
-        document.getElementById('assigned-dev-model').value = `${item.brand} ${item.model}`;
-        document.getElementById('assigned-dev-warranty').value = item.defaultWarrantyMonths || 60;
-        document.getElementById('assigned-dev-interval').value = item.defaultIntervalMonths || 12;
+      const item = (window.catalogData || []).find(x => x.id === catId);
+      if (!item) return;
+      document.getElementById('assigned-dev-type').value = item.deviceType || 'heat_pump';
+      document.getElementById('assigned-dev-model').value = `${item.brand} ${item.model}`.trim();
+      document.getElementById('assigned-dev-warranty').value = item.defaultWarrantyMonths || 60;
+      document.getElementById('assigned-dev-interval').value = item.defaultIntervalMonths || 12;
+    }
+
+    function toggleAssignedInstallDate(noInstall) {
+      const box = document.getElementById('assigned-dev-dates-box');
+      if (noInstall) {
+        box.classList.add('hidden');
+      } else {
+        box.classList.remove('hidden');
       }
     }
 
@@ -2078,8 +2659,10 @@ service cloud.firestore {
       const clientId = document.getElementById('select-client-target').value;
       const type = document.getElementById('assigned-dev-type').value || 'heat_pump';
       const model = document.getElementById('assigned-dev-model').value.trim();
-      const install = document.getElementById('assigned-dev-install').value;
-      const warranty = Number(document.getElementById('assigned-dev-warranty').value) || 60;
+      const noInstallDate = Boolean(document.getElementById('assigned-dev-no-install').checked);
+      const today = toYMD(new Date());
+      const install = noInstallDate ? '' : (document.getElementById('assigned-dev-install').value || today);
+      const warranty = noInstallDate ? 0 : (Number(document.getElementById('assigned-dev-warranty').value) || 60);
       const interval = Number(document.getElementById('assigned-dev-interval').value) || 12;
 
       const client = (window.clientsData || []).find(c => c.id === clientId);
@@ -2092,12 +2675,13 @@ service cloud.firestore {
         id: `dev_${Date.now()}`,
         deviceType: type,
         deviceModel: model || 'Urządzenie HVAC',
+        noInstallDate,
         installDate: install,
         warrantyMonths: warranty,
-        lastInspectionDate: install,
-        nextInspectionDate: addMonths(install, interval),
+        lastInspectionDate: install || today,
+        nextInspectionDate: addMonths(install || today, interval),
         inspectionIntervalMonths: interval,
-        remindersCanceled: false,
+        remindersCanceled: noInstallDate,
         inspectionHistory: []
       };
 
@@ -2106,7 +2690,74 @@ service cloud.firestore {
       closeModal('modal-add-device');
       renderDashboard();
       if (currentTab === 'clients') renderClients();
-      showToast("Przypisano urządzenie do klienta wraz z okresem gwarancji!");
+      showToast("Przypisano urządzenie do klienta!");
+    }
+    function openScheduleModal(preselectedClientId = '') {
+      populateWorkerSelects();
+      document.getElementById('visit-client-search').value = '';
+      renderVisitClientDropdown(preselectedClientId);
+      renderVisitDeviceDropdown();
+      document.getElementById('visit-date').value = selectedDate;
+      document.getElementById('visit-type-preset').value = 'Przegląd';
+      document.getElementById('visit-type-custom-wrap').classList.add('hidden');
+      document.getElementById('visit-type-custom').value = '';
+      if (selectedWorkerFilter !== 'all') {
+        document.getElementById('visit-worker-select').value = selectedWorkerFilter;
+      }
+      document.getElementById('modal-schedule').classList.remove('hidden');
+      document.getElementById('modal-schedule').classList.add('flex');
+    }
+
+    function renderVisitClientDropdown(selectedClientId = '') {
+      const q = (document.getElementById('visit-client-search')?.value || '').toLowerCase();
+      const sel = document.getElementById('visit-client-select');
+      if (!sel) return;
+      const filtered = (window.clientsData || []).filter(c => !q || c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q) || (c.street||'').toLowerCase().includes(q));
+      sel.innerHTML = filtered.map((c, idx) => {
+        const isSel = selectedClientId ? c.id === selectedClientId : idx === 0;
+        return `<option value="${c.id}" ${isSel ? 'selected' : ''}>${c.name} (${c.city}, ${c.street})</option>`;
+      }).join('');
+      renderVisitDeviceDropdown();
+    }
+
+    function renderVisitDeviceDropdown() {
+      const clientId = document.getElementById('visit-client-select')?.value;
+      const devSel = document.getElementById('visit-device-select');
+      if (!devSel) return;
+      const client = (window.clientsData || []).find(c => c.id === clientId);
+      const devs = client?.devices || [];
+      if (devs.length === 0) {
+        devSel.innerHTML = `<option value="">Ogólne (Brak przypisanego urządzenia)</option>`;
+      } else {
+        devSel.innerHTML = devs.map(d => `<option value="${d.id}">${getDeviceInfo(d.deviceType).short}: ${d.deviceModel}</option>`).join('') +
+          `<option value="">Wszystkie / Inne urządzenie klienta</option>`;
+      }
+    }
+
+    function handleSaveVisit(e) {
+      e.preventDefault();
+      const clientId = document.getElementById('visit-client-select').value;
+      const deviceId = document.getElementById('visit-device-select').value || '';
+      const date = document.getElementById('visit-date').value;
+      const time = document.getElementById('visit-time').value;
+      const preset = document.getElementById('visit-type-preset').value;
+      const customVal = (document.getElementById('visit-type-custom').value || '').trim();
+      const serviceType = preset === 'custom' ? (customVal || 'Serwis') : preset;
+      const workerName = document.getElementById('visit-worker-select').value || (window.workersData?.[0] || 'Serwisant 1');
+
+      const newVisit = { id: 'v_' + Date.now(), clientId, deviceId, workerName, date, time, serviceType, status: 'planned' };
+      window.appointmentsData.push(newVisit);
+      selectedDate = date;
+      persistData();
+
+      closeModal('modal-schedule');
+      renderDashboard();
+      if (currentTab === 'map_planner') {
+        renderPlanner();
+        renderMapMarkers();
+        if (!document.getElementById('planner-week-view').classList.contains('hidden')) renderWeekView();
+      }
+      showToast(`Zaplanowano: ${serviceType} (${workerName})!`);
     }
 
     function openInspectionModal(clientId) {
@@ -2212,42 +2863,6 @@ service cloud.firestore {
       }
     }
 
-    function openScheduleModal() {
-      renderVisitClientDropdown();
-      document.getElementById('visit-date').value = selectedDate;
-      document.getElementById('modal-schedule').classList.remove('hidden');
-      document.getElementById('modal-schedule').classList.add('flex');
-    }
-
-    function renderVisitClientDropdown() {
-      const q = (document.getElementById('visit-client-search')?.value || '').toLowerCase();
-      const sel = document.getElementById('visit-client-select');
-      if (!sel) return;
-      const filtered = (window.clientsData || []).filter(c => !q || c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q) || (c.street||'').toLowerCase().includes(q));
-      sel.innerHTML = filtered.map((c, idx) => `<option value="${c.id}" ${idx === 0 ? 'selected' : ''}>${c.name} (${c.city}, ${c.street})</option>`).join('');
-    }
-
-    function handleSaveVisit(e) {
-      e.preventDefault();
-      const clientId = document.getElementById('visit-client-select').value;
-      const date = document.getElementById('visit-date').value;
-      const time = document.getElementById('visit-time').value;
-      const serviceType = document.getElementById('visit-type').value;
-
-      const newVisit = { id: 'v_' + Date.now(), clientId, date, time, serviceType, status: 'planned' };
-      window.appointmentsData.push(newVisit);
-      persistData();
-
-      closeModal('modal-schedule');
-      renderDashboard();
-      if (currentTab === 'map_planner') {
-        renderPlanner();
-        renderMapMarkers();
-        if (!document.getElementById('planner-week-view').classList.contains('hidden')) renderWeekView();
-      }
-      showToast("Zaplanowano wizytę!");
-    }
-
     function toggleVisitStatus(id) {
       const visit = (window.appointmentsData || []).find(a => a.id === id);
       if (!visit) return;
@@ -2257,11 +2872,13 @@ service cloud.firestore {
       if (currentTab === 'map_planner') {
         renderPlanner();
         renderMapMarkers();
+        if (!document.getElementById('planner-week-view').classList.contains('hidden')) renderWeekView();
       }
+      if (currentTab === 'history') renderHistoryTable();
     }
 
     function deleteVisit(id) {
-      window.appointmentsData = window.appointmentsData.filter(a => a.id !== id);
+      window.appointmentsData = (window.appointmentsData || []).filter(a => a.id !== id);
       persistData();
       renderDashboard();
       if (currentTab === 'map_planner') {
@@ -2269,7 +2886,30 @@ service cloud.firestore {
         renderMapMarkers();
         if (!document.getElementById('planner-week-view').classList.contains('hidden')) renderWeekView();
       }
+      if (currentTab === 'history') renderHistoryTable();
       showToast("Usunięto wizytę z planu.");
+    }
+
+    function requestExportClientsCSV() {
+      const enriched = getEnrichedClients();
+      if (enriched.length === 0) { showToast("Brak klientów do eksportu."); return; }
+      document.getElementById('export-password-input').value = '';
+      document.getElementById('export-password-error').classList.add('hidden');
+      document.getElementById('modal-export-password').classList.remove('hidden');
+      document.getElementById('modal-export-password').classList.add('flex');
+      setTimeout(() => document.getElementById('export-password-input').focus(), 80);
+      lucide.createIcons();
+    }
+
+    function confirmExportPassword(e) {
+      e.preventDefault();
+      const pass = document.getElementById('export-password-input').value;
+      if (pass !== '456852') {
+        document.getElementById('export-password-error').classList.remove('hidden');
+        return;
+      }
+      closeModal('modal-export-password');
+      exportClientsCSV();
     }
 
     function exportClientsCSV() {
