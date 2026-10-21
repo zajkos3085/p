@@ -99,12 +99,22 @@
       </nav>
     </div>
 
-    <div onclick="openFirebaseModal()" id="cloud-status" class="cursor-pointer hover:border-emerald-500 transition flex p-3.5 mx-3 mb-3 md:m-4 rounded-2xl bg-zinc-100 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-400 items-center justify-between" title="Kliknij, aby skonfigurować bazę online Firebase">
-      <div class="flex items-center gap-2">
-        <span class="w-2.5 h-2.5 rounded-full bg-amber-500" id="cloud-dot"></span>
-        <span id="cloud-txt" class="font-bold">Tryb lokalny (Offline)</span>
+    <div class="mx-3 mb-3 md:m-4 space-y-1.5">
+      <div onclick="openFirebaseModal()" id="cloud-status" class="cursor-pointer hover:border-emerald-500 transition flex p-3 rounded-2xl bg-zinc-100 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-400 items-center justify-between" title="Kliknij, aby skonfigurować lub przetestować bazę online Firebase">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" id="cloud-dot"></span>
+          <span id="cloud-txt" class="font-bold truncate">Tryb lokalny (Offline)</span>
+        </div>
+        <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 shrink-0">Chmura ⚙️</span>
       </div>
-      <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">Chmura ⚙️</span>
+      <div id="cloud-sync-actions" class="hidden grid-cols-2 gap-1.5">
+        <button onclick="forcePullFromCloud()" class="py-1.5 px-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 border border-zinc-200 dark:border-zinc-700 text-[11px] font-bold text-zinc-700 dark:text-zinc-300 flex items-center justify-center gap-1 transition" title="Pobierz najnowsze dane z chmury na to urządzenie">
+          <i data-lucide="cloud-download" class="w-3.5 h-3.5 text-emerald-600"></i> Pobierz z chmury
+        </button>
+        <button onclick="forcePushToCloud()" class="py-1.5 px-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 border border-zinc-200 dark:border-zinc-700 text-[11px] font-bold text-zinc-700 dark:text-zinc-300 flex items-center justify-center gap-1 transition" title="Wyślij dane z tego urządzenia do chmury">
+          <i data-lucide="cloud-upload" class="w-3.5 h-3.5 text-sky-600"></i> Wyślij do chmury
+        </button>
+      </div>
     </div>
   </aside>
 
@@ -610,33 +620,75 @@
 
   <!-- MODAL: FIREBASE CLOUD CONFIG -->
   <div id="modal-firebase" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-lg w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800 max-h-[90vh] overflow-y-auto">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-2xl w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800 max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
         <div class="flex items-center gap-2">
           <i data-lucide="cloud" class="w-5 h-5 text-emerald-600"></i>
-          <h3 class="text-base font-extrabold">Połączenie z bazą online (Firebase)</h3>
+          <h3 class="text-base font-extrabold">Połączenie i Diagnostyka Bazy Online (Firebase)</h3>
         </div>
         <button onclick="closeModal('modal-firebase')"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
-      <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-        Wklej tutaj obiekt <strong>firebaseConfig</strong> skopiowany z darmowej konsoli Google Firebase (lub sam JSON), aby zsynchronizować program <strong>PP</strong> między komputerem a telefonami na GitHub Pages.
-      </p>
+
+      <!-- STATUS DIAGNOSTYCZNY NA ŻYWO -->
+      <div id="fb-diagnostic-box" class="p-3.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-xs space-y-1.5">
+        <div class="font-extrabold flex items-center justify-between">
+          <span>Status połączenia z bazą Firestore:</span>
+          <span id="fb-diag-badge" class="px-2 py-0.5 rounded bg-zinc-300 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold">Nie przetestowano</span>
+        </div>
+        <p id="fb-diag-message" class="text-zinc-600 dark:text-zinc-400 leading-relaxed">Wpisz dane projektu poniżej i kliknij „Połącz i Przetestuj Zapis”, aby sprawdzić czy oba urządzenia widzą tę samą bazę.</p>
+      </div>
+
+      <!-- NAJCZĘSTSZY POWÓD BRAKU SYNCHRONIZACJI: REGUŁY FIRESTORE -->
+      <div class="p-4 rounded-xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800/80 text-xs space-y-2">
+        <div class="font-extrabold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+          <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i> Dlaczego klient dodany na jednym urządzeniu nie pojawia się na drugim?
+        </div>
+        <p class="text-zinc-700 dark:text-zinc-300 leading-relaxed">
+          Samo wpisanie klucza API nie wystarczy, jeśli w konsoli Firebase nie utworzyłeś bazy <strong>Firestore Database</strong> lub jej zakładka <strong>Reguły (Rules)</strong> blokuje zapis! Sprawdź te 2 kroki w <strong>console.firebase.google.com</strong>:
+        </p>
+        <ol class="list-decimal list-inside space-y-1 text-zinc-700 dark:text-zinc-300 leading-relaxed font-medium">
+          <li>W lewym menu kliknij <strong>Kompilacja (Build) &rarr; Firestore Database</strong> i upewnij się, że kliknąłeś <strong>Utwórz bazę danych (Create database)</strong>.</li>
+          <li>Wewnątrz Firestore Database kliknij na górze zakładkę <strong>Reguły (Rules)</strong>, zamień cały tekst na poniższy i kliknij <strong>Opublikuj (Publish)</strong>:</li>
+        </ol>
+        <pre class="p-2.5 rounded-lg bg-zinc-900 text-emerald-400 font-mono text-[11px] overflow-x-auto select-all">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}</pre>
+      </div>
+
+      <!-- SZYBKI KREATOR (WYSTARCZĄ 2 POLA) -->
+      <div class="p-3.5 rounded-xl bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 space-y-2.5">
+        <div class="text-xs font-extrabold text-zinc-800 dark:text-zinc-200">Opcja A: Wpisz tylko 2 dane z zakładki „Ogólne” (General) — muszą być identyczne na obu urządzeniach:</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-[11px] font-bold text-zinc-500 mb-1">Identyfikator projektu (Project ID)</label>
+            <input type="text" id="fb-quick-project-id" oninput="buildConfigFromQuickFields()" placeholder="np. pp-planer-12345" class="w-full px-3 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-zinc-500 mb-1">Klucz API sieci Web (Web API Key / apiKey)</label>
+            <input type="text" id="fb-quick-api-key" oninput="buildConfigFromQuickFields()" placeholder="np. AIzaSyB123456789..." class="w-full px-3 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs outline-none">
+          </div>
+        </div>
+      </div>
+
       <div>
-        <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Obiekt konfiguracyjny Firebase (JSON lub kod JS)</label>
-        <textarea id="firebase-config-input" rows="7" placeholder='{
+        <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Opcja B: Pełna konfiguracja firebaseConfig (JSON lub kod JS z Firebase)</label>
+        <textarea id="firebase-config-input" rows="5" placeholder='{
   "apiKey": "AIzaSy...",
   "authDomain": "twoj-projekt.firebaseapp.com",
   "projectId": "twoj-projekt",
-  "storageBucket": "twoj-projekt.appspot.com",
-  "messagingSenderId": "123456789",
-  "appId": "1:123456789:web:abcdef"
+  "storageBucket": "twoj-projekt.appspot.com"
 }' class="w-full p-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-mono outline-none focus:border-emerald-500"></textarea>
       </div>
       <div class="flex flex-wrap justify-between items-center gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
         <button type="button" onclick="disconnectFirebase()" class="px-3 py-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl text-xs font-bold">Rozłącz chmurę (Tryb lokalny)</button>
         <div class="flex gap-2">
           <button type="button" onclick="closeModal('modal-firebase')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Zamknij</button>
-          <button type="button" onclick="saveAndConnectFirebase()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-sm">Połącz i Synchronizuj</button>
+          <button type="button" onclick="saveAndConnectFirebase()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-sm">Połącz i Przetestuj Zapis</button>
         </div>
       </div>
     </div>
@@ -658,6 +710,7 @@
     // };
 
     let firestoreDb = null;
+    let firestoreUnsubscribe = null;
     let isCloudConnected = false;
 
     window.clientsData = [];
@@ -778,24 +831,78 @@
       });
     }
 
-    function updateCloudBadge(online, text) {
+    function setDiagnosticStatus(state, title, message) {
+      const badge = document.getElementById('fb-diag-badge');
+      const msg = document.getElementById('fb-diag-message');
+      const box = document.getElementById('fb-diagnostic-box');
+      if (!badge || !msg || !box) return;
+
+      msg.innerHTML = message;
+      badge.innerText = title;
+
+      if (state === 'ok') {
+        box.className = 'p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-xs space-y-1.5';
+        badge.className = 'px-2 py-0.5 rounded bg-emerald-600 text-white font-bold';
+      } else if (state === 'error') {
+        box.className = 'p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-xs space-y-1.5';
+        badge.className = 'px-2 py-0.5 rounded bg-rose-600 text-white font-bold';
+      } else {
+        box.className = 'p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-xs space-y-1.5';
+        badge.className = 'px-2 py-0.5 rounded bg-amber-500 text-white font-bold';
+      }
+    }
+
+    function updateCloudBadge(state, text) {
       const dot = document.getElementById('cloud-dot');
       const txt = document.getElementById('cloud-txt');
+      const actions = document.getElementById('cloud-sync-actions');
       if (!dot || !txt) return;
-      if (online) {
-        dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
-        txt.innerText = text || 'Chmura Firebase (Online)';
+
+      if (state === 'online') {
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0';
+        txt.innerText = text || 'Chmura Online (Zsynchronizowano)';
+        if (actions) {
+          actions.classList.remove('hidden');
+          actions.classList.add('grid');
+        }
+      } else if (state === 'error') {
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping shrink-0';
+        txt.innerText = text || 'Błąd bazy Firebase (Kliknij)';
+        if (actions) actions.classList.add('hidden');
       } else {
-        dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500';
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0';
         txt.innerText = text || 'Tryb lokalny (Offline)';
+        if (actions) actions.classList.add('hidden');
       }
+      lucide.createIcons();
     }
 
     function openFirebaseModal() {
       const saved = localStorage.getItem('pp_firebase_config_json') || '';
       document.getElementById('firebase-config-input').value = saved;
+      try {
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          document.getElementById('fb-quick-project-id').value = parsed.projectId || '';
+          document.getElementById('fb-quick-api-key').value = parsed.apiKey || '';
+        }
+      } catch (e) {}
       document.getElementById('modal-firebase').classList.remove('hidden');
       document.getElementById('modal-firebase').classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function buildConfigFromQuickFields() {
+      const pid = (document.getElementById('fb-quick-project-id')?.value || '').trim();
+      const key = (document.getElementById('fb-quick-api-key')?.value || '').trim();
+      if (!pid && !key) return;
+      const autoCfg = {
+        apiKey: key,
+        authDomain: `${pid}.firebaseapp.com`,
+        projectId: pid,
+        storageBucket: `${pid}.appspot.com`
+      };
+      document.getElementById('firebase-config-input').value = JSON.stringify(autoCfg, null, 2);
     }
 
     function parseFirebaseInput(rawText) {
@@ -805,72 +912,193 @@
       if (firstBrace !== -1 && lastBrace !== -1) {
         cleaned = cleaned.slice(firstBrace, lastBrace + 1);
       }
-      // Zamiana kluczy bez cudzysłowów z domyślnego kodu JS Firebase na poprawny JSON
       cleaned = cleaned.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
       cleaned = cleaned.replace(/,\s*}/g, '}');
       return JSON.parse(cleaned);
     }
 
-    function saveAndConnectFirebase() {
+    async function saveAndConnectFirebase() {
       const raw = document.getElementById('firebase-config-input').value;
       try {
         const cfg = parseFirebaseInput(raw);
         if (!cfg.apiKey || !cfg.projectId) {
-          showToast('Brakuje klucza apiKey lub projectId w konfiguracji!');
+          setDiagnosticStatus('error', 'Brak danych', 'Wpisz poprawny Project ID oraz Web API Key.');
+          showToast('Brakuje klucza apiKey lub projectId!');
           return;
         }
         localStorage.setItem('pp_firebase_config_json', JSON.stringify(cfg, null, 2));
-        closeModal('modal-firebase');
-        initFirebaseConnection(cfg, true);
+        setDiagnosticStatus('wait', 'Testowanie połączenia...', `Łączenie z projektem <strong>${cfg.projectId}</strong>...`);
+        await initFirebaseConnection(cfg, true);
       } catch (e) {
-        showToast('Nieprawidłowy format konfiguracji! Skopiuj cały obiekt { ... } z Firebase.');
+        setDiagnosticStatus('error', 'Błąd formatu', 'Nieprawidłowy format JSON. Skorzystaj z Opcji A (wpisz tylko 2 pola powyżej).');
+        showToast('Nieprawidłowy format konfiguracji!');
       }
     }
 
     function disconnectFirebase() {
+      if (firestoreUnsubscribe) {
+        firestoreUnsubscribe();
+        firestoreUnsubscribe = null;
+      }
       localStorage.removeItem('pp_firebase_config_json');
       isCloudConnected = false;
       firestoreDb = null;
-      updateCloudBadge(false, 'Tryb lokalny (Offline)');
+      updateCloudBadge('offline', 'Tryb lokalny (Offline)');
+      setDiagnosticStatus('wait', 'Rozłączono', 'Aplikacja działa teraz wyłącznie w pamięci tego urządzenia.');
       closeModal('modal-firebase');
       showToast('Rozłączono chmurę. Aplikacja działa teraz lokalnie.');
     }
 
-    function initFirebaseConnection(configObj, pushLocalIfEmpty = false) {
+    function explainFirestoreError(err, projectId) {
+      const code = err?.code || '';
+      if (code === 'permission-denied') {
+        return `Serwer Firebase odrzucił dostęp (<strong>permission-denied</strong>). Wejdź w konsoli Firebase do <strong>Firestore Database &rarr; Reguły (Rules)</strong>, ustaw <code>allow read, write: if true;</code> i kliknij <strong>Publish</strong>!`;
+      }
+      if (code === 'not-found' || (err?.message && err.message.includes('database (default) does not exist'))) {
+        return `W projekcie <strong>${projectId}</strong> nie utworzono jeszcze bazy danych! Wejdź w konsoli Firebase do <strong>Build &rarr; Firestore Database</strong> i kliknij <strong>Create database</strong>.`;
+      }
+      return `Błąd Firebase (${code || 'nieznany'}): ${err?.message || 'Sprawdź poprawność Project ID oraz Web API Key.'}`;
+    }
+
+    async function initFirebaseConnection(configObj, isInteractiveTest = false) {
       if (!window.firebase) return;
       try {
-        if (!firebase.apps.length) {
-          firebase.initializeApp(configObj);
+        if (firestoreUnsubscribe) {
+          firestoreUnsubscribe();
+          firestoreUnsubscribe = null;
         }
-        firestoreDb = firebase.firestore();
-        isCloudConnected = true;
-        updateCloudBadge(true, 'Chmura Firebase (Online)');
 
-        firestoreDb.collection('pp_state').doc('main').onSnapshot((docSnap) => {
-          if (docSnap.exists) {
-            const data = docSnap.data();
-            window.clientsData = data.clients || [];
-            window.appointmentsData = data.appointments || [];
-            window.catalogData = data.catalog || [];
+        // Używamy unikalnej nazwy instancji dla danego projectId, aby zmiana klucza działała od razu bez odświeżania strony
+        const appName = 'pp_app_' + (configObj.projectId || 'default').replace(/[^a-zA-Z0-9_]/g, '_');
+        let fbApp = firebase.apps.find(a => a.name === appName);
+        if (!fbApp) {
+          fbApp = firebase.initializeApp(configObj, appName);
+        }
+
+        firestoreDb = fbApp.firestore();
+        const docRef = firestoreDb.collection('pp_state').doc('main');
+
+        // 1. Prawdziwy test odczytu/zapisu z serwera (z pominięciem lokalnego cache)
+        const docSnap = await docRef.get({ source: 'server' });
+
+        if (docSnap.exists) {
+          const cloudData = docSnap.data();
+          const cloudClients = cloudData.clients || [];
+
+          // Jeśli w chmurze są już klienci, pobieramy ich na to urządzenie
+          if (cloudClients.length > 0 || (window.clientsData || []).length === 0) {
+            window.clientsData = cloudClients;
+            window.appointmentsData = cloudData.appointments || [];
+            window.catalogData = cloudData.catalog || window.catalogData;
             localStorage.setItem('pp_hvac_clients_v4', JSON.stringify(window.clientsData));
             localStorage.setItem('pp_hvac_appointments_v4', JSON.stringify(window.appointmentsData));
             localStorage.setItem('pp_hvac_catalog_v4', JSON.stringify(window.catalogData));
             refreshAllViews();
-          } else if (pushLocalIfEmpty) {
-            persistData();
+          } else if ((window.clientsData || []).length > 0 && cloudClients.length === 0) {
+            // Jeśli na tym urządzeniu mamy już klientów, a w chmurze było pusto -> wysyłamy naszych klientów do chmury
+            await docRef.set({
+              clients: window.clientsData,
+              appointments: window.appointmentsData,
+              catalog: window.catalogData,
+              updatedAt: new Date().toISOString()
+            });
+          }
+        } else {
+          // Dokument jeszcze nie istnieje w chmurze -> tworzymy go i zapisujemy obecny stan
+          await docRef.set({
+            clients: window.clientsData || [],
+            appointments: window.appointmentsData || [],
+            catalog: window.catalogData || [],
+            updatedAt: new Date().toISOString()
+          });
+        }
+
+        isCloudConnected = true;
+        updateCloudBadge('online', `Online: ${configObj.projectId}`);
+        setDiagnosticStatus(
+          'ok',
+          'Połączono i Zweryfikowano!',
+          `Pomyślnie połączono z bazą projektu <strong>${configObj.projectId}</strong>. Liczba klientów w chmurze: <strong>${(window.clientsData || []).length}</strong>. Każda zmiana jest teraz wysyłana na żywo na drugie urządzenie.`
+        );
+
+        if (isInteractiveTest) {
+          showToast(`Połączono z chmurą (${configObj.projectId})!`);
+        }
+
+        // 2. Nasłuchiwanie zmian na żywo z drugiego urządzenia
+        firestoreUnsubscribe = docRef.onSnapshot((liveSnap) => {
+          if (liveSnap.exists) {
+            const data = liveSnap.data();
+            window.clientsData = data.clients || [];
+            window.appointmentsData = data.appointments || [];
+            if (Array.isArray(data.catalog) && data.catalog.length > 0) {
+              window.catalogData = data.catalog;
+            }
+            localStorage.setItem('pp_hvac_clients_v4', JSON.stringify(window.clientsData));
+            localStorage.setItem('pp_hvac_appointments_v4', JSON.stringify(window.appointmentsData));
+            localStorage.setItem('pp_hvac_catalog_v4', JSON.stringify(window.catalogData));
+            refreshAllViews();
           }
         }, (err) => {
-          console.error('Błąd Firestore:', err);
-          updateCloudBadge(false, 'Błąd autoryzacji Firestore');
-          showToast('Sprawdź reguły (Rules) w Firestore!');
+          console.error('Błąd nasłuchiwania Firestore:', err);
+          isCloudConnected = false;
+          updateCloudBadge('error', 'Błąd synchronizacji (Kliknij)');
+          setDiagnosticStatus('error', 'Błąd autoryzacji Firestore', explainFirestoreError(err, configObj.projectId));
         });
 
-        if (pushLocalIfEmpty) {
-          showToast('Połączono z bazą Firebase Online!');
+      } catch (err) {
+        console.error('Błąd połączenia z Firebase:', err);
+        isCloudConnected = false;
+        updateCloudBadge('error', 'Błąd bazy Firebase (Kliknij)');
+        setDiagnosticStatus('error', 'Połączenie odrzucone', explainFirestoreError(err, configObj.projectId));
+        showToast('Błąd zapisu do chmury! Sprawdź komunikat w oknie Chmura ⚙️');
+      }
+    }
+
+    async function forcePushToCloud() {
+      if (!firestoreDb) {
+        openFirebaseModal();
+        return;
+      }
+      try {
+        await firestoreDb.collection('pp_state').doc('main').set({
+          clients: window.clientsData || [],
+          appointments: window.appointmentsData || [],
+          catalog: window.catalogData || [],
+          updatedAt: new Date().toISOString()
+        });
+        showToast(`Wysłano bazę (${window.clientsData.length} klientów) do chmury!`);
+      } catch (err) {
+        updateCloudBadge('error', 'Błąd zapisu!');
+        openFirebaseModal();
+        setDiagnosticStatus('error', 'Błąd wysyłania do chmury', explainFirestoreError(err, ''));
+      }
+    }
+
+    async function forcePullFromCloud() {
+      if (!firestoreDb) {
+        openFirebaseModal();
+        return;
+      }
+      try {
+        const snap = await firestoreDb.collection('pp_state').doc('main').get({ source: 'server' });
+        if (snap.exists) {
+          const data = snap.data();
+          window.clientsData = data.clients || [];
+          window.appointmentsData = data.appointments || [];
+          window.catalogData = data.catalog || window.catalogData;
+          localStorage.setItem('pp_hvac_clients_v4', JSON.stringify(window.clientsData));
+          localStorage.setItem('pp_hvac_appointments_v4', JSON.stringify(window.appointmentsData));
+          localStorage.setItem('pp_hvac_catalog_v4', JSON.stringify(window.catalogData));
+          refreshAllViews();
+          showToast(`Pobrano z chmury (${window.clientsData.length} klientów)!`);
+        } else {
+          showToast('Baza w chmurze jest jeszcze pusta.');
         }
       } catch (err) {
-        console.error(err);
-        updateCloudBadge(false, 'Błąd połączenia');
+        updateCloudBadge('error', 'Błąd pobierania!');
+        openFirebaseModal();
+        setDiagnosticStatus('error', 'Błąd pobierania z chmury', explainFirestoreError(err, ''));
       }
     }
 
@@ -924,7 +1152,12 @@
           appointments: window.appointmentsData,
           catalog: window.catalogData,
           updatedAt: new Date().toISOString()
-        }).catch(err => console.error('Błąd zapisu do chmury:', err));
+        }).catch(err => {
+          console.error('Błąd zapisu do chmury:', err);
+          updateCloudBadge('error', 'Błąd zapisu (Kliknij)');
+          setDiagnosticStatus('error', 'Zapis zablokowany przez Firebase', explainFirestoreError(err, ''));
+          showToast('Uwaga: Chmura odrzuciła zapis! Kliknij Chmura ⚙️');
+        });
       }
     }
 
