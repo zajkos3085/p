@@ -180,18 +180,15 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div class="lg:col-span-7 space-y-6">
-            <!-- TODAY VISITS -->
+            <!-- TODAY VISITS (PODZIAŁ NA SERWISANTÓW) -->
             <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
               <div class="px-5 py-4 bg-zinc-900 dark:bg-zinc-800/90 text-white flex justify-between items-center flex-wrap gap-2">
                 <div class="flex items-center gap-2">
                   <i data-lucide="calendar-check" class="w-4 h-4 text-emerald-400"></i>
-                  <h2 id="today-panel-title" class="text-sm sm:text-base font-bold">Plan pracy na dzisiaj</h2>
+                  <h2 id="today-panel-title" class="text-sm sm:text-base font-bold">Plan pracy na dzisiaj (Podział na ekipy)</h2>
                 </div>
-                <button id="today-route-btn" onclick="openTodayRoute()" class="bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-extrabold text-xs px-3.5 py-2 rounded-xl hidden items-center gap-1.5 shadow transition">
-                  <i data-lucide="navigation" class="w-3.5 h-3.5"></i> Trasa Google Maps
-                </button>
               </div>
-              <div id="today-visits-list" class="p-4 space-y-2.5"></div>
+              <div id="today-visits-list" class="p-4 space-y-4"></div>
             </div>
 
             <!-- URGENT INSPECTIONS (MAX 5 + EXPAND) -->
@@ -241,11 +238,9 @@
               <button onclick="shiftDate(1)" class="p-1.5 rounded-lg hover:bg-white dark:hover:bg-zinc-700 transition" title="Następny dzień"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
             </div>
 
-            <div class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1 rounded-xl border border-zinc-200 dark:border-zinc-700">
-              <i data-lucide="hard-hat" class="w-3.5 h-3.5 text-emerald-600"></i>
-              <select id="planner-worker-filter" onchange="onWorkerFilterChange(this.value)" class="bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-0.5 text-xs font-extrabold outline-none"></select>
-              <button onclick="openWorkersModal()" class="ml-1 px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 hover:bg-emerald-600 hover:text-white text-[10px] font-bold transition" title="Zarządzaj ekipą">+ Ekipa</button>
-            </div>
+            <button onclick="openWorkersModal()" class="px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-emerald-600 hover:text-white border border-zinc-200 dark:border-zinc-700 text-xs font-extrabold flex items-center gap-1.5 transition" title="Zarządzaj serwisantami i ekipami">
+              <i data-lucide="hard-hat" class="w-3.5 h-3.5 text-emerald-600"></i> Zarządzaj ekipami
+            </button>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
@@ -271,7 +266,7 @@
                 <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> OK</span>
               </div>
             </div>
-            <div id="map-container" style="height: 540px; width: 100%;"></div>
+            <div id="map-container" style="height: 580px; width: 100%;"></div>
           </div>
 
           <div class="lg:col-span-5 space-y-4">
@@ -279,7 +274,7 @@
               <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
                 <div>
                   <h2 id="planner-day-title" class="text-base font-extrabold text-zinc-900 dark:text-white">Plan Dnia</h2>
-                  <p class="text-xs text-zinc-500">Układ chronologiczny wg godzin</p>
+                  <p class="text-xs text-zinc-500">Wszystkie ekipy pod sobą z osobnymi trasami Google Maps</p>
                 </div>
                 <div class="flex gap-1.5">
                   <button onclick="sortVisitsByTime()" class="px-2.5 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 rounded-xl text-xs font-bold flex items-center gap-1" title="Sortuj wizyty chronologicznie wg godzin">
@@ -336,19 +331,7 @@
                 </button>
               </div>
 
-              <div id="planner-visits-list" class="space-y-2.5 max-h-[360px] overflow-y-auto pr-1"></div>
-            </div>
-
-            <!-- Karta eksportu trasy do Google Maps -->
-            <div class="bg-zinc-900 dark:bg-zinc-900 text-white rounded-2xl shadow-lg p-5 space-y-3 border border-zinc-800">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-extrabold flex items-center gap-2">
-                  <i data-lucide="navigation" class="w-4 h-4 text-emerald-400"></i> Nawigacja Google Maps
-                </h3>
-                <span class="text-[11px] px-2 py-0.5 rounded bg-zinc-800 text-emerald-400 font-bold">Start: GPS</span>
-              </div>
-              <p class="text-xs text-zinc-400">Uwzględnia ustalone godziny, pomija wykonane zlecenia i startuje z Twojej pozycji.</p>
-              <div id="planner-route-action"></div>
+              <div id="planner-visits-list" class="space-y-4 max-h-[520px] overflow-y-auto pr-1"></div>
             </div>
           </div>
         </div>
@@ -626,11 +609,20 @@
         <button onclick="closeModal('modal-add-device')"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
       <form onsubmit="handleSaveAssignedDevice(event)" class="space-y-4">
-        <div>
+        <!-- 1. Wybór klienta z widocznym polem wybranego klienta i rozwijaną listą -->
+        <div class="relative">
           <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">1. Wybierz klienta</label>
-          <input type="text" id="search-client-for-dev" oninput="renderClientDropdown()" placeholder="Wpisz nazwisko, telefon lub miasto..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm mb-1.5 outline-none">
-          <select id="select-client-target" size="4" required class="w-full border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm p-1.5 outline-none bg-zinc-50 dark:bg-zinc-800"></select>
+          <input type="hidden" id="select-client-target" required>
+          <div onclick="toggleCustomDropdown('assigned-client-dd')" class="w-full px-3.5 py-2.5 bg-emerald-50/70 dark:bg-emerald-950/40 border-2 border-emerald-500/70 dark:border-emerald-600 rounded-xl text-sm font-extrabold flex justify-between items-center cursor-pointer text-zinc-900 dark:text-white">
+            <span id="assigned-client-selected-label" class="truncate">-- Kliknij, aby wybrać klienta --</span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+          </div>
+          <div id="assigned-client-dd" class="hidden mt-1.5 p-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl shadow-xl space-y-1.5">
+            <input type="text" id="search-client-for-dev" oninput="renderClientDropdown()" placeholder="Szukaj klienta po nazwisku, mieście, telefonie..." class="w-full px-3 py-1.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none">
+            <div id="assigned-client-dd-list" class="max-h-44 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-700/60 text-xs"></div>
+          </div>
         </div>
+
         <div>
           <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">2. Wybierz typ urządzenia</label>
           <select id="assigned-dev-type" onchange="onAssignedTypeChange()" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none">
@@ -639,14 +631,30 @@
             <option value="ventilation">💨 Wentylacja / Rekuperacja</option>
           </select>
         </div>
-        <div>
-          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">3. Wybierz model z Bazy Urządzeń dla wybranego typu</label>
-          <input type="text" id="search-catalog-for-dev" oninput="renderCatalogDropdown()" placeholder="Wyszukaj model..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm mb-1.5 outline-none">
-          <select id="select-catalog-target" size="4" onchange="onCatalogModelSelected(this.value)" class="w-full border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm p-1.5 outline-none bg-zinc-50 dark:bg-zinc-800"></select>
+
+        <!-- 3. Rozwijana lista wyboru z Bazy Urządzeń -->
+        <div class="relative">
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">3. Wybierz model z Bazy Urządzeń (lub wpisz ręcznie niżej)</label>
+          <input type="hidden" id="select-catalog-target">
+          <div onclick="toggleCustomDropdown('assigned-catalog-dd')" class="w-full px-3.5 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold flex justify-between items-center cursor-pointer text-zinc-800 dark:text-zinc-100">
+            <span id="assigned-catalog-selected-label" class="truncate">-- Kliknij, aby wybrać model z katalogu --</span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-zinc-500 shrink-0"></i>
+          </div>
+          <div id="assigned-catalog-dd" class="hidden mt-1.5 p-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl shadow-xl space-y-1.5">
+            <input type="text" id="search-catalog-for-dev" oninput="renderCatalogDropdown()" placeholder="Filtruj modele..." class="w-full px-3 py-1.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none">
+            <div id="assigned-catalog-dd-list" class="max-h-40 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-700/60 text-xs"></div>
+          </div>
         </div>
-        <div>
-          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Pełna nazwa modelu</label>
-          <input type="text" id="assigned-dev-model" required placeholder="Wybierz z katalogu lub wpisz..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Pełna nazwa modelu</label>
+            <input type="text" id="assigned-dev-model" required placeholder="np. Panasonic Aquarea 9kW" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-semibold outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Numer seryjny (S/N)</label>
+            <input type="text" id="assigned-dev-serial" placeholder="np. SN-2026-88412" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-mono outline-none">
+          </div>
         </div>
 
         <label class="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 cursor-pointer text-xs font-bold text-amber-900 dark:text-amber-300">
@@ -687,11 +695,11 @@
     </div>
   </div>
 
-  <!-- MODAL: INSPECTIONS -->
+  <!-- MODAL: INSPECTIONS / HISTORIA DZIAŁAŃ -->
   <div id="modal-inspections" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-xl w-full shadow-2xl p-5 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto border border-zinc-200 dark:border-zinc-800">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-2xl w-full shadow-2xl p-5 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto border border-zinc-200 dark:border-zinc-800">
       <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
-        <h3 id="modal-insp-title" class="text-base font-extrabold">Przeglądy i historia</h3>
+        <h3 id="modal-insp-title" class="text-base font-extrabold">Historia działań i przeglądów</h3>
         <button onclick="closeModal('modal-inspections')"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
       <div id="modal-insp-body" class="space-y-4"></div>
@@ -706,15 +714,22 @@
         <button onclick="closeModal('modal-schedule')"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
       <form onsubmit="handleSaveVisit(event)" class="space-y-3.5">
-        <div>
-          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">1. Wyszukaj i wybierz klienta</label>
-          <input type="text" id="visit-client-search" oninput="renderVisitClientDropdown()" placeholder="Wpisz nazwisko lub miasto..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm mb-1.5 outline-none">
-          <select id="visit-client-select" size="4" onchange="renderVisitDeviceDropdown()" required class="w-full border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm p-1.5 outline-none bg-zinc-50 dark:bg-zinc-800"></select>
+        <div class="relative">
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">1. Wybrany klient</label>
+          <input type="hidden" id="visit-client-select" required>
+          <div onclick="toggleCustomDropdown('visit-client-dd')" class="w-full px-3.5 py-2.5 bg-emerald-50/70 dark:bg-emerald-950/40 border-2 border-emerald-500/70 dark:border-emerald-600 rounded-xl text-sm font-extrabold flex justify-between items-center cursor-pointer text-zinc-900 dark:text-white">
+            <span id="visit-client-selected-label" class="truncate">-- Kliknij, aby wybrać klienta --</span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+          </div>
+          <div id="visit-client-dd" class="hidden mt-1.5 p-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl shadow-xl space-y-1.5">
+            <input type="text" id="visit-client-search" oninput="renderVisitClientDropdown()" placeholder="Wpisz nazwisko, ulicę lub miasto..." class="w-full px-3 py-1.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none">
+            <div id="visit-client-dd-list" class="max-h-44 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-700/60 text-xs"></div>
+          </div>
         </div>
 
         <div>
           <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">2. Urządzenie, którego dotyczy wyjazd</label>
-          <select id="visit-device-select" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none"></select>
+          <select id="visit-device-select" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-extrabold outline-none text-zinc-900 dark:text-white"></select>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
@@ -751,6 +766,35 @@
         <div class="flex justify-end gap-2 pt-3 border-t border-zinc-200 dark:border-zinc-800">
           <button type="button" onclick="closeModal('modal-schedule')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-semibold">Anuluj</button>
           <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold">Dodaj do planu</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CLOSE ORDER WITH COMMENT (ZAMKNIJ ZLECENIE) -->
+  <div id="modal-close-visit" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-md w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800">
+      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600"></i>
+          <h3 class="text-base font-extrabold">Zamknij zlecenie i wpisz do historii</h3>
+        </div>
+        <button onclick="closeModal('modal-close-visit')"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form onsubmit="handleConfirmCloseVisit(event)" class="space-y-3.5">
+        <input type="hidden" id="close-visit-id">
+        <div id="close-visit-summary" class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700 text-xs space-y-1"></div>
+        <div>
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Komentarz powykonawczy (zostanie zapisany w historii urządzenia)</label>
+          <textarea id="close-visit-comment" rows="3" required placeholder="Opisz wykonane czynności serwisowe / przeglądowe..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm outline-none focus:border-emerald-500"></textarea>
+        </div>
+        <label class="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 cursor-pointer text-xs font-bold text-emerald-900 dark:text-emerald-300">
+          <input type="checkbox" id="close-visit-update-next-insp" checked class="rounded text-emerald-600">
+          <span>Zaktualizuj również datę kolejnego przeglądu okresowego (+ interwał urządzenia)</span>
+        </label>
+        <div class="flex justify-end gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+          <button type="button" onclick="closeModal('modal-close-visit')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Anuluj</button>
+          <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm">Zatwierdź i zamknij zlecenie</button>
         </div>
       </form>
     </div>
@@ -1294,11 +1338,10 @@ service cloud.firestore {
       const workers = window.workersData && window.workersData.length > 0 ? window.workersData : ['Serwisant 1'];
       if (!selectedWorkerFilter || !workers.includes(selectedWorkerFilter)) selectedWorkerFilter = workers[0];
 
-      ['planner-worker-filter', 'visit-worker-select', 'quick-map-worker'].forEach(id => {
+      ['visit-worker-select', 'quick-map-worker'].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
         el.innerHTML = workers.map(w => `<option value="${w}">${w}</option>`).join('');
-        if (id === 'planner-worker-filter') el.value = selectedWorkerFilter;
       });
 
       const histEl = document.getElementById('history-worker-filter');
@@ -1309,11 +1352,10 @@ service cloud.firestore {
       }
     }
 
-    function onWorkerFilterChange(val) {
-      selectedWorkerFilter = val || (window.workersData?.[0] || 'Serwisant 1');
-      renderPlanner();
-      renderMapMarkers();
-      if (!document.getElementById('planner-week-view').classList.contains('hidden')) renderWeekView();
+    function toggleCustomDropdown(ddId) {
+      const el = document.getElementById(ddId);
+      if (!el) return;
+      el.classList.toggle('hidden');
     }
 
     function openWorkersModal() {
@@ -1436,42 +1478,59 @@ service cloud.firestore {
       else document.getElementById('empty-state').classList.add('hidden');
 
       const visitsContainer = document.getElementById('today-visits-list');
-      const routeBtn = document.getElementById('today-route-btn');
       document.getElementById('today-panel-title').innerText = `Plan pracy na dzisiaj (${formatDatePL(todayYMD)})`;
 
       if (todayVisits.length === 0) {
         visitsContainer.innerHTML = `<p class="text-center py-6 text-sm text-zinc-500">Brak zaplanowanych wyjazdów na dzisiaj.</p>`;
-        routeBtn.classList.add('hidden');
       } else {
-        const pendingForRoute = todayVisits.filter(v => v.status !== 'completed');
-        if (pendingForRoute.length > 0) {
-          routeBtn.classList.remove('hidden');
-          routeBtn.innerHTML = `<i data-lucide="navigation" class="w-3.5 h-3.5"></i> Trasa Google Maps (${pendingForRoute.length})`;
-        } else routeBtn.classList.add('hidden');
+        const workersList = [...new Set([...(window.workersData || ['Serwisant 1']), ...todayVisits.map(v => v.workerName || 'Serwisant 1')])];
+        const groupedHtml = workersList.map(worker => {
+          const workerVisits = todayVisits.filter(v => (v.workerName || 'Serwisant 1') === worker);
+          if (workerVisits.length === 0) return '';
+          const pendingForWorker = workerVisits.filter(v => v.status !== 'completed');
 
-        visitsContainer.innerHTML = todayVisits.map(v => {
-          const client = enriched.find(c => c.id === v.clientId);
-          const dev = client?.devices?.find(d => d.id === v.deviceId);
-          const isDone = v.status === 'completed';
           return `
-            <div class="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 flex justify-between items-center gap-3">
-              <div>
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-xs font-extrabold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-md">${v.time}</span>
-                  <span class="font-bold text-sm text-zinc-900 dark:text-white ${isDone ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</span>
-                  <span class="text-[11px] font-bold bg-zinc-200 dark:bg-zinc-700 px-2 py-0.5 rounded text-zinc-800 dark:text-zinc-200">${v.serviceType}</span>
-                  ${v.workerName ? `<span class="text-[10px] font-extrabold bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 px-2 py-0.5 rounded">👷 ${v.workerName}</span>` : ''}
+            <div class="p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/30 space-y-2.5">
+              <div class="flex justify-between items-center flex-wrap gap-2 border-b border-zinc-200 dark:border-zinc-700 pb-2">
+                <div class="flex items-center gap-2">
+                  <span class="px-2.5 py-1 rounded-lg bg-sky-600 text-white text-xs font-extrabold flex items-center gap-1">👷 ${worker}</span>
+                  <span class="text-xs font-bold text-zinc-500">(${workerVisits.length} zleceń)</span>
                 </div>
-                ${dev ? `<div class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5">🔧 ${dev.deviceModel}</div>` : ''}
-                ${v.notes ? `<div class="text-[11px] text-amber-700 dark:text-amber-400 font-medium mt-0.5">📝 Notatka: ${v.notes}</div>` : ''}
-                ${client ? `<div class="text-xs text-zinc-600 dark:text-zinc-400 mt-1">📍 ${client.city}, ${client.street} • <a href="tel:${client.phone}" class="text-emerald-600 dark:text-emerald-400 font-bold underline">📞 ${client.phone}</a></div>` : ''}
+                ${pendingForWorker.length > 0 ? `
+                  <button onclick="openRouteForDate('${todayYMD}', '${worker.replace(/'/g, "\\'")}')" class="bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-extrabold text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-sm transition">
+                    <i data-lucide="navigation" class="w-3.5 h-3.5"></i> Trasa Google Maps (${pendingForWorker.length})
+                  </button>
+                ` : `<span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">✓ Trasa zakończona</span>`}
               </div>
-              <button onclick="toggleVisitStatus('${v.id}')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${isDone ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200'}">
-                ${isDone ? 'Wykonano' : 'Oznacz'}
-              </button>
+              <div class="space-y-2">
+                ${workerVisits.map(v => {
+                  const client = enriched.find(c => c.id === v.clientId);
+                  const dev = client?.devices?.find(d => d.id === v.deviceId);
+                  const isDone = v.status === 'completed';
+                  return `
+                    <div class="p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex justify-between items-center gap-3">
+                      <div class="min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <span class="text-xs font-extrabold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-md">${v.time}</span>
+                          <span class="font-bold text-sm text-zinc-900 dark:text-white ${isDone ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</span>
+                          <span class="text-[11px] font-bold bg-zinc-200 dark:bg-zinc-700 px-2 py-0.5 rounded text-zinc-800 dark:text-zinc-200">${v.serviceType}</span>
+                        </div>
+                        ${dev ? `<div class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5">🔧 ${dev.deviceModel} ${dev.serialNumber ? `<span class="font-mono text-zinc-500">(S/N: ${dev.serialNumber})</span>` : ''}</div>` : ''}
+                        ${v.notes ? `<div class="text-[11px] text-amber-700 dark:text-amber-400 font-medium mt-0.5">📝 Notatka: ${v.notes}</div>` : ''}
+                        ${v.completionComment ? `<div class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold mt-0.5">✅ Wykonano: ${v.completionComment}</div>` : ''}
+                        ${client ? `<div class="text-xs text-zinc-600 dark:text-zinc-400 mt-1">📍 ${client.city}, ${client.street} • <a href="tel:${client.phone}" class="text-emerald-600 dark:text-emerald-400 font-bold underline">📞 ${client.phone}</a></div>` : ''}
+                      </div>
+                      <button onclick="handleVisitActionButton('${v.id}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold shrink-0 transition ${isDone ? 'bg-zinc-200 dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'}">
+                        ${isDone ? '✓ Zamknięte (Cofnij)' : 'Zamknij zlecenie'}
+                      </button>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
             </div>
           `;
         }).join('');
+        visitsContainer.innerHTML = groupedHtml;
       }
 
       const urgentListEl = document.getElementById('urgent-list');
@@ -1485,25 +1544,39 @@ service cloud.firestore {
       if (displayUrgent.length === 0) {
         urgentListEl.innerHTML = `<div class="p-6 text-center text-sm text-zinc-500">Wszystkie urządzenia mają aktualne przeglądy!</div>`;
       } else {
-        urgentListEl.innerHTML = displayUrgent.map(({ client, device, status }) => `
-          <div class="p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/40 space-y-2 transition">
-            <div class="flex justify-between items-center flex-wrap gap-2">
-              <div>
-                <span class="font-bold text-sm text-zinc-900 dark:text-white">${client.name}</span>
-                <span class="text-xs ml-2 font-semibold text-zinc-500">(${device.deviceModel})</span>
-                <div class="text-xs ${status.isOverdue ? 'text-rose-600' : 'text-amber-600'} font-bold mt-0.5">
-                  ${status.isOverdue ? `Po terminie o ${Math.abs(status.daysToInspection)} dni (${status.nextInspectionFormatted})` : `Przegląd za ${status.daysToInspection} dni (${status.nextInspectionFormatted})`} • <a href="tel:${client.phone}" class="underline">📞 ${client.phone}</a>
+        urgentListEl.innerHTML = displayUrgent.map(({ client, device, status }) => {
+          const scheduledVisit = (window.appointmentsData || []).find(a =>
+            a.status !== 'completed' &&
+            a.clientId === client.id &&
+            (!a.deviceId || a.deviceId === device.id)
+          );
+          const rowClasses = scheduledVisit
+            ? 'p-4 bg-emerald-50/90 dark:bg-emerald-950/40 border-l-4 border-emerald-500 space-y-2 transition'
+            : 'p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/40 space-y-2 transition';
+
+          return `
+            <div class="${rowClasses}">
+              <div class="flex justify-between items-center flex-wrap gap-2">
+                <div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-bold text-sm text-zinc-900 dark:text-white">${client.name}</span>
+                    <span class="text-xs font-semibold text-zinc-500">(${device.deviceModel}${device.serialNumber ? ` • S/N: ${device.serialNumber}` : ''})</span>
+                    ${scheduledVisit ? `<span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-extrabold">📅 Wyjazd zaplanowany: ${formatDatePL(scheduledVisit.date)} (${scheduledVisit.time}) — ${scheduledVisit.workerName || 'Serwis'}</span>` : ''}
+                  </div>
+                  <div class="text-xs ${scheduledVisit ? 'text-emerald-700 dark:text-emerald-300' : status.isOverdue ? 'text-rose-600' : 'text-amber-600'} font-bold mt-0.5">
+                    ${status.isOverdue ? `Po terminie o ${Math.abs(status.daysToInspection)} dni (${status.nextInspectionFormatted})` : `Przegląd za ${status.daysToInspection} dni (${status.nextInspectionFormatted})`} • <a href="tel:${client.phone}" class="underline">📞 ${client.phone}</a>
+                  </div>
+                </div>
+                <div class="flex gap-1.5 flex-wrap">
+                  <button onclick="createServiceFromUrgent('${client.id}', '${device.id}')" class="px-3 py-1.5 ${scheduledVisit ? 'bg-emerald-700 hover:bg-emerald-600' : 'bg-sky-600 hover:bg-sky-500'} text-white rounded-xl text-xs font-bold shadow-sm">${scheduledVisit ? 'Zmień / Dodaj wyjazd' : 'Utwórz serwis'}</button>
+                  <button onclick="openInspectionModal('${client.id}', '${device.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold">Historia działań</button>
+                  <button onclick="skipInspection('${client.id}', '${device.id}')" class="px-2.5 py-1.5 bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 rounded-xl text-xs font-bold" title="Pomija bieżący i przesuwa o rok">Anuluj aktualny (+1r)</button>
+                  <button onclick="toggleReminders('${client.id}', '${device.id}')" class="px-2.5 py-1.5 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-bold">Anuluj</button>
                 </div>
               </div>
-              <div class="flex gap-1.5 flex-wrap">
-                <button onclick="createServiceFromUrgent('${client.id}', '${device.id}')" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold shadow-sm">Utwórz serwis</button>
-                <button onclick="openInspectionModal('${client.id}', '${device.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold">Wbij przegląd</button>
-                <button onclick="skipInspection('${client.id}', '${device.id}')" class="px-2.5 py-1.5 bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 rounded-xl text-xs font-bold" title="Pomija bieżący i przesuwa o rok">Anuluj aktualny (+1r)</button>
-                <button onclick="toggleReminders('${client.id}', '${device.id}')" class="px-2.5 py-1.5 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-bold">Anuluj</button>
-              </div>
             </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
       }
 
       renderCalendar();
@@ -1712,7 +1785,7 @@ service cloud.firestore {
     function onPlannerDateChange(val) { if (!val) return; selectedDate = val; renderPlanner(); renderMapMarkers(); if (!document.getElementById('planner-week-view').classList.contains('hidden')) renderWeekView(); }
 
     function sortVisitsByTime() {
-      const dayVisits = (window.appointmentsData || []).filter(a => a.date === selectedDate && (!selectedWorkerFilter || !a.workerName || a.workerName === selectedWorkerFilter));
+      const dayVisits = (window.appointmentsData || []).filter(a => a.date === selectedDate);
       if (dayVisits.length <= 1) return;
 
       window.appointmentsData.sort((a, b) => {
@@ -1729,49 +1802,62 @@ service cloud.firestore {
       document.getElementById('planner-day-title').innerText = `Plan Dnia: ${formatDatePL(selectedDate)}`;
 
       const dayVisits = (window.appointmentsData || [])
-        .filter(a => a.date === selectedDate && (!selectedWorkerFilter || !a.workerName || a.workerName === selectedWorkerFilter))
+        .filter(a => a.date === selectedDate)
         .sort((a,b) => (a.time||'00:00').localeCompare(b.time||'00:00'));
       const listEl = document.getElementById('planner-visits-list');
 
+      const allWorkers = [...new Set([...(window.workersData || ['Serwisant 1']), ...dayVisits.map(v => v.workerName || 'Serwisant 1')])];
+
       if (dayVisits.length === 0) {
-        listEl.innerHTML = `<div class="text-xs text-zinc-500 py-8 text-center border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">Brak wizyt dla wybranej ekipy. Kliknij pinezkę na mapie lub dodaj przez + Zlecenie.</div>`;
-        document.getElementById('planner-route-action').innerHTML = `<div class="text-xs text-zinc-400 text-center py-3">Brak punktów trasy na ten dzień.</div>`;
+        listEl.innerHTML = `<div class="text-xs text-zinc-500 py-8 text-center border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">Brak zaplanowanych wizyt na ten dzień. Kliknij pinezkę na mapie lub dodaj przez przycisk + Dodaj.</div>`;
       } else {
-        listEl.innerHTML = dayVisits.map(v => {
-          const client = (window.clientsData || []).find(c => c.id === v.clientId);
-          const dev = client?.devices?.find(d => d.id === v.deviceId);
-          const isDone = v.status === 'completed';
+        listEl.innerHTML = allWorkers.map(worker => {
+          const workerVisits = dayVisits.filter(v => (v.workerName || 'Serwisant 1') === worker);
+          if (workerVisits.length === 0) return '';
+          const pending = workerVisits.filter(v => v.status !== 'completed');
+
           return `
-            <div class="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50 flex justify-between items-center gap-2">
-              <div class="min-w-0">
-                <div class="flex items-center gap-1.5 flex-wrap">
-                  <span class="text-xs font-extrabold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded">${v.time}</span>
-                  <h3 class="text-sm font-bold text-zinc-900 dark:text-white truncate ${isDone ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</h3>
-                  <span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200">${v.serviceType || 'Przegląd'}</span>
-                  ${v.workerName ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300">👷 ${v.workerName}</span>` : ''}
+            <div class="p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50/80 dark:bg-zinc-800/40 space-y-2.5">
+              <div class="flex justify-between items-center flex-wrap gap-2 border-b border-zinc-200 dark:border-zinc-700 pb-2">
+                <div class="flex items-center gap-2">
+                  <span class="px-2.5 py-1 rounded-lg bg-sky-600 text-white text-xs font-extrabold">👷 Trasa: ${worker}</span>
+                  <span class="text-[11px] font-bold text-zinc-500">${workerVisits.length} pkt</span>
                 </div>
-                ${dev ? `<div class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5 truncate">🔧 ${dev.deviceModel}</div>` : ''}
-                ${v.notes ? `<div class="text-[11px] text-amber-700 dark:text-amber-400 font-medium mt-0.5 truncate">📝 ${v.notes}</div>` : ''}
-                <p class="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5 truncate">📍 ${client ? client.city + ', ' + client.street : ''} • <a href="tel:${client?.phone}" class="text-emerald-600 dark:text-emerald-400 font-semibold underline">📞 ${client?.phone || ''}</a></p>
+                ${pending.length > 0 ? `
+                  <button onclick="openRouteForDate('${selectedDate}', '${worker.replace(/'/g, "\\'")}')" class="bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-extrabold px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-sm transition text-xs">
+                    <i data-lucide="navigation" class="w-3.5 h-3.5"></i> Nawiguj trasę (${pending.length})
+                  </button>
+                ` : `<span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">✓ Wszystkie zlecenia zamknięte</span>`}
               </div>
-              <div class="flex items-center gap-1.5 shrink-0">
-                <button onclick="toggleVisitStatus('${v.id}')" class="px-2.5 py-1.5 rounded-xl text-xs font-bold ${isDone ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200'}">${isDone ? 'Wykonana' : 'Oznacz'}</button>
-                <button onclick="deleteVisit('${v.id}')" class="text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 p-1.5 rounded-lg" title="Usuń wizytę"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+              <div class="space-y-2">
+                ${workerVisits.map(v => {
+                  const client = (window.clientsData || []).find(c => c.id === v.clientId);
+                  const dev = client?.devices?.find(d => d.id === v.deviceId);
+                  const isDone = v.status === 'completed';
+                  return `
+                    <div class="p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex justify-between items-center gap-2">
+                      <div class="min-w-0">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                          <span class="text-xs font-extrabold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded">${v.time}</span>
+                          <h3 class="text-sm font-bold text-zinc-900 dark:text-white truncate ${isDone ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</h3>
+                          <span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200">${v.serviceType || 'Przegląd'}</span>
+                        </div>
+                        ${dev ? `<div class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5 truncate">🔧 ${dev.deviceModel} ${dev.serialNumber ? `<span class="font-mono text-zinc-500">(S/N: ${dev.serialNumber})</span>` : ''}</div>` : ''}
+                        ${v.notes ? `<div class="text-[11px] text-amber-700 dark:text-amber-400 font-medium mt-0.5">📝 ${v.notes}</div>` : ''}
+                        ${v.completionComment ? `<div class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold mt-0.5">✅ Komentarz: ${v.completionComment}</div>` : ''}
+                        <p class="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5 truncate">📍 ${client ? client.city + ', ' + client.street : ''} • <a href="tel:${client?.phone}" class="text-emerald-600 dark:text-emerald-400 font-semibold underline">📞 ${client?.phone || ''}</a></p>
+                      </div>
+                      <div class="flex items-center gap-1.5 shrink-0">
+                        <button onclick="handleVisitActionButton('${v.id}')" class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold ${isDone ? 'bg-zinc-100 dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'}">${isDone ? '✓ Zamknięte' : 'Zamknij zlecenie'}</button>
+                        <button onclick="deleteVisit('${v.id}')" class="text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 p-1.5 rounded-lg" title="Usuń wizytę"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
               </div>
             </div>
           `;
         }).join('');
-
-        const pending = dayVisits.filter(v => v.status !== 'completed');
-        if (pending.length > 0) {
-          document.getElementById('planner-route-action').innerHTML = `
-            <button onclick="openRouteForDate('${selectedDate}')" class="w-full bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 shadow transition text-xs sm:text-sm">
-              <i data-lucide="navigation" class="w-4 h-4"></i> Trasa Google Maps (${pending.length} pkt)
-            </button>
-          `;
-        } else {
-          document.getElementById('planner-route-action').innerHTML = `<div class="text-xs text-emerald-400 font-bold text-center py-3">Wszystkie wizyty zostały wykonane!</div>`;
-        }
       }
       lucide.createIcons();
     }
@@ -1790,7 +1876,7 @@ service cloud.firestore {
         const ymd = toYMD(d);
         const isSelected = ymd === selectedDate;
         const dayVisits = (window.appointmentsData || [])
-          .filter(a => a.date === ymd && (!selectedWorkerFilter || !a.workerName || a.workerName === selectedWorkerFilter))
+          .filter(a => a.date === ymd)
           .sort((a,b)=>(a.time||'00:00').localeCompare(b.time||'00:00'));
 
         html += `
@@ -1824,9 +1910,9 @@ service cloud.firestore {
       lucide.createIcons();
     }
 
-    function openRouteForDate(dateStr) {
+    function openRouteForDate(dateStr, workerName = null) {
       const dayVisits = (window.appointmentsData || [])
-        .filter(a => a.date === dateStr && a.status !== 'completed' && (!selectedWorkerFilter || !a.workerName || a.workerName === selectedWorkerFilter))
+        .filter(a => a.date === dateStr && a.status !== 'completed' && (!workerName || (a.workerName || 'Serwisant 1') === workerName))
         .sort((a,b) => (a.time||'00:00').localeCompare(b.time||'00:00'));
       if (dayVisits.length === 0) return;
 
@@ -1854,7 +1940,7 @@ service cloud.firestore {
       } else launchUrl('');
     }
 
-    function openTodayRoute() { openRouteForDate(toYMD(new Date())); }
+    function openTodayRoute(workerName = null) { openRouteForDate(toYMD(new Date()), workerName); }
 
     function renderClients() {
       const enriched = getEnrichedClients();
@@ -1862,7 +1948,7 @@ service cloud.firestore {
       const deviceFilter = document.getElementById('device-filter-select')?.value || 'all';
 
       const filtered = enriched.filter(c => {
-        const matchText = !query || c.name.toLowerCase().includes(query) || c.city.toLowerCase().includes(query) || c.street.toLowerCase().includes(query) || c.phone.toLowerCase().includes(query) || c.devices.some(d => d.deviceModel.toLowerCase().includes(query));
+        const matchText = !query || c.name.toLowerCase().includes(query) || c.city.toLowerCase().includes(query) || c.street.toLowerCase().includes(query) || c.phone.toLowerCase().includes(query) || c.devices.some(d => d.deviceModel.toLowerCase().includes(query) || (d.serialNumber || '').toLowerCase().includes(query));
         const matchDev = deviceFilter === 'all' || c.devices.some(d => d.deviceType === deviceFilter);
         return matchText && matchDev;
       });
@@ -1898,7 +1984,7 @@ service cloud.firestore {
               const st = dev.status;
               return `
                 <div onclick="openInspectionModal('${c.id}', '${dev.id}')" class="flex items-center justify-between p-2 rounded-xl border text-xs cursor-pointer ${info.bg} ${info.border}">
-                  <span class="font-bold text-zinc-900 dark:text-white">${dev.deviceModel} ${st.noInstallDate ? '<span class="text-[10px] font-normal text-zinc-500">(Obce)</span>' : ''}</span>
+                  <span class="font-bold text-zinc-900 dark:text-white">${dev.deviceModel} ${dev.serialNumber ? `<span class="text-[10px] font-mono text-zinc-500">[S/N: ${dev.serialNumber}]</span>` : ''} ${st.noInstallDate ? '<span class="text-[10px] font-normal text-zinc-500">(Obce)</span>' : ''}</span>
                   ${st.isOverdue ? '<span class="px-1.5 rounded bg-rose-600 text-white text-[10px] font-bold">Po terminie</span>' : st.isSoon ? `<span class="px-1.5 rounded bg-amber-500 text-white text-[10px] font-bold">Za ${st.daysToInspection}d</span>` : '<span class="px-1.5 rounded bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-300 border text-[10px] font-bold">OK</span>'}
                 </div>
               `;
@@ -1907,7 +1993,7 @@ service cloud.firestore {
           <div class="flex justify-end gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800 flex-wrap">
             <button onclick="createOrderFromClient('${c.id}')" class="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-sm">+ Zlecenie</button>
             <button onclick="openAddDeviceModalForClient('${c.id}')" class="px-3.5 py-1.5 bg-teal-50 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-900 rounded-xl text-xs font-bold whitespace-nowrap">+ Dodaj urządzenie</button>
-            <button onclick="openInspectionModal('${c.id}')" class="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900 rounded-xl text-xs font-bold">Przeglądy</button>
+            <button onclick="openInspectionModal('${c.id}')" class="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900 rounded-xl text-xs font-bold">Historia działań</button>
             <button onclick="openEditClientModal('${c.id}')" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-xl text-xs font-bold">Edytuj</button>
             <button onclick="deleteClient('${c.id}')" class="px-3 py-1.5 bg-rose-50 dark:bg-rose-950/40 text-rose-600 rounded-xl text-xs font-bold">Usuń</button>
           </div>
@@ -1931,7 +2017,7 @@ service cloud.firestore {
                 const st = dev.status;
                 return `
                   <div onclick="openInspectionModal('${c.id}', '${dev.id}')" class="inline-flex items-center gap-2 px-2.5 py-1 rounded-xl border text-xs cursor-pointer ${info.bg} ${info.border}">
-                    <span class="font-bold text-zinc-900 dark:text-white">${dev.deviceModel} ${st.noInstallDate ? '<span class="text-[10px] font-normal text-zinc-500">(Obce)</span>' : ''}</span>
+                    <span class="font-bold text-zinc-900 dark:text-white">${dev.deviceModel} ${dev.serialNumber ? `<span class="text-[10px] font-mono text-zinc-500">[S/N: ${dev.serialNumber}]</span>` : ''} ${st.noInstallDate ? '<span class="text-[10px] font-normal text-zinc-500">(Obce)</span>' : ''}</span>
                     ${st.isOverdue ? '<span class="px-1.5 rounded bg-rose-600 text-white text-[10px] font-bold">Po terminie</span>' : st.isSoon ? `<span class="px-1.5 rounded bg-amber-500 text-white text-[10px] font-bold">Za ${st.daysToInspection}d</span>` : '<span class="px-1.5 rounded bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-300 border text-[10px] font-bold">OK</span>'}
                   </div>
                 `;
@@ -1942,7 +2028,7 @@ service cloud.firestore {
             <div class="inline-flex items-center gap-1.5">
               <button onclick="createOrderFromClient('${c.id}')" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-sm whitespace-nowrap">+ Zlecenie</button>
               <button onclick="openAddDeviceModalForClient('${c.id}')" class="px-3 py-1.5 bg-teal-50 dark:bg-teal-950 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800 rounded-lg text-xs font-bold whitespace-nowrap">+ Dodaj urządzenie</button>
-              <button onclick="openInspectionModal('${c.id}')" class="px-2.5 py-1.5 bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-lg text-xs font-bold whitespace-nowrap">Przeglądy</button>
+              <button onclick="openInspectionModal('${c.id}')" class="px-2.5 py-1.5 bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-lg text-xs font-bold whitespace-nowrap">Historia działań</button>
               <button onclick="openEditClientModal('${c.id}')" class="p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
               <button onclick="deleteClient('${c.id}')" class="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
             </div>
@@ -2233,8 +2319,9 @@ service cloud.firestore {
             ${getFilteredCatalogOptionsHtmlForType(selectedType)}
           </select>
         </div>
-        <div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <input type="text" class="dev-model w-full px-2.5 py-1.5 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none bg-white dark:bg-zinc-800 font-semibold" placeholder="Model urządzenia..." value="${data?.deviceModel || ''}" required>
+          <input type="text" class="dev-serial w-full px-2.5 py-1.5 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs font-mono outline-none bg-white dark:bg-zinc-800" placeholder="Numer seryjny (S/N)..." value="${data?.serialNumber || ''}">
         </div>
         <label class="flex items-center gap-2 text-[11px] font-bold text-amber-800 dark:text-amber-300 cursor-pointer pt-0.5">
           <input type="checkbox" class="dev-no-install rounded" ${noInstall ? 'checked' : ''} onchange="toggleModalDevDates(this)">
@@ -2406,6 +2493,7 @@ service cloud.firestore {
         const prevDev = existingClient?.devices?.find(d => d.id === devId);
         const type = el.querySelector('.dev-type').value;
         const model = el.querySelector('.dev-model').value.trim();
+        const serialNumber = (el.querySelector('.dev-serial')?.value || '').trim();
         const noInstallDate = Boolean(el.querySelector('.dev-no-install')?.checked);
         const install = noInstallDate ? '' : (el.querySelector('.dev-install').value || today);
         const warranty = noInstallDate ? 0 : (Number(el.querySelector('.dev-warranty').value) || 60);
@@ -2415,6 +2503,7 @@ service cloud.firestore {
           id: devId,
           deviceType: type,
           deviceModel: model || 'Urządzenie HVAC',
+          serialNumber,
           noInstallDate,
           installDate: install,
           warrantyMonths: warranty,
@@ -2467,8 +2556,413 @@ service cloud.firestore {
     }
 
     function openAddDeviceModalForClient(preClientId = '') {
-      openAddDeviceModal();
-      if (preClientId) setTimeout(() => { const sel = document.getElementById('select-client-target'); if (sel) sel.value = preClientId; }, 50);
+      openAddDeviceModal(preClientId);
+    }
+
+    function openAddDeviceModalWithCatalog(catId) {
+      const item = (window.catalogData || []).find(x => x.id === catId);
+      openAddDeviceModal('', catId);
+      if (item) {
+        document.getElementById('assigned-dev-type').value = item.deviceType || 'heat_pump';
+        renderCatalogDropdown(catId);
+        onCatalogModelSelected(catId);
+      }
+    }
+
+    function openAddDeviceModal(preClientId = '', preCatalogId = '') {
+      document.getElementById('search-client-for-dev').value = '';
+      document.getElementById('search-catalog-for-dev').value = '';
+      document.getElementById('assigned-client-dd').classList.add('hidden');
+      document.getElementById('assigned-catalog-dd').classList.add('hidden');
+      document.getElementById('assigned-dev-type').value = 'heat_pump';
+      document.getElementById('assigned-dev-model').value = '';
+      document.getElementById('assigned-dev-serial').value = '';
+      document.getElementById('assigned-dev-no-install').checked = false;
+      toggleAssignedInstallDate(false);
+
+      const today = toYMD(new Date());
+      document.getElementById('assigned-dev-install').value = today;
+      document.getElementById('assigned-dev-next-insp').value = addMonths(today, 12);
+      document.getElementById('assigned-dev-warranty').value = 60;
+      document.getElementById('assigned-dev-interval').value = 12;
+
+      const defaultClient = preClientId
+        ? (window.clientsData || []).find(c => c.id === preClientId)
+        : (window.clientsData || [])[0];
+
+      if (defaultClient) {
+        selectAssignedClient(defaultClient.id, false);
+      } else {
+        document.getElementById('select-client-target').value = '';
+        document.getElementById('assigned-client-selected-label').innerText = '-- Brak klientów w bazie --';
+      }
+
+      renderClientDropdown();
+      renderCatalogDropdown(preCatalogId);
+
+      document.getElementById('modal-add-device').classList.remove('hidden');
+      document.getElementById('modal-add-device').classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function selectAssignedClient(clientId, closeDd = true) {
+      const c = (window.clientsData || []).find(x => x.id === clientId);
+      if (!c) return;
+      document.getElementById('select-client-target').value = c.id;
+      document.getElementById('assigned-client-selected-label').innerText = `👤 ${c.name} (${c.city}, ${c.street})`;
+      if (closeDd) document.getElementById('assigned-client-dd').classList.add('hidden');
+      renderClientDropdown();
+    }
+
+    function onAssignedTypeChange() {
+      document.getElementById('assigned-dev-model').value = '';
+      document.getElementById('select-catalog-target').value = '';
+      document.getElementById('assigned-catalog-selected-label').innerText = '-- Kliknij, aby wybrać model z katalogu --';
+      renderCatalogDropdown();
+    }
+
+    function renderClientDropdown() {
+      const q = (document.getElementById('search-client-for-dev')?.value || '').toLowerCase();
+      const listEl = document.getElementById('assigned-client-dd-list');
+      const currentId = document.getElementById('select-client-target')?.value;
+      if (!listEl) return;
+      const filtered = (window.clientsData || []).filter(c => !q || c.name.toLowerCase().includes(q) || (c.city || '').toLowerCase().includes(q) || (c.phone || '').toLowerCase().includes(q));
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<div class="p-2 text-zinc-400 text-center">Brak pasujących klientów</div>`;
+        return;
+      }
+      listEl.innerHTML = filtered.map(c => `
+        <div onclick="selectAssignedClient('${c.id}', true)" class="p-2 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 cursor-pointer flex justify-between items-center rounded-lg ${c.id === currentId ? 'bg-emerald-100/80 dark:bg-emerald-900/40 font-extrabold text-emerald-700 dark:text-emerald-300' : ''}">
+          <span>${c.name} <span class="text-zinc-400">(${c.city}, ${c.street})</span></span>
+          ${c.id === currentId ? '<span class="text-[10px] bg-emerald-600 text-white px-1.5 py-0.5 rounded">Wybrano</span>' : ''}
+        </div>
+      `).join('');
+    }
+
+    function renderCatalogDropdown(preCatalogId = '') {
+      const q = (document.getElementById('search-catalog-for-dev')?.value || '').toLowerCase();
+      const selectedType = document.getElementById('assigned-dev-type')?.value || 'heat_pump';
+      const listEl = document.getElementById('assigned-catalog-dd-list');
+      const currentCatId = preCatalogId || document.getElementById('select-catalog-target')?.value;
+      if (!listEl) return;
+      const filtered = (window.catalogData || []).filter(item => item.deviceType === selectedType && (!q || `${item.brand} ${item.model}`.toLowerCase().includes(q)));
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<div class="p-2 text-zinc-400 text-center">Brak modeli tego typu w katalogu</div>`;
+        return;
+      }
+      listEl.innerHTML = filtered.map(item => `
+        <div onclick="onCatalogModelSelected('${item.id}')" class="p-2 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 cursor-pointer flex justify-between items-center rounded-lg ${item.id === currentCatId ? 'bg-emerald-100/80 dark:bg-emerald-900/40 font-extrabold text-emerald-700 dark:text-emerald-300' : ''}">
+          <span>${item.brand} ${item.model} <span class="text-zinc-400">(${item.defaultWarrantyMonths || 60}m gw.)</span></span>
+          ${item.id === currentCatId ? '<span class="text-[10px] bg-emerald-600 text-white px-1.5 py-0.5 rounded">Wybrano</span>' : ''}
+        </div>
+      `).join('');
+    }
+
+    function onCatalogModelSelected(catId) {
+      const item = (window.catalogData || []).find(x => x.id === catId);
+      if (!item) return;
+      document.getElementById('select-catalog-target').value = item.id;
+      document.getElementById('assigned-catalog-selected-label').innerText = `🔧 ${item.brand} ${item.model} (${item.defaultWarrantyMonths || 60}m gw.)`;
+      document.getElementById('assigned-dev-type').value = item.deviceType || 'heat_pump';
+      document.getElementById('assigned-dev-model').value = `${item.brand} ${item.model}`.trim();
+      document.getElementById('assigned-dev-warranty').value = item.defaultWarrantyMonths || 60;
+      document.getElementById('assigned-dev-interval').value = item.defaultIntervalMonths || 12;
+      document.getElementById('assigned-catalog-dd').classList.add('hidden');
+      renderCatalogDropdown(catId);
+    }
+
+    function toggleAssignedInstallDate(noInstall) {
+      const box = document.getElementById('assigned-dev-dates-box');
+      const extBox = document.getElementById('assigned-dev-external-next-box');
+      if (noInstall) { box.classList.add('hidden'); if (extBox) extBox.classList.remove('hidden'); }
+      else { box.classList.remove('hidden'); if (extBox) extBox.classList.add('hidden'); }
+    }
+
+    function handleSaveAssignedDevice(e) {
+      e.preventDefault();
+      const clientId = document.getElementById('select-client-target').value;
+      const type = document.getElementById('assigned-dev-type').value || 'heat_pump';
+      const model = document.getElementById('assigned-dev-model').value.trim();
+      const serialNumber = (document.getElementById('assigned-dev-serial')?.value || '').trim();
+      const noInstallDate = Boolean(document.getElementById('assigned-dev-no-install').checked);
+      const today = toYMD(new Date());
+      const install = noInstallDate ? '' : (document.getElementById('assigned-dev-install').value || today);
+      const warranty = noInstallDate ? 0 : (Number(document.getElementById('assigned-dev-warranty').value) || 60);
+      const interval = noInstallDate ? (Number(document.getElementById('assigned-dev-ext-interval').value) || 12) : (Number(document.getElementById('assigned-dev-interval').value) || 12);
+      const nextInspDate = noInstallDate ? (document.getElementById('assigned-dev-next-insp').value || addMonths(today, interval)) : addMonths(install || today, interval);
+
+      const client = (window.clientsData || []).find(c => c.id === clientId);
+      if (!client) { showToast("Wybierz klienta z listy!"); return; }
+
+      const newDev = {
+        id: `dev_${Date.now()}`,
+        deviceType: type,
+        deviceModel: model || 'Urządzenie HVAC',
+        serialNumber,
+        noInstallDate,
+        installDate: install,
+        warrantyMonths: warranty,
+        lastInspectionDate: install || today,
+        nextInspectionDate: nextInspDate,
+        inspectionIntervalMonths: interval,
+        remindersCanceled: false,
+        inspectionHistory: []
+      };
+
+      client.devices = [...(client.devices || []), newDev];
+      persistData();
+      closeModal('modal-add-device');
+      renderDashboard();
+      if (currentTab === 'clients') renderClients();
+      showToast("Przypisano urządzenie do klienta!");
+    }
+
+    function openScheduleModal(preselectedClientId = '', preselectedDeviceId = '') {
+      populateWorkerSelects();
+      document.getElementById('visit-client-search').value = '';
+      document.getElementById('visit-client-dd').classList.add('hidden');
+
+      const targetClient = preselectedClientId
+        ? (window.clientsData || []).find(c => c.id === preselectedClientId)
+        : (window.clientsData || [])[0];
+
+      if (targetClient) {
+        selectVisitClient(targetClient.id, false, preselectedDeviceId);
+      } else {
+        document.getElementById('visit-client-select').value = '';
+        document.getElementById('visit-client-selected-label').innerText = '-- Brak klientów w bazie --';
+      }
+
+      renderVisitClientDropdown();
+      document.getElementById('visit-date').value = selectedDate;
+      document.getElementById('visit-type-preset').value = 'Przegląd';
+      document.getElementById('visit-type-custom-wrap').classList.add('hidden');
+      document.getElementById('visit-type-custom').value = '';
+      document.getElementById('visit-notes').value = '';
+      document.getElementById('modal-schedule').classList.remove('hidden');
+      document.getElementById('modal-schedule').classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function selectVisitClient(clientId, closeDd = true, preselectedDeviceId = '') {
+      const c = (window.clientsData || []).find(x => x.id === clientId);
+      if (!c) return;
+      document.getElementById('visit-client-select').value = c.id;
+      document.getElementById('visit-client-selected-label').innerText = `👤 ${c.name} (${c.city}, ${c.street})`;
+      if (closeDd) document.getElementById('visit-client-dd').classList.add('hidden');
+      renderVisitClientDropdown();
+      renderVisitDeviceDropdown(preselectedDeviceId);
+    }
+
+    function renderVisitClientDropdown() {
+      const q = (document.getElementById('visit-client-search')?.value || '').toLowerCase();
+      const listEl = document.getElementById('visit-client-dd-list');
+      const currentId = document.getElementById('visit-client-select')?.value;
+      if (!listEl) return;
+      const filtered = (window.clientsData || []).filter(c => !q || c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q) || (c.street||'').toLowerCase().includes(q));
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<div class="p-2 text-zinc-400 text-center">Brak pasujących klientów</div>`;
+        return;
+      }
+      listEl.innerHTML = filtered.map(c => `
+        <div onclick="selectVisitClient('${c.id}', true)" class="p-2 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 cursor-pointer flex justify-between items-center rounded-lg ${c.id === currentId ? 'bg-emerald-100/80 dark:bg-emerald-900/40 font-extrabold text-emerald-700 dark:text-emerald-300' : ''}">
+          <span>${c.name} <span class="text-zinc-400">(${c.city}, ${c.street})</span></span>
+          ${c.id === currentId ? '<span class="text-[10px] bg-emerald-600 text-white px-1.5 py-0.5 rounded">Wybrano</span>' : ''}
+        </div>
+      `).join('');
+    }
+
+    function renderVisitDeviceDropdown(preselectedDeviceId = '') {
+      const clientId = document.getElementById('visit-client-select')?.value;
+      const devSel = document.getElementById('visit-device-select');
+      if (!devSel) return;
+      const client = (window.clientsData || []).find(c => c.id === clientId);
+      const devs = client?.devices || [];
+      if (devs.length === 0) devSel.innerHTML = `<option value="">Ogólne (Brak przypisanego urządzenia)</option>`;
+      else devSel.innerHTML = devs.map((d, idx) => {
+        const isSelected = preselectedDeviceId ? d.id === preselectedDeviceId : idx === 0;
+        return `<option value="${d.id}" ${isSelected ? 'selected' : ''}>🔧 ${getDeviceInfo(d.deviceType).short}: ${d.deviceModel}${d.serialNumber ? ` (S/N: ${d.serialNumber})` : ''}</option>`;
+      }).join('') + `<option value="">Wszystkie / Inne urządzenie</option>`;
+    }
+
+    function openInspectionModal(clientId, highlightDeviceId = null) {
+      const c = getEnrichedClients().find(x => x.id === clientId);
+      if (!c) return;
+
+      document.getElementById('modal-insp-title').innerText = `Historia działań i przeglądów: ${c.name}`;
+      const body = document.getElementById('modal-insp-body');
+
+      body.innerHTML = c.devices.map(d => {
+        const isHighlighted = highlightDeviceId && d.id === highlightDeviceId;
+        const deviceVisits = (window.appointmentsData || []).filter(v =>
+          v.clientId === c.id && (!v.deviceId || v.deviceId === d.id)
+        );
+
+        const combinedActions = [
+          ...(d.inspectionHistory || []).map(h => ({
+            id: h.id,
+            date: h.date,
+            type: h.actionType || 'Wpis w karcie urządzenia',
+            technician: h.technician || 'Serwis PP',
+            notes: h.notes || '',
+            badgeColor: 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+          })),
+          ...deviceVisits.filter(v => !v.savedToDeviceHistory).map(v => ({
+            id: v.id,
+            date: v.date,
+            type: v.status === 'completed' ? `Zamknięte zlecenie: ${v.serviceType}` : `Zaplanowano: ${v.serviceType} (${v.time})`,
+            technician: v.workerName || 'Serwis PP',
+            notes: v.completionComment || v.notes || 'Brak dodatkowego komentarza',
+            badgeColor: v.status === 'completed' ? 'bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300' : 'bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300'
+          }))
+        ].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+        return `
+          <div class="p-4 bg-zinc-50 dark:bg-zinc-800/60 border ${isHighlighted ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-zinc-200 dark:border-zinc-700'} rounded-xl space-y-3">
+            <div class="flex justify-between items-center flex-wrap gap-2">
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h4 class="font-extrabold text-zinc-900 dark:text-white">${d.deviceModel}</h4>
+                  ${d.serialNumber ? `<span class="text-xs font-mono px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200">S/N: ${d.serialNumber}</span>` : ''}
+                </div>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Następny przegląd: <span class="font-bold text-zinc-800 dark:text-zinc-200">${d.status.nextInspectionFormatted}</span> • Gwarancja do: <span class="font-bold">${d.status.warrantyEndFormatted}</span></p>
+              </div>
+              <div class="flex gap-1.5 flex-wrap">
+                <button onclick="registerInspection('${c.id}', '${d.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold">+ Wbij szybki przegląd</button>
+                <button onclick="skipInspection('${c.id}', '${d.id}')" class="px-3 py-1.5 bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 rounded-xl text-xs font-bold">Anuluj aktualny (+1r)</button>
+                <button onclick="toggleReminders('${c.id}', '${d.id}')" class="px-3 py-1.5 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-bold">${d.status.remindersCanceled ? 'Wznów' : 'Anuluj'}</button>
+              </div>
+            </div>
+            <div class="text-xs space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-700">
+              <span class="font-bold text-zinc-600 dark:text-zinc-400">Pełna historia działań (przeglądy, serwisy, naprawy, komentarze):</span>
+              ${combinedActions.length === 0 ? '<p class="text-zinc-400">Brak zarejestrowanych działań na tym urządzeniu.</p>' : combinedActions.map(act => `
+                <div class="bg-white dark:bg-zinc-900 p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 space-y-1">
+                  <div class="flex justify-between items-center flex-wrap gap-1">
+                    <span class="font-extrabold">📅 ${formatDatePL(act.date)} • 👷 ${act.technician}</span>
+                    <span class="text-[10px] font-extrabold px-2 py-0.5 rounded ${act.badgeColor}">${act.type}</span>
+                  </div>
+                  <div class="text-zinc-700 dark:text-zinc-300 font-medium">${act.notes}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('modal-inspections').classList.remove('hidden');
+      document.getElementById('modal-inspections').classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function registerInspection(clientId, devId) {
+      const today = toYMD(new Date());
+      const client = (window.clientsData || []).find(c => c.id === clientId);
+      if (!client) return;
+
+      client.devices = client.devices.map(d => {
+        if (d.id !== devId) return d;
+        const interval = Number(d.inspectionIntervalMonths || 12);
+        const nextYear = addMonths(today, interval);
+        const history = d.inspectionHistory || [];
+        return {
+          ...d,
+          lastInspectionDate: today,
+          nextInspectionDate: nextYear,
+          remindersCanceled: false,
+          inspectionHistory: [{ id: `h_${Date.now()}`, date: today, actionType: 'Przegląd okresowy', technician: 'Serwis PP', notes: 'Przegląd okresowy wykonany' }, ...history]
+        };
+      });
+
+      persistData();
+      showToast("Zarejestrowano przegląd w historii działań!");
+      openInspectionModal(clientId, devId);
+      renderDashboard();
+      if (currentTab === 'clients') renderClients();
+      if (currentTab === 'history') renderHistoryTable();
+    }
+
+    function handleVisitActionButton(visitId) {
+      const visit = (window.appointmentsData || []).find(a => a.id === visitId);
+      if (!visit) return;
+      if (visit.status === 'completed') {
+        askConfirmation('Cofnięcie zamknięcia zlecenia', 'Czy chcesz przywrócić to zlecenie z powrotem do statusu „W planie”?', () => {
+          visit.status = 'planned';
+          persistData();
+          refreshAllViews();
+          showToast('Przywrócono zlecenie do realizacji.');
+        });
+      } else {
+        openCloseVisitModal(visitId);
+      }
+    }
+
+    function openCloseVisitModal(visitId) {
+      const visit = (window.appointmentsData || []).find(a => a.id === visitId);
+      if (!visit) return;
+      const client = (window.clientsData || []).find(c => c.id === visit.clientId);
+      const dev = client?.devices?.find(d => d.id === visit.deviceId) || client?.devices?.[0];
+
+      document.getElementById('close-visit-id').value = visit.id;
+      document.getElementById('close-visit-comment').value = visit.notes ? `Wykonano: ${visit.serviceType}. (${visit.notes})` : `Wykonano: ${visit.serviceType} — urządzenie sprawne.`;
+      const isInsp = (visit.serviceType || '').toLowerCase().includes('przegl');
+      document.getElementById('close-visit-update-next-insp').checked = isInsp;
+
+      document.getElementById('close-visit-summary').innerHTML = `
+        <div class="font-extrabold text-zinc-900 dark:text-white">${client ? client.name : 'Klient'} • ${visit.serviceType}</div>
+        <div class="text-zinc-500">🔧 Urządzenie: <strong>${dev ? dev.deviceModel : 'Ogólne'}</strong> ${dev?.serialNumber ? `(S/N: ${dev.serialNumber})` : ''}</div>
+        <div class="text-zinc-500">👷 Wykonawca: <strong>${visit.workerName || 'Serwis PP'}</strong> • Data: <strong>${formatDatePL(visit.date)}</strong></div>
+      `;
+
+      document.getElementById('modal-close-visit').classList.remove('hidden');
+      document.getElementById('modal-close-visit').classList.add('flex');
+      setTimeout(() => document.getElementById('close-visit-comment').focus(), 80);
+      lucide.createIcons();
+    }
+
+    function handleConfirmCloseVisit(e) {
+      e.preventDefault();
+      const visitId = document.getElementById('close-visit-id').value;
+      const comment = (document.getElementById('close-visit-comment').value || '').trim();
+      const shouldUpdateNextInsp = document.getElementById('close-visit-update-next-insp').checked;
+
+      const visit = (window.appointmentsData || []).find(a => a.id === visitId);
+      if (!visit) return;
+
+      visit.status = 'completed';
+      visit.completionComment = comment;
+      visit.savedToDeviceHistory = true;
+
+      const client = (window.clientsData || []).find(c => c.id === visit.clientId);
+      if (client && Array.isArray(client.devices) && client.devices.length > 0) {
+        const targetDevId = visit.deviceId || client.devices[0].id;
+        client.devices = client.devices.map(d => {
+          if (d.id !== targetDevId) return d;
+          const interval = Number(d.inspectionIntervalMonths || 12);
+          const nextDate = shouldUpdateNextInsp ? addMonths(visit.date || toYMD(new Date()), interval) : d.nextInspectionDate;
+          const history = d.inspectionHistory || [];
+          return {
+            ...d,
+            lastInspectionDate: shouldUpdateNextInsp ? (visit.date || toYMD(new Date())) : d.lastInspectionDate,
+            nextInspectionDate: nextDate,
+            remindersCanceled: shouldUpdateNextInsp ? false : d.remindersCanceled,
+            inspectionHistory: [
+              {
+                id: `h_visit_${Date.now()}`,
+                date: visit.date || toYMD(new Date()),
+                actionType: visit.serviceType || 'Serwis',
+                technician: visit.workerName || 'Serwis PP',
+                notes: comment
+              },
+              ...history
+            ]
+          };
+        });
+      }
+
+      persistData();
+      closeModal('modal-close-visit');
+      refreshAllViews();
+      showToast('Zlecenie zamknięte i dopisane do historii urządzenia!');
     }
 
     function openAddDeviceModalWithCatalog(catId) {
