@@ -361,8 +361,8 @@
                   </div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div>
-                    <label class="text-[10px] font-bold text-zinc-500">Urządzenie</label>
+                  <div id="quick-map-existing-dev-wrap">
+                    <label class="text-[10px] font-bold text-zinc-500">Urządzenie u klienta</label>
                     <select id="quick-map-device" class="w-full px-2.5 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-semibold"></select>
                   </div>
                   <div>
@@ -370,10 +370,25 @@
                     <select id="quick-map-service-preset" onchange="onServicePresetChange('quick')" class="w-full px-2.5 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-bold">
                       <option value="Przegląd">🛠️ Przegląd</option>
                       <option value="Serwis">⚡ Serwis / Awaria</option>
-                      <option value="Montaż">🏗️ Montaż</option>
+                      <option value="Montaż">🏗️ Montaż (Nowe urz.)</option>
                       <option value="custom">✏️ Wpisz ręcznie...</option>
                     </select>
                   </div>
+                </div>
+                <!-- Sekcja wyboru nowego urządzenia z katalogu, gdy wybrano Montaż z mapy -->
+                <div id="quick-map-install-new-wrap" class="hidden p-2.5 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 space-y-2">
+                  <div class="text-[10px] font-extrabold uppercase text-amber-800 dark:text-amber-300 flex items-center gap-1">
+                    🏗️ Co będzie montowane u klienta?
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <select id="quick-map-new-type" onchange="renderQuickInstallCatalog()" class="w-full px-2 py-1.5 rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-zinc-900 text-xs font-bold">
+                      <option value="heat_pump">🔥 Pompa ciepła</option>
+                      <option value="ac">❄️ Klimatyzacja</option>
+                      <option value="ventilation">💨 Wentylacja</option>
+                    </select>
+                    <select id="quick-map-new-cat" onchange="onQuickInstallCatalogPick()" class="w-full px-2 py-1.5 rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-zinc-900 text-xs font-semibold"></select>
+                  </div>
+                  <input type="text" id="quick-map-new-model" placeholder="Model montowanego urządzenia (np. Panasonic Aquarea 9kW)" class="w-full px-2.5 py-1.5 rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-zinc-900 text-xs font-bold">
                 </div>
                 <input type="text" id="quick-map-service-custom" placeholder="Wpisz własny opis pracy..." class="hidden w-full px-2.5 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs">
                 <div>
@@ -781,23 +796,13 @@
           </div>
         </div>
 
-        <div>
-          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">2. Urządzenie, którego dotyczy wyjazd</label>
-          <select id="visit-device-select" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-extrabold outline-none text-zinc-900 dark:text-white"></select>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Data wizyty</label><input type="date" id="visit-date" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none"></div>
-          <div><label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Godzina</label><input type="time" id="visit-time" value="09:00" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none"></div>
-        </div>
-
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Rodzaj pracy</label>
+            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">2. Rodzaj pracy</label>
             <select id="visit-type-preset" onchange="onServicePresetChange('modal')" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none">
               <option value="Przegląd">🛠️ Przegląd</option>
               <option value="Serwis">⚡ Serwis / Awaria</option>
-              <option value="Montaż">🏗️ Montaż</option>
+              <option value="Montaż">🏗️ Montaż (Nowe urz.)</option>
               <option value="custom">✏️ Wpisz ręcznie...</option>
             </select>
           </div>
@@ -810,6 +815,49 @@
         <div id="visit-type-custom-wrap" class="hidden">
           <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Własny opis usługi</label>
           <input type="text" id="visit-type-custom" placeholder="np. Wymiana zaworu zwrotnego" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
+        </div>
+
+        <!-- Dla Przeglądu / Serwisu: wybór już zamontowanego urządzenia klienta -->
+        <div id="visit-existing-device-wrap">
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">3. Urządzenie u klienta, którego dotyczy wyjazd</label>
+          <select id="visit-device-select" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-extrabold outline-none text-zinc-900 dark:text-white"></select>
+        </div>
+
+        <!-- Dla Montażu: wybór nowego urządzenia z katalogu, które dopiero zostanie zamontowane i przypisane po zamknięciu zlecenia -->
+        <div id="visit-new-install-wrap" class="hidden p-3.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800 space-y-2.5">
+          <div class="text-xs font-extrabold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+            <i data-lucide="package-plus" class="w-4 h-4 shrink-0"></i>
+            <span>3. Urządzenie planowane do montażu (przypisze się automatycznie po montażu)</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] font-bold text-zinc-500 mb-1">Typ urządzenia</label>
+              <select id="visit-new-dev-type" onchange="renderModalInstallCatalog()" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-bold outline-none">
+                <option value="heat_pump">🔥 Pompa ciepła</option>
+                <option value="ac">❄️ Klimatyzacja</option>
+                <option value="ventilation">💨 Wentylacja / Rekuperacja</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-zinc-500 mb-1">Wybierz z Bazy Urządzeń</label>
+              <select id="visit-new-dev-cat" onchange="onModalInstallCatalogPick()" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-bold outline-none"></select>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div class="sm:col-span-2">
+              <label class="block text-[10px] font-bold text-zinc-500 mb-1">Model do zamontowania</label>
+              <input type="text" id="visit-new-dev-model" placeholder="np. Panasonic Aquarea 9kW" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-bold outline-none">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-zinc-500 mb-1">Gwarancja (msc)</label>
+              <input type="number" id="visit-new-dev-warranty" value="60" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-bold outline-none">
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Data wizyty</label><input type="date" id="visit-date" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none"></div>
+          <div><label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Godzina</label><input type="time" id="visit-time" value="09:00" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none"></div>
         </div>
 
         <div>
@@ -827,22 +875,53 @@
 
   <!-- MODAL: CLOSE ORDER WITH COMMENT (ZAMKNIJ ZLECENIE) -->
   <div id="modal-close-visit" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-md w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-md w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800 max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
         <div class="flex items-center gap-2">
           <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600"></i>
-          <h3 class="text-base font-extrabold">Zamknij zlecenie i wpisz do historii</h3>
+          <h3 id="close-visit-modal-title" class="text-base font-extrabold">Zamknij zlecenie i wpisz do historii</h3>
         </div>
         <button onclick="closeModal('modal-close-visit')"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
       <form onsubmit="handleConfirmCloseVisit(event)" class="space-y-3.5">
         <input type="hidden" id="close-visit-id">
         <div id="close-visit-summary" class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700 text-xs space-y-1"></div>
+
+        <!-- Specjalny boks widoczny tylko przy zamykaniu MONTAŻU: automatycznie tworzy i przypisuje urządzenie do klienta -->
+        <div id="close-visit-install-box" class="hidden p-3.5 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 space-y-2.5">
+          <div class="text-xs font-extrabold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+            🏗️ Finalizacja montażu — przypisz zamontowane urządzenie do klienta:
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Typ urządzenia</label>
+              <select id="close-install-type" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-bold">
+                <option value="heat_pump">🔥 Pompa ciepła</option>
+                <option value="ac">❄️ Klimatyzacja</option>
+                <option value="ventilation">💨 Wentylacja / Rekuperacja</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Gwarancja (msc)</label>
+              <input type="number" id="close-install-warranty" value="60" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-bold">
+            </div>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Zamontowany model urządzenia</label>
+            <input type="text" id="close-install-model" placeholder="np. Panasonic Aquarea 9kW" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-bold">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Numer seryjny zamontowanej jednostki (S/N)</label>
+            <input type="text" id="close-install-serial" placeholder="Wpisz S/N z tabliczki znamionowej..." class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-mono">
+          </div>
+          <p class="text-[10px] text-amber-800 dark:text-amber-300 font-semibold">Po zatwierdzeniu urządzenie zostanie automatycznie dopisane do konta klienta wraz z gwarancją i terminem pierwszego przeglądu za rok.</p>
+        </div>
+
         <div>
           <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Komentarz powykonawczy (zostanie zapisany w historii urządzenia)</label>
           <textarea id="close-visit-comment" rows="3" required placeholder="Opisz wykonane czynności serwisowe / przeglądowe..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm outline-none focus:border-emerald-500"></textarea>
         </div>
-        <label class="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 cursor-pointer text-xs font-bold text-emerald-900 dark:text-emerald-300">
+        <label id="close-visit-next-insp-label" class="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 cursor-pointer text-xs font-bold text-emerald-900 dark:text-emerald-300">
           <input type="checkbox" id="close-visit-update-next-insp" checked class="rounded text-emerald-600">
           <span>Zaktualizuj również datę kolejnego przeglądu okresowego (+ interwał urządzenia)</span>
         </label>
@@ -1494,10 +1573,15 @@ service cloud.firestore {
 
     function filterAndSwitchClients() { switchTab('clients'); }
 
+    function setText(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.innerText = val;
+    }
+
     function renderDashboard() {
       const enriched = getEnrichedClients();
       const todayYMD = toYMD(new Date());
-      document.getElementById('header-date').innerText = `Dzisiaj: ${formatDatePL(todayYMD)}`;
+      setText('header-date', `Dzisiaj: ${formatDatePL(todayYMD)}`);
 
       let totalDevs = 0, overdue = 0, soon = 0;
       const urgentItems = [];
@@ -1516,125 +1600,138 @@ service cloud.firestore {
       urgentItems.sort((a,b) => a.status.daysToInspection - b.status.daysToInspection);
       const todayVisits = (window.appointmentsData || []).filter(a => a.date === todayYMD).sort((a,b) => (a.time||'00:00').localeCompare(b.time||'00:00'));
 
-      document.getElementById('stat-today').innerText = `${todayVisits.length} wizyt`;
-      document.getElementById('stat-overdue').innerText = `${overdue} urz.`;
-      document.getElementById('stat-soon').innerText = `${soon} urz.`;
-      document.getElementById('stat-clients').innerText = `${enriched.length}`;
-      document.getElementById('badge-clients').innerText = enriched.length;
-      document.getElementById('badge-catalog').innerText = (window.catalogData || []).length;
+      setText('stat-today', `${todayVisits.length} wizyt`);
+      setText('stat-overdue', `${overdue} urz.`);
+      setText('stat-soon', `${soon} urz.`);
+      setText('stat-clients', `${enriched.length}`);
+      setText('badge-clients', enriched.length);
+      setText('badge-catalog', (window.catalogData || []).length);
 
       const todayBadge = document.getElementById('badge-today');
-      if (todayVisits.length > 0) { todayBadge.innerText = todayVisits.length; todayBadge.classList.remove('hidden'); }
-      else todayBadge.classList.add('hidden');
+      if (todayBadge) {
+        if (todayVisits.length > 0) { todayBadge.innerText = todayVisits.length; todayBadge.classList.remove('hidden'); }
+        else todayBadge.classList.add('hidden');
+      }
 
       const urgentBadge = document.getElementById('badge-urgent');
       const totalUrgent = overdue + soon;
-      if (totalUrgent > 0) { urgentBadge.innerText = totalUrgent; urgentBadge.classList.remove('hidden'); }
-      else urgentBadge.classList.add('hidden');
+      if (urgentBadge) {
+        if (totalUrgent > 0) { urgentBadge.innerText = totalUrgent; urgentBadge.classList.remove('hidden'); }
+        else urgentBadge.classList.add('hidden');
+      }
 
-      if (enriched.length === 0) document.getElementById('empty-state').classList.remove('hidden');
-      else document.getElementById('empty-state').classList.add('hidden');
+      const emptyStateEl = document.getElementById('empty-state');
+      if (emptyStateEl) {
+        if (enriched.length === 0) emptyStateEl.classList.remove('hidden');
+        else emptyStateEl.classList.add('hidden');
+      }
 
       const visitsContainer = document.getElementById('today-visits-list');
-      document.getElementById('today-panel-title').innerText = `Plan pracy na dzisiaj (${formatDatePL(todayYMD)})`;
+      setText('today-panel-title', `Plan pracy na dzisiaj (${formatDatePL(todayYMD)})`);
 
-      if (todayVisits.length === 0) {
-        visitsContainer.innerHTML = `<p class="text-center py-6 text-sm text-zinc-500">Brak zaplanowanych wyjazdów na dzisiaj.</p>`;
-      } else {
-        const workersList = [...new Set([...(window.workersData || ['Serwisant 1']), ...todayVisits.map(v => v.workerName || 'Serwisant 1')])];
-        const groupedHtml = workersList.map(worker => {
-          const workerVisits = todayVisits.filter(v => (v.workerName || 'Serwisant 1') === worker);
-          if (workerVisits.length === 0) return '';
-          const pendingForWorker = workerVisits.filter(v => v.status !== 'completed');
+      if (visitsContainer) {
+        if (todayVisits.length === 0) {
+          visitsContainer.innerHTML = `<p class="text-center py-6 text-sm text-zinc-500">Brak zaplanowanych wyjazdów na dzisiaj.</p>`;
+        } else {
+          const workersList = [...new Set([...(window.workersData || ['Serwisant 1']), ...todayVisits.map(v => v.workerName || 'Serwisant 1')])];
+          const groupedHtml = workersList.map(worker => {
+            const workerVisits = todayVisits.filter(v => (v.workerName || 'Serwisant 1') === worker);
+            if (workerVisits.length === 0) return '';
+            const pendingForWorker = workerVisits.filter(v => v.status !== 'completed');
 
-          return `
-            <div class="p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/30 space-y-2.5">
-              <div class="flex justify-between items-center flex-wrap gap-2 border-b border-zinc-200 dark:border-zinc-700 pb-2">
-                <div class="flex items-center gap-2">
-                  <span class="px-2.5 py-1 rounded-lg bg-sky-600 text-white text-xs font-extrabold flex items-center gap-1">👷 ${worker}</span>
-                  <span class="text-xs font-bold text-zinc-500">(${workerVisits.length} zleceń)</span>
+            return `
+              <div class="p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/30 space-y-2.5">
+                <div class="flex justify-between items-center flex-wrap gap-2 border-b border-zinc-200 dark:border-zinc-700 pb-2">
+                  <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-1 rounded-lg bg-sky-600 text-white text-xs font-extrabold flex items-center gap-1">👷 ${worker}</span>
+                    <span class="text-xs font-bold text-zinc-500">(${workerVisits.length} zleceń)</span>
+                  </div>
+                  ${pendingForWorker.length > 0 ? `
+                    <button onclick="openRouteForDate('${todayYMD}', '${worker.replace(/'/g, "\\'")}')" class="bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-extrabold text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-sm transition">
+                      <i data-lucide="navigation" class="w-3.5 h-3.5"></i> Trasa Google Maps (${pendingForWorker.length})
+                    </button>
+                  ` : `<span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">✓ Trasa zakończona</span>`}
                 </div>
-                ${pendingForWorker.length > 0 ? `
-                  <button onclick="openRouteForDate('${todayYMD}', '${worker.replace(/'/g, "\\'")}')" class="bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-extrabold text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-sm transition">
-                    <i data-lucide="navigation" class="w-3.5 h-3.5"></i> Trasa Google Maps (${pendingForWorker.length})
-                  </button>
-                ` : `<span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">✓ Trasa zakończona</span>`}
-              </div>
-              <div class="space-y-2">
-                ${workerVisits.map(v => {
-                  const client = enriched.find(c => c.id === v.clientId);
-                  const dev = client?.devices?.find(d => d.id === v.deviceId);
-                  const isDone = v.status === 'completed';
-                  return `
-                    <div class="p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex justify-between items-center gap-3">
-                      <div class="min-w-0">
-                        <div class="flex items-center gap-2 flex-wrap">
-                          <span class="text-xs font-extrabold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-md">${v.time}</span>
-                          <span class="font-bold text-sm text-zinc-900 dark:text-white ${isDone ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</span>
-                          <span class="text-[11px] font-bold bg-zinc-200 dark:bg-zinc-700 px-2 py-0.5 rounded text-zinc-800 dark:text-zinc-200">${v.serviceType}</span>
+                <div class="space-y-2">
+                  ${workerVisits.map(v => {
+                    const client = enriched.find(c => c.id === v.clientId);
+                    const dev = client?.devices?.find(d => d.id === v.deviceId);
+                    const isDone = v.status === 'completed';
+                    return `
+                      <div class="p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex justify-between items-center gap-3">
+                        <div class="min-w-0">
+                          <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-xs font-extrabold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-md">${v.time}</span>
+                            <span class="font-bold text-sm text-zinc-900 dark:text-white ${isDone ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</span>
+                            <span class="text-[11px] font-bold bg-zinc-200 dark:bg-zinc-700 px-2 py-0.5 rounded text-zinc-800 dark:text-zinc-200">${v.serviceType}</span>
+                          </div>
+                          ${dev ? `<div class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5">🔧 ${dev.deviceModel} ${dev.serialNumber ? `<span class="font-mono text-zinc-500">(S/N: ${dev.serialNumber})</span>` : ''}</div>` : ''}
+                          ${v.notes ? `<div class="text-[11px] text-amber-700 dark:text-amber-400 font-medium mt-0.5">📝 Notatka: ${v.notes}</div>` : ''}
+                          ${v.completionComment ? `<div class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold mt-0.5">✅ Wykonano: ${v.completionComment}</div>` : ''}
+                          ${client ? `<div class="text-xs text-zinc-600 dark:text-zinc-400 mt-1">📍 ${client.city}, ${client.street} • <a href="tel:${client.phone}" class="text-emerald-600 dark:text-emerald-400 font-bold underline">📞 ${client.phone}</a></div>` : ''}
                         </div>
-                        ${dev ? `<div class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5">🔧 ${dev.deviceModel} ${dev.serialNumber ? `<span class="font-mono text-zinc-500">(S/N: ${dev.serialNumber})</span>` : ''}</div>` : ''}
-                        ${v.notes ? `<div class="text-[11px] text-amber-700 dark:text-amber-400 font-medium mt-0.5">📝 Notatka: ${v.notes}</div>` : ''}
-                        ${v.completionComment ? `<div class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold mt-0.5">✅ Wykonano: ${v.completionComment}</div>` : ''}
-                        ${client ? `<div class="text-xs text-zinc-600 dark:text-zinc-400 mt-1">📍 ${client.city}, ${client.street} • <a href="tel:${client.phone}" class="text-emerald-600 dark:text-emerald-400 font-bold underline">📞 ${client.phone}</a></div>` : ''}
+                        <button onclick="handleVisitActionButton('${v.id}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold shrink-0 transition ${isDone ? 'bg-zinc-200 dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'}">
+                          ${isDone ? '✓ Zamknięte (Cofnij)' : 'Zamknij zlecenie'}
+                        </button>
                       </div>
-                      <button onclick="handleVisitActionButton('${v.id}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold shrink-0 transition ${isDone ? 'bg-zinc-200 dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'}">
-                        ${isDone ? '✓ Zamknięte (Cofnij)' : 'Zamknij zlecenie'}
-                      </button>
-                    </div>
-                  `;
-                }).join('')}
+                    `;
+                  }).join('')}
+                </div>
               </div>
-            </div>
-          `;
-        }).join('');
-        visitsContainer.innerHTML = groupedHtml;
+            `;
+          }).join('');
+          visitsContainer.innerHTML = groupedHtml;
+        }
       }
 
       const urgentListEl = document.getElementById('urgent-list');
       const toggleBtn = document.getElementById('toggle-urgent-btn');
-      if (urgentItems.length > 5) {
-        toggleBtn.classList.remove('hidden');
-        toggleBtn.innerText = showAllUrgent ? 'Zwiń do 5' : `Rozwiń pełną listę (${urgentItems.length})`;
-      } else toggleBtn.classList.add('hidden');
+      if (toggleBtn) {
+        if (urgentItems.length > 5) {
+          toggleBtn.classList.remove('hidden');
+          toggleBtn.innerText = showAllUrgent ? 'Zwiń do 5' : `Rozwiń pełną listę (${urgentItems.length})`;
+        } else toggleBtn.classList.add('hidden');
+      }
 
       const displayUrgent = showAllUrgent ? urgentItems : urgentItems.slice(0, 5);
-      if (displayUrgent.length === 0) {
-        urgentListEl.innerHTML = `<div class="p-6 text-center text-sm text-zinc-500">Wszystkie urządzenia mają aktualne przeglądy!</div>`;
-      } else {
-        urgentListEl.innerHTML = displayUrgent.map(({ client, device, status }) => {
-          const scheduledVisit = (window.appointmentsData || []).find(a =>
-            a.status !== 'completed' &&
-            a.clientId === client.id &&
-            (!a.deviceId || a.deviceId === device.id)
-          );
-          const rowClasses = scheduledVisit
-            ? 'p-4 bg-emerald-50/90 dark:bg-emerald-950/40 border-l-4 border-emerald-500 space-y-2 transition'
-            : 'p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/40 space-y-2 transition';
+      if (urgentListEl) {
+        if (displayUrgent.length === 0) {
+          urgentListEl.innerHTML = `<div class="p-6 text-center text-sm text-zinc-500">Wszystkie urządzenia mają aktualne przeglądy!</div>`;
+        } else {
+          urgentListEl.innerHTML = displayUrgent.map(({ client, device, status }) => {
+            const scheduledVisit = (window.appointmentsData || []).find(a =>
+              a.status !== 'completed' &&
+              a.clientId === client.id &&
+              (!a.deviceId || a.deviceId === device.id)
+            );
+            const rowClasses = scheduledVisit
+              ? 'p-4 bg-emerald-50/90 dark:bg-emerald-950/40 border-l-4 border-emerald-500 space-y-2 transition'
+              : 'p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/40 space-y-2 transition';
 
-          return `
-            <div class="p-4 ${rowClasses}">
-              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-                <div>
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <span class="font-bold text-sm text-zinc-900 dark:text-white">${client.name}</span>
-                    <span class="text-xs font-semibold text-zinc-500">(${device.deviceModel}${device.serialNumber ? ` • S/N: ${device.serialNumber}` : ''})</span>
-                    ${scheduledVisit ? `<span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-extrabold">📅 Wyjazd zaplanowany: ${formatDatePL(scheduledVisit.date)} (${scheduledVisit.time}) — ${scheduledVisit.workerName || 'Serwis'}</span>` : ''}
+            return `
+              <div class="p-4 ${rowClasses}">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                  <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span class="font-bold text-sm text-zinc-900 dark:text-white">${client.name}</span>
+                      <span class="text-xs font-semibold text-zinc-500">(${device.deviceModel}${device.serialNumber ? ` • S/N: ${device.serialNumber}` : ''})</span>
+                      ${scheduledVisit ? `<span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-extrabold">📅 Wyjazd zaplanowany: ${formatDatePL(scheduledVisit.date)} (${scheduledVisit.time}) — ${scheduledVisit.workerName || 'Serwis'}</span>` : ''}
+                    </div>
+                    <div class="text-xs ${scheduledVisit ? 'text-emerald-700 dark:text-emerald-300' : status.isOverdue ? 'text-rose-600' : 'text-amber-600'} font-bold mt-1">
+                      ${status.isOverdue ? `Po terminie o ${Math.abs(status.daysToInspection)} dni (${status.nextInspectionFormatted})` : `Przegląd za ${status.daysToInspection} dni (${status.nextInspectionFormatted})`} • <a href="tel:${client.phone}" class="underline">📞 ${client.phone}</a>
+                    </div>
                   </div>
-                  <div class="text-xs ${scheduledVisit ? 'text-emerald-700 dark:text-emerald-300' : status.isOverdue ? 'text-rose-600' : 'text-amber-600'} font-bold mt-1">
-                    ${status.isOverdue ? `Po terminie o ${Math.abs(status.daysToInspection)} dni (${status.nextInspectionFormatted})` : `Przegląd za ${status.daysToInspection} dni (${status.nextInspectionFormatted})`} • <a href="tel:${client.phone}" class="underline">📞 ${client.phone}</a>
+                  <div class="grid grid-cols-2 sm:flex gap-1.5 w-full sm:w-auto">
+                    <button onclick="createServiceFromUrgent('${client.id}', '${device.id}')" class="px-3 py-2 sm:py-1.5 ${scheduledVisit ? 'bg-emerald-700 hover:bg-emerald-600' : 'bg-sky-600 hover:bg-sky-500'} text-white rounded-xl text-xs font-bold shadow-sm flex items-center justify-center gap-1"><i data-lucide="calendar-plus" class="w-3.5 h-3.5 shrink-0"></i><span>${scheduledVisit ? 'Zmień wyjazd' : 'Utwórz serwis'}</span></button>
+                    <button onclick="openInspectionModal('${client.id}', '${device.id}')" class="px-3 py-2 sm:py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1"><i data-lucide="history" class="w-3.5 h-3.5 shrink-0"></i><span>Historia</span></button>
+                    <button onclick="skipInspection('${client.id}', '${device.id}')" class="px-2.5 py-2 sm:py-1.5 bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1" title="Pomija bieżący i przesuwa o rok"><i data-lucide="fast-forward" class="w-3.5 h-3.5 shrink-0"></i><span>+1 rok</span></button>
+                    <button onclick="toggleReminders('${client.id}', '${device.id}')" class="px-2.5 py-2 sm:py-1.5 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1"><i data-lucide="bell-off" class="w-3.5 h-3.5 shrink-0"></i><span>Anuluj</span></button>
                   </div>
-                </div>
-                <div class="grid grid-cols-2 sm:flex gap-1.5 w-full sm:w-auto">
-                  <button onclick="createServiceFromUrgent('${client.id}', '${device.id}')" class="px-3 py-2 sm:py-1.5 ${scheduledVisit ? 'bg-emerald-700 hover:bg-emerald-600' : 'bg-sky-600 hover:bg-sky-500'} text-white rounded-xl text-xs font-bold shadow-sm flex items-center justify-center gap-1"><i data-lucide="calendar-plus" class="w-3.5 h-3.5 shrink-0"></i><span>${scheduledVisit ? 'Zmień wyjazd' : 'Utwórz serwis'}</span></button>
-                  <button onclick="openInspectionModal('${client.id}', '${device.id}')" class="px-3 py-2 sm:py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1"><i data-lucide="history" class="w-3.5 h-3.5 shrink-0"></i><span>Historia</span></button>
-                  <button onclick="skipInspection('${client.id}', '${device.id}')" class="px-2.5 py-2 sm:py-1.5 bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1" title="Pomija bieżący i przesuwa o rok"><i data-lucide="fast-forward" class="w-3.5 h-3.5 shrink-0"></i><span>+1 rok</span></button>
-                  <button onclick="toggleReminders('${client.id}', '${device.id}')" class="px-2.5 py-2 sm:py-1.5 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1"><i data-lucide="bell-off" class="w-3.5 h-3.5 shrink-0"></i><span>Anuluj</span></button>
                 </div>
               </div>
-            </div>
-          `;
-        }).join('');
+            `;
+          }).join('');
+        }
       }
 
       renderCalendar();
@@ -1764,51 +1861,13 @@ service cloud.firestore {
 
       populateWorkerSelects();
       if (selectedWorkerFilter) document.getElementById('quick-map-worker').value = selectedWorkerFilter;
+      document.getElementById('quick-map-service-preset').value = 'Przegląd';
+      onServicePresetChange('quick');
       document.getElementById('quick-map-schedule-box').classList.remove('hidden');
       if (mapInstance) mapInstance.closePopup();
     }
 
     function closeQuickMapBox() { quickMapSelectedClientId = null; document.getElementById('quick-map-schedule-box').classList.add('hidden'); }
-
-    function onServicePresetChange(source) {
-      if (source === 'quick') {
-        const val = document.getElementById('quick-map-service-preset').value;
-        const customInput = document.getElementById('quick-map-service-custom');
-        if (val === 'custom') { customInput.classList.remove('hidden'); customInput.focus(); }
-        else customInput.classList.add('hidden');
-      } else {
-        const val = document.getElementById('visit-type-preset').value;
-        const wrap = document.getElementById('visit-type-custom-wrap');
-        if (val === 'custom') { wrap.classList.remove('hidden'); document.getElementById('visit-type-custom').focus(); }
-        else wrap.classList.add('hidden');
-      }
-    }
-
-    function confirmQuickMapSchedule() {
-      if (!quickMapSelectedClientId) return;
-      const time = document.getElementById('quick-map-time').value || '09:00';
-      const preset = document.getElementById('quick-map-service-preset').value;
-      const customVal = (document.getElementById('quick-map-service-custom').value || '').trim();
-      const serviceType = preset === 'custom' ? (customVal || 'Serwis') : preset;
-      const deviceId = document.getElementById('quick-map-device').value || '';
-      const workerName = document.getElementById('quick-map-worker').value || (window.workersData?.[0] || 'Serwisant 1');
-      const notes = (document.getElementById('quick-map-notes').value || '').trim();
-
-      // Sprawdzenie kolizji godzinowej na tego samego serwisanta
-      const conflict = (window.appointmentsData || []).some(a => a.date === selectedDate && a.workerName === workerName && a.time === time);
-      if (conflict) {
-        showToast(`Błąd: Pracownik ${workerName} ma już zaplanowaną wizytę na godzinę ${time}!`);
-        return;
-      }
-
-      window.appointmentsData.push({ id: 'v_' + Date.now(), clientId: quickMapSelectedClientId, deviceId, workerName, date: selectedDate, time, serviceType, notes, status: 'planned' });
-      persistData();
-      closeQuickMapBox();
-      renderPlanner();
-      renderMapMarkers();
-      renderDashboard();
-      showToast(`Zaplanowano wizytę na ${formatDatePL(selectedDate)} o ${time}!`);
-    }
 
     function refreshMap() { if (mapInstance) { mapInstance.invalidateSize(); renderMapMarkers(); } }
 
@@ -1859,6 +1918,7 @@ service cloud.firestore {
       document.getElementById('planner-date-input').value = selectedDate;
       document.getElementById('planner-day-title').innerText = `Plan Dnia: ${formatDatePL(selectedDate)}`;
 
+      const enriched = getEnrichedClients();
       const dayVisits = (window.appointmentsData || [])
         .filter(a => a.date === selectedDate)
         .sort((a,b) => (a.time||'00:00').localeCompare(b.time||'00:00'));
@@ -1889,24 +1949,28 @@ service cloud.firestore {
               </div>
               <div class="space-y-2">
                 ${workerVisits.map(v => {
-                  const client = (window.clientsData || []).find(c => c.id === v.clientId);
+                  const client = enriched.find(c => c.id === v.clientId);
                   const dev = client?.devices?.find(d => d.id === v.deviceId);
                   const isDone = v.status === 'completed';
+                  const isMontaz = (v.serviceType || '').toLowerCase().includes('monta');
                   return `
-                    <div class="p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex justify-between items-center gap-2">
+                    <div class="p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex justify-between items-center gap-3">
                       <div class="min-w-0">
-                        <div class="flex items-center gap-1.5 flex-wrap">
-                          <span class="text-xs font-extrabold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded">${v.time}</span>
-                          <h3 class="text-sm font-bold text-zinc-900 dark:text-white truncate ${isDone ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</h3>
-                          <span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200">${v.serviceType || 'Przegląd'}</span>
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <span class="text-xs font-extrabold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-md">${v.time}</span>
+                          <span class="font-bold text-sm text-zinc-900 dark:text-white ${isDone ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</span>
+                          <span class="text-[11px] font-bold ${isMontaz ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200'} px-2 py-0.5 rounded">${v.serviceType}</span>
                         </div>
-                        ${dev ? `<div class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5 truncate">🔧 ${dev.deviceModel} ${dev.serialNumber ? `<span class="font-mono text-zinc-500">(S/N: ${dev.serialNumber})</span>` : ''}</div>` : ''}
-                        ${v.notes ? `<div class="text-[11px] text-amber-700 dark:text-amber-400 font-medium mt-0.5">📝 ${v.notes}</div>` : ''}
-                        ${v.completionComment ? `<div class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold mt-0.5">✅ Komentarz: ${v.completionComment}</div>` : ''}
-                        <p class="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5 truncate">📍 ${client ? client.city + ', ' + client.street : ''} • <a href="tel:${client?.phone}" class="text-emerald-600 dark:text-emerald-400 font-semibold underline">📞 ${client?.phone || ''}</a></p>
+                        ${isMontaz && v.plannedInstallModel && !dev ? `<div class="text-[11px] font-extrabold text-amber-700 dark:text-amber-300 mt-0.5">🏗️ Do zamontowania: ${getDeviceInfo(v.plannedInstallType).short} — ${v.plannedInstallModel}</div>` : ''}
+                        ${dev ? `<div class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5">🔧 ${dev.deviceModel} ${dev.serialNumber ? `<span class="font-mono text-zinc-500">(S/N: ${dev.serialNumber})</span>` : ''}</div>` : ''}
+                        ${v.notes ? `<div class="text-[11px] text-amber-700 dark:text-amber-400 font-medium mt-0.5">📝 Notatka: ${v.notes}</div>` : ''}
+                        ${v.completionComment ? `<div class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold mt-0.5">✅ Wykonano: ${v.completionComment}</div>` : ''}
+                        ${client ? `<div class="text-xs text-zinc-600 dark:text-zinc-400 mt-1">📍 ${client.city}, ${client.street} • <a href="tel:${client.phone}" class="text-emerald-600 dark:text-emerald-400 font-bold underline">📞 ${client.phone}</a></div>` : ''}
                       </div>
                       <div class="flex items-center gap-1.5 shrink-0">
-                        <button onclick="handleVisitActionButton('${v.id}')" class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold ${isDone ? 'bg-zinc-100 dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'}">${isDone ? '✓ Zamknięte' : 'Zamknij zlecenie'}</button>
+                        <button onclick="handleVisitActionButton('${v.id}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition ${isDone ? 'bg-zinc-200 dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'}">
+                          ${isDone ? '✓ Zamknięte (Cofnij)' : 'Zamknij zlecenie'}
+                        </button>
                         <button onclick="deleteVisit('${v.id}')" class="text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 p-1.5 rounded-lg" title="Usuń wizytę"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                       </div>
                     </div>
@@ -2788,12 +2852,12 @@ service cloud.firestore {
       document.getElementById('visit-client-search').value = '';
       document.getElementById('visit-client-dd').classList.add('hidden');
 
-      const targetClient = preselectedClientId
+      const defaultClient = preselectedClientId
         ? (window.clientsData || []).find(c => c.id === preselectedClientId)
         : (window.clientsData || [])[0];
 
-      if (targetClient) {
-        selectVisitClient(targetClient.id, false, preselectedDeviceId);
+      if (defaultClient) {
+        selectVisitClient(defaultClient.id, false, preselectedDeviceId);
       } else {
         document.getElementById('visit-client-select').value = '';
         document.getElementById('visit-client-selected-label').innerText = '-- Brak klientów w bazie --';
@@ -2804,10 +2868,123 @@ service cloud.firestore {
       document.getElementById('visit-type-preset').value = 'Przegląd';
       document.getElementById('visit-type-custom-wrap').classList.add('hidden');
       document.getElementById('visit-type-custom').value = '';
+      document.getElementById('visit-new-dev-model').value = '';
+      document.getElementById('visit-new-dev-warranty').value = 60;
+      onServicePresetChange('modal');
       document.getElementById('visit-notes').value = '';
       document.getElementById('modal-schedule').classList.remove('hidden');
       document.getElementById('modal-schedule').classList.add('flex');
       lucide.createIcons();
+    }
+
+    function renderQuickInstallCatalog() {
+      const type = document.getElementById('quick-map-new-type')?.value || 'heat_pump';
+      const catSel = document.getElementById('quick-map-new-cat');
+      if (!catSel) return;
+      const items = (window.catalogData || []).filter(x => x.deviceType === type);
+      catSel.innerHTML = `<option value="">-- Wybierz z katalogu --</option>` + items.map(x => `<option value="${x.id}">${x.brand} ${x.model}</option>`).join('');
+    }
+
+    function onQuickInstallCatalogPick() {
+      const catId = document.getElementById('quick-map-new-cat')?.value;
+      const item = (window.catalogData || []).find(x => x.id === catId);
+      if (item) {
+        document.getElementById('quick-map-new-model').value = `${item.brand} ${item.model}`.trim();
+      }
+    }
+
+    function renderModalInstallCatalog() {
+      const type = document.getElementById('visit-new-dev-type')?.value || 'heat_pump';
+      const catSel = document.getElementById('visit-new-dev-cat');
+      if (!catSel) return;
+      const items = (window.catalogData || []).filter(x => x.deviceType === type);
+      catSel.innerHTML = `<option value="">-- Wybierz model z Bazy Urządzeń --</option>` + items.map(x => `<option value="${x.id}">${x.brand} ${x.model} (${x.defaultWarrantyMonths || 60}m gw.)</option>`).join('');
+    }
+
+    function onModalInstallCatalogPick() {
+      const catId = document.getElementById('visit-new-dev-cat')?.value;
+      const item = (window.catalogData || []).find(x => x.id === catId);
+      if (item) {
+        document.getElementById('visit-new-dev-model').value = `${item.brand} ${item.model}`.trim();
+        document.getElementById('visit-new-dev-warranty').value = item.defaultWarrantyMonths || 60;
+      }
+    }
+
+    function onServicePresetChange(source) {
+      if (source === 'quick') {
+        const val = document.getElementById('quick-map-service-preset').value;
+        const customInput = document.getElementById('quick-map-service-custom');
+        const existingDevWrap = document.getElementById('quick-map-existing-dev-wrap');
+        const installNewWrap = document.getElementById('quick-map-install-new-wrap');
+
+        if (val === 'custom') { customInput.classList.remove('hidden'); customInput.focus(); }
+        else customInput.classList.add('hidden');
+
+        if (val === 'Montaż') {
+          if (existingDevWrap) existingDevWrap.classList.add('hidden');
+          if (installNewWrap) { installNewWrap.classList.remove('hidden'); renderQuickInstallCatalog(); }
+        } else {
+          if (existingDevWrap) existingDevWrap.classList.remove('hidden');
+          if (installNewWrap) installNewWrap.classList.add('hidden');
+        }
+      } else {
+        const val = document.getElementById('visit-type-preset').value;
+        const wrap = document.getElementById('visit-type-custom-wrap');
+        const existingWrap = document.getElementById('visit-existing-device-wrap');
+        const newInstallWrap = document.getElementById('visit-new-install-wrap');
+
+        if (val === 'custom') { wrap.classList.remove('hidden'); document.getElementById('visit-type-custom').focus(); }
+        else wrap.classList.add('hidden');
+
+        if (val === 'Montaż') {
+          if (existingWrap) existingWrap.classList.add('hidden');
+          if (newInstallWrap) { newInstallWrap.classList.remove('hidden'); renderModalInstallCatalog(); }
+        } else {
+          if (existingWrap) existingWrap.classList.remove('hidden');
+          if (newInstallWrap) newInstallWrap.classList.add('hidden');
+        }
+      }
+    }
+
+    function confirmQuickMapSchedule() {
+      if (!quickMapSelectedClientId) return;
+      const time = document.getElementById('quick-map-time').value || '09:00';
+      const preset = document.getElementById('quick-map-service-preset').value;
+      const customVal = (document.getElementById('quick-map-service-custom').value || '').trim();
+      const serviceType = preset === 'custom' ? (customVal || 'Serwis') : preset;
+      const isMontaz = preset === 'Montaż';
+      const deviceId = isMontaz ? '' : (document.getElementById('quick-map-device').value || '');
+      const plannedInstallType = isMontaz ? (document.getElementById('quick-map-new-type')?.value || 'heat_pump') : '';
+      const plannedInstallModel = isMontaz ? ((document.getElementById('quick-map-new-model')?.value || '').trim() || 'Nowe urządzenie HVAC') : '';
+      const workerName = document.getElementById('quick-map-worker').value || (window.workersData?.[0] || 'Serwisant 1');
+      const notes = (document.getElementById('quick-map-notes').value || '').trim();
+
+      const conflict = (window.appointmentsData || []).some(a => a.date === selectedDate && a.workerName === workerName && a.time === time);
+      if (conflict) {
+        showToast(`Błąd: Pracownik ${workerName} ma już zaplanowaną wizytę na godzinę ${time}!`);
+        return;
+      }
+
+      window.appointmentsData.push({
+        id: 'v_' + Date.now(),
+        clientId: quickMapSelectedClientId,
+        deviceId,
+        plannedInstallType,
+        plannedInstallModel,
+        plannedInstallWarranty: 60,
+        workerName,
+        date: selectedDate,
+        time,
+        serviceType,
+        notes,
+        status: 'planned'
+      });
+      persistData();
+      closeQuickMapBox();
+      renderPlanner();
+      renderMapMarkers();
+      renderDashboard();
+      showToast(`Zaplanowano wizytę na ${formatDatePL(selectedDate)} o ${time}!`);
     }
 
     function selectVisitClient(clientId, closeDd = true, preselectedDeviceId = '') {
@@ -2854,12 +3031,16 @@ service cloud.firestore {
     function handleSaveVisit(e) {
       e.preventDefault();
       const clientId = document.getElementById('visit-client-select').value;
-      const deviceId = document.getElementById('visit-device-select').value || '';
       const date = document.getElementById('visit-date').value;
       const time = document.getElementById('visit-time').value;
       const preset = document.getElementById('visit-type-preset').value;
       const customVal = (document.getElementById('visit-type-custom').value || '').trim();
       const serviceType = preset === 'custom' ? (customVal || 'Serwis') : preset;
+      const isMontaz = preset === 'Montaż';
+      const deviceId = isMontaz ? '' : (document.getElementById('visit-device-select').value || '');
+      const plannedInstallType = isMontaz ? (document.getElementById('visit-new-dev-type')?.value || 'heat_pump') : '';
+      const plannedInstallModel = isMontaz ? ((document.getElementById('visit-new-dev-model')?.value || '').trim() || 'Nowe urządzenie HVAC') : '';
+      const plannedInstallWarranty = isMontaz ? (Number(document.getElementById('visit-new-dev-warranty')?.value) || 60) : 60;
       const workerName = document.getElementById('visit-worker-select').value || (window.workersData?.[0] || 'Serwisant 1');
       const notes = (document.getElementById('visit-notes').value || '').trim();
 
@@ -2868,14 +3049,26 @@ service cloud.firestore {
         return;
       }
 
-      // Blokada 2 wyjazdów na tę samą godzinę dla tego samego serwisanta
       const conflict = (window.appointmentsData || []).some(a => a.date === date && a.workerName === workerName && a.time === time);
       if (conflict) {
         showToast(`Błąd: Pracownik ${workerName} ma już zapisaną wizytę na godzinę ${time}!`);
         return;
       }
 
-      const newVisit = { id: 'v_' + Date.now(), clientId, deviceId, workerName, date, time, serviceType, notes, status: 'planned' };
+      const newVisit = {
+        id: 'v_' + Date.now(),
+        clientId,
+        deviceId,
+        plannedInstallType,
+        plannedInstallModel,
+        plannedInstallWarranty,
+        workerName,
+        date,
+        time,
+        serviceType,
+        notes,
+        status: 'planned'
+      };
       window.appointmentsData.push(newVisit);
       selectedDate = date;
       persistData();
@@ -2901,31 +3094,26 @@ service cloud.firestore {
 
         const combinedActions = [
           ...(d.inspectionHistory || []).map(h => ({
-            id: h.id,
             date: h.date,
-            type: h.actionType || 'Wpis w karcie urządzenia',
             technician: h.technician || 'Serwis PP',
+            type: h.actionType || 'Przegląd / Wpis w karcie',
             notes: h.notes || '',
             badgeColor: 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
           })),
           ...deviceVisits.filter(v => !v.savedToDeviceHistory).map(v => ({
-            id: v.id,
             date: v.date,
-            type: v.status === 'completed' ? `Zamknięte zlecenie: ${v.serviceType}` : `Zaplanowano: ${v.serviceType} (${v.time})`,
             technician: v.workerName || 'Serwis PP',
+            type: `${v.serviceType || 'Zlecenie'} (${v.status === 'completed' ? 'Zamknięte' : 'Zaplanowane na ' + v.time})`,
             notes: v.completionComment || v.notes || 'Brak dodatkowego komentarza',
-            badgeColor: v.status === 'completed' ? 'bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300' : 'bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300'
+            badgeColor: v.status === 'completed' ? 'bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300' : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
           }))
         ].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
         return `
-          <div class="p-4 bg-zinc-50 dark:bg-zinc-800/60 border ${isHighlighted ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-zinc-200 dark:border-zinc-700'} rounded-xl space-y-3">
-            <div class="flex justify-between items-center flex-wrap gap-2">
+          <div class="p-4 bg-zinc-50 dark:bg-zinc-800/60 border ${isHighlighted ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-zinc-200 dark:border-zinc-700'} rounded-2xl space-y-3">
+            <div class="flex justify-between items-start flex-wrap gap-2">
               <div>
-                <div class="flex items-center gap-2 flex-wrap">
-                  <h4 class="font-extrabold text-zinc-900 dark:text-white">${d.deviceModel}</h4>
-                  ${d.serialNumber ? `<span class="text-xs font-mono px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200">S/N: ${d.serialNumber}</span>` : ''}
-                </div>
+                <h4 class="font-extrabold text-sm text-zinc-900 dark:text-white">${getDeviceInfo(d.deviceType).short}: ${d.deviceModel} ${d.serialNumber ? `<span class="text-xs font-mono text-zinc-500">[S/N: ${d.serialNumber}]</span>` : ''}</h4>
                 <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Następny przegląd: <span class="font-bold text-zinc-800 dark:text-zinc-200">${d.status.nextInspectionFormatted}</span> • Gwarancja do: <span class="font-bold">${d.status.warrantyEndFormatted}</span></p>
               </div>
               <div class="flex gap-1.5 flex-wrap">
@@ -2942,7 +3130,7 @@ service cloud.firestore {
                     <span class="font-extrabold">📅 ${formatDatePL(act.date)} • 👷 ${act.technician}</span>
                     <span class="text-[10px] font-extrabold px-2 py-0.5 rounded ${act.badgeColor}">${act.type}</span>
                   </div>
-                  <div class="text-zinc-700 dark:text-zinc-300 font-medium">${act.notes}</div>
+                  <div class="text-zinc-600 dark:text-zinc-300">${act.notes}</div>
                 </div>
               `).join('')}
             </div>
@@ -2956,30 +3144,29 @@ service cloud.firestore {
     }
 
     function registerInspection(clientId, devId) {
-      const today = toYMD(new Date());
       const client = (window.clientsData || []).find(c => c.id === clientId);
       if (!client) return;
+      const today = toYMD(new Date());
 
-      client.devices = client.devices.map(d => {
+      client.devices = (client.devices || []).map(d => {
         if (d.id !== devId) return d;
         const interval = Number(d.inspectionIntervalMonths || 12);
-        const nextYear = addMonths(today, interval);
+        const nextDate = addMonths(today, interval);
         const history = d.inspectionHistory || [];
         return {
           ...d,
           lastInspectionDate: today,
-          nextInspectionDate: nextYear,
+          nextInspectionDate: nextDate,
           remindersCanceled: false,
-          inspectionHistory: [{ id: `h_${Date.now()}`, date: today, actionType: 'Przegląd okresowy', technician: 'Serwis PP', notes: 'Przegląd okresowy wykonany' }, ...history]
+          inspectionHistory: [{ id: `h_${Date.now()}`, date: today, actionType: 'Przegląd okresowy', technician: 'Serwis PP', notes: 'Wykonano przegląd okresowy.' }, ...history]
         };
       });
 
       persistData();
-      showToast("Zarejestrowano przegląd w historii działań!");
+      showToast("Zarejestrowano wykonany przegląd!");
       openInspectionModal(clientId, devId);
       renderDashboard();
       if (currentTab === 'clients') renderClients();
-      if (currentTab === 'history') renderHistoryTable();
     }
 
     function handleVisitActionButton(visitId) {
@@ -3001,22 +3188,40 @@ service cloud.firestore {
       const visit = (window.appointmentsData || []).find(a => a.id === visitId);
       if (!visit) return;
       const client = (window.clientsData || []).find(c => c.id === visit.clientId);
-      const dev = client?.devices?.find(d => d.id === visit.deviceId) || client?.devices?.[0];
+      const dev = client?.devices?.find(d => d.id === visit.deviceId);
+      const isMontaz = (visit.serviceType || '').toLowerCase().includes('monta');
 
       document.getElementById('close-visit-id').value = visit.id;
-      document.getElementById('close-visit-comment').value = visit.notes ? `Wykonano: ${visit.serviceType}. (${visit.notes})` : `Wykonano: ${visit.serviceType} — urządzenie sprawne.`;
-      const isInsp = (visit.serviceType || '').toLowerCase().includes('przegl');
-      document.getElementById('close-visit-update-next-insp').checked = isInsp;
+      document.getElementById('close-visit-comment').value = isMontaz
+        ? `Zamontowano i uruchomiono urządzenie: ${visit.plannedInstallModel || 'HVAC'}.${visit.notes ? ' (' + visit.notes + ')' : ''}`
+        : (visit.notes ? `Wykonano: ${visit.serviceType}. (${visit.notes})` : `Wykonano: ${visit.serviceType} — urządzenie sprawne.`);
+
+      const installBox = document.getElementById('close-visit-install-box');
+      const nextInspLabel = document.getElementById('close-visit-next-insp-label');
+
+      if (isMontaz) {
+        installBox.classList.remove('hidden');
+        nextInspLabel.classList.add('hidden');
+        document.getElementById('close-install-type').value = visit.plannedInstallType || 'heat_pump';
+        document.getElementById('close-install-model').value = visit.plannedInstallModel || '';
+        document.getElementById('close-install-warranty').value = visit.plannedInstallWarranty || 60;
+        document.getElementById('close-install-serial').value = '';
+      } else {
+        installBox.classList.add('hidden');
+        nextInspLabel.classList.remove('hidden');
+        const isInsp = (visit.serviceType || '').toLowerCase().includes('przegl');
+        document.getElementById('close-visit-update-next-insp').checked = isInsp;
+      }
 
       document.getElementById('close-visit-summary').innerHTML = `
         <div class="font-extrabold text-zinc-900 dark:text-white">${client ? client.name : 'Klient'} • ${visit.serviceType}</div>
-        <div class="text-zinc-500">🔧 Urządzenie: <strong>${dev ? dev.deviceModel : 'Ogólne'}</strong> ${dev?.serialNumber ? `(S/N: ${dev.serialNumber})` : ''}</div>
+        <div class="text-zinc-500">${isMontaz ? `🏗️ Planowany montaż: <strong>${visit.plannedInstallModel || 'Nowe urządzenie'}</strong>` : `🔧 Urządzenie: <strong>${dev ? dev.deviceModel : 'Ogólne'}</strong> ${dev?.serialNumber ? `(S/N: ${dev.serialNumber})` : ''}`}</div>
         <div class="text-zinc-500">👷 Wykonawca: <strong>${visit.workerName || 'Serwis PP'}</strong> • Data: <strong>${formatDatePL(visit.date)}</strong></div>
       `;
 
       document.getElementById('modal-close-visit').classList.remove('hidden');
       document.getElementById('modal-close-visit').classList.add('flex');
-      setTimeout(() => document.getElementById('close-visit-comment').focus(), 80);
+      setTimeout(() => document.getElementById(isMontaz ? 'close-install-serial' : 'close-visit-comment').focus(), 80);
       lucide.createIcons();
     }
 
@@ -3029,27 +3234,62 @@ service cloud.firestore {
       const visit = (window.appointmentsData || []).find(a => a.id === visitId);
       if (!visit) return;
 
+      const isMontaz = (visit.serviceType || '').toLowerCase().includes('monta');
+      const client = (window.clientsData || []).find(c => c.id === visit.clientId);
+      const installDate = visit.date || toYMD(new Date());
+
       visit.status = 'completed';
       visit.completionComment = comment;
       visit.savedToDeviceHistory = true;
 
-      const client = (window.clientsData || []).find(c => c.id === visit.clientId);
-      if (client && Array.isArray(client.devices) && client.devices.length > 0) {
+      if (isMontaz && client) {
+        const newType = document.getElementById('close-install-type').value || 'heat_pump';
+        const newModel = (document.getElementById('close-install-model').value || '').trim() || visit.plannedInstallModel || 'Urządzenie HVAC';
+        const newWarranty = Number(document.getElementById('close-install-warranty').value) || 60;
+        const newSerial = (document.getElementById('close-install-serial').value || '').trim();
+
+        const createdDevId = `dev_${Date.now()}`;
+        const newDevice = {
+          id: createdDevId,
+          deviceType: newType,
+          deviceModel: newModel,
+          serialNumber: newSerial,
+          noInstallDate: false,
+          installDate: installDate,
+          warrantyMonths: newWarranty,
+          lastInspectionDate: installDate,
+          nextInspectionDate: addMonths(installDate, 12),
+          inspectionIntervalMonths: 12,
+          remindersCanceled: false,
+          inspectionHistory: [
+            {
+              id: `h_install_${Date.now()}`,
+              date: installDate,
+              actionType: 'Montaż i uruchomienie',
+              technician: visit.workerName || 'Ekipa Montażowa',
+              notes: comment
+            }
+          ]
+        };
+
+        client.devices = [...(client.devices || []), newDevice];
+        visit.deviceId = createdDevId;
+      } else if (client && Array.isArray(client.devices) && client.devices.length > 0) {
         const targetDevId = visit.deviceId || client.devices[0].id;
         client.devices = client.devices.map(d => {
           if (d.id !== targetDevId) return d;
           const interval = Number(d.inspectionIntervalMonths || 12);
-          const nextDate = shouldUpdateNextInsp ? addMonths(visit.date || toYMD(new Date()), interval) : d.nextInspectionDate;
+          const nextDate = shouldUpdateNextInsp ? addMonths(installDate, interval) : d.nextInspectionDate;
           const history = d.inspectionHistory || [];
           return {
             ...d,
-            lastInspectionDate: shouldUpdateNextInsp ? (visit.date || toYMD(new Date())) : d.lastInspectionDate,
+            lastInspectionDate: shouldUpdateNextInsp ? installDate : d.lastInspectionDate,
             nextInspectionDate: nextDate,
             remindersCanceled: shouldUpdateNextInsp ? false : d.remindersCanceled,
             inspectionHistory: [
               {
                 id: `h_visit_${Date.now()}`,
-                date: visit.date || toYMD(new Date()),
+                date: installDate,
                 actionType: visit.serviceType || 'Serwis',
                 technician: visit.workerName || 'Serwis PP',
                 notes: comment
@@ -3063,7 +3303,7 @@ service cloud.firestore {
       persistData();
       closeModal('modal-close-visit');
       refreshAllViews();
-      showToast('Zlecenie zamknięte i dopisane do historii urządzenia!');
+      showToast(isMontaz ? 'Montaż zamknięty — nowe urządzenie przypisano do klienta!' : 'Zlecenie zamknięte i dopisane do historii urządzenia!');
     }
 
     function skipInspection(clientId, devId) {
