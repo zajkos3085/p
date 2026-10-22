@@ -1914,7 +1914,10 @@ service cloud.firestore {
       const dayVisits = (window.appointmentsData || [])
         .filter(a => a.date === dateStr && a.status !== 'completed' && (!workerName || (a.workerName || 'Serwisant 1') === workerName))
         .sort((a,b) => (a.time||'00:00').localeCompare(b.time||'00:00'));
-      if (dayVisits.length === 0) return;
+      if (dayVisits.length === 0) {
+        showToast("Brak aktywnych punktów trasy do nawigacji.");
+        return;
+      }
 
       const addrs = dayVisits.map(v => {
         const c = (window.clientsData || []).find(cl => cl.id === v.clientId);
@@ -1925,19 +1928,22 @@ service cloud.firestore {
       const dest = encodeURIComponent(addrs[addrs.length - 1]);
       const wps = addrs.slice(0, -1);
 
-      const launchUrl = (originParam = '') => {
-        let url = `https://www.google.com/maps/dir/?api=1${originParam}&destination=${dest}&travelmode=driving`;
-        if (wps.length > 0) url += `&waypoints=${wps.map(a => encodeURIComponent(a)).join('|')}`;
-        window.open(url, '_blank');
-      };
+      // Brak parametru origin sprawia, że aplikacja Google Maps na telefonie i komputerze
+      // automatycznie przyjmuje "Twoją bieżącą lokalizację GPS" jako punkt startowy
+      // i nie blokuje otwarcia linku przez mobilny bloker pop-upów!
+      let url = `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`;
+      if (wps.length > 0) {
+        url += `&waypoints=${wps.map(a => encodeURIComponent(a)).join('|')}`;
+      }
 
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          pos => launchUrl(`&origin=${pos.coords.latitude},${pos.coords.longitude}`),
-          () => launchUrl(''),
-          { timeout: 2200 }
-        );
-      } else launchUrl('');
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (isMobile) {
+        // Na telefonach bezpośrednie przejście natychmiast uruchamia aplikację Google Maps
+        window.location.href = url;
+      } else {
+        const win = window.open(url, '_blank', 'noopener,noreferrer');
+        if (!win) window.location.href = url;
+      }
     }
 
     function openTodayRoute(workerName = null) { openRouteForDate(toYMD(new Date()), workerName); }
@@ -2785,6 +2791,41 @@ service cloud.firestore {
       }).join('') + `<option value="">Wszystkie / Inne urządzenie</option>`;
     }
 
+    function handleSaveVisit(e) {
+      e.preventDefault();
+      const clientId = document.getElementById('visit-client-select').value;
+      const deviceId = document.getElementById('visit-device-select').value || '';
+      const date = document.getElementById('visit-date').value;
+      const time = document.getElementById('visit-time').value;
+      const preset = document.getElementById('visit-type-preset').value;
+      const customVal = (document.getElementById('visit-type-custom').value || '').trim();
+      const serviceType = preset === 'custom' ? (customVal || 'Serwis') : preset;
+      const workerName = document.getElementById('visit-worker-select').value || (window.workersData?.[0] || 'Serwisant 1');
+      const notes = (document.getElementById('visit-notes').value || '').trim();
+
+      if (!clientId) {
+        showToast("Wybierz klienta z listy!");
+        return;
+      }
+
+      // Blokada 2 wyjazdów na tę samą godzinę dla tego samego serwisanta
+      const conflict = (window.appointmentsData || []).some(a => a.date === date && a.workerName === workerName && a.time === time);
+      if (conflict) {
+        showToast(`Błąd: Pracownik ${workerName} ma już zapisaną wizytę na godzinę ${time}!`);
+        return;
+      }
+
+      const newVisit = { id: 'v_' + Date.now(), clientId, deviceId, workerName, date, time, serviceType, notes, status: 'planned' };
+      window.appointmentsData.push(newVisit);
+      selectedDate = date;
+      persistData();
+
+      closeModal('modal-schedule');
+      renderDashboard();
+      if (currentTab === 'map_planner') { renderPlanner(); renderMapMarkers(); if (!document.getElementById('planner-week-view').classList.contains('hidden')) renderWeekView(); }
+      showToast(`Zaplanowano zlecenie dla ${workerName}!`);
+    }
+
     function openInspectionModal(clientId, highlightDeviceId = null) {
       const c = getEnrichedClients().find(x => x.id === clientId);
       if (!c) return;
@@ -2963,229 +3004,6 @@ service cloud.firestore {
       closeModal('modal-close-visit');
       refreshAllViews();
       showToast('Zlecenie zamknięte i dopisane do historii urządzenia!');
-    }
-
-    function openAddDeviceModalWithCatalog(catId) {
-      const item = (window.catalogData || []).find(x => x.id === catId);
-      openAddDeviceModal();
-      setTimeout(() => {
-        if (item) { document.getElementById('assigned-dev-type').value = item.deviceType || 'heat_pump'; renderCatalogDropdown(); }
-        const sel = document.getElementById('select-catalog-target');
-        if (sel) { sel.value = catId; onCatalogModelSelected(catId); }
-      }, 50);
-    }
-
-    function openAddDeviceModal() {
-      renderClientDropdown();
-      document.getElementById('assigned-dev-type').value = 'heat_pump';
-      renderCatalogDropdown();
-      document.getElementById('assigned-dev-model').value = '';
-      document.getElementById('assigned-dev-no-install').checked = false;
-      toggleAssignedInstallDate(false);
-      const today = toYMD(new Date());
-      document.getElementById('assigned-dev-install').value = today;
-      document.getElementById('assigned-dev-next-insp').value = addMonths(today, 12);
-      document.getElementById('assigned-dev-warranty').value = 60;
-      document.getElementById('assigned-dev-interval').value = 12;
-      document.getElementById('modal-add-device').classList.remove('hidden');
-      document.getElementById('modal-add-device').classList.add('flex');
-    }
-
-    function onAssignedTypeChange() { document.getElementById('assigned-dev-model').value = ''; renderCatalogDropdown(); }
-
-    function renderClientDropdown() {
-      const q = (document.getElementById('search-client-for-dev')?.value || '').toLowerCase();
-      const sel = document.getElementById('select-client-target');
-      if (!sel) return;
-      const filtered = (window.clientsData || []).filter(c => !q || c.name.toLowerCase().includes(q) || (c.city || '').toLowerCase().includes(q) || (c.phone || '').toLowerCase().includes(q));
-      sel.innerHTML = filtered.map((c, idx) => `<option value="${c.id}" ${idx === 0 ? 'selected' : ''}>${c.name} (${c.city}, ${c.street})</option>`).join('');
-    }
-
-    function renderCatalogDropdown() {
-      const q = (document.getElementById('search-catalog-for-dev')?.value || '').toLowerCase();
-      const selectedType = document.getElementById('assigned-dev-type')?.value || 'heat_pump';
-      const sel = document.getElementById('select-catalog-target');
-      if (!sel) return;
-      const filtered = (window.catalogData || []).filter(item => item.deviceType === selectedType && (!q || `${item.brand} ${item.model}`.toLowerCase().includes(q)));
-      sel.innerHTML = filtered.map(item => `<option value="${item.id}">${item.brand} ${item.model} (${item.defaultWarrantyMonths || 60}m gw.)</option>`).join('');
-    }
-
-    function onCatalogModelSelected(catId) {
-      const item = (window.catalogData || []).find(x => x.id === catId);
-      if (!item) return;
-      document.getElementById('assigned-dev-type').value = item.deviceType || 'heat_pump';
-      document.getElementById('assigned-dev-model').value = `${item.brand} ${item.model}`.trim();
-      document.getElementById('assigned-dev-warranty').value = item.defaultWarrantyMonths || 60;
-      document.getElementById('assigned-dev-interval').value = item.defaultIntervalMonths || 12;
-    }
-
-    function toggleAssignedInstallDate(noInstall) {
-      const box = document.getElementById('assigned-dev-dates-box');
-      const extBox = document.getElementById('assigned-dev-external-next-box');
-      if (noInstall) { box.classList.add('hidden'); if (extBox) extBox.classList.remove('hidden'); }
-      else { box.classList.remove('hidden'); if (extBox) extBox.classList.add('hidden'); }
-    }
-
-    function handleSaveAssignedDevice(e) {
-      e.preventDefault();
-      const clientId = document.getElementById('select-client-target').value;
-      const type = document.getElementById('assigned-dev-type').value || 'heat_pump';
-      const model = document.getElementById('assigned-dev-model').value.trim();
-      const noInstallDate = Boolean(document.getElementById('assigned-dev-no-install').checked);
-      const today = toYMD(new Date());
-      const install = noInstallDate ? '' : (document.getElementById('assigned-dev-install').value || today);
-      const warranty = noInstallDate ? 0 : (Number(document.getElementById('assigned-dev-warranty').value) || 60);
-      const interval = noInstallDate ? (Number(document.getElementById('assigned-dev-ext-interval').value) || 12) : (Number(document.getElementById('assigned-dev-interval').value) || 12);
-      const nextInspDate = noInstallDate ? (document.getElementById('assigned-dev-next-insp').value || addMonths(today, interval)) : addMonths(install || today, interval);
-
-      const client = (window.clientsData || []).find(c => c.id === clientId);
-      if (!client) { showToast("Wybierz klienta!"); return; }
-
-      const newDev = {
-        id: `dev_${Date.now()}`,
-        deviceType: type,
-        deviceModel: model || 'Urządzenie HVAC',
-        noInstallDate,
-        installDate: install,
-        warrantyMonths: warranty,
-        lastInspectionDate: install || today,
-        nextInspectionDate: nextInspDate,
-        inspectionIntervalMonths: interval,
-        remindersCanceled: false,
-        inspectionHistory: []
-      };
-
-      client.devices = [...(client.devices || []), newDev];
-      persistData();
-      closeModal('modal-add-device');
-      renderDashboard();
-      if (currentTab === 'clients') renderClients();
-      showToast("Przypisano urządzenie do klienta!");
-    }
-
-    function openScheduleModal(preselectedClientId = '', preselectedDeviceId = '') {
-      populateWorkerSelects();
-      document.getElementById('visit-client-search').value = '';
-      renderVisitClientDropdown(preselectedClientId);
-      renderVisitDeviceDropdown(preselectedDeviceId);
-      document.getElementById('visit-date').value = selectedDate;
-      document.getElementById('visit-type-preset').value = 'Przegląd';
-      document.getElementById('visit-type-custom-wrap').classList.add('hidden');
-      document.getElementById('visit-type-custom').value = '';
-      document.getElementById('visit-notes').value = '';
-      if (selectedWorkerFilter) document.getElementById('visit-worker-select').value = selectedWorkerFilter;
-      document.getElementById('modal-schedule').classList.remove('hidden');
-      document.getElementById('modal-schedule').classList.add('flex');
-    }
-
-    function renderVisitClientDropdown(selectedClientId = '') {
-      const q = (document.getElementById('visit-client-search')?.value || '').toLowerCase();
-      const sel = document.getElementById('visit-client-select');
-      if (!sel) return;
-      const filtered = (window.clientsData || []).filter(c => !q || c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q) || (c.street||'').toLowerCase().includes(q));
-      sel.innerHTML = filtered.map((c, idx) => {
-        const isSel = selectedClientId ? c.id === selectedClientId : idx === 0;
-        return `<option value="${c.id}" ${isSel ? 'selected' : ''}>${c.name} (${c.city}, ${c.street})</option>`;
-      }).join('');
-      renderVisitDeviceDropdown();
-    }
-
-    function renderVisitDeviceDropdown(preselectedDeviceId = '') {
-      const clientId = document.getElementById('visit-client-select')?.value;
-      const devSel = document.getElementById('visit-device-select');
-      if (!devSel) return;
-      const client = (window.clientsData || []).find(c => c.id === clientId);
-      const devs = client?.devices || [];
-      if (devs.length === 0) devSel.innerHTML = `<option value="">Ogólne (Brak przypisanego urządzenia)</option>`;
-      else devSel.innerHTML = devs.map(d => `<option value="${d.id}" ${preselectedDeviceId && d.id === preselectedDeviceId ? 'selected' : ''}>${getDeviceInfo(d.deviceType).short}: ${d.deviceModel}</option>`).join('') + `<option value="">Wszystkie / Inne urządzenie</option>`;
-    }
-
-    function handleSaveVisit(e) {
-      e.preventDefault();
-      const clientId = document.getElementById('visit-client-select').value;
-      const deviceId = document.getElementById('visit-device-select').value || '';
-      const date = document.getElementById('visit-date').value;
-      const time = document.getElementById('visit-time').value;
-      const preset = document.getElementById('visit-type-preset').value;
-      const customVal = (document.getElementById('visit-type-custom').value || '').trim();
-      const serviceType = preset === 'custom' ? (customVal || 'Serwis') : preset;
-      const workerName = document.getElementById('visit-worker-select').value || (window.workersData?.[0] || 'Serwisant 1');
-      const notes = (document.getElementById('visit-notes').value || '').trim();
-
-      // Blokada 2 wyjazdów na tę samą godzinę dla tego samego serwisanta
-      const conflict = (window.appointmentsData || []).some(a => a.date === date && a.workerName === workerName && a.time === time);
-      if (conflict) {
-        showToast(`Błąd: Pracownik ${workerName} ma już zapisaną wizytę na godzinę ${time}!`);
-        return;
-      }
-
-      const newVisit = { id: 'v_' + Date.now(), clientId, deviceId, workerName, date, time, serviceType, notes, status: 'planned' };
-      window.appointmentsData.push(newVisit);
-      selectedDate = date;
-      persistData();
-
-      closeModal('modal-schedule');
-      renderDashboard();
-      if (currentTab === 'map_planner') { renderPlanner(); renderMapMarkers(); if (!document.getElementById('planner-week-view').classList.contains('hidden')) renderWeekView(); }
-      showToast(`Zaplanowano zlecenie dla ${workerName}!`);
-    }
-
-    function openInspectionModal(clientId) {
-      const c = getEnrichedClients().find(x => x.id === clientId);
-      if (!c) return;
-
-      document.getElementById('modal-insp-title').innerText = `Przeglądy: ${c.name}`;
-      const body = document.getElementById('modal-insp-body');
-
-      body.innerHTML = c.devices.map(d => `
-        <div class="p-4 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl space-y-3">
-          <div class="flex justify-between items-center flex-wrap gap-2">
-            <div>
-              <h4 class="font-extrabold text-zinc-900 dark:text-white">${d.deviceModel}</h4>
-              <p class="text-xs text-zinc-500 dark:text-zinc-400">Następny przegląd: <span class="font-bold text-zinc-800 dark:text-zinc-200">${d.status.nextInspectionFormatted}</span> • Gwarancja do: <span class="font-bold">${d.status.warrantyEndFormatted}</span></p>
-            </div>
-            <div class="flex gap-1.5 flex-wrap">
-              <button onclick="registerInspection('${c.id}', '${d.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold">Wbij przegląd</button>
-              <button onclick="skipInspection('${c.id}', '${d.id}')" class="px-3 py-1.5 bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 rounded-xl text-xs font-bold">Anuluj aktualny (+1r)</button>
-              <button onclick="toggleReminders('${c.id}', '${d.id}')" class="px-3 py-1.5 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-bold">${d.status.remindersCanceled ? 'Wznów' : 'Anuluj'}</button>
-            </div>
-          </div>
-          <div class="text-xs space-y-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-700">
-            <span class="font-bold text-zinc-600 dark:text-zinc-400">Trwała historia przeglądów:</span>
-            ${(!d.inspectionHistory || d.inspectionHistory.length === 0) ? '<p class="text-zinc-400">Brak wpisów w historii.</p>' : d.inspectionHistory.map(h => `<div class="bg-white dark:bg-zinc-900 p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 flex justify-between"><span>📅 <strong>${formatDatePL(h.date)}</strong> (${h.technician})</span><span>${h.notes}</span></div>`).join('')}
-          </div>
-        </div>
-      `).join('');
-
-      document.getElementById('modal-inspections').classList.remove('hidden');
-      document.getElementById('modal-inspections').classList.add('flex');
-    }
-
-    function registerInspection(clientId, devId) {
-      const today = toYMD(new Date());
-      const client = (window.clientsData || []).find(c => c.id === clientId);
-      if (!client) return;
-
-      client.devices = client.devices.map(d => {
-        if (d.id !== devId) return d;
-        const interval = Number(d.inspectionIntervalMonths || 12);
-        const nextYear = addMonths(today, interval);
-        const history = d.inspectionHistory || [];
-        return {
-          ...d,
-          lastInspectionDate: today,
-          nextInspectionDate: nextYear,
-          remindersCanceled: false,
-          inspectionHistory: [{ id: `h_${Date.now()}`, date: today, technician: 'Serwis PP', notes: 'Przegląd okresowy wykonany' }, ...history]
-        };
-      });
-
-      persistData();
-      showToast("Zarejestrowano przegląd!");
-      openInspectionModal(clientId);
-      renderDashboard();
-      if (currentTab === 'clients') renderClients();
-      if (currentTab === 'history') renderHistoryTable();
     }
 
     function skipInspection(clientId, devId) {
