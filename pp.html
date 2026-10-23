@@ -197,8 +197,8 @@
           </button>
         </div>
 
-        <!-- 4 KAFELKI STATYSTYK -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        <!-- 5 KAFELKÓW STATYSTYK (w tym Po Gwarancji) -->
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-4">
           <div onclick="switchTab('map_planner')" class="bg-white dark:bg-zinc-900 p-3.5 sm:p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm cursor-pointer hover:border-emerald-500 transition">
             <div class="flex items-center justify-between">
               <span class="text-[10px] sm:text-xs font-bold uppercase text-zinc-400">Plan na dziś</span>
@@ -223,7 +223,15 @@
             <div id="stat-soon" class="text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">0 urz.</div>
           </div>
 
-          <div onclick="filterAndSwitchClients()" class="bg-white dark:bg-zinc-900 p-3.5 sm:p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm cursor-pointer hover:border-emerald-500 transition">
+          <div onclick="filterAndSwitchClients()" class="bg-white dark:bg-zinc-900 p-3.5 sm:p-4 rounded-2xl border border-purple-200 dark:border-purple-900/60 shadow-sm cursor-pointer hover:border-purple-500 transition">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] sm:text-xs font-bold uppercase text-purple-600 dark:text-purple-400">Po gwarancji</span>
+              <i data-lucide="shield-alert" class="w-4 h-4 text-purple-500"></i>
+            </div>
+            <div id="stat-expired-warranty" class="text-xl sm:text-2xl font-extrabold text-purple-600 dark:text-purple-400 mt-1">0 urz.</div>
+          </div>
+
+          <div onclick="filterAndSwitchClients()" class="bg-white dark:bg-zinc-900 p-3.5 sm:p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm cursor-pointer hover:border-emerald-500 transition col-span-2 lg:col-span-1">
             <div class="flex items-center justify-between">
               <span class="text-[10px] sm:text-xs font-bold uppercase text-zinc-400">Baza klientów</span>
               <i data-lucide="users" class="w-4 h-4 text-teal-600 dark:text-teal-400"></i>
@@ -422,6 +430,12 @@
               <option value="ac">❄️ Klimatyzacja</option>
               <option value="ventilation">💨 Wentylacja</option>
             </select>
+            <select id="warranty-filter-select" onchange="renderClients()" class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold outline-none text-zinc-800 dark:text-zinc-100">
+              <option value="all">Wszystkie gwarancje</option>
+              <option value="under_warranty">🛡️ Na gwarancji</option>
+              <option value="expired_warranty">⚠️ Po gwarancji</option>
+              <option value="external">🔧 Obce (Brak gw.)</option>
+            </select>
             <button onclick="requestExportClientsCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
               <i data-lucide="lock" class="w-3.5 h-3.5"></i> Eksport Excel (CSV)
             </button>
@@ -507,30 +521,57 @@
 
       <!-- 5. TAB: HISTORY & STATS (HISTORIA I STATYSTYKI) -->
       <div id="tab-history" class="tab-content space-y-6 hidden">
-        <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4">
+        <!-- FILTRY STATYSTYK (OGÓŁEM, LATA, MIESIĄCE) -->
+        <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <i data-lucide="calendar-range" class="w-5 h-5 text-emerald-600"></i>
+            <div>
+              <h3 class="text-sm font-extrabold text-zinc-900 dark:text-white">Okres analizy statystyk i historii</h3>
+              <p id="stats-period-label" class="text-[11px] text-zinc-500">Podsumowanie: Ogółem (wszystkie lata)</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="stats-time-scope" onchange="onStatsTimeScopeChange()" class="bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 rounded-xl px-3 py-2 text-xs font-extrabold outline-none text-emerald-900 dark:text-emerald-200">
+              <option value="all">📊 Zakres: Ogółem (Wszystkie lata)</option>
+              <option value="year">📅 Zakres: Wybrany Rok</option>
+              <option value="month">🗓️ Zakres: Wybrany Miesiąc</option>
+            </select>
+            <select id="stats-year-select" onchange="renderHistoryTable()" class="hidden bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-bold outline-none text-zinc-800 dark:text-zinc-100"></select>
+            <select id="stats-month-select" onchange="renderHistoryTable()" class="hidden bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-bold outline-none text-zinc-800 dark:text-zinc-100">
+              <option value="01">Styczeń</option><option value="02">Luty</option><option value="03">Marzec</option><option value="04">Kwiecień</option><option value="05">Maj</option><option value="06">Czerwiec</option><option value="07">Lipiec</option><option value="08">Sierpień</option><option value="09">Wrzesień</option><option value="10">Październik</option><option value="11">Listopad</option><option value="12">Grudzień</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 7 KAFELKÓW STATYSTYK W TYM OSOBNE OKNO "PO GWARANCJI" -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
           <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <span class="text-[11px] font-bold uppercase text-zinc-400">Wykonane przeglądy</span>
+            <span class="text-[10px] font-bold uppercase text-zinc-400">Wykonane akcje</span>
             <div id="stat-history-total" class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">0</div>
           </div>
           <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <span class="text-[11px] font-bold uppercase text-zinc-400">Zaplanowane wyjazdy</span>
+            <span class="text-[10px] font-bold uppercase text-zinc-400">Zapl. wyjazdy</span>
             <div id="stat-visits-planned" class="text-2xl font-extrabold text-sky-600 dark:text-sky-400 mt-1">0</div>
           </div>
           <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <span class="text-[11px] font-bold uppercase text-zinc-400">Zrealizowane wizyty</span>
+            <span class="text-[10px] font-bold uppercase text-zinc-400">Zrealizowane wizyty</span>
             <div id="stat-visits-completed" class="text-2xl font-extrabold text-teal-600 dark:text-teal-400 mt-1">0</div>
           </div>
           <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <span class="text-[11px] font-bold uppercase text-zinc-400">Wszystkie urządzenia</span>
+            <span class="text-[10px] font-bold uppercase text-zinc-400">Wszystkie urządz.</span>
             <div id="stat-devices-total" class="text-2xl font-extrabold text-zinc-900 dark:text-white mt-1">0</div>
           </div>
-          <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <span class="text-[11px] font-bold uppercase text-zinc-400">Na gwarancji / Obce</span>
-            <div id="stat-warranty-breakdown" class="text-lg font-extrabold text-amber-600 dark:text-amber-400 mt-1">0 / 0</div>
+          <div onclick="filterClientsByWarranty('under_warranty')" class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm cursor-pointer hover:border-emerald-500 transition">
+            <span class="text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400">🛡️ Na gwarancji</span>
+            <div id="stat-under-warranty" class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">0 urz.</div>
           </div>
-          <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <span class="text-[11px] font-bold uppercase text-zinc-400">Miejscowości</span>
-            <div id="stat-cities-total" class="text-2xl font-extrabold text-purple-600 dark:text-purple-400 mt-1">0</div>
+          <div onclick="filterClientsByWarranty('expired_warranty')" class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-purple-200 dark:border-purple-900/60 shadow-sm cursor-pointer hover:border-purple-500 transition">
+            <span class="text-[10px] font-bold uppercase text-purple-600 dark:text-purple-400">⚠️ Po gwarancji</span>
+            <div id="stat-expired-warranty-box" class="text-2xl font-extrabold text-purple-600 dark:text-purple-400 mt-1">0 urz.</div>
+          </div>
+          <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm col-span-2 sm:col-span-1">
+            <span class="text-[10px] font-bold uppercase text-zinc-400">Obce / Miejscowości</span>
+            <div id="stat-cities-total" class="text-lg font-extrabold text-amber-600 dark:text-amber-400 mt-1">0 / 0</div>
           </div>
         </div>
 
@@ -540,7 +581,7 @@
             <div id="stats-device-types-bars" class="space-y-3 pt-1"></div>
           </div>
           <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 space-y-3 shadow-sm">
-            <h3 class="text-xs font-extrabold uppercase tracking-wider text-zinc-400">Struktura prac w Planerze (Przegląd / Serwis / Montaż)</h3>
+            <h3 class="text-xs font-extrabold uppercase tracking-wider text-zinc-400">Struktura prac (Przegląd / Serwis / Montaż)</h3>
             <div id="stats-service-types-bars" class="space-y-3 pt-1"></div>
           </div>
           <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 space-y-3 shadow-sm">
@@ -678,7 +719,6 @@
         <button onclick="closeModal('modal-add-device')"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
       <form onsubmit="handleSaveAssignedDevice(event)" class="space-y-4">
-        <!-- 1. Wybór klienta z widocznym polem wybranego klienta i rozwijaną listą -->
         <div class="relative">
           <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">1. Wybierz klienta</label>
           <input type="hidden" id="select-client-target" required>
@@ -701,7 +741,6 @@
           </select>
         </div>
 
-        <!-- 3. Rozwijana lista wyboru z Bazy Urządzeń -->
         <div class="relative">
           <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">3. Wybierz model z Bazy Urządzeń (lub wpisz ręcznie niżej)</label>
           <input type="hidden" id="select-catalog-target">
@@ -817,13 +856,11 @@
           <input type="text" id="visit-type-custom" placeholder="np. Wymiana zaworu zwrotnego" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
         </div>
 
-        <!-- Dla Przeglądu / Serwisu: wybór już zamontowanego urządzenia klienta -->
         <div id="visit-existing-device-wrap">
           <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">3. Urządzenie u klienta, którego dotyczy wyjazd</label>
           <select id="visit-device-select" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-extrabold outline-none text-zinc-900 dark:text-white"></select>
         </div>
 
-        <!-- Dla Montażu: wybór nowego urządzenia z katalogu, które dopiero zostanie zamontowane i przypisane po zamknięciu zlecenia -->
         <div id="visit-new-install-wrap" class="hidden p-3.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800 space-y-2.5">
           <div class="text-xs font-extrabold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
             <i data-lucide="package-plus" class="w-4 h-4 shrink-0"></i>
@@ -887,7 +924,6 @@
         <input type="hidden" id="close-visit-id">
         <div id="close-visit-summary" class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700 text-xs space-y-1"></div>
 
-        <!-- Specjalny boks widoczny tylko przy zamykaniu MONTAŻU: automatycznie tworzy i przypisuje urządzenie do klienta -->
         <div id="close-visit-install-box" class="hidden p-3.5 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 space-y-2.5">
           <div class="text-xs font-extrabold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
             🏗️ Finalizacja montażu — przypisz zamontowane urządzenie do klienta:
@@ -1031,7 +1067,7 @@ service cloud.firestore {
     </div>
   </div>
 
-  <!-- MODAL: CONFIRM ACTION (Z DODATKOWYM POTWIERDZENIEM) -->
+  <!-- MODAL: CONFIRM ACTION -->
   <div id="modal-confirm-action" class="fixed inset-0 z-[60] bg-zinc-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-sm w-full shadow-2xl p-5 space-y-4 border border-zinc-200 dark:border-zinc-800">
       <div class="flex items-center gap-2.5 text-amber-600 dark:text-amber-400">
@@ -1171,6 +1207,8 @@ service cloud.firestore {
           const warrantyEnd = new Date(install);
           warrantyEnd.setMonth(warrantyEnd.getMonth() + Number(dev.warrantyMonths || 60));
           const daysToWarranty = noInstallDate ? -1 : Math.ceil((warrantyEnd - now) / (1000*60*60*24));
+          const isUnderWarranty = !noInstallDate && daysToWarranty >= 0;
+          const isExpiredWarranty = !noInstallDate && daysToWarranty < 0;
 
           const baseNext = dev.nextInspectionDate || addMonths(dev.installDate || toYMD(new Date()), dev.inspectionIntervalMonths || 12);
           const nextInsp = new Date(baseNext + 'T12:00:00');
@@ -1182,7 +1220,9 @@ service cloud.firestore {
             status: {
               noInstallDate,
               warrantyEndFormatted: noInstallDate ? 'Brak (Obce)' : formatDatePL(toYMD(warrantyEnd)),
-              isUnderWarranty: !noInstallDate && daysToWarranty >= 0,
+              daysToWarranty,
+              isUnderWarranty,
+              isExpiredWarranty,
               nextInspectionFormatted: formatDatePL(toYMD(nextInsp)),
               daysToInspection,
               remindersCanceled: canceled,
@@ -1196,9 +1236,20 @@ service cloud.firestore {
         const anyOverdue = activeDevs.some(d => d.status.isOverdue);
         const anySoon = activeDevs.some(d => d.status.isSoon);
         const anyUnderWarranty = devices.some(d => d.status.isUnderWarranty);
+        const anyExpiredWarranty = devices.some(d => d.status.isExpiredWarranty);
 
-        return { ...c, devices, anyOverdue, anySoon, anyUnderWarranty };
+        return { ...c, devices, anyOverdue, anySoon, anyUnderWarranty, anyExpiredWarranty };
       });
+    }
+
+    function getWarrantyBadgeHtml(st) {
+      if (st.noInstallDate) {
+        return `<span class="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-[10px] font-bold shrink-0">🔧 Obce (Brak gw.)</span>`;
+      }
+      if (st.isUnderWarranty) {
+        return `<span class="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/90 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 text-[10px] font-extrabold shrink-0" title="Gwarancja ważna do ${st.warrantyEndFormatted}">🛡️ Na gwarancji (do ${st.warrantyEndFormatted})</span>`;
+      }
+      return `<span class="px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950/90 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-800 text-[10px] font-extrabold shrink-0" title="Gwarancja wygasła ${st.warrantyEndFormatted}">⚠️ Po gwarancji (od ${st.warrantyEndFormatted})</span>`;
     }
 
     function setDiagnosticStatus(state, title, message) {
@@ -1448,6 +1499,7 @@ service cloud.firestore {
       }
 
       populateWorkerSelects();
+      initStatsTimeFilters();
       renderDashboard();
 
       const savedCfg = localStorage.getItem('pp_firebase_config_json');
@@ -1535,7 +1587,7 @@ service cloud.firestore {
         populateWorkerSelects();
         renderWorkersListInModal();
         renderPlanner();
-        showToast('Usunięto ekipy.');
+        showToast('Usunięto ekipę.');
       });
     }
 
@@ -1568,10 +1620,20 @@ service cloud.firestore {
       if (tabId === 'map_planner') { renderPlanner(); setTimeout(initMap, 120); }
       if (tabId === 'clients') renderClients();
       if (tabId === 'devices_db') renderCatalog();
-      if (tabId === 'history') renderHistoryTable();
+      if (tabId === 'history') { initStatsTimeFilters(); renderHistoryTable(); }
     }
 
-    function filterAndSwitchClients() { switchTab('clients'); }
+    function filterAndSwitchClients() {
+      const wf = document.getElementById('warranty-filter-select');
+      if (wf) wf.value = 'all';
+      switchTab('clients');
+    }
+
+    function filterClientsByWarranty(statusValue) {
+      const wf = document.getElementById('warranty-filter-select');
+      if (wf) wf.value = statusValue || 'all';
+      switchTab('clients');
+    }
 
     function setText(id, val) {
       const el = document.getElementById(id);
@@ -1583,7 +1645,7 @@ service cloud.firestore {
       const todayYMD = toYMD(new Date());
       setText('header-date', `Dzisiaj: ${formatDatePL(todayYMD)}`);
 
-      let totalDevs = 0, overdue = 0, soon = 0;
+      let totalDevs = 0, overdue = 0, soon = 0, expiredWarranty = 0;
       const urgentItems = [];
 
       enriched.forEach(c => {
@@ -1591,6 +1653,7 @@ service cloud.firestore {
           totalDevs++;
           if (d.status.isOverdue) overdue++;
           else if (d.status.isSoon) soon++;
+          if (d.status.isExpiredWarranty) expiredWarranty++;
           if (!d.status.remindersCanceled && (d.status.isOverdue || d.status.isSoon)) {
             urgentItems.push({ client: c, device: d, status: d.status });
           }
@@ -1603,6 +1666,7 @@ service cloud.firestore {
       setText('stat-today', `${todayVisits.length} wizyt`);
       setText('stat-overdue', `${overdue} urz.`);
       setText('stat-soon', `${soon} urz.`);
+      setText('stat-expired-warranty', `${expiredWarranty} urz.`);
       setText('stat-clients', `${enriched.length}`);
       setText('badge-clients', enriched.length);
       setText('badge-catalog', (window.catalogData || []).length);
@@ -1709,12 +1773,13 @@ service cloud.firestore {
               : 'p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/40 space-y-2 transition';
 
             return `
-              <div class="p-4 ${rowClasses}">
+              <div class="${rowClasses}">
                 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                   <div>
                     <div class="flex items-center gap-2 flex-wrap">
                       <span class="font-bold text-sm text-zinc-900 dark:text-white">${client.name}</span>
                       <span class="text-xs font-semibold text-zinc-500">(${device.deviceModel}${device.serialNumber ? ` • S/N: ${device.serialNumber}` : ''})</span>
+                      ${getWarrantyBadgeHtml(status)}
                       ${scheduledVisit ? `<span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-extrabold">📅 Wyjazd zaplanowany: ${formatDatePL(scheduledVisit.date)} (${scheduledVisit.time}) — ${scheduledVisit.workerName || 'Serwis'}</span>` : ''}
                     </div>
                     <div class="text-xs ${scheduledVisit ? 'text-emerald-700 dark:text-emerald-300' : status.isOverdue ? 'text-rose-600' : 'text-amber-600'} font-bold mt-1">
@@ -2050,9 +2115,6 @@ service cloud.firestore {
       const dest = encodeURIComponent(addrs[addrs.length - 1]);
       const wps = addrs.slice(0, -1);
 
-      // Brak parametru origin sprawia, że aplikacja Google Maps na telefonie i komputerze
-      // automatycznie przyjmuje "Twoją bieżącą lokalizację GPS" jako punkt startowy
-      // i nie blokuje otwarcia linku przez mobilny bloker pop-upów!
       let url = `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`;
       if (wps.length > 0) {
         url += `&waypoints=${wps.map(a => encodeURIComponent(a)).join('|')}`;
@@ -2060,7 +2122,6 @@ service cloud.firestore {
 
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       if (isMobile) {
-        // Na telefonach bezpośrednie przejście natychmiast uruchamia aplikację Google Maps
         window.location.href = url;
       } else {
         const win = window.open(url, '_blank', 'noopener,noreferrer');
@@ -2074,11 +2135,17 @@ service cloud.firestore {
       const enriched = getEnrichedClients();
       const query = (document.getElementById('client-search-input')?.value || '').toLowerCase().trim();
       const deviceFilter = document.getElementById('device-filter-select')?.value || 'all';
+      const warrantyFilter = document.getElementById('warranty-filter-select')?.value || 'all';
 
       const filtered = enriched.filter(c => {
         const matchText = !query || c.name.toLowerCase().includes(query) || c.city.toLowerCase().includes(query) || c.street.toLowerCase().includes(query) || c.phone.toLowerCase().includes(query) || c.devices.some(d => d.deviceModel.toLowerCase().includes(query) || (d.serialNumber || '').toLowerCase().includes(query));
         const matchDev = deviceFilter === 'all' || c.devices.some(d => d.deviceType === deviceFilter);
-        return matchText && matchDev;
+        const matchWarranty =
+          warrantyFilter === 'all' ||
+          (warrantyFilter === 'under_warranty' && c.devices.some(d => d.status.isUnderWarranty)) ||
+          (warrantyFilter === 'expired_warranty' && c.devices.some(d => d.status.isExpiredWarranty)) ||
+          (warrantyFilter === 'external' && c.devices.some(d => d.status.noInstallDate));
+        return matchText && matchDev && matchWarranty;
       });
 
       document.getElementById('badge-clients').innerText = enriched.length;
@@ -2088,7 +2155,7 @@ service cloud.firestore {
 
       if (filtered.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-zinc-500">Brak klientów spełniających kryteria.</td></tr>`;
-        mobileContainer.innerHTML = `<div class="p-8 text-center text-zinc-500 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800">Brak klientów w bazie.</div>`;
+        mobileContainer.innerHTML = `<div class="p-8 text-center text-zinc-500 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800">Brak klientów spełniających wybrane filtry.</div>`;
         return;
       }
 
@@ -2106,14 +2173,20 @@ service cloud.firestore {
               <i data-lucide="phone" class="w-3.5 h-3.5"></i> ${c.phone}
             </a>
           </div>
-          <div class="space-y-1.5 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+          <div class="space-y-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
             ${c.devices.map(dev => {
               const info = getDeviceInfo(dev.deviceType);
               const st = dev.status;
               return `
-                <div onclick="openInspectionModal('${c.id}', '${dev.id}')" class="flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer ${info.bg} ${info.border}">
-                  <span class="font-bold text-zinc-900 dark:text-white">${dev.deviceModel} ${dev.serialNumber ? `<span class="text-[10px] font-mono text-zinc-500">[S/N: ${dev.serialNumber}]</span>` : ''} ${st.noInstallDate ? '<span class="text-[10px] font-normal text-zinc-500">(Obce)</span>' : ''}</span>
-                  ${st.isOverdue ? '<span class="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[10px] font-bold shrink-0">Po terminie</span>' : st.isSoon ? `<span class="px-1.5 py-0.5 rounded bg-amber-500 text-white text-[10px] font-bold shrink-0">Za ${st.daysToInspection}d</span>` : '<span class="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-300 border text-[10px] font-bold shrink-0">OK</span>'}
+                <div onclick="openInspectionModal('${c.id}', '${dev.id}')" class="p-2.5 rounded-xl border text-xs cursor-pointer space-y-1.5 ${info.bg} ${info.border}">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="font-bold text-zinc-900 dark:text-white">${dev.deviceModel} ${dev.serialNumber ? `<span class="text-[10px] font-mono text-zinc-500">[S/N: ${dev.serialNumber}]</span>` : ''}</span>
+                    ${st.isOverdue ? '<span class="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[10px] font-bold shrink-0">Przegląd po terminie</span>' : st.isSoon ? `<span class="px-1.5 py-0.5 rounded bg-amber-500 text-white text-[10px] font-bold shrink-0">Przegląd za ${st.daysToInspection}d</span>` : '<span class="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-300 border text-[10px] font-bold shrink-0">Przegląd OK</span>'}
+                  </div>
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                    ${getWarrantyBadgeHtml(st)}
+                    <span class="text-[10px] text-zinc-500 font-semibold">Kolejny przegląd: ${st.nextInspectionFormatted}</span>
+                  </div>
                 </div>
               `;
             }).join('')}
@@ -2141,14 +2214,15 @@ service cloud.firestore {
           <td class="py-3.5 px-4 text-zinc-600 dark:text-zinc-300">${c.city}, ${c.street}</td>
           <td class="py-3.5 px-4"><a href="tel:${c.phone}" class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold hover:underline whitespace-nowrap">📞 ${c.phone}</a></td>
           <td class="py-2.5 px-4">
-            <div class="flex flex-wrap gap-2">
+            <div class="flex flex-col gap-2">
               ${c.devices.map(dev => {
                 const info = getDeviceInfo(dev.deviceType);
                 const st = dev.status;
                 return `
-                  <div onclick="openInspectionModal('${c.id}', '${dev.id}')" class="inline-flex items-center gap-2 px-2.5 py-1 rounded-xl border text-xs cursor-pointer ${info.bg} ${info.border}">
-                    <span class="font-bold text-zinc-900 dark:text-white">${dev.deviceModel} ${dev.serialNumber ? `<span class="text-[10px] font-mono text-zinc-500">[S/N: ${dev.serialNumber}]</span>` : ''} ${st.noInstallDate ? '<span class="text-[10px] font-normal text-zinc-500">(Obce)</span>' : ''}</span>
-                    ${st.isOverdue ? '<span class="px-1.5 rounded bg-rose-600 text-white text-[10px] font-bold">Po terminie</span>' : st.isSoon ? `<span class="px-1.5 rounded bg-amber-500 text-white text-[10px] font-bold">Za ${st.daysToInspection}d</span>` : '<span class="px-1.5 rounded bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-300 border text-[10px] font-bold">OK</span>'}
+                  <div onclick="openInspectionModal('${c.id}', '${dev.id}')" class="inline-flex flex-wrap items-center gap-2 px-3 py-1.5 rounded-xl border text-xs cursor-pointer w-fit ${info.bg} ${info.border}">
+                    <span class="font-bold text-zinc-900 dark:text-white">${dev.deviceModel} ${dev.serialNumber ? `<span class="text-[10px] font-mono text-zinc-500">[S/N: ${dev.serialNumber}]</span>` : ''}</span>
+                    ${getWarrantyBadgeHtml(st)}
+                    ${st.isOverdue ? '<span class="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[10px] font-bold">Przegląd po terminie</span>' : st.isSoon ? `<span class="px-1.5 py-0.5 rounded bg-amber-500 text-white text-[10px] font-bold">Przegląd za ${st.daysToInspection}d</span>` : `<span class="px-1.5 py-0.5 rounded bg-white dark:bg-zinc-800 text-emerald-700 dark:text-emerald-300 border text-[10px] font-bold">Przegląd: ${st.nextInspectionFormatted}</span>`}
                   </div>
                 `;
               }).join('')}
@@ -2226,13 +2300,86 @@ service cloud.firestore {
       });
     }
 
+    function initStatsTimeFilters() {
+      const yearSel = document.getElementById('stats-year-select');
+      const monthSel = document.getElementById('stats-month-select');
+      if (!yearSel || !monthSel) return;
+
+      const now = new Date();
+      const currentYear = String(now.getFullYear());
+      const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+
+      const yearsSet = new Set([currentYear, String(now.getFullYear() - 1), String(now.getFullYear() - 2)]);
+      (window.appointmentsData || []).forEach(a => {
+        if (a.date && a.date.length >= 4) yearsSet.add(a.date.slice(0, 4));
+      });
+      (window.clientsData || []).forEach(c => {
+        (c.devices || []).forEach(d => {
+          if (d.installDate && d.installDate.length >= 4) yearsSet.add(d.installDate.slice(0, 4));
+          (d.inspectionHistory || []).forEach(h => {
+            if (h.date && h.date.length >= 4) yearsSet.add(h.date.slice(0, 4));
+          });
+        });
+      });
+
+      const sortedYears = Array.from(yearsSet).sort((a, b) => b.localeCompare(a));
+      const prevYear = yearSel.value || currentYear;
+      yearSel.innerHTML = sortedYears.map(y => `<option value="${y}">Rok ${y}</option>`).join('');
+      yearSel.value = sortedYears.includes(prevYear) ? prevYear : currentYear;
+
+      if (!monthSel.value) monthSel.value = currentMonth;
+    }
+
+    function onStatsTimeScopeChange() {
+      const scope = document.getElementById('stats-time-scope')?.value || 'all';
+      const yearSel = document.getElementById('stats-year-select');
+      const monthSel = document.getElementById('stats-month-select');
+
+      if (scope === 'all') {
+        yearSel.classList.add('hidden');
+        monthSel.classList.add('hidden');
+      } else if (scope === 'year') {
+        yearSel.classList.remove('hidden');
+        monthSel.classList.add('hidden');
+      } else {
+        yearSel.classList.remove('hidden');
+        monthSel.classList.remove('hidden');
+      }
+      renderHistoryTable();
+    }
+
+    function matchesStatsTimeFilter(dateStr, scope, year, month) {
+      if (scope === 'all') return true;
+      if (!dateStr || typeof dateStr !== 'string') return false;
+      if (scope === 'year') return dateStr.startsWith(`${year}-`);
+      if (scope === 'month') return dateStr.startsWith(`${year}-${month}`);
+      return true;
+    }
+
     function renderHistoryTable() {
       const q = (document.getElementById('history-search')?.value || '').toLowerCase();
       const workerFilter = document.getElementById('history-worker-filter')?.value || 'all';
+      const scope = document.getElementById('stats-time-scope')?.value || 'all';
+      const selectedYear = document.getElementById('stats-year-select')?.value || String(new Date().getFullYear());
+      const selectedMonth = document.getElementById('stats-month-select')?.value || String(new Date().getMonth() + 1).padStart(2, '0');
+
+      const monthNames = {
+        '01': 'Styczeń', '02': 'Luty', '03': 'Marzec', '04': 'Kwiecień',
+        '05': 'Maj', '06': 'Czerwiec', '07': 'Lipiec', '08': 'Sierpień',
+        '09': 'Wrzesień', '10': 'Październik', '11': 'Listopad', '12': 'Grudzień'
+      };
+
+      const periodLabelEl = document.getElementById('stats-period-label');
+      if (periodLabelEl) {
+        if (scope === 'all') periodLabelEl.innerText = 'Podsumowanie: Ogółem (wszystkie lata)';
+        else if (scope === 'year') periodLabelEl.innerText = `Podsumowanie za rok ${selectedYear}`;
+        else periodLabelEl.innerText = `Podsumowanie za: ${monthNames[selectedMonth] || selectedMonth} ${selectedYear}`;
+      }
+
       const enriched = getEnrichedClients();
 
       let allHistory = [];
-      let totalDevices = 0, underWarranty = 0, external = 0;
+      let totalDevices = 0, underWarranty = 0, expiredWarrantyCount = 0, external = 0;
       const devTypeCounts = { heat_pump: 0, ac: 0, ventilation: 0 };
       const citiesSet = new Set();
 
@@ -2243,14 +2390,21 @@ service cloud.firestore {
           devTypeCounts[d.deviceType] = (devTypeCounts[d.deviceType] || 0) + 1;
           if (d.status.noInstallDate) external++;
           else if (d.status.isUnderWarranty) underWarranty++;
+          else if (d.status.isExpiredWarranty) expiredWarrantyCount++;
 
           (d.inspectionHistory || []).forEach(h => {
-            allHistory.push({ ...h, clientName: c.name, clientCity: c.city, deviceModel: d.deviceModel });
+            if (matchesStatsTimeFilter(h.date, scope, selectedYear, selectedMonth)) {
+              allHistory.push({ ...h, clientName: c.name, clientCity: c.city, deviceModel: d.deviceModel });
+            }
           });
         });
       });
 
-      (window.appointmentsData || []).filter(a => a.status === 'completed').forEach(v => {
+      const periodAppointments = (window.appointmentsData || []).filter(a =>
+        matchesStatsTimeFilter(a.date, scope, selectedYear, selectedMonth)
+      );
+
+      periodAppointments.filter(a => a.status === 'completed' && !a.savedToDeviceHistory).forEach(v => {
         const client = enriched.find(c => c.id === v.clientId);
         const dev = client?.devices?.find(d => d.id === v.deviceId);
         allHistory.push({
@@ -2266,15 +2420,16 @@ service cloud.firestore {
 
       allHistory.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
-      const plannedVisits = (window.appointmentsData || []).filter(a => a.status !== 'completed').length;
-      const completedVisits = (window.appointmentsData || []).filter(a => a.status === 'completed').length;
+      const plannedVisits = periodAppointments.filter(a => a.status !== 'completed').length;
+      const completedVisits = periodAppointments.filter(a => a.status === 'completed').length;
 
-      document.getElementById('stat-history-total').innerText = allHistory.length;
-      document.getElementById('stat-visits-planned').innerText = plannedVisits;
-      document.getElementById('stat-visits-completed').innerText = completedVisits;
-      document.getElementById('stat-devices-total').innerText = totalDevices;
-      document.getElementById('stat-warranty-breakdown').innerText = `${underWarranty} gw. / ${external} obce`;
-      document.getElementById('stat-cities-total').innerText = citiesSet.size;
+      setText('stat-history-total', allHistory.length);
+      setText('stat-visits-planned', plannedVisits);
+      setText('stat-visits-completed', completedVisits);
+      setText('stat-devices-total', totalDevices);
+      setText('stat-under-warranty', `${underWarranty} urz.`);
+      setText('stat-expired-warranty-box', `${expiredWarrantyCount} urz.`);
+      setText('stat-cities-total', `${external} obce / ${citiesSet.size} miast`);
 
       const devBarsEl = document.getElementById('stats-device-types-bars');
       if (devBarsEl) {
@@ -2302,7 +2457,7 @@ service cloud.firestore {
       const srvBarsEl = document.getElementById('stats-service-types-bars');
       if (srvBarsEl) {
         let p = 0, s = 0, m = 0;
-        (window.appointmentsData || []).forEach(a => {
+        periodAppointments.forEach(a => {
           const sv = (a.serviceType || '').toLowerCase();
           if (sv.includes('monta')) m++;
           else if (sv.includes('serwis') || sv.includes('awaria')) s++;
@@ -2311,16 +2466,16 @@ service cloud.firestore {
         const totalSrv = Math.max(1, p + s + m);
         const srvItems = [
           { label: '🛠️ Przeglądy', count: p, color: 'bg-emerald-500' },
-          { label: '⚡ Serwisy', count: s, color: 'bg-rose-500' },
+          { label: '⚡ Serwisy / Awarie', count: s, color: 'bg-rose-500' },
           { label: '🏗️ Montaże', count: m, color: 'bg-amber-500' }
         ];
         srvBarsEl.innerHTML = srvItems.map(it => {
-          const pct = Math.round((it.count / totalSrv) * 100);
+          const pct = (p + s + m) > 0 ? Math.round((it.count / totalSrv) * 100) : 0;
           return `
             <div class="space-y-1">
               <div class="flex justify-between text-xs font-bold">
                 <span>${it.label}</span>
-                <span>${it.count}</span>
+                <span>${it.count} (${pct}%)</span>
               </div>
               <div class="w-full h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                 <div class="${it.color} h-full rounded-full" style="width:${pct}%"></div>
@@ -2334,8 +2489,8 @@ service cloud.firestore {
       if (wrkBarsEl) {
         const workers = window.workersData || ['Serwisant 1'];
         wrkBarsEl.innerHTML = workers.map(w => {
-          const assigned = (window.appointmentsData || []).filter(a => a.workerName === w).length;
-          const done = (window.appointmentsData || []).filter(a => a.workerName === w && a.status === 'completed').length;
+          const assigned = periodAppointments.filter(a => a.workerName === w).length;
+          const done = periodAppointments.filter(a => a.workerName === w && a.status === 'completed').length;
           return `
             <div class="flex justify-between items-center p-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/70 dark:border-zinc-700 text-xs">
               <span class="font-bold">👷 ${w}</span>
@@ -2353,7 +2508,7 @@ service cloud.firestore {
 
       const tbody = document.getElementById('history-table-body');
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-zinc-400">Brak wpisów w historii.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-zinc-400">Brak wpisów w historii dla wybranego okresu.</td></tr>`;
         return;
       }
 
@@ -3113,8 +3268,11 @@ service cloud.firestore {
           <div class="p-4 bg-zinc-50 dark:bg-zinc-800/60 border ${isHighlighted ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-zinc-200 dark:border-zinc-700'} rounded-2xl space-y-3">
             <div class="flex justify-between items-start flex-wrap gap-2">
               <div>
-                <h4 class="font-extrabold text-sm text-zinc-900 dark:text-white">${getDeviceInfo(d.deviceType).short}: ${d.deviceModel} ${d.serialNumber ? `<span class="text-xs font-mono text-zinc-500">[S/N: ${d.serialNumber}]</span>` : ''}</h4>
-                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Następny przegląd: <span class="font-bold text-zinc-800 dark:text-zinc-200">${d.status.nextInspectionFormatted}</span> • Gwarancja do: <span class="font-bold">${d.status.warrantyEndFormatted}</span></p>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h4 class="font-extrabold text-sm text-zinc-900 dark:text-white">${getDeviceInfo(d.deviceType).short}: ${d.deviceModel} ${d.serialNumber ? `<span class="text-xs font-mono text-zinc-500">[S/N: ${d.serialNumber}]</span>` : ''}</h4>
+                  ${getWarrantyBadgeHtml(d.status)}
+                </div>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Następny przegląd: <span class="font-bold text-zinc-800 dark:text-zinc-200">${d.status.nextInspectionFormatted}</span></p>
               </div>
               <div class="flex gap-1.5 flex-wrap">
                 <button onclick="registerInspection('${c.id}', '${d.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold">+ Wbij szybki przegląd</button>
@@ -3396,13 +3554,14 @@ service cloud.firestore {
 
     function exportClientsCSV() {
       const enriched = getEnrichedClients();
-      const headers = ['Imię i Nazwisko', 'Telefon', 'Kod pocztowy', 'Miasto', 'Ulica', 'Lat', 'Lng', 'Typ urządzenia', 'Model', 'Data montażu', 'Gwarancja', 'Ostatni przegląd', 'Następny przegląd', 'Notatki'];
+      const headers = ['Imię i Nazwisko', 'Telefon', 'Kod pocztowy', 'Miasto', 'Ulica', 'Lat', 'Lng', 'Typ urządzenia', 'Model', 'Data montażu', 'Gwarancja (msc)', 'Status Gwarancji', 'Ostatni przegląd', 'Następny przegląd', 'Notatki'];
       const escape = val => `"${String(val || '').replace(/"/g, '""')}"`;
       const rows = [];
 
       enriched.forEach(c => {
         c.devices.forEach(d => {
-          rows.push([c.name, c.phone, c.postalCode, c.city, c.street, c.lat, c.lng, getDeviceInfo(d.deviceType).short, d.deviceModel, d.installDate, d.warrantyMonths, d.lastInspectionDate, d.nextInspectionDate, c.notes].map(escape).join(';'));
+          const wStatus = d.status.noInstallDate ? 'Obce' : d.status.isUnderWarranty ? `Na gwarancji do ${d.status.warrantyEndFormatted}` : `Po gwarancji (${d.status.warrantyEndFormatted})`;
+          rows.push([c.name, c.phone, c.postalCode, c.city, c.street, c.lat, c.lng, getDeviceInfo(d.deviceType).short, d.deviceModel, d.installDate, d.warrantyMonths, wStatus, d.lastInspectionDate, d.nextInspectionDate, c.notes].map(escape).join(';'));
         });
       });
 
@@ -3469,13 +3628,13 @@ service cloud.firestore {
       const today = new Date();
       const shift = days => { const d = new Date(today); d.setDate(d.getDate() + days); return toYMD(d); };
       const sampleClients = [
-        { id: 'c_1', name: 'Jan Kowalski', phone: '+48 601 234 567', city: 'Poznań', postalCode: '60-101', street: 'ul. Słoneczna 15', lat: 52.3942, lng: 16.8824, notes: 'Pompa ciepła', devices: [{ id: 'd1', deviceType: 'heat_pump', deviceModel: 'Panasonic Aquarea T-CAP 9kW', installDate: '2024-10-15', warrantyMonths: 60, lastInspectionDate: '2025-10-15', nextInspectionDate: shift(10), inspectionIntervalMonths: 12, remindersCanceled: false, inspectionHistory: [{ id: 'h1', date: '2025-10-15', technician: 'Serwis PP', notes: 'Pierwszy przegląd roczny.' }] }] },
-        { id: 'c_2', name: 'Karolina Wójcik', phone: '+48 603 112 233', city: 'Tarnowo Podgórne', postalCode: '62-080', street: 'ul. Polna 3', lat: 52.4632, lng: 16.6854, notes: 'Klimatyzacja', devices: [{ id: 'd2', deviceType: 'ac', deviceModel: 'Gree Amber Prestige 3.5kW', installDate: '2024-03-10', warrantyMonths: 60, lastInspectionDate: '2024-03-10', nextInspectionDate: shift(-4), inspectionIntervalMonths: 12, remindersCanceled: false, inspectionHistory: [] }] }
+        { id: 'c_1', name: 'Jan Kowalski', phone: '+48 601 234 567', city: 'Poznań', postalCode: '60-101', street: 'ul. Słoneczna 15', lat: 52.3942, lng: 16.8824, notes: 'Pompa ciepła', devices: [{ id: 'd1', deviceType: 'heat_pump', deviceModel: 'Panasonic Aquarea T-CAP 9kW', installDate: '2024-10-15', warrantyMonths: 60, lastInspectionDate: '2025-10-15', nextInspectionDate: shift(10), inspectionIntervalMonths: 12, remindersCanceled: false, inspectionHistory: [{ id: 'h1', date: '2025-10-15', technician: 'Serwisant 1', notes: 'Pierwszy przegląd roczny.' }] }] },
+        { id: 'c_2', name: 'Karolina Wójcik', phone: '+48 603 112 233', city: 'Tarnowo Podgórne', postalCode: '62-080', street: 'ul. Polna 3', lat: 52.4632, lng: 16.6854, notes: 'Klimatyzacja po gwarancji', devices: [{ id: 'd2', deviceType: 'ac', deviceModel: 'Gree Amber Prestige 3.5kW', installDate: '2019-03-10', warrantyMonths: 36, lastInspectionDate: '2024-03-10', nextInspectionDate: shift(-4), inspectionIntervalMonths: 12, remindersCanceled: false, inspectionHistory: [] }] }
       ];
 
       window.clientsData = sampleClients;
       window.appointmentsData = [
-        { id: 'v_1', clientId: 'c_1', date: toYMD(new Date()), time: '09:00', serviceType: 'Przegląd', notes: 'Sprawdzić ciśnienie', status: 'planned' }
+        { id: 'v_1', clientId: 'c_1', workerName: 'Serwisant 1', date: toYMD(new Date()), time: '09:00', serviceType: 'Przegląd', notes: 'Sprawdzić ciśnienie', status: 'planned' }
       ];
       persistData();
       renderDashboard();
@@ -3484,15 +3643,11 @@ service cloud.firestore {
 
     function closeModal(id) { document.getElementById(id).classList.remove('flex'); document.getElementById(id).classList.add('hidden'); }
 
-    // OGÓLNY TEST SYSTEMOWY PO WŁASNEJ LINII (Self-Diagnostic / Smoke Test)
     function runSystemSelfTest() {
       try {
         console.group("🚀 PP Planer Pracy — Ogólny test systemowy");
-        console.log("1. Sprawdzam pamięć lokalną i konfigurację chmury...", { clients: window.clientsData.length, appointments: window.appointmentsData.length, catalog: window.catalogData.length });
-        console.log("2. Sprawdzam poprawność geokodowania i struktur urządzeń...");
         const enriched = getEnrichedClients();
         console.log(`Zwalidowano ${enriched.length} klientów w systemie.`);
-        console.log("✅ Wszystkie moduły, stany i widoki są w pełni sprawne.");
         console.groupEnd();
       } catch (e) {
         console.error("Błąd podczas testu systemowego:", e);
