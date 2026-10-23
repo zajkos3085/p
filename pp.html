@@ -268,27 +268,12 @@
                   <i data-lucide="bell-ring" class="w-4 h-4 text-amber-600 dark:text-amber-400"></i>
                   <div>
                     <h2 class="text-sm sm:text-base font-bold text-zinc-900 dark:text-white">Kończące się przeglądy — DO UMÓWIENIA</h2>
-                    <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Po zaplanowaniu wyjazdu przegląd automatycznie przeniesie się do kafelka poniżej</p>
+                    <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Po zaplanowaniu wyjazdu przegląd automatycznie przeniesie się do kafelka pod kalendarzem</p>
                   </div>
                 </div>
                 <button id="toggle-urgent-btn" onclick="toggleUrgentList()" class="px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold hidden text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 transition">Rozwiń pełną listę</button>
               </div>
               <div id="urgent-list" class="divide-y divide-zinc-100 dark:divide-zinc-800"></div>
-            </div>
-
-            <!-- OSOBNY KAFELEK: ZAPLANOWANE PRZEGLĄDY KTÓRE SIĘ KOŃCZĄ -->
-            <div id="scheduled-urgent-card" class="bg-white dark:bg-zinc-900 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm overflow-hidden">
-              <div class="px-5 py-4 border-b border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/70 dark:bg-emerald-950/30 flex justify-between items-center flex-wrap gap-2">
-                <div class="flex items-center gap-2">
-                  <i data-lucide="calendar-check-2" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
-                  <div>
-                    <h2 class="text-sm sm:text-base font-extrabold text-emerald-950 dark:text-emerald-200">Zaplanowane przeglądy (Umówione wyjazdy)</h2>
-                    <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80">Kończące się przeglądy, które mają już przypisaną datę i serwisanta w planerze</p>
-                  </div>
-                </div>
-                <span id="scheduled-urgent-count-badge" class="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-xs font-extrabold">0</span>
-              </div>
-              <div id="scheduled-urgent-list" class="divide-y divide-emerald-100 dark:divide-emerald-900/40"></div>
             </div>
           </div>
 
@@ -306,6 +291,21 @@
                 <div>Pon</div><div>Wt</div><div>Śr</div><div>Czw</div><div>Pt</div><div>Sob</div><div>Ndz</div>
               </div>
               <div id="calendar-grid" class="grid grid-cols-7 gap-1.5"></div>
+            </div>
+
+            <!-- OSOBNY KAFELEK POD KALENDARZEM: ZAPLANOWANE PRZEGLĄDY KTÓRE SIĘ KOŃCZĄ -->
+            <div id="scheduled-urgent-card" class="bg-white dark:bg-zinc-900 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm overflow-hidden">
+              <div class="px-5 py-4 border-b border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/70 dark:bg-emerald-950/30 flex justify-between items-center flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="calendar-check-2" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
+                  <div>
+                    <h2 class="text-sm sm:text-base font-extrabold text-emerald-950 dark:text-emerald-200">Zaplanowane przeglądy (Umówione wyjazdy)</h2>
+                    <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80">Kończące się przeglądy, które mają już przypisaną datę i serwisanta w planerze</p>
+                  </div>
+                </div>
+                <span id="scheduled-urgent-count-badge" class="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-xs font-extrabold">0</span>
+              </div>
+              <div id="scheduled-urgent-list" class="divide-y divide-emerald-100 dark:divide-emerald-900/40"></div>
             </div>
           </div>
         </div>
@@ -2228,13 +2228,13 @@ service cloud.firestore {
         url += `&waypoints=${wps.map(a => encodeURIComponent(a)).join('|')}`;
       }
 
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      if (isMobile) {
-        window.location.href = url;
-      } else {
-        const win = window.open(url, '_blank', 'noopener,noreferrer');
-        if (!win) window.location.href = url;
-      }
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     function openTodayRoute(workerName = null) { openRouteForDate(toYMD(new Date()), workerName); }
