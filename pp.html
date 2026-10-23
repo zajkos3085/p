@@ -1717,6 +1717,7 @@ service cloud.firestore {
           if (!d.status.remindersCanceled && (d.status.isOverdue || d.status.isSoon)) {
             const scheduledVisit = (window.appointmentsData || []).find(a =>
               a.status !== 'completed' &&
+              a.status !== 'canceled' &&
               a.clientId === c.id &&
               (!a.deviceId || a.deviceId === d.id)
             );
@@ -1778,7 +1779,7 @@ service cloud.firestore {
           const groupedHtml = workersList.map(worker => {
             const workerVisits = todayVisits.filter(v => (v.workerName || 'Serwisant 1') === worker);
             if (workerVisits.length === 0) return '';
-            const pendingForWorker = workerVisits.filter(v => v.status !== 'completed');
+            const pendingForWorker = workerVisits.filter(v => v.status !== 'completed' && v.status !== 'canceled');
 
             return `
               <div class="p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/30 space-y-2.5">
@@ -1798,22 +1799,34 @@ service cloud.firestore {
                     const client = enriched.find(c => c.id === v.clientId);
                     const dev = client?.devices?.find(d => d.id === v.deviceId);
                     const isDone = v.status === 'completed';
+                    const isCanceled = v.status === 'canceled';
                     return `
-                      <div class="p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex justify-between items-center gap-3">
+                      <div class="p-3 rounded-xl border ${isCanceled ? 'border-rose-200 dark:border-rose-900/50 bg-rose-50/40 dark:bg-rose-950/20' : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900'} flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                         <div class="min-w-0">
                           <div class="flex items-center gap-2 flex-wrap">
-                            <span class="text-xs font-extrabold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-md">${v.time}</span>
-                            <span class="font-bold text-sm text-zinc-900 dark:text-white ${isDone ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</span>
+                            <span class="text-xs font-extrabold ${isCanceled ? 'text-rose-700 bg-rose-100 dark:bg-rose-950 dark:text-rose-300 line-through' : 'text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950'} px-2 py-0.5 rounded-md">${v.time}</span>
+                            <span class="font-bold text-sm text-zinc-900 dark:text-white ${(isDone || isCanceled) ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</span>
                             <span class="text-[11px] font-bold bg-zinc-200 dark:bg-zinc-700 px-2 py-0.5 rounded text-zinc-800 dark:text-zinc-200">${v.serviceType}</span>
+                            ${isCanceled ? '<span class="px-2 py-0.5 rounded bg-rose-600 text-white text-[10px] font-extrabold uppercase">Anulowane</span>' : ''}
                           </div>
                           ${dev ? `<div class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5">🔧 ${dev.deviceModel} ${dev.serialNumber ? `<span class="font-mono text-zinc-500">(S/N: ${dev.serialNumber})</span>` : ''}</div>` : ''}
                           ${v.notes ? `<div class="text-[11px] text-amber-700 dark:text-amber-400 font-medium mt-0.5">📝 Notatka: ${v.notes}</div>` : ''}
                           ${v.completionComment ? `<div class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold mt-0.5">✅ Wykonano: ${v.completionComment}</div>` : ''}
+                          ${v.cancelReason ? `<div class="text-[11px] text-rose-600 dark:text-rose-400 font-bold mt-0.5">❌ Powód anulowania: ${v.cancelReason}</div>` : ''}
                           ${client ? `<div class="text-xs text-zinc-600 dark:text-zinc-400 mt-1">📍 ${client.city}, ${client.street} • <a href="tel:${client.phone}" class="text-emerald-600 dark:text-emerald-400 font-bold underline">📞 ${client.phone}</a></div>` : ''}
                         </div>
-                        <button onclick="handleVisitActionButton('${v.id}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold shrink-0 transition ${isDone ? 'bg-zinc-200 dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'}">
-                          ${isDone ? '✓ Zamknięte (Cofnij)' : 'Zamknij zlecenie'}
-                        </button>
+                        <div class="flex items-center gap-1.5 shrink-0 flex-wrap">
+                          ${!isCanceled ? `
+                            <button onclick="handleVisitActionButton('${v.id}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition ${isDone ? 'bg-zinc-200 dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'}">
+                              ${isDone ? '✓ Zamknięte (Cofnij)' : 'Zamknij zlecenie'}
+                            </button>
+                          ` : ''}
+                          ${!isDone ? `
+                            <button onclick="cancelOrRestoreVisit('${v.id}')" class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold transition ${isCanceled ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800' : 'bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800'}">
+                              ${isCanceled ? 'Przywróć zlecenie' : 'Anuluj zlecenie'}
+                            </button>
+                          ` : ''}
+                        </div>
                       </div>
                     `;
                   }).join('')}
@@ -1897,8 +1910,8 @@ service cloud.firestore {
                   <button onclick="selectDateFromCalendar('${scheduledVisit.date}')" class="px-2.5 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100">
                     Pokaż w planerze
                   </button>
-                  <button onclick="deleteVisit('${scheduledVisit.id}')" class="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg" title="Odwołaj wyjazd (wróci do umówienia)">
-                    <i data-lucide="x-circle" class="w-4 h-4"></i>
+                  <button onclick="cancelOrRestoreVisit('${scheduledVisit.id}')" class="px-2.5 py-1.5 bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-xl text-xs font-bold hover:bg-rose-100" title="Anuluj zaplanowany wyjazd">
+                    Anuluj
                   </button>
                 </div>
               </div>
@@ -1984,7 +1997,7 @@ service cloud.firestore {
       mapMarkersGroup.clearLayers();
       const enriched = getEnrichedClients();
       const bounds = [];
-      const dayVisitsClientIds = new Set((window.appointmentsData || []).filter(a => a.date === selectedDate).map(a => a.clientId));
+      const dayVisitsClientIds = new Set((window.appointmentsData || []).filter(a => a.date === selectedDate && a.status !== 'canceled').map(a => a.clientId));
 
       enriched.forEach(c => {
         const lat = parseFloat(c.lat), lng = parseFloat(c.lng);
@@ -2105,7 +2118,7 @@ service cloud.firestore {
         listEl.innerHTML = allWorkers.map(worker => {
           const workerVisits = dayVisits.filter(v => (v.workerName || 'Serwisant 1') === worker);
           if (workerVisits.length === 0) return '';
-          const pending = workerVisits.filter(v => v.status !== 'completed');
+          const pending = workerVisits.filter(v => v.status !== 'completed' && v.status !== 'canceled');
 
           return `
             <div class="p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50/80 dark:bg-zinc-800/40 space-y-2.5">
@@ -2118,33 +2131,43 @@ service cloud.firestore {
                   <button onclick="openRouteForDate('${selectedDate}', '${worker.replace(/'/g, "\\'")}')" class="bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-extrabold px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-sm transition text-xs">
                     <i data-lucide="navigation" class="w-3.5 h-3.5"></i> Nawiguj trasę (${pending.length})
                   </button>
-                ` : `<span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">✓ Wszystkie zlecenia zamknięte</span>`}
+                ` : `<span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">✓ Wszystkie zlecenia zamknięte / rozliczone</span>`}
               </div>
               <div class="space-y-2">
                 ${workerVisits.map(v => {
                   const client = enriched.find(c => c.id === v.clientId);
                   const dev = client?.devices?.find(d => d.id === v.deviceId);
                   const isDone = v.status === 'completed';
+                  const isCanceled = v.status === 'canceled';
                   const isMontaz = (v.serviceType || '').toLowerCase().includes('monta');
                   return `
-                    <div class="p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex justify-between items-center gap-3">
+                    <div class="p-3 rounded-xl border ${isCanceled ? 'border-rose-200 dark:border-rose-900/50 bg-rose-50/40 dark:bg-rose-950/20' : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900'} flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                       <div class="min-w-0">
                         <div class="flex items-center gap-2 flex-wrap">
-                          <span class="text-xs font-extrabold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-md">${v.time}</span>
-                          <span class="font-bold text-sm text-zinc-900 dark:text-white ${isDone ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</span>
+                          <span class="text-xs font-extrabold ${isCanceled ? 'text-rose-700 bg-rose-100 dark:bg-rose-950 dark:text-rose-300 line-through' : 'text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950'} px-2 py-0.5 rounded-md">${v.time}</span>
+                          <span class="font-bold text-sm text-zinc-900 dark:text-white ${(isDone || isCanceled) ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</span>
                           <span class="text-[11px] font-bold ${isMontaz ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200'} px-2 py-0.5 rounded">${v.serviceType}</span>
+                          ${isCanceled ? '<span class="px-2 py-0.5 rounded bg-rose-600 text-white text-[10px] font-extrabold uppercase">Anulowane</span>' : ''}
                         </div>
                         ${isMontaz && v.plannedInstallModel && !dev ? `<div class="text-[11px] font-extrabold text-amber-700 dark:text-amber-300 mt-0.5">🏗️ Do zamontowania: ${getDeviceInfo(v.plannedInstallType).short} — ${v.plannedInstallModel}</div>` : ''}
                         ${dev ? `<div class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5">🔧 ${dev.deviceModel} ${dev.serialNumber ? `<span class="font-mono text-zinc-500">(S/N: ${dev.serialNumber})</span>` : ''}</div>` : ''}
                         ${v.notes ? `<div class="text-[11px] text-amber-700 dark:text-amber-400 font-medium mt-0.5">📝 Notatka: ${v.notes}</div>` : ''}
                         ${v.completionComment ? `<div class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold mt-0.5">✅ Wykonano: ${v.completionComment}</div>` : ''}
+                        ${v.cancelReason ? `<div class="text-[11px] text-rose-600 dark:text-rose-400 font-bold mt-0.5">❌ Powód anulowania: ${v.cancelReason}</div>` : ''}
                         ${client ? `<div class="text-xs text-zinc-600 dark:text-zinc-400 mt-1">📍 ${client.city}, ${client.street} • <a href="tel:${client.phone}" class="text-emerald-600 dark:text-emerald-400 font-bold underline">📞 ${client.phone}</a></div>` : ''}
                       </div>
-                      <div class="flex items-center gap-1.5 shrink-0">
-                        <button onclick="handleVisitActionButton('${v.id}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold transition ${isDone ? 'bg-zinc-200 dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'}">
-                          ${isDone ? '✓ Zamknięte (Cofnij)' : 'Zamknij zlecenie'}
-                        </button>
-                        <button onclick="deleteVisit('${v.id}')" class="text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 p-1.5 rounded-lg" title="Usuń wizytę"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                      <div class="flex items-center gap-1.5 shrink-0 flex-wrap">
+                        ${!isCanceled ? `
+                          <button onclick="handleVisitActionButton('${v.id}')" class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold transition ${isDone ? 'bg-zinc-200 dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'}">
+                            ${isDone ? '✓ Zamknięte' : 'Zamknij'}
+                          </button>
+                        ` : ''}
+                        ${!isDone ? `
+                          <button onclick="cancelOrRestoreVisit('${v.id}')" class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold transition ${isCanceled ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800' : 'bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800'}" title="${isCanceled ? 'Przywróć zlecenie do realizacji' : 'Oznacz zlecenie jako anulowane / odwołane'}">
+                            ${isCanceled ? 'Przywróć' : 'Anuluj'}
+                          </button>
+                        ` : ''}
+                        <button onclick="deleteVisit('${v.id}')" class="text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 p-1.5 rounded-lg" title="Usuń całkowicie z planu"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                       </div>
                     </div>
                   `;
@@ -2184,13 +2207,19 @@ service cloud.firestore {
               ${dayVisits.length === 0 ? '<div class="text-[11px] text-zinc-400 py-4 text-center">Brak wyjazdów</div>' : dayVisits.map(v => {
                 const client = (window.clientsData || []).find(c => c.id === v.clientId);
                 const dev = client?.devices?.find(d => d.id === v.deviceId);
+                const isCanceled = v.status === 'canceled';
+                const isDone = v.status === 'completed';
                 return `
-                  <div class="p-2.5 bg-zinc-50 dark:bg-zinc-800 rounded-xl text-xs space-y-1 border border-zinc-200/60 dark:border-zinc-700">
-                    <div class="flex justify-between items-center">
-                      <span class="font-extrabold text-emerald-700 dark:text-emerald-300">${v.time} • ${v.serviceType || 'Wizyta'}</span>
-                      <button onclick="deleteVisit('${v.id}')" class="text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950 p-1 rounded" title="Usuń wyjazd"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                  <div class="p-2.5 ${isCanceled ? 'bg-rose-50/50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/50' : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200/60 dark:border-zinc-700'} rounded-xl text-xs space-y-1 border">
+                    <div class="flex justify-between items-center gap-1">
+                      <span class="font-extrabold ${isCanceled ? 'text-rose-600 line-through' : 'text-emerald-700 dark:text-emerald-300'}">${v.time} • ${v.serviceType || 'Wizyta'}</span>
+                      <div class="flex items-center gap-0.5">
+                        ${!isDone ? `<button onclick="cancelOrRestoreVisit('${v.id}')" class="text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-950 p-1 rounded" title="${isCanceled ? 'Przywróć zlecenie' : 'Anuluj zlecenie'}"><i data-lucide="ban" class="w-3.5 h-3.5"></i></button>` : ''}
+                        <button onclick="deleteVisit('${v.id}')" class="text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950 p-1 rounded" title="Usuń wyjazd"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                      </div>
                     </div>
-                    <div class="font-bold text-zinc-900 dark:text-white truncate">${client ? client.name : 'Klient'}</div>
+                    <div class="font-bold text-zinc-900 dark:text-white truncate ${(isCanceled || isDone) ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</div>
+                    ${isCanceled ? `<div class="text-[10px] font-extrabold text-rose-600 uppercase">Anulowane</div>` : ''}
                     ${dev ? `<div class="text-[10px] text-teal-600 dark:text-teal-400 font-semibold truncate">🔧 ${dev.deviceModel}</div>` : ''}
                     ${v.notes ? `<div class="text-[10px] text-amber-600 dark:text-amber-400 font-medium truncate">📝 ${v.notes}</div>` : ''}
                     ${v.workerName ? `<div class="text-[10px] text-sky-600 dark:text-sky-400 font-bold truncate">👷 ${v.workerName}</div>` : ''}
@@ -2207,18 +2236,32 @@ service cloud.firestore {
 
     function openRouteForDate(dateStr, workerName = null) {
       const dayVisits = (window.appointmentsData || [])
-        .filter(a => a.date === dateStr && a.status !== 'completed' && (!workerName || (a.workerName || 'Serwisant 1') === workerName))
+        .filter(a => a.date === dateStr && a.status !== 'completed' && a.status !== 'canceled' && (!workerName || (a.workerName || 'Serwisant 1') === workerName))
         .sort((a,b) => (a.time||'00:00').localeCompare(b.time||'00:00'));
       if (dayVisits.length === 0) {
         showToast("Brak aktywnych punktów trasy do nawigacji.");
         return;
       }
 
-      const addrs = dayVisits.map(v => {
+      const rawAddrs = dayVisits.map(v => {
         const c = (window.clientsData || []).find(cl => cl.id === v.clientId);
-        return c ? `${c.street}, ${c.postalCode || ''} ${c.city}, Polska`.trim() : null;
+        if (!c) return null;
+        const formatted = `${c.street}, ${c.postalCode || ''} ${c.city}, Polska`.replace(/\s+/g, ' ').trim();
+        const normKey = `${(c.city || '').toLowerCase().trim()}|${cleanPolishStreet(c.street || '').toLowerCase()}`;
+        return { formatted, normKey, clientId: c.id };
       }).filter(Boolean);
 
+      // Eliminacja takich samych adresów występujących bezpośrednio po sobie (np. 2 zlecenia u tego samego klienta pod rząd),
+      // aby Google Maps nie zawieszało trasy przy identycznych sąsiednich punktach (waypoints)
+      const deduplicatedAddrs = [];
+      rawAddrs.forEach(item => {
+        const prev = deduplicatedAddrs[deduplicatedAddrs.length - 1];
+        if (!prev || (prev.clientId !== item.clientId && prev.normKey !== item.normKey)) {
+          deduplicatedAddrs.push(item);
+        }
+      });
+
+      const addrs = deduplicatedAddrs.map(x => x.formatted);
       if (addrs.length === 0) return;
       const dest = encodeURIComponent(addrs[addrs.length - 1]);
       const wps = addrs.slice(0, -1);
@@ -3263,7 +3306,7 @@ service cloud.firestore {
       const workerName = document.getElementById('quick-map-worker').value || (window.workersData?.[0] || 'Serwisant 1');
       const notes = (document.getElementById('quick-map-notes').value || '').trim();
 
-      const conflict = (window.appointmentsData || []).some(a => a.date === selectedDate && a.workerName === workerName && a.time === time);
+      const conflict = (window.appointmentsData || []).some(a => a.date === selectedDate && a.workerName === workerName && a.time === time && a.status !== 'canceled');
       if (conflict) {
         showToast(`Błąd: Pracownik ${workerName} ma już zaplanowaną wizytę na godzinę ${time}!`);
         return;
@@ -3353,7 +3396,7 @@ service cloud.firestore {
         return;
       }
 
-      const conflict = (window.appointmentsData || []).some(a => a.date === date && a.workerName === workerName && a.time === time);
+      const conflict = (window.appointmentsData || []).some(a => a.date === date && a.workerName === workerName && a.time === time && a.status !== 'canceled');
       if (conflict) {
         showToast(`Błąd: Pracownik ${workerName} ma już zapisaną wizytę na godzinę ${time}!`);
         return;
@@ -3671,8 +3714,41 @@ service cloud.firestore {
       if (currentTab === 'history') renderHistoryTable();
     }
 
+    function cancelOrRestoreVisit(id) {
+      const visit = (window.appointmentsData || []).find(a => a.id === id);
+      if (!visit) return;
+      const client = (window.clientsData || []).find(c => c.id === visit.clientId);
+      const isCurrentlyCanceled = visit.status === 'canceled';
+
+      if (isCurrentlyCanceled) {
+        askConfirmation(
+          'Przywrócenie zlecenia',
+          `Czy chcesz przywrócić anulowane zlecenie u klienta „${client ? client.name : 'Klient'}” (${formatDatePL(visit.date)} o ${visit.time}) z powrotem do realizacji?`,
+          () => {
+            visit.status = 'planned';
+            delete visit.cancelReason;
+            persistData();
+            refreshAllViews();
+            showToast("Przywrócono zlecenie do planu.");
+          }
+        );
+      } else {
+        askConfirmation(
+          'Anulowanie zlecenia w planerze',
+          `Czy na pewno chcesz anulować (odwołać) zlecenie „${visit.serviceType}” u klienta ${client ? client.name : ''} zaplanowane na ${formatDatePL(visit.date)} o ${visit.time}? Zlecenie pozostanie widoczne jako anulowane i nie będzie brane pod uwagę w trasie Google Maps.`,
+          () => {
+            visit.status = 'canceled';
+            visit.cancelReason = 'Odwołane w planerze';
+            persistData();
+            refreshAllViews();
+            showToast("Oznaczono zlecenie jako anulowane.");
+          }
+        );
+      }
+    }
+
     function deleteVisit(id) {
-      askConfirmation('Potwierdź usunięcie', 'Czy na pewno chcesz usunąć tę wizytę z planu?', () => {
+      askConfirmation('Potwierdź usunięcie', 'Czy na pewno chcesz całkowicie usunąć tę wizytę z planu?', () => {
         window.appointmentsData = (window.appointmentsData || []).filter(a => a.id !== id);
         persistData();
         renderDashboard();
