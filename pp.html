@@ -197,8 +197,8 @@
           </button>
         </div>
 
-        <!-- 5 KAFELKÓW STATYSTYK (w tym Po Gwarancji) -->
-        <div class="grid grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-4">
+        <!-- 6 KAFELKÓW STATYSTYK NA PULPICIE (w tym Osobny Kafelek Zaplanowanych Przeglądów oraz Po Gwarancji) -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3.5">
           <div onclick="switchTab('map_planner')" class="bg-white dark:bg-zinc-900 p-3.5 sm:p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm cursor-pointer hover:border-emerald-500 transition">
             <div class="flex items-center justify-between">
               <span class="text-[10px] sm:text-xs font-bold uppercase text-zinc-400">Plan na dziś</span>
@@ -207,7 +207,7 @@
             <div id="stat-today" class="text-xl sm:text-2xl font-extrabold text-zinc-900 dark:text-white mt-1">0 wizyt</div>
           </div>
 
-          <div onclick="filterAndSwitchClients()" class="bg-white dark:bg-zinc-900 p-3.5 sm:p-4 rounded-2xl border border-rose-200 dark:border-rose-900/60 shadow-sm cursor-pointer hover:border-rose-500 transition">
+          <div onclick="document.getElementById('urgent-unscheduled-card')?.scrollIntoView({behavior:'smooth'})" class="bg-white dark:bg-zinc-900 p-3.5 sm:p-4 rounded-2xl border border-rose-200 dark:border-rose-900/60 shadow-sm cursor-pointer hover:border-rose-500 transition">
             <div class="flex items-center justify-between">
               <span class="text-[10px] sm:text-xs font-bold uppercase text-rose-500">Po terminie</span>
               <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-500"></i>
@@ -215,7 +215,7 @@
             <div id="stat-overdue" class="text-xl sm:text-2xl font-extrabold text-rose-600 dark:text-rose-400 mt-1">0 urz.</div>
           </div>
 
-          <div onclick="filterAndSwitchClients()" class="bg-white dark:bg-zinc-900 p-3.5 sm:p-4 rounded-2xl border border-amber-200 dark:border-amber-900/60 shadow-sm cursor-pointer hover:border-amber-500 transition">
+          <div onclick="document.getElementById('urgent-unscheduled-card')?.scrollIntoView({behavior:'smooth'})" class="bg-white dark:bg-zinc-900 p-3.5 sm:p-4 rounded-2xl border border-amber-200 dark:border-amber-900/60 shadow-sm cursor-pointer hover:border-amber-500 transition">
             <div class="flex items-center justify-between">
               <span class="text-[10px] sm:text-xs font-bold uppercase text-amber-600">Wkrótce (30d)</span>
               <i data-lucide="clock" class="w-4 h-4 text-amber-500"></i>
@@ -223,7 +223,15 @@
             <div id="stat-soon" class="text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">0 urz.</div>
           </div>
 
-          <div onclick="filterAndSwitchClients()" class="bg-white dark:bg-zinc-900 p-3.5 sm:p-4 rounded-2xl border border-purple-200 dark:border-purple-900/60 shadow-sm cursor-pointer hover:border-purple-500 transition">
+          <div onclick="document.getElementById('scheduled-urgent-card')?.scrollIntoView({behavior:'smooth'})" class="bg-white dark:bg-zinc-900 p-3.5 sm:p-4 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm cursor-pointer hover:border-emerald-500 transition">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] sm:text-xs font-bold uppercase text-emerald-600 dark:text-emerald-400">Zapl. przeglądy</span>
+              <i data-lucide="calendar-clock" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
+            </div>
+            <div id="stat-scheduled-urgent" class="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">0 urz.</div>
+          </div>
+
+          <div onclick="filterClientsByWarranty('expired_warranty')" class="bg-white dark:bg-zinc-900 p-3.5 sm:p-4 rounded-2xl border border-purple-200 dark:border-purple-900/60 shadow-sm cursor-pointer hover:border-purple-500 transition">
             <div class="flex items-center justify-between">
               <span class="text-[10px] sm:text-xs font-bold uppercase text-purple-600 dark:text-purple-400">Po gwarancji</span>
               <i data-lucide="shield-alert" class="w-4 h-4 text-purple-500"></i>
@@ -231,7 +239,7 @@
             <div id="stat-expired-warranty" class="text-xl sm:text-2xl font-extrabold text-purple-600 dark:text-purple-400 mt-1">0 urz.</div>
           </div>
 
-          <div onclick="filterAndSwitchClients()" class="bg-white dark:bg-zinc-900 p-3.5 sm:p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm cursor-pointer hover:border-emerald-500 transition col-span-2 lg:col-span-1">
+          <div onclick="filterAndSwitchClients()" class="bg-white dark:bg-zinc-900 p-3.5 sm:p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm cursor-pointer hover:border-emerald-500 transition">
             <div class="flex items-center justify-between">
               <span class="text-[10px] sm:text-xs font-bold uppercase text-zinc-400">Baza klientów</span>
               <i data-lucide="users" class="w-4 h-4 text-teal-600 dark:text-teal-400"></i>
@@ -253,16 +261,34 @@
               <div id="today-visits-list" class="p-4 space-y-4"></div>
             </div>
 
-            <!-- URGENT INSPECTIONS (MAX 5 + EXPAND) -->
-            <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+            <!-- DO ZAPLANOWANIA: URGENT INSPECTIONS (BEZ ZAPLANOWANEJ WIZYTY) -->
+            <div id="urgent-unscheduled-card" class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
               <div class="px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-amber-50/60 dark:bg-amber-950/20 flex justify-between items-center flex-wrap gap-2">
                 <div class="flex items-center gap-2">
                   <i data-lucide="bell-ring" class="w-4 h-4 text-amber-600 dark:text-amber-400"></i>
-                  <h2 class="text-sm sm:text-base font-bold text-zinc-900 dark:text-white">Kończące się terminy przeglądów i gwarancji</h2>
+                  <div>
+                    <h2 class="text-sm sm:text-base font-bold text-zinc-900 dark:text-white">Kończące się przeglądy — DO UMÓWIENIA</h2>
+                    <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Po zaplanowaniu wyjazdu przegląd automatycznie przeniesie się do kafelka poniżej</p>
+                  </div>
                 </div>
                 <button id="toggle-urgent-btn" onclick="toggleUrgentList()" class="px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold hidden text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 transition">Rozwiń pełną listę</button>
               </div>
               <div id="urgent-list" class="divide-y divide-zinc-100 dark:divide-zinc-800"></div>
+            </div>
+
+            <!-- OSOBNY KAFELEK: ZAPLANOWANE PRZEGLĄDY KTÓRE SIĘ KOŃCZĄ -->
+            <div id="scheduled-urgent-card" class="bg-white dark:bg-zinc-900 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm overflow-hidden">
+              <div class="px-5 py-4 border-b border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/70 dark:bg-emerald-950/30 flex justify-between items-center flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="calendar-check-2" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
+                  <div>
+                    <h2 class="text-sm sm:text-base font-extrabold text-emerald-950 dark:text-emerald-200">Zaplanowane przeglądy (Umówione wyjazdy)</h2>
+                    <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80">Kończące się przeglądy, które mają już przypisaną datę i serwisanta w planerze</p>
+                  </div>
+                </div>
+                <span id="scheduled-urgent-count-badge" class="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-xs font-extrabold">0</span>
+              </div>
+              <div id="scheduled-urgent-list" class="divide-y divide-emerald-100 dark:divide-emerald-900/40"></div>
             </div>
           </div>
 
@@ -521,16 +547,19 @@
 
       <!-- 5. TAB: HISTORY & STATS (HISTORIA I STATYSTYKI) -->
       <div id="tab-history" class="tab-content space-y-6 hidden">
-        <!-- FILTRY STATYSTYK (OGÓŁEM, LATA, MIESIĄCE) -->
+        <!-- FILTRY STATYSTYK (OGÓŁEM, LATA, MIESIĄCE + PODZIAŁ NA SERWISANTÓW) -->
         <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2">
             <i data-lucide="calendar-range" class="w-5 h-5 text-emerald-600"></i>
             <div>
-              <h3 class="text-sm font-extrabold text-zinc-900 dark:text-white">Okres analizy statystyk i historii</h3>
+              <h3 class="text-sm font-extrabold text-zinc-900 dark:text-white">Okres analizy i filtr serwisanta</h3>
               <p id="stats-period-label" class="text-[11px] text-zinc-500">Podsumowanie: Ogółem (wszystkie lata)</p>
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-2">
+            <select id="stats-worker-scope" onchange="onStatsWorkerScopeChange()" class="bg-sky-50 dark:bg-sky-950/50 border border-sky-300 dark:border-sky-800 rounded-xl px-3 py-2 text-xs font-extrabold outline-none text-sky-900 dark:text-sky-200">
+              <option value="all">👷 Wszyscy serwisanci (Cała firma)</option>
+            </select>
             <select id="stats-time-scope" onchange="onStatsTimeScopeChange()" class="bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 rounded-xl px-3 py-2 text-xs font-extrabold outline-none text-emerald-900 dark:text-emerald-200">
               <option value="all">📊 Zakres: Ogółem (Wszystkie lata)</option>
               <option value="year">📅 Zakres: Wybrany Rok</option>
@@ -543,49 +572,56 @@
           </div>
         </div>
 
-        <!-- 7 KAFELKÓW STATYSTYK W TYM OSOBNE OKNO "PO GWARANCJI" -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
-          <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+        <!-- 8 OSOBNYCH KAFELKÓW STATYSTYK (ROZDZIELONE OBCE URZĄDZENIA ORAZ MIEJSCOWOŚCI) -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+          <div class="bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
             <span class="text-[10px] font-bold uppercase text-zinc-400">Wykonane akcje</span>
-            <div id="stat-history-total" class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">0</div>
+            <div id="stat-history-total" class="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">0</div>
           </div>
-          <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+          <div class="bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
             <span class="text-[10px] font-bold uppercase text-zinc-400">Zapl. wyjazdy</span>
-            <div id="stat-visits-planned" class="text-2xl font-extrabold text-sky-600 dark:text-sky-400 mt-1">0</div>
+            <div id="stat-visits-planned" class="text-xl sm:text-2xl font-extrabold text-sky-600 dark:text-sky-400 mt-1">0</div>
           </div>
-          <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <span class="text-[10px] font-bold uppercase text-zinc-400">Zrealizowane wizyty</span>
-            <div id="stat-visits-completed" class="text-2xl font-extrabold text-teal-600 dark:text-teal-400 mt-1">0</div>
+          <div class="bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <span class="text-[10px] font-bold uppercase text-zinc-400">Zrealizowane</span>
+            <div id="stat-visits-completed" class="text-xl sm:text-2xl font-extrabold text-teal-600 dark:text-teal-400 mt-1">0</div>
           </div>
-          <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <span class="text-[10px] font-bold uppercase text-zinc-400">Wszystkie urządz.</span>
-            <div id="stat-devices-total" class="text-2xl font-extrabold text-zinc-900 dark:text-white mt-1">0</div>
+          <div class="bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <span class="text-[10px] font-bold uppercase text-zinc-400">Wszystkie urz.</span>
+            <div id="stat-devices-total" class="text-xl sm:text-2xl font-extrabold text-zinc-900 dark:text-white mt-1">0</div>
           </div>
-          <div onclick="filterClientsByWarranty('under_warranty')" class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm cursor-pointer hover:border-emerald-500 transition">
+          <div onclick="filterClientsByWarranty('under_warranty')" class="bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm cursor-pointer hover:border-emerald-500 transition">
             <span class="text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400">🛡️ Na gwarancji</span>
-            <div id="stat-under-warranty" class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">0 urz.</div>
+            <div id="stat-under-warranty" class="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">0 urz.</div>
           </div>
-          <div onclick="filterClientsByWarranty('expired_warranty')" class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-purple-200 dark:border-purple-900/60 shadow-sm cursor-pointer hover:border-purple-500 transition">
+          <div onclick="filterClientsByWarranty('expired_warranty')" class="bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border border-purple-200 dark:border-purple-900/60 shadow-sm cursor-pointer hover:border-purple-500 transition">
             <span class="text-[10px] font-bold uppercase text-purple-600 dark:text-purple-400">⚠️ Po gwarancji</span>
-            <div id="stat-expired-warranty-box" class="text-2xl font-extrabold text-purple-600 dark:text-purple-400 mt-1">0 urz.</div>
+            <div id="stat-expired-warranty-box" class="text-xl sm:text-2xl font-extrabold text-purple-600 dark:text-purple-400 mt-1">0 urz.</div>
           </div>
-          <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm col-span-2 sm:col-span-1">
-            <span class="text-[10px] font-bold uppercase text-zinc-400">Obce / Miejscowości</span>
-            <div id="stat-cities-total" class="text-lg font-extrabold text-amber-600 dark:text-amber-400 mt-1">0 / 0</div>
+          <div onclick="filterClientsByWarranty('external')" class="bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border border-amber-200 dark:border-amber-900/60 shadow-sm cursor-pointer hover:border-amber-500 transition">
+            <span class="text-[10px] font-bold uppercase text-amber-600 dark:text-amber-400">🔧 Obce urządz.</span>
+            <div id="stat-external-devices-box" class="text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">0 urz.</div>
+          </div>
+          <div class="bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <span class="text-[10px] font-bold uppercase text-zinc-400">📍 Miejscowości</span>
+            <div id="stat-cities-total" class="text-xl sm:text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">0</div>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 space-y-3 shadow-sm">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <div class="lg:col-span-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 space-y-3 shadow-sm">
             <h3 class="text-xs font-extrabold uppercase tracking-wider text-zinc-400">Podział bazy wg typu urządzeń</h3>
             <div id="stats-device-types-bars" class="space-y-3 pt-1"></div>
           </div>
-          <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 space-y-3 shadow-sm">
+          <div class="lg:col-span-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 space-y-3 shadow-sm">
             <h3 class="text-xs font-extrabold uppercase tracking-wider text-zinc-400">Struktura prac (Przegląd / Serwis / Montaż)</h3>
             <div id="stats-service-types-bars" class="space-y-3 pt-1"></div>
           </div>
-          <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 space-y-3 shadow-sm">
-            <h3 class="text-xs font-extrabold uppercase tracking-wider text-zinc-400">Obciążenie i aktywność ekip</h3>
+          <div class="lg:col-span-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 space-y-3 shadow-sm">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-extrabold uppercase tracking-wider text-zinc-400">Podział na serwisantów (Zlecenia i Typy)</h3>
+              <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Kliknij, aby filtrować</span>
+            </div>
             <div id="stats-workers-bars" class="space-y-2.5 pt-1"></div>
           </div>
         </div>
@@ -1539,6 +1575,30 @@ service cloud.firestore {
         histEl.innerHTML = `<option value="all">Wszyscy wykonawcy</option>` + workers.map(w => `<option value="${w}">${w}</option>`).join('');
         histEl.value = prevH;
       }
+
+      const statsWorkerEl = document.getElementById('stats-worker-scope');
+      if (statsWorkerEl) {
+        const prevSW = statsWorkerEl.value || 'all';
+        statsWorkerEl.innerHTML = `<option value="all">👷 Wszyscy serwisanci (Cała firma)</option>` + workers.map(w => `<option value="${w}">👷 Serwisant: ${w}</option>`).join('');
+        statsWorkerEl.value = workers.includes(prevSW) || prevSW === 'all' ? prevSW : 'all';
+      }
+    }
+
+    function onStatsWorkerScopeChange() {
+      const val = document.getElementById('stats-worker-scope')?.value || 'all';
+      const histEl = document.getElementById('history-worker-filter');
+      if (histEl) histEl.value = val;
+      renderHistoryTable();
+    }
+
+    function selectWorkerInStats(workerName) {
+      const statsWorkerEl = document.getElementById('stats-worker-scope');
+      const histEl = document.getElementById('history-worker-filter');
+      if (!statsWorkerEl) return;
+      const nextVal = statsWorkerEl.value === workerName ? 'all' : workerName;
+      statsWorkerEl.value = nextVal;
+      if (histEl) histEl.value = nextVal;
+      renderHistoryTable();
     }
 
     function toggleCustomDropdown(ddId) {
@@ -1645,31 +1705,48 @@ service cloud.firestore {
       const todayYMD = toYMD(new Date());
       setText('header-date', `Dzisiaj: ${formatDatePL(todayYMD)}`);
 
-      let totalDevs = 0, overdue = 0, soon = 0, expiredWarranty = 0;
-      const urgentItems = [];
+      let totalDevs = 0, overdueUnscheduled = 0, soonUnscheduled = 0, scheduledUrgentCount = 0, expiredWarranty = 0;
+      const unscheduledUrgentItems = [];
+      const scheduledUrgentItems = [];
 
       enriched.forEach(c => {
         c.devices.forEach(d => {
           totalDevs++;
-          if (d.status.isOverdue) overdue++;
-          else if (d.status.isSoon) soon++;
           if (d.status.isExpiredWarranty) expiredWarranty++;
+
           if (!d.status.remindersCanceled && (d.status.isOverdue || d.status.isSoon)) {
-            urgentItems.push({ client: c, device: d, status: d.status });
+            const scheduledVisit = (window.appointmentsData || []).find(a =>
+              a.status !== 'completed' &&
+              a.clientId === c.id &&
+              (!a.deviceId || a.deviceId === d.id)
+            );
+
+            if (scheduledVisit) {
+              scheduledUrgentCount++;
+              scheduledUrgentItems.push({ client: c, device: d, status: d.status, scheduledVisit });
+            } else {
+              if (d.status.isOverdue) overdueUnscheduled++;
+              else if (d.status.isSoon) soonUnscheduled++;
+              unscheduledUrgentItems.push({ client: c, device: d, status: d.status });
+            }
           }
         });
       });
 
-      urgentItems.sort((a,b) => a.status.daysToInspection - b.status.daysToInspection);
+      unscheduledUrgentItems.sort((a,b) => a.status.daysToInspection - b.status.daysToInspection);
+      scheduledUrgentItems.sort((a,b) => (a.scheduledVisit.date || '').localeCompare(b.scheduledVisit.date || ''));
+
       const todayVisits = (window.appointmentsData || []).filter(a => a.date === todayYMD).sort((a,b) => (a.time||'00:00').localeCompare(b.time||'00:00'));
 
       setText('stat-today', `${todayVisits.length} wizyt`);
-      setText('stat-overdue', `${overdue} urz.`);
-      setText('stat-soon', `${soon} urz.`);
+      setText('stat-overdue', `${overdueUnscheduled} urz.`);
+      setText('stat-soon', `${soonUnscheduled} urz.`);
+      setText('stat-scheduled-urgent', `${scheduledUrgentCount} urz.`);
       setText('stat-expired-warranty', `${expiredWarranty} urz.`);
       setText('stat-clients', `${enriched.length}`);
       setText('badge-clients', enriched.length);
       setText('badge-catalog', (window.catalogData || []).length);
+      setText('scheduled-urgent-count-badge', scheduledUrgentCount);
 
       const todayBadge = document.getElementById('badge-today');
       if (todayBadge) {
@@ -1678,7 +1755,7 @@ service cloud.firestore {
       }
 
       const urgentBadge = document.getElementById('badge-urgent');
-      const totalUrgent = overdue + soon;
+      const totalUrgent = overdueUnscheduled + soonUnscheduled;
       if (urgentBadge) {
         if (totalUrgent > 0) { urgentBadge.innerText = totalUrgent; urgentBadge.classList.remove('hidden'); }
         else urgentBadge.classList.add('hidden');
@@ -1748,54 +1825,85 @@ service cloud.firestore {
         }
       }
 
+      // 1. LISTA DO UMÓWIENIA (NIEZAPLANOWANE)
       const urgentListEl = document.getElementById('urgent-list');
       const toggleBtn = document.getElementById('toggle-urgent-btn');
       if (toggleBtn) {
-        if (urgentItems.length > 5) {
+        if (unscheduledUrgentItems.length > 5) {
           toggleBtn.classList.remove('hidden');
-          toggleBtn.innerText = showAllUrgent ? 'Zwiń do 5' : `Rozwiń pełną listę (${urgentItems.length})`;
+          toggleBtn.innerText = showAllUrgent ? 'Zwiń do 5' : `Rozwiń pełną listę (${unscheduledUrgentItems.length})`;
         } else toggleBtn.classList.add('hidden');
       }
 
-      const displayUrgent = showAllUrgent ? urgentItems : urgentItems.slice(0, 5);
+      const displayUrgent = showAllUrgent ? unscheduledUrgentItems : unscheduledUrgentItems.slice(0, 5);
       if (urgentListEl) {
         if (displayUrgent.length === 0) {
-          urgentListEl.innerHTML = `<div class="p-6 text-center text-sm text-zinc-500">Wszystkie urządzenia mają aktualne przeglądy!</div>`;
+          urgentListEl.innerHTML = `<div class="p-6 text-center text-sm text-zinc-500">Brak oczekujących przeglądów do umówienia!</div>`;
         } else {
-          urgentListEl.innerHTML = displayUrgent.map(({ client, device, status }) => {
-            const scheduledVisit = (window.appointmentsData || []).find(a =>
-              a.status !== 'completed' &&
-              a.clientId === client.id &&
-              (!a.deviceId || a.deviceId === device.id)
-            );
-            const rowClasses = scheduledVisit
-              ? 'p-4 bg-emerald-50/90 dark:bg-emerald-950/40 border-l-4 border-emerald-500 space-y-2 transition'
-              : 'p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/40 space-y-2 transition';
-
-            return `
-              <div class="${rowClasses}">
-                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-                  <div>
-                    <div class="flex items-center gap-2 flex-wrap">
-                      <span class="font-bold text-sm text-zinc-900 dark:text-white">${client.name}</span>
-                      <span class="text-xs font-semibold text-zinc-500">(${device.deviceModel}${device.serialNumber ? ` • S/N: ${device.serialNumber}` : ''})</span>
-                      ${getWarrantyBadgeHtml(status)}
-                      ${scheduledVisit ? `<span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-extrabold">📅 Wyjazd zaplanowany: ${formatDatePL(scheduledVisit.date)} (${scheduledVisit.time}) — ${scheduledVisit.workerName || 'Serwis'}</span>` : ''}
-                    </div>
-                    <div class="text-xs ${scheduledVisit ? 'text-emerald-700 dark:text-emerald-300' : status.isOverdue ? 'text-rose-600' : 'text-amber-600'} font-bold mt-1">
-                      ${status.isOverdue ? `Po terminie o ${Math.abs(status.daysToInspection)} dni (${status.nextInspectionFormatted})` : `Przegląd za ${status.daysToInspection} dni (${status.nextInspectionFormatted})`} • <a href="tel:${client.phone}" class="underline">📞 ${client.phone}</a>
-                    </div>
+          urgentListEl.innerHTML = displayUrgent.map(({ client, device, status }) => `
+            <div class="p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/40 space-y-2 transition">
+              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                <div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-bold text-sm text-zinc-900 dark:text-white">${client.name}</span>
+                    <span class="text-xs font-semibold text-zinc-500">(${device.deviceModel}${device.serialNumber ? ` • S/N: ${device.serialNumber}` : ''})</span>
+                    ${getWarrantyBadgeHtml(status)}
                   </div>
-                  <div class="grid grid-cols-2 sm:flex gap-1.5 w-full sm:w-auto">
-                    <button onclick="createServiceFromUrgent('${client.id}', '${device.id}')" class="px-3 py-2 sm:py-1.5 ${scheduledVisit ? 'bg-emerald-700 hover:bg-emerald-600' : 'bg-sky-600 hover:bg-sky-500'} text-white rounded-xl text-xs font-bold shadow-sm flex items-center justify-center gap-1"><i data-lucide="calendar-plus" class="w-3.5 h-3.5 shrink-0"></i><span>${scheduledVisit ? 'Zmień wyjazd' : 'Utwórz serwis'}</span></button>
-                    <button onclick="openInspectionModal('${client.id}', '${device.id}')" class="px-3 py-2 sm:py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1"><i data-lucide="history" class="w-3.5 h-3.5 shrink-0"></i><span>Historia</span></button>
-                    <button onclick="skipInspection('${client.id}', '${device.id}')" class="px-2.5 py-2 sm:py-1.5 bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1" title="Pomija bieżący i przesuwa o rok"><i data-lucide="fast-forward" class="w-3.5 h-3.5 shrink-0"></i><span>+1 rok</span></button>
-                    <button onclick="toggleReminders('${client.id}', '${device.id}')" class="px-2.5 py-2 sm:py-1.5 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1"><i data-lucide="bell-off" class="w-3.5 h-3.5 shrink-0"></i><span>Anuluj</span></button>
+                  <div class="text-xs ${status.isOverdue ? 'text-rose-600' : 'text-amber-600'} font-bold mt-1">
+                    ${status.isOverdue ? `Po terminie o ${Math.abs(status.daysToInspection)} dni (${status.nextInspectionFormatted})` : `Przegląd za ${status.daysToInspection} dni (${status.nextInspectionFormatted})`} • 📍 ${client.city} • <a href="tel:${client.phone}" class="underline">📞 ${client.phone}</a>
                   </div>
                 </div>
+                <div class="grid grid-cols-2 sm:flex gap-1.5 w-full sm:w-auto">
+                  <button onclick="createServiceFromUrgent('${client.id}', '${device.id}')" class="px-3 py-2 sm:py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold shadow-sm flex items-center justify-center gap-1"><i data-lucide="calendar-plus" class="w-3.5 h-3.5 shrink-0"></i><span>Utwórz serwis</span></button>
+                  <button onclick="openInspectionModal('${client.id}', '${device.id}')" class="px-3 py-2 sm:py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1"><i data-lucide="history" class="w-3.5 h-3.5 shrink-0"></i><span>Historia</span></button>
+                  <button onclick="skipInspection('${client.id}', '${device.id}')" class="px-2.5 py-2 sm:py-1.5 bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1" title="Pomija bieżący i przesuwa o rok"><i data-lucide="fast-forward" class="w-3.5 h-3.5 shrink-0"></i><span>+1 rok</span></button>
+                  <button onclick="toggleReminders('${client.id}', '${device.id}')" class="px-2.5 py-2 sm:py-1.5 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1"><i data-lucide="bell-off" class="w-3.5 h-3.5 shrink-0"></i><span>Anuluj</span></button>
+                </div>
               </div>
-            `;
-          }).join('');
+            </div>
+          `).join('');
+        }
+      }
+
+      // 2. OSOBNY KAFELEK: ZAPLANOWANE PRZEGLĄDY (UMÓWIONE WYJAZDY)
+      const scheduledUrgentListEl = document.getElementById('scheduled-urgent-list');
+      if (scheduledUrgentListEl) {
+        if (scheduledUrgentItems.length === 0) {
+          scheduledUrgentListEl.innerHTML = `<div class="p-6 text-center text-xs sm:text-sm text-zinc-400">Brak zaplanowanych przeglądów z listy kończących się terminów. Kliknij „Utwórz serwis” powyżej, aby zaplanować wyjazd.</div>`;
+        } else {
+          scheduledUrgentListEl.innerHTML = scheduledUrgentItems.map(({ client, device, status, scheduledVisit }) => `
+            <div class="p-4 bg-emerald-50/40 dark:bg-emerald-950/20 hover:bg-emerald-50/80 dark:hover:bg-emerald-950/40 transition">
+              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="px-2.5 py-0.5 rounded-lg bg-emerald-600 text-white text-[11px] font-extrabold flex items-center gap-1">
+                      📅 ${formatDatePL(scheduledVisit.date)} o ${scheduledVisit.time}
+                    </span>
+                    <span class="px-2 py-0.5 rounded-lg bg-sky-600 text-white text-[11px] font-extrabold">
+                      👷 ${scheduledVisit.workerName || 'Serwisant 1'}
+                    </span>
+                    <span class="font-extrabold text-sm text-zinc-900 dark:text-white">${client.name}</span>
+                    ${getWarrantyBadgeHtml(status)}
+                  </div>
+                  <div class="text-xs font-bold text-teal-800 dark:text-teal-300">
+                    🔧 ${device.deviceModel} ${device.serialNumber ? `<span class="font-mono text-zinc-500">(S/N: ${device.serialNumber})</span>` : ''} • 📍 ${client.city}, ${client.street} • <a href="tel:${client.phone}" class="underline text-emerald-700 dark:text-emerald-400">📞 ${client.phone}</a>
+                  </div>
+                  ${scheduledVisit.notes ? `<div class="text-[11px] text-amber-700 dark:text-amber-400 font-semibold">📝 Notatka do wyjazdu: ${scheduledVisit.notes}</div>` : ''}
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <button onclick="openCloseVisitModal('${scheduledVisit.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm">
+                    Zamknij zlecenie
+                  </button>
+                  <button onclick="selectDateFromCalendar('${scheduledVisit.date}')" class="px-2.5 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100">
+                    Pokaż w planerze
+                  </button>
+                  <button onclick="deleteVisit('${scheduledVisit.id}')" class="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg" title="Odwołaj wyjazd (wróci do umówienia)">
+                    <i data-lucide="x-circle" class="w-4 h-4"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `).join('');
         }
       }
 
@@ -2358,10 +2466,15 @@ service cloud.firestore {
 
     function renderHistoryTable() {
       const q = (document.getElementById('history-search')?.value || '').toLowerCase();
-      const workerFilter = document.getElementById('history-worker-filter')?.value || 'all';
       const scope = document.getElementById('stats-time-scope')?.value || 'all';
       const selectedYear = document.getElementById('stats-year-select')?.value || String(new Date().getFullYear());
       const selectedMonth = document.getElementById('stats-month-select')?.value || String(new Date().getMonth() + 1).padStart(2, '0');
+      const selectedWorker = document.getElementById('stats-worker-scope')?.value || 'all';
+
+      const histWorkerSelect = document.getElementById('history-worker-filter');
+      if (histWorkerSelect && histWorkerSelect.value !== selectedWorker) {
+        histWorkerSelect.value = selectedWorker;
+      }
 
       const monthNames = {
         '01': 'Styczeń', '02': 'Luty', '03': 'Marzec', '04': 'Kwiecień',
@@ -2369,11 +2482,12 @@ service cloud.firestore {
         '09': 'Wrzesień', '10': 'Październik', '11': 'Listopad', '12': 'Grudzień'
       };
 
+      const workerLabel = selectedWorker === 'all' ? 'Wszyscy serwisanci' : `Serwisant: ${selectedWorker}`;
       const periodLabelEl = document.getElementById('stats-period-label');
       if (periodLabelEl) {
-        if (scope === 'all') periodLabelEl.innerText = 'Podsumowanie: Ogółem (wszystkie lata)';
-        else if (scope === 'year') periodLabelEl.innerText = `Podsumowanie za rok ${selectedYear}`;
-        else periodLabelEl.innerText = `Podsumowanie za: ${monthNames[selectedMonth] || selectedMonth} ${selectedYear}`;
+        if (scope === 'all') periodLabelEl.innerText = `Podsumowanie: Ogółem (wszystkie lata) • ${workerLabel}`;
+        else if (scope === 'year') periodLabelEl.innerText = `Podsumowanie za rok ${selectedYear} • ${workerLabel}`;
+        else periodLabelEl.innerText = `Podsumowanie za: ${monthNames[selectedMonth] || selectedMonth} ${selectedYear} • ${workerLabel}`;
       }
 
       const enriched = getEnrichedClients();
@@ -2400,11 +2514,15 @@ service cloud.firestore {
         });
       });
 
-      const periodAppointments = (window.appointmentsData || []).filter(a =>
+      const periodAppointmentsAllWorkers = (window.appointmentsData || []).filter(a =>
         matchesStatsTimeFilter(a.date, scope, selectedYear, selectedMonth)
       );
 
-      periodAppointments.filter(a => a.status === 'completed' && !a.savedToDeviceHistory).forEach(v => {
+      const periodAppointments = selectedWorker === 'all'
+        ? periodAppointmentsAllWorkers
+        : periodAppointmentsAllWorkers.filter(a => (a.workerName || 'Serwisant 1') === selectedWorker);
+
+      periodAppointmentsAllWorkers.filter(a => a.status === 'completed' && !a.savedToDeviceHistory).forEach(v => {
         const client = enriched.find(c => c.id === v.clientId);
         const dev = client?.devices?.find(d => d.id === v.deviceId);
         allHistory.push({
@@ -2420,16 +2538,21 @@ service cloud.firestore {
 
       allHistory.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
+      const historyForWorkerScope = selectedWorker === 'all'
+        ? allHistory
+        : allHistory.filter(h => (h.technician || '') === selectedWorker);
+
       const plannedVisits = periodAppointments.filter(a => a.status !== 'completed').length;
       const completedVisits = periodAppointments.filter(a => a.status === 'completed').length;
 
-      setText('stat-history-total', allHistory.length);
+      setText('stat-history-total', historyForWorkerScope.length);
       setText('stat-visits-planned', plannedVisits);
       setText('stat-visits-completed', completedVisits);
       setText('stat-devices-total', totalDevices);
       setText('stat-under-warranty', `${underWarranty} urz.`);
       setText('stat-expired-warranty-box', `${expiredWarrantyCount} urz.`);
-      setText('stat-cities-total', `${external} obce / ${citiesSet.size} miast`);
+      setText('stat-external-devices-box', `${external} urz.`);
+      setText('stat-cities-total', `${citiesSet.size}`);
 
       const devBarsEl = document.getElementById('stats-device-types-bars');
       if (devBarsEl) {
@@ -2487,22 +2610,48 @@ service cloud.firestore {
 
       const wrkBarsEl = document.getElementById('stats-workers-bars');
       if (wrkBarsEl) {
-        const workers = window.workersData || ['Serwisant 1'];
+        const workers = [...new Set([...(window.workersData || ['Serwisant 1']), ...periodAppointmentsAllWorkers.map(a => a.workerName || 'Serwisant 1')])];
         wrkBarsEl.innerHTML = workers.map(w => {
-          const assigned = periodAppointments.filter(a => a.workerName === w).length;
-          const done = periodAppointments.filter(a => a.workerName === w && a.status === 'completed').length;
+          const wApps = periodAppointmentsAllWorkers.filter(a => (a.workerName || 'Serwisant 1') === w);
+          const assigned = wApps.length;
+          const done = wApps.filter(a => a.status === 'completed').length;
+          const pending = assigned - done;
+          let wp = 0, ws = 0, wm = 0;
+          wApps.forEach(a => {
+            const sv = (a.serviceType || '').toLowerCase();
+            if (sv.includes('monta')) wm++;
+            else if (sv.includes('serwis') || sv.includes('awaria')) ws++;
+            else wp++;
+          });
+          const pct = assigned > 0 ? Math.round((done / assigned) * 100) : 0;
+          const isSelectedW = selectedWorker === w;
+
           return `
-            <div class="flex justify-between items-center p-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/70 dark:border-zinc-700 text-xs">
-              <span class="font-bold">👷 ${w}</span>
-              <span class="font-extrabold text-emerald-600 dark:text-emerald-400">${done} wyk. / ${assigned} zapl.</span>
+            <div onclick="selectWorkerInStats('${w.replace(/'/g, "\\'")}')" class="cursor-pointer p-3 rounded-xl border transition space-y-1.5 ${isSelectedW ? 'bg-sky-50 dark:bg-sky-950/50 border-sky-500 ring-1 ring-sky-500/30' : 'bg-zinc-50 dark:bg-zinc-800/60 border-zinc-200/70 dark:border-zinc-700 hover:border-emerald-400'}">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-extrabold text-zinc-900 dark:text-white flex items-center gap-1.5">
+                  👷 ${w}
+                  ${isSelectedW ? '<span class="px-1.5 py-0.2 rounded bg-sky-600 text-white text-[9px]">Aktywny filtr</span>' : ''}
+                </span>
+                <span class="font-extrabold text-emerald-600 dark:text-emerald-400">${done} wyk. / ${pending} w planie</span>
+              </div>
+              <div class="flex items-center gap-2 text-[10px] font-bold text-zinc-500 dark:text-zinc-400">
+                <span class="px-1.5 py-0.5 rounded bg-emerald-100/80 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">🛠️ Przeglądy: ${wp}</span>
+                <span class="px-1.5 py-0.5 rounded bg-rose-100/80 dark:bg-rose-950 text-rose-800 dark:text-rose-300">⚡ Serwisy: ${ws}</span>
+                <span class="px-1.5 py-0.5 rounded bg-amber-100/80 dark:bg-amber-950 text-amber-800 dark:text-amber-300">🏗️ Montaże: ${wm}</span>
+              </div>
+              <div class="w-full h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+                <div class="bg-emerald-500 h-full rounded-full" style="width:${pct}%"></div>
+              </div>
             </div>
           `;
         }).join('');
       }
 
+      const tableWorkerFilter = document.getElementById('history-worker-filter')?.value || 'all';
       const filtered = allHistory.filter(h => {
         const matchText = !q || h.clientName.toLowerCase().includes(q) || (h.clientCity||'').toLowerCase().includes(q) || h.deviceModel.toLowerCase().includes(q) || (h.technician||'').toLowerCase().includes(q) || (h.notes||'').toLowerCase().includes(q);
-        const matchWorker = workerFilter === 'all' || (h.technician || '') === workerFilter;
+        const matchWorker = tableWorkerFilter === 'all' || (h.technician || '') === tableWorkerFilter;
         return matchText && matchWorker;
       });
 
