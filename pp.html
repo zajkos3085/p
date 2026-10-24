@@ -464,14 +464,17 @@
         <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row gap-3 justify-between items-center">
           <div class="relative flex-1 w-full">
             <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-            <input type="text" id="client-search-input" oninput="renderClients()" placeholder="Szukaj klienta po nazwisku, adresie, telefonie, modelu urządzenia lub notatce..." class="w-full pl-10 pr-9 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:border-emerald-500 text-zinc-800 dark:text-zinc-100">
+            <input type="text" id="client-search-input" oninput="renderClients()" placeholder="Szukaj (np. nazwisko, NIP lub kilka miast po spacji: Poznań Luboń Swarzędz)..." class="w-full pl-10 pr-9 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:border-emerald-500 text-zinc-800 dark:text-zinc-100">
             <button type="button" onclick="clearClientSearch()" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200" title="Wyczyść wyszukiwanie">
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
           </div>
           <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto shrink-0">
-            <button onclick="requestExportClientsCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
-              <i data-lucide="lock" class="w-3.5 h-3.5"></i> Eksport Excel (CSV)
+            <button onclick="requestExportClientsCSV(true)" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition" title="Eksportuj tylko aktualnie wyświetlanych klientów po wyszukaniu">
+              <i data-lucide="lock" class="w-3.5 h-3.5"></i> <span id="export-filtered-btn-label">Eksport widocznych (CSV)</span>
+            </button>
+            <button onclick="requestExportClientsCSV(false)" class="bg-teal-700 hover:bg-teal-600 text-white px-3 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition" title="Eksportuj całą bazę wszystkich klientów">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i> Cała baza
             </button>
             <input type="file" id="csv-file-input" accept=".csv" onchange="importClientsCSV(event)" class="hidden">
             <button onclick="document.getElementById('csv-file-input').click()" class="bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
@@ -664,6 +667,7 @@
                   <th class="py-3 px-4">Urządzenie / Zlecenie</th>
                   <th class="py-3 px-4">Wykonawca</th>
                   <th class="py-3 px-4">Notatka serwisowa</th>
+                  <th class="py-3 px-4 text-right">Edycja</th>
                 </tr>
               </thead>
               <tbody id="history-table-body" class="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs sm:text-sm"></tbody>
@@ -684,10 +688,14 @@
       </div>
       <form onsubmit="handleSaveClient(event)" class="space-y-4">
         <input type="hidden" id="edit-client-id">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Imię i nazwisko</label>
+            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Imię i nazwisko / Firma</label>
             <input type="text" id="client-name" oninput="autoCapitalizeInput(this)" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm capitalize outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">NIP (opcjonalnie)</label>
+            <input type="text" id="client-nip" placeholder="np. 777-000-11-22" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-mono outline-none focus:border-emerald-500">
           </div>
           <div>
             <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Telefon</label>
@@ -946,6 +954,54 @@
     </div>
   </div>
 
+  <!-- MODAL: EDIT EXISTING HISTORY NOTE WITH PASSWORD -->
+  <div id="modal-edit-history-note" class="fixed inset-0 z-[70] bg-zinc-950/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-md w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800">
+      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="edit-3" class="w-4 h-4 text-emerald-600"></i>
+          <h3 class="text-sm sm:text-base font-extrabold">Edycja notatki w historii działań</h3>
+        </div>
+        <button onclick="closeModal('modal-edit-history-note')"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <form onsubmit="handleConfirmEditHistoryNote(event)" class="space-y-3">
+        <input type="hidden" id="edit-hist-source-type">
+        <input type="hidden" id="edit-hist-client-id">
+        <input type="hidden" id="edit-hist-device-id">
+        <input type="hidden" id="edit-hist-item-id">
+
+        <div id="edit-hist-info-label" class="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-200"></div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-[11px] font-bold text-zinc-500 mb-1">Data wpisu</label>
+            <input type="date" id="edit-hist-date" required class="w-full px-2.5 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-zinc-500 mb-1">Wykonawca</label>
+            <input type="text" id="edit-hist-tech" required class="w-full px-2.5 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-zinc-500 mb-1">Treść notatki serwisowej</label>
+          <textarea id="edit-hist-notes" rows="3" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs outline-none focus:border-emerald-500"></textarea>
+        </div>
+
+        <div class="pt-1 border-t border-zinc-200 dark:border-zinc-800">
+          <label class="block text-[11px] font-extrabold text-amber-700 dark:text-amber-400 mb-1">Hasło autoryzacyjne</label>
+          <input type="password" id="edit-hist-password" required placeholder="Wpisz hasło..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-bold tracking-widest text-center outline-none focus:border-emerald-500">
+          <p id="edit-hist-password-error" class="text-xs text-rose-600 font-bold text-center mt-1 hidden">Nieprawidłowe hasło!</p>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('modal-edit-history-note')" class="px-3.5 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Anuluj</button>
+          <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm">Zapisz poprawkę</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- MODAL: SCHEDULE VISIT -->
   <div id="modal-schedule" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-md w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800 max-h-[92vh] overflow-y-auto">
@@ -1157,7 +1213,7 @@
             <tr>
               <th class="py-2.5 px-3">Klient</th>
               <th class="py-2.5 px-3">Telefon</th>
-              <th class="py-2.5 px-3">Adres</th>
+              <th class="py-2.5 px-3">Adres i Pinezka GPS</th>
               <th class="py-2.5 px-3">Urządzenia do przypisania</th>
               <th class="py-2.5 px-3">Tryb zapisu</th>
             </tr>
@@ -1166,11 +1222,21 @@
         </table>
       </div>
 
+      <div id="csv-geocode-progress-box" class="hidden p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 text-xs space-y-1.5 shrink-0">
+        <div class="flex justify-between items-center font-extrabold text-emerald-900 dark:text-emerald-200">
+          <span id="csv-geocode-status-txt">📍 Automatyczne ustawianie pinezek na mapie wg adresów...</span>
+          <span id="csv-geocode-counter">0 / 0</span>
+        </div>
+        <div class="w-full h-2 bg-emerald-200/70 dark:bg-emerald-900 rounded-full overflow-hidden">
+          <div id="csv-geocode-bar" class="h-full bg-emerald-600 transition-all duration-300" style="width: 0%"></div>
+        </div>
+      </div>
+
       <div class="flex justify-between items-center gap-2 pt-3 border-t border-zinc-200 dark:border-zinc-800 shrink-0 flex-wrap">
-        <span class="text-[11px] text-zinc-500">💡 Import obsługuje także niepełne wiersze oraz samych klientów bez urządzeń.</span>
+        <span class="text-[11px] text-zinc-500">💡 Import obsługuje niepełne wiersze oraz automatycznie ustawia pinezki GPS dla wpisanych adresów.</span>
         <div class="flex gap-2">
-          <button type="button" onclick="closeModal('modal-csv-preview')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Anuluj</button>
-          <button type="button" onclick="confirmCsvImport()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm">+ Dopisz do bazy klientów</button>
+          <button type="button" id="csv-cancel-btn" onclick="closeModal('modal-csv-preview')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Anuluj</button>
+          <button type="button" id="csv-confirm-btn" onclick="confirmCsvImport()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm">+ Dopisz do bazy klientów</button>
         </div>
       </div>
     </div>
@@ -2292,6 +2358,7 @@ service cloud.firestore {
         marker.bindPopup(`
           <div style="min-width:190px;font-family:'Inter',sans-serif;">
             <div style="font-weight:800;font-size:13px;color:#18181b;">${c.name}</div>
+            ${c.nip ? `<div style="font-size:10px;color:#059669;font-weight:700;">NIP: ${c.nip}</div>` : ''}
             <div style="font-size:11px;color:#52525b;margin-top:2px;">📍 ${c.city}, ${c.street}</div>
             <div style="margin-top:4px;"><a href="tel:${c.phone}" style="color:#059669;font-weight:700;font-size:12px;text-decoration:underline;">📞 ${c.phone}</a></div>
             <button onclick="selectClientFromMapForPlanner('${c.id}')" style="margin-top:8px;width:100%;background:#059669;color:#fff;border:none;padding:6px 10px;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;">
@@ -2508,16 +2575,14 @@ service cloud.firestore {
     /* ==========================================================================
        7. BAZA KLIENTÓW, KATALOG URZĄDZEŃ I FORMULARZE
        ========================================================================== */
-    function renderClients() {
+    function getFilteredEnrichedClients() {
       const enriched = getEnrichedClients();
-      const query = (document.getElementById('client-search-input')?.value || '').toLowerCase().trim();
+      const rawQuery = (document.getElementById('client-search-input')?.value || '').toLowerCase().trim();
+      if (!rawQuery) return enriched;
 
-      const filtered = enriched.filter(c => {
-        if (!query) return true;
-        const clientText = `${c.name} ${c.city} ${c.street} ${c.phone} ${c.postalCode || ''} ${c.notes || ''}`.toLowerCase();
-        if (clientText.includes(query)) return true;
-
-        return c.devices.some(d => {
+      const buildSearchableBlob = c => {
+        const clientText = `${c.name || ''} ${c.nip || ''} ${c.city || ''} ${c.street || ''} ${c.phone || ''} ${c.postalCode || ''} ${c.notes || ''}`.toLowerCase();
+        const devsText = (c.devices || []).map(d => {
           const typeInfo = getDeviceInfo(d.deviceType);
           const wStatus = d.status.ourUnknownDate
             ? 'nasze brak daty'
@@ -2531,12 +2596,39 @@ service cloud.firestore {
             : d.status.isSoon
               ? 'wkrótce kończące się'
               : 'przegląd ok';
-          const devText = `${d.deviceModel} ${d.serialNumber || ''} ${d.deviceNotes || ''} ${typeInfo.label} ${typeInfo.short} ${wStatus} ${iStatus}`.toLowerCase();
-          return devText.includes(query);
-        });
+          return `${d.deviceModel || ''} ${d.serialNumber || ''} ${d.deviceNotes || ''} ${typeInfo.label} ${typeInfo.short} ${wStatus} ${iStatus}`.toLowerCase();
+        }).join(' ');
+        return { fullText: `${clientText} ${devsText}`, cityText: (c.city || '').toLowerCase().trim() };
+      };
+
+      // Najpierw sprawdzamy dopasowanie całej frazy (np. "na gwarancji", "po gwarancji", "Jan Kowalski")
+      const exactMatches = enriched.filter(c => buildSearchableBlob(c).fullText.includes(rawQuery));
+
+      // Dzielimy wpisane zapytanie na pojedyncze słowa (po spacjach, przecinkach lub średnikach)
+      const tokens = rawQuery.split(/[\s,;]+/).map(t => t.trim()).filter(Boolean);
+      if (tokens.length <= 1) return exactMatches;
+
+      // Sprawdzamy, czy wszystkie wpisane słowa pasują jednocześnie do jednego klienta (logika AND, np. "Jan Poznań")
+      const andMatches = enriched.filter(c => {
+        const blob = buildSearchableBlob(c).fullText;
+        return tokens.every(tok => blob.includes(tok));
       });
+      if (andMatches.length > 0) return andMatches;
+
+      // Jeśli żaden pojedynczy klient nie zawiera wszystkich słów naraz (np. użytkownik wpisał kilka miejscowości: "Poznań Luboń Swarzędz"),
+      // wyświetlamy klientów, którzy pasują do KTÓREGOKOLWIEK z wpisanych słów (logika OR dla każdego słowa osobno)
+      return enriched.filter(c => {
+        const blob = buildSearchableBlob(c).fullText;
+        return tokens.some(tok => blob.includes(tok));
+      });
+    }
+
+    function renderClients() {
+      const enriched = getEnrichedClients();
+      const filtered = getFilteredEnrichedClients();
 
       setText('badge-clients', enriched.length);
+      setText('export-filtered-btn-label', filtered.length < enriched.length ? `Eksport widocznych (${filtered.length})` : `Eksport widocznych (CSV)`);
       const tbody = document.getElementById('clients-table-body');
       const mobileContainer = document.getElementById('clients-mobile-container');
 
@@ -2554,6 +2646,7 @@ service cloud.firestore {
                 <h3 class="font-extrabold text-zinc-900 dark:text-white text-base break-words">${c.name}</h3>
                 <span class="shrink-0 whitespace-nowrap text-[11px] bg-zinc-900 dark:bg-zinc-700 text-white px-2 py-0.5 rounded-full font-bold">${c.devices.length} urz.</span>
               </div>
+              ${c.nip ? `<div class="text-[11px] font-mono font-bold text-emerald-700 dark:text-emerald-400 mt-0.5">NIP: ${c.nip}</div>` : ''}
               <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">📍 ${c.city}, ${c.street}</p>
             </div>
             <a href="tel:${c.phone}" class="px-3 py-2 bg-emerald-600 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 shadow-sm">
@@ -2593,9 +2686,12 @@ service cloud.firestore {
       tbody.innerHTML = filtered.map(c => `
         <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition">
           <td class="py-3.5 px-4 font-bold text-zinc-900 dark:text-white">
-            <div class="flex items-center gap-2 flex-wrap max-w-xs">
-              <span class="break-words">${c.name}</span>
-              <span class="shrink-0 whitespace-nowrap text-[11px] bg-zinc-900 dark:bg-zinc-700 text-white px-2 py-0.5 rounded-full font-extrabold">${c.devices.length} urz.</span>
+            <div class="flex flex-col max-w-xs">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="break-words">${c.name}</span>
+                <span class="shrink-0 whitespace-nowrap text-[11px] bg-zinc-900 dark:bg-zinc-700 text-white px-2 py-0.5 rounded-full font-extrabold">${c.devices.length} urz.</span>
+              </div>
+              ${c.nip ? `<span class="text-[11px] font-mono font-bold text-emerald-700 dark:text-emerald-400 mt-0.5">NIP: ${c.nip}</span>` : ''}
             </div>
           </td>
           <td class="py-3.5 px-4 text-zinc-600 dark:text-zinc-300">${c.city || '—'}${c.street ? `, ${c.street}` : ''}</td>
@@ -2807,9 +2903,19 @@ service cloud.firestore {
           else if (d.status.isUnderWarranty) underWarranty++;
           else if (d.status.isExpiredWarranty) expiredWarrantyCount++;
 
-          (d.inspectionHistory || []).forEach(h => {
+          (d.inspectionHistory || []).forEach((h, hIdx) => {
+            if (!h.id) h.id = `h_auto_${d.id}_${hIdx}`;
             if (matchesStatsTimeFilter(h.date, scope, selectedYear, selectedMonth)) {
-              allHistory.push({ ...h, clientName: c.name, clientCity: c.city, deviceModel: d.deviceModel });
+              allHistory.push({
+                ...h,
+                sourceType: 'device_history',
+                clientId: c.id,
+                deviceId: d.id,
+                itemId: h.id,
+                clientName: c.name,
+                clientCity: c.city,
+                deviceModel: d.deviceModel
+              });
             }
           });
         });
@@ -2828,11 +2934,16 @@ service cloud.firestore {
         const dev = client?.devices?.find(d => d.id === v.deviceId);
         allHistory.push({
           id: 'vh_' + v.id,
+          sourceType: 'appointment',
+          clientId: v.clientId || '',
+          deviceId: v.deviceId || '',
+          itemId: v.id,
           date: v.date,
           clientName: client ? client.name : 'Klient',
           clientCity: client ? client.city : '',
           deviceModel: dev ? dev.deviceModel : (v.plannedInstallModel || v.serviceType || 'Serwis / Przegląd'),
           technician: v.workerName || 'Serwis PP',
+          rawNotes: v.completionComment || v.notes || '',
           notes: `Wykonano: ${v.serviceType || 'Serwis'} ${v.completionComment ? '• ' + v.completionComment : v.notes ? '• ' + v.notes : ''}`
         });
       });
@@ -2946,14 +3057,19 @@ service cloud.firestore {
 
       const tbody = document.getElementById('history-table-body');
       tbody.innerHTML = filtered.length === 0
-        ? `<tr><td colspan="5" class="py-8 text-center text-zinc-400">Brak wpisów w historii dla wybranego okresu.</td></tr>`
+        ? `<tr><td colspan="6" class="py-8 text-center text-zinc-400">Brak wpisów w historii dla wybranego okresu.</td></tr>`
         : filtered.map(h => `
           <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
-            <td class="py-3 px-4 font-bold text-emerald-600 dark:text-emerald-400">${formatDatePL(h.date)}</td>
+            <td class="py-3 px-4 font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">${formatDatePL(h.date)}</td>
             <td class="py-3 px-4 font-bold text-zinc-900 dark:text-white">${h.clientName} <span class="text-xs text-zinc-400 font-normal">(${h.clientCity})</span></td>
             <td class="py-3 px-4 text-zinc-700 dark:text-zinc-300 font-medium">${h.deviceModel}</td>
-            <td class="py-3 px-4 text-zinc-600 dark:text-zinc-400 font-semibold">👷 ${h.technician || 'Serwis PP'}</td>
+            <td class="py-3 px-4 text-zinc-600 dark:text-zinc-400 font-semibold whitespace-nowrap">👷 ${h.technician || 'Serwis PP'}</td>
             <td class="py-3 px-4 text-zinc-600 dark:text-zinc-300">${h.notes}</td>
+            <td class="py-3 px-4 text-right">
+              <button onclick="openEditHistoryNoteModal('${h.sourceType}', '${h.clientId}', '${h.deviceId}', '${h.itemId}')" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs font-bold inline-flex items-center gap-1" title="Edytuj notatkę w historii (wymaga hasła)">
+                <i data-lucide="lock" class="w-3 h-3 text-emerald-600"></i> Edytuj
+              </button>
+            </td>
           </tr>
         `).join('');
       lucide.createIcons();
@@ -2967,6 +3083,7 @@ service cloud.firestore {
       setText('modal-client-title', 'Nowy klient');
       document.getElementById('edit-client-id').value = '';
       document.getElementById('client-name').value = '';
+      document.getElementById('client-nip').value = '';
       document.getElementById('client-phone').value = '+48 ';
       document.getElementById('client-postal').value = '';
       document.getElementById('client-city').value = '';
@@ -2987,6 +3104,7 @@ service cloud.firestore {
       setText('modal-client-title', 'Edycja klienta');
       document.getElementById('edit-client-id').value = c.id;
       document.getElementById('client-name').value = capitalizeWords(c.name || '');
+      document.getElementById('client-nip').value = c.nip || '';
       document.getElementById('client-phone').value = ensurePhonePrefix(c.phone || '+48 ');
       document.getElementById('client-postal').value = c.postalCode || '';
       document.getElementById('client-city').value = capitalizeWords(c.city || '');
@@ -3251,6 +3369,7 @@ service cloud.firestore {
       const clientData = {
         id: editingClientId || ('c_' + Date.now()),
         name: capitalizeWords(document.getElementById('client-name').value.trim()),
+        nip: (document.getElementById('client-nip')?.value || '').trim(),
         phone: ensurePhonePrefix(document.getElementById('client-phone').value.trim()),
         postalCode: document.getElementById('client-postal').value.trim(),
         city: capitalizeWords(document.getElementById('client-city').value.trim()),
@@ -3782,16 +3901,27 @@ service cloud.firestore {
           return true;
         });
         const combinedActions = [
-          ...(d.inspectionHistory || []).map(h => ({
-            date: h.date,
-            technician: h.technician || 'Serwis PP',
-            type: h.actionType || 'Przegląd / Serwis',
-            notes: h.notes || '',
-            badgeColor: (h.actionType || '').toLowerCase().includes('monta')
-              ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
-              : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
-          })),
+          ...(d.inspectionHistory || []).map((h, hIdx) => {
+            if (!h.id) h.id = `h_auto_${d.id}_${hIdx}`;
+            return {
+              sourceType: 'device_history',
+              clientId: c.id,
+              deviceId: d.id,
+              itemId: h.id,
+              date: h.date,
+              technician: h.technician || 'Serwis PP',
+              type: h.actionType || 'Przegląd / Serwis',
+              notes: h.notes || '',
+              badgeColor: (h.actionType || '').toLowerCase().includes('monta')
+                ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
+                : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+            };
+          }),
           ...completedDeviceVisits.map(v => ({
+            sourceType: 'appointment',
+            clientId: c.id,
+            deviceId: d.id,
+            itemId: v.id,
             date: v.date,
             technician: v.workerName || 'Serwis PP',
             type: `${v.serviceType || 'Serwis / Przegląd'} (Wykonane)`,
@@ -3837,7 +3967,12 @@ service cloud.firestore {
                 <div class="bg-white dark:bg-zinc-900 p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 space-y-1">
                   <div class="flex justify-between items-center flex-wrap gap-1">
                     <span class="font-extrabold">📅 ${formatDatePL(act.date)} • 👷 ${act.technician}</span>
-                    <span class="text-[10px] font-extrabold px-2 py-0.5 rounded ${act.badgeColor}">${act.type}</span>
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-[10px] font-extrabold px-2 py-0.5 rounded ${act.badgeColor}">${act.type}</span>
+                      <button onclick="openEditHistoryNoteModal('${act.sourceType}', '${act.clientId}', '${act.deviceId}', '${act.itemId}')" class="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 rounded text-[10px] font-bold inline-flex items-center gap-1" title="Edytuj ten wpis (wymaga hasła)">
+                        <i data-lucide="lock" class="w-2.5 h-2.5 text-emerald-600"></i> Edytuj
+                      </button>
+                    </div>
                   </div>
                   <div class="text-zinc-600 dark:text-zinc-300">${act.notes}</div>
                 </div>
@@ -3848,6 +3983,80 @@ service cloud.firestore {
       }).join('');
 
       openModal('modal-inspections');
+    }
+
+    function openEditHistoryNoteModal(sourceType, clientId, deviceId, itemId) {
+      document.getElementById('edit-hist-source-type').value = sourceType;
+      document.getElementById('edit-hist-client-id').value = clientId;
+      document.getElementById('edit-hist-device-id').value = deviceId;
+      document.getElementById('edit-hist-item-id').value = itemId;
+      document.getElementById('edit-hist-password').value = '';
+      document.getElementById('edit-hist-password-error').classList.add('hidden');
+
+      const client = (window.clientsData || []).find(c => c.id === clientId);
+      const dev = (client?.devices || []).find(d => d.id === deviceId);
+
+      if (sourceType === 'device_history' && dev) {
+        const hItem = (dev.inspectionHistory || []).find(h => h.id === itemId);
+        if (!hItem) return;
+        setText('edit-hist-info-label', `👤 ${client ? client.name : 'Klient'} — 🔧 ${dev.deviceModel}`);
+        document.getElementById('edit-hist-date').value = hItem.date || toYMD(new Date());
+        document.getElementById('edit-hist-tech').value = hItem.technician || 'Serwis PP';
+        document.getElementById('edit-hist-notes').value = hItem.notes || '';
+      } else if (sourceType === 'appointment') {
+        const visit = (window.appointmentsData || []).find(a => a.id === itemId);
+        if (!visit) return;
+        setText('edit-hist-info-label', `👤 ${client ? client.name : 'Klient'} — 📋 Zlecenie: ${visit.serviceType || 'Serwis'}`);
+        document.getElementById('edit-hist-date').value = visit.date || toYMD(new Date());
+        document.getElementById('edit-hist-tech').value = visit.workerName || 'Serwis PP';
+        document.getElementById('edit-hist-notes').value = visit.completionComment || visit.notes || '';
+      } else {
+        return;
+      }
+
+      openModal('modal-edit-history-note');
+      setTimeout(() => document.getElementById('edit-hist-notes')?.focus(), 80);
+    }
+
+    function handleConfirmEditHistoryNote(e) {
+      e.preventDefault();
+      if (document.getElementById('edit-hist-password').value !== ADMIN_PIN) {
+        document.getElementById('edit-hist-password-error').classList.remove('hidden');
+        return;
+      }
+
+      const sourceType = document.getElementById('edit-hist-source-type').value;
+      const clientId = document.getElementById('edit-hist-client-id').value;
+      const deviceId = document.getElementById('edit-hist-device-id').value;
+      const itemId = document.getElementById('edit-hist-item-id').value;
+      const newDate = document.getElementById('edit-hist-date').value || toYMD(new Date());
+      const newTech = (document.getElementById('edit-hist-tech').value || 'Serwis PP').trim();
+      const newNotes = (document.getElementById('edit-hist-notes').value || '').trim();
+
+      if (sourceType === 'device_history') {
+        const client = (window.clientsData || []).find(c => c.id === clientId);
+        const dev = (client?.devices || []).find(d => d.id === deviceId);
+        if (dev && Array.isArray(dev.inspectionHistory)) {
+          dev.inspectionHistory = dev.inspectionHistory.map(h =>
+            h.id === itemId ? { ...h, date: newDate, technician: newTech, notes: newNotes } : h
+          );
+        }
+      } else if (sourceType === 'appointment') {
+        const visit = (window.appointmentsData || []).find(a => a.id === itemId);
+        if (visit) {
+          visit.date = newDate;
+          visit.workerName = newTech;
+          visit.completionComment = newNotes;
+        }
+      }
+
+      persistData();
+      closeModal('modal-edit-history-note');
+      if (!document.getElementById('modal-inspections').classList.contains('hidden') && clientId) {
+        openInspectionModal(clientId, deviceId || null);
+      }
+      refreshAllViews();
+      showToast('Zapisano poprawioną notatkę w historii!');
     }
 
     function saveInlineDeviceNotes(clientId, devId) {
@@ -4129,12 +4338,13 @@ service cloud.firestore {
     /* ==========================================================================
        11. EKSPORT / IMPORT CSV ORAZ DANE TESTOWE
        ========================================================================== */
-    function requestExportClientsCSV() {
-      if (getEnrichedClients().length === 0) { showToast('Brak klientów do eksportu.'); return; }
+    function requestExportClientsCSV(onlyFiltered = true) {
+      const targetList = onlyFiltered ? getFilteredEnrichedClients() : getEnrichedClients();
+      if (targetList.length === 0) { showToast('Brak klientów do eksportu.'); return; }
       requestAdminPin(
-        'Autoryzacja eksportu danych',
+        onlyFiltered ? `Eksport widocznych klientów (${targetList.length})` : `Eksport całej bazy (${targetList.length})`,
         'Podaj hasło autoryzacyjne, aby pobrać bazę klientów do pliku CSV:',
-        () => exportClientsCSV()
+        () => exportClientsCSV(onlyFiltered)
       );
     }
 
@@ -4150,19 +4360,19 @@ service cloud.firestore {
       if (typeof cb === 'function') cb();
     }
 
-    function exportClientsCSV() {
-      const enriched = getEnrichedClients();
-      const headers = ['Imię i Nazwisko', 'Telefon', 'Kod pocztowy', 'Miasto', 'Ulica', 'Lat', 'Lng', 'Typ urządzenia', 'Model', 'Data montażu', 'Gwarancja (msc)', 'Status Gwarancji', 'Ostatni przegląd', 'Następny przegląd', 'Notatki'];
+    function exportClientsCSV(onlyFiltered = true) {
+      const targetClients = onlyFiltered ? getFilteredEnrichedClients() : getEnrichedClients();
+      const headers = ['Imię i Nazwisko', 'NIP', 'Telefon', 'Kod pocztowy', 'Miasto', 'Ulica', 'Lat', 'Lng', 'Typ urządzenia', 'Model', 'Data montażu', 'Gwarancja (msc)', 'Status Gwarancji', 'Ostatni przegląd', 'Następny przegląd', 'Notatki'];
       const escape = val => `"${String(val ?? '').replace(/"/g, '""')}"`;
       const rows = [];
 
-      enriched.forEach(c => {
+      targetClients.forEach(c => {
         if (!c.devices || c.devices.length === 0) {
-          rows.push([c.name, c.phone, c.postalCode, c.city, c.street, c.lat, c.lng, '', '', '', '', 'Brak urządzenia', '', '', c.notes].map(escape).join(';'));
+          rows.push([c.name, c.nip || '', c.phone, c.postalCode, c.city, c.street, c.lat, c.lng, '', '', '', '', 'Brak urządzenia', '', '', c.notes].map(escape).join(';'));
         } else {
           c.devices.forEach(d => {
             const wStatus = d.status.ourUnknownDate ? 'Nasze (Brak daty)' : d.status.noInstallDate ? 'Obce' : d.status.isUnderWarranty ? `Na gwarancji do ${d.status.warrantyEndFormatted}` : `Po gwarancji (${d.status.warrantyEndFormatted})`;
-            rows.push([c.name, c.phone, c.postalCode, c.city, c.street, c.lat, c.lng, getDeviceInfo(d.deviceType).short, d.deviceModel, d.installDate, d.warrantyMonths, wStatus, d.lastInspectionDate, d.nextInspectionDate, c.notes].map(escape).join(';'));
+            rows.push([c.name, c.nip || '', c.phone, c.postalCode, c.city, c.street, c.lat, c.lng, getDeviceInfo(d.deviceType).short, d.deviceModel, d.installDate, d.warrantyMonths, wStatus, d.lastInspectionDate, d.nextInspectionDate, c.notes].map(escape).join(';'));
           });
         }
       });
@@ -4172,11 +4382,11 @@ service cloud.firestore {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `PP_Klienci_${toYMD(new Date())}.csv`;
+      a.download = `PP_Klienci_${onlyFiltered ? 'Widoczni_' : 'CalaBaza_'}${toYMD(new Date())}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      showToast('Wyeksportowano bazę klientów do pliku CSV!');
+      showToast(`Wyeksportowano ${targetClients.length} klientów do pliku CSV!`);
     }
 
     function parseCsvRow(line, sep) {
@@ -4208,6 +4418,7 @@ service cloud.firestore {
       headerCols.forEach((h, idx) => {
         const low = (h || '').toLowerCase();
         if (low.includes('imi') || low.includes('nazw') || low.includes('klient') || low === 'name') map.name = idx;
+        else if (low.includes('nip')) map.nip = idx;
         else if (low.includes('tel') || low.includes('phone')) map.phone = idx;
         else if (low.includes('kod') || low.includes('poczt') || low.includes('postal')) map.postal = idx;
         else if (low.includes('miast') || low.includes('miejscow') || low === 'city') map.city = idx;
@@ -4271,11 +4482,12 @@ service cloud.firestore {
 
           const getCol = (key, fallbackIdx) => {
             if (hasHeader && headerMap[key] !== undefined) return cols[headerMap[key]] || '';
-            if (!hasHeader && fallbackIdx < cols.length) return cols[fallbackIdx] || '';
+            if (!hasHeader && fallbackIdx !== undefined && fallbackIdx < cols.length) return cols[fallbackIdx] || '';
             return '';
           };
 
           let rawName = getCol('name', 0);
+          let rawNip = getCol('nip', undefined);
           let rawPhone = getCol('phone', 1);
           let rawPostal = getCol('postal', 2);
           let rawCity = getCol('city', 3);
@@ -4304,6 +4516,7 @@ service cloud.firestore {
           if (!rawName && !rawPhone && !rawCity && !rawStreet) continue;
 
           const finalName = capitalizeWords(rawName || `Klient (${rawCity || rawPhone || 'Import'})`);
+          const finalNip = (rawNip || '').trim();
           const finalPhone = rawPhone ? ensurePhonePrefix(rawPhone) : '+48 ';
           const finalCity = capitalizeWords(rawCity || '');
           const finalStreet = capitalizeWords(rawStreet || '');
@@ -4346,15 +4559,22 @@ service cloud.firestore {
               (ec.city || '').toLowerCase() === finalCity.toLowerCase()
             );
 
+            const parsedLat = parseFloat(String(rawLat || '').replace(',', '.'));
+            const parsedLng = parseFloat(String(rawLng || '').replace(',', '.'));
+            const hasValidCoords = !isNaN(parsedLat) && !isNaN(parsedLng) &&
+              !(Math.abs(parsedLat - 52.4064) < 0.0001 && Math.abs(parsedLng - 16.9252) < 0.0001);
+
             groupedMap.set(key, {
               id: `c_imp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
               name: finalName,
+              nip: finalNip,
               phone: finalPhone,
               postalCode: rawPostal,
               city: finalCity || 'Poznań',
               street: finalStreet,
-              lat: parseFloat(rawLat) || 52.4064,
-              lng: parseFloat(rawLng) || 16.9252,
+              lat: hasValidCoords ? parsedLat : 52.4064,
+              lng: hasValidCoords ? parsedLng : 16.9252,
+              needsGeocoding: !hasValidCoords && Boolean(finalCity || finalStreet || rawPostal),
               notes: rawNotes || '',
               devices: dev ? [dev] : [],
               existingClientId: existingMatch ? existingMatch.id : null
@@ -4376,11 +4596,66 @@ service cloud.firestore {
       });
     }
 
+    async function geocodeAddressHelper(city, street, postal) {
+      const cleanCity = (city || '').trim();
+      const streetClean = cleanPolishStreet(street || '');
+      const cleanPostal = (postal || '').trim();
+      if (!cleanCity && !streetClean && !cleanPostal) return null;
+
+      try {
+        // 1. Zapytanie strukturalne (miasto + ulica + kod pocztowy)
+        if (cleanCity && streetClean) {
+          const params = new URLSearchParams({ format: 'json', limit: '1', countrycodes: 'pl', city: cleanCity, street: streetClean });
+          if (cleanPostal) params.set('postalcode', cleanPostal);
+          let res = await fetch(`https://nominatim.openstreetmap.org/search?${params.toString()}`);
+          let data = await res.json();
+          if (data && data.length > 0) {
+            return { lat: parseFloat(parseFloat(data[0].lat).toFixed(5)), lng: parseFloat(parseFloat(data[0].lon).toFixed(5)) };
+          }
+        }
+
+        // 2. Zapytanie pełnotekstowe (ulica + kod + miejscowość)
+        const q2 = `${streetClean ? streetClean + ', ' : ''}${cleanPostal ? cleanPostal + ' ' : ''}${cleanCity}, Polska`.trim();
+        let res2 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=pl&limit=1&q=${encodeURIComponent(q2)}`);
+        let data2 = await res2.json();
+        if (data2 && data2.length > 0) {
+          return { lat: parseFloat(parseFloat(data2[0].lat).toFixed(5)), lng: parseFloat(parseFloat(data2[0].lon).toFixed(5)) };
+        }
+
+        // 3. Fallback na samą miejscowość / kod pocztowy (jeśli ulica ma nietypowy zapis)
+        if (cleanCity || cleanPostal) {
+          const q3 = `${cleanPostal ? cleanPostal + ' ' : ''}${cleanCity}, Polska`.trim();
+          let res3 = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=pl&limit=1&q=${encodeURIComponent(q3)}`);
+          let data3 = await res3.json();
+          if (data3 && data3.length > 0) {
+            // Lekki rozrzut wokół centrum miejscowości, aby pinezki z tego samego miasta bez ulicy nie przykrywały się w 1 punkcie
+            const jitterLat = (Math.random() - 0.5) * 0.003;
+            const jitterLng = (Math.random() - 0.5) * 0.003;
+            return {
+              lat: parseFloat((parseFloat(data3[0].lat) + jitterLat).toFixed(5)),
+              lng: parseFloat((parseFloat(data3[0].lon) + jitterLng).toFixed(5))
+            };
+          }
+        }
+      } catch (e) {}
+      return null;
+    }
+
     function openCsvPreviewModal() {
       const totalClients = pendingCsvImportClients.length;
       const newClients = pendingCsvImportClients.filter(c => !c.existingClientId).length;
       const existingMerged = pendingCsvImportClients.filter(c => c.existingClientId).length;
       const withoutDevices = pendingCsvImportClients.filter(c => c.devices.length === 0).length;
+      const toGeocodeCount = pendingCsvImportClients.filter(c => c.needsGeocoding && !c.existingClientId).length;
+
+      document.getElementById('csv-geocode-progress-box')?.classList.add('hidden');
+      const confirmBtn = document.getElementById('csv-confirm-btn');
+      if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.innerText = toGeocodeCount > 0
+          ? `+ Dopisz do bazy i ustaw pinezki GPS (${toGeocodeCount})`
+          : `+ Dopisz do bazy klientów`;
+      }
 
       document.getElementById('csv-preview-stats').innerHTML = `
         <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
@@ -4403,9 +4678,17 @@ service cloud.firestore {
 
       document.getElementById('csv-preview-tbody').innerHTML = pendingCsvImportClients.map(c => `
         <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
-          <td class="py-2.5 px-3 font-bold text-zinc-900 dark:text-white">${c.name}</td>
+          <td class="py-2.5 px-3 font-bold text-zinc-900 dark:text-white">
+            <div>${c.name}</div>
+            ${c.nip ? `<div class="text-[10px] font-mono text-emerald-600">NIP: ${c.nip}</div>` : ''}
+          </td>
           <td class="py-2.5 px-3 text-zinc-600 dark:text-zinc-300">${c.phone || '—'}</td>
-          <td class="py-2.5 px-3 text-zinc-600 dark:text-zinc-300">${c.city || '—'}${c.street ? `, ${c.street}` : ''}</td>
+          <td class="py-2.5 px-3 text-zinc-600 dark:text-zinc-300">
+            <div>${c.postalCode ? c.postalCode + ' ' : ''}${c.city || '—'}${c.street ? `, ${c.street}` : ''}</div>
+            ${c.needsGeocoding
+              ? `<span class="inline-block mt-0.5 px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[10px] font-bold">📍 Brak kordów — pobierze GPS z adresu</span>`
+              : `<span class="inline-block mt-0.5 px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-mono">📍 GPS: ${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}</span>`}
+          </td>
           <td class="py-2.5 px-3">
             ${c.devices.length === 0
               ? `<span class="px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-[10px] font-bold">Brak urządzenia (sam klient)</span>`
@@ -4422,8 +4705,70 @@ service cloud.firestore {
       openModal('modal-csv-preview');
     }
 
-    function confirmCsvImport() {
+    async function confirmCsvImport() {
       if (!pendingCsvImportClients || pendingCsvImportClients.length === 0) return;
+
+      const confirmBtn = document.getElementById('csv-confirm-btn');
+      const cancelBtn = document.getElementById('csv-cancel-btn');
+      const progressBox = document.getElementById('csv-geocode-progress-box');
+      const progressBar = document.getElementById('csv-geocode-bar');
+      const progressCounter = document.getElementById('csv-geocode-counter');
+      const progressTxt = document.getElementById('csv-geocode-status-txt');
+
+      const itemsToGeocode = pendingCsvImportClients.filter(imp => {
+        if (!imp.needsGeocoding) return false;
+        if (imp.existingClientId) {
+          const ex = (window.clientsData || []).find(c => c.id === imp.existingClientId);
+          if (ex && !(Math.abs((ex.lat || 52.4064) - 52.4064) < 0.0001 && Math.abs((ex.lng || 16.9252) - 16.9252) < 0.0001)) {
+            return false;
+          }
+        }
+        return true;
+      });
+
+      if (itemsToGeocode.length > 0) {
+        if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.innerText = 'Trwa namierzanie adresów GPS...'; }
+        if (cancelBtn) cancelBtn.disabled = true;
+        progressBox?.classList.remove('hidden');
+
+        // Cache dla takich samych adresów / miejscowości, aby przyspieszyć import
+        const geocodeCache = new Map();
+
+        for (let i = 0; i < itemsToGeocode.length; i++) {
+          const item = itemsToGeocode[i];
+          const pct = Math.round(((i + 1) / itemsToGeocode.length) * 100);
+          if (progressBar) progressBar.style.width = `${pct}%`;
+          if (progressCounter) progressCounter.innerText = `${i + 1} / ${itemsToGeocode.length}`;
+          if (progressTxt) progressTxt.innerText = `📍 Szukam współrzędnych dla: ${item.city || ''} ${item.street || ''}...`;
+
+          const cacheKey = `${(item.city || '').toLowerCase().trim()}|${cleanPolishStreet(item.street || '').toLowerCase()}|${(item.postalCode || '').trim()}`;
+          let coords = null;
+
+          if (geocodeCache.has(cacheKey)) {
+            const cached = geocodeCache.get(cacheKey);
+            if (cached) {
+              coords = {
+                lat: parseFloat((cached.lat + (Math.random() - 0.5) * 0.0008).toFixed(5)),
+                lng: parseFloat((cached.lng + (Math.random() - 0.5) * 0.0008).toFixed(5))
+              };
+            }
+          } else {
+            coords = await geocodeAddressHelper(item.city, item.street, item.postalCode);
+            geocodeCache.set(cacheKey, coords);
+            // Krótki odstęp dla stabilności zapytań Nominatim OSM
+            if (i < itemsToGeocode.length - 1) {
+              await new Promise(r => setTimeout(r, 320));
+            }
+          }
+
+          if (coords) {
+            item.lat = coords.lat;
+            item.lng = coords.lng;
+            item.needsGeocoding = false;
+          }
+        }
+      }
+
       let addedCount = 0;
       let updatedCount = 0;
 
@@ -4431,27 +4776,36 @@ service cloud.firestore {
         if (imp.existingClientId) {
           const existing = (window.clientsData || []).find(c => c.id === imp.existingClientId);
           if (existing) {
+            if (!existing.nip && imp.nip) existing.nip = imp.nip;
             if ((!existing.phone || existing.phone.trim() === '+48') && imp.phone) existing.phone = imp.phone;
             if (!existing.street && imp.street) existing.street = imp.street;
             if (!existing.postalCode && imp.postalCode) existing.postalCode = imp.postalCode;
             if (!existing.notes && imp.notes) existing.notes = imp.notes;
+            if (Math.abs((existing.lat || 52.4064) - 52.4064) < 0.0001 && Math.abs((existing.lng || 16.9252) - 16.9252) < 0.0001 && !imp.needsGeocoding) {
+              existing.lat = imp.lat;
+              existing.lng = imp.lng;
+            }
             if (imp.devices && imp.devices.length > 0) {
               existing.devices = [...(existing.devices || []), ...imp.devices];
             }
             updatedCount++;
           }
         } else {
-          const { existingClientId, ...cleanClient } = imp;
+          const { existingClientId, needsGeocoding, ...cleanClient } = imp;
           window.clientsData.push(cleanClient);
           addedCount++;
         }
       });
 
       pendingCsvImportClients = [];
+      if (confirmBtn) confirmBtn.disabled = false;
+      if (cancelBtn) cancelBtn.disabled = false;
+      progressBox?.classList.add('hidden');
+
       persistData();
       closeModal('modal-csv-preview');
       refreshAllViews();
-      showToast(`Import zakończony: dopisano ${addedCount} nowych klientów, uzupełniono ${updatedCount}!`);
+      showToast(`Import zakończony: dopisano ${addedCount} klientów (z ustawionymi pinezkami GPS), uzupełniono ${updatedCount}!`);
     }
 
     function seedSampleData() {
