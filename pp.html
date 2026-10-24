@@ -291,7 +291,13 @@
             <!-- CALENDAR -->
             <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
               <div class="flex justify-between items-center mb-4">
-                <h2 id="cal-month-label" class="text-base font-extrabold text-zinc-900 dark:text-white">Kalendarz</h2>
+                <div>
+                  <h2 id="cal-month-label" class="text-base font-extrabold text-zinc-900 dark:text-white">Kalendarz</h2>
+                  <p class="text-[10px] text-zinc-500 dark:text-zinc-400 flex items-center gap-2 mt-0.5">
+                    <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-600 inline-block"></span> Niezamknięte zlecenia</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-600 inline-block"></span> Zamknięte</span>
+                  </p>
+                </div>
                 <div class="flex items-center gap-1.5">
                   <button onclick="changeMonth(-1)" class="p-1.5 border border-zinc-300 dark:border-zinc-700 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
                   <button onclick="changeMonth(1)" class="p-1.5 border border-zinc-300 dark:border-zinc-700 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
@@ -455,37 +461,20 @@
 
       <!-- 3. TAB: CLIENTS (KLIENCI) -->
       <div id="tab-clients" class="tab-content space-y-4 hidden">
-        <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col xl:flex-row gap-3 justify-between items-center">
+        <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row gap-3 justify-between items-center">
           <div class="relative flex-1 w-full">
             <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-            <input type="text" id="client-search-input" oninput="renderClients()" placeholder="Szukaj klienta po nazwisku, adresie, telefonie lub modelu urządzenia..." class="w-full pl-10 pr-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:border-emerald-500 text-zinc-800 dark:text-zinc-100">
+            <input type="text" id="client-search-input" oninput="renderClients()" placeholder="Szukaj klienta po nazwisku, adresie, telefonie, modelu urządzenia lub notatce..." class="w-full pl-10 pr-9 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:border-emerald-500 text-zinc-800 dark:text-zinc-100">
+            <button type="button" onclick="clearClientSearch()" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200" title="Wyczyść wyszukiwanie">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
           </div>
-          <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto">
-            <select id="device-filter-select" onchange="renderClients()" class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold outline-none text-zinc-800 dark:text-zinc-100">
-              <option value="all">Wszystkie urządzenia</option>
-              <option value="heat_pump">🔥 Pompy ciepła</option>
-              <option value="ac">❄️ Klimatyzacja</option>
-              <option value="ventilation">💨 Wentylacja</option>
-            </select>
-            <select id="warranty-filter-select" onchange="renderClients()" class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-semibold outline-none text-zinc-800 dark:text-zinc-100">
-              <option value="all">Wszystkie gwarancje</option>
-              <option value="under_warranty">🛡️ Na gwarancji</option>
-              <option value="expired_warranty">⚠️ Po gwarancji</option>
-              <option value="our_no_date">🏠 Nasze (Brak daty)</option>
-              <option value="external">🔧 Obce (Brak gw.)</option>
-            </select>
-            <select id="inspection-filter-select" onchange="renderClients()" class="bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-xl px-3 py-2 text-xs font-extrabold outline-none text-amber-900 dark:text-amber-200">
-              <option value="all">📋 Wszystkie przeglądy</option>
-              <option value="ending_or_overdue">⏰ Kończące się i po terminie</option>
-              <option value="overdue">🚨 Tylko po terminie</option>
-              <option value="soon">⏳ Tylko kończące się wkrótce</option>
-              <option value="ok">✅ Przegląd aktualny (OK)</option>
-            </select>
-            <button onclick="requestExportClientsCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
+          <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto shrink-0">
+            <button onclick="requestExportClientsCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
               <i data-lucide="lock" class="w-3.5 h-3.5"></i> Eksport Excel (CSV)
             </button>
             <input type="file" id="csv-file-input" accept=".csv" onchange="importClientsCSV(event)" class="hidden">
-            <button onclick="document.getElementById('csv-file-input').click()" class="bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
+            <button onclick="document.getElementById('csv-file-input').click()" class="bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
               <i data-lucide="upload" class="w-4 h-4"></i> Import CSV
             </button>
           </div>
@@ -783,14 +772,16 @@
       </div>
       <form onsubmit="handleSaveAssignedDevice(event)" class="space-y-4">
         <div class="relative">
-          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">1. Wybierz klienta</label>
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">1. Wyszukaj i wybierz klienta (wpisz nazwisko, miasto lub telefon)</label>
           <input type="hidden" id="select-client-target" required>
-          <div onclick="toggleCustomDropdown('assigned-client-dd')" class="w-full px-3.5 py-2.5 bg-emerald-50/70 dark:bg-emerald-950/40 border-2 border-emerald-500/70 dark:border-emerald-600 rounded-xl text-sm font-extrabold flex justify-between items-center cursor-pointer text-zinc-900 dark:text-white">
-            <span id="assigned-client-selected-label" class="truncate">-- Kliknij, aby wybrać klienta --</span>
-            <i data-lucide="chevron-down" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 text-emerald-600 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+            <input type="text" id="search-client-for-dev" onfocus="openCustomDropdown('assigned-client-dd'); renderClientDropdown();" oninput="openCustomDropdown('assigned-client-dd'); renderClientDropdown();" placeholder="Zacznij pisać, aby wyszukać klienta..." autocomplete="off" class="w-full pl-10 pr-9 py-2.5 bg-emerald-50/70 dark:bg-emerald-950/40 border-2 border-emerald-500/70 dark:border-emerald-600 rounded-xl text-xs sm:text-sm font-extrabold outline-none text-zinc-900 dark:text-white">
+            <button type="button" onclick="clearAssignedClientSearch()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 p-1" title="Wyczyść i pokaż wszystkich">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
           </div>
-          <div id="assigned-client-dd" class="hidden mt-1.5 p-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl shadow-xl space-y-1.5">
-            <input type="text" id="search-client-for-dev" oninput="renderClientDropdown()" placeholder="Szukaj klienta po nazwisku, mieście, telefonie..." class="w-full px-3 py-1.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none">
+          <div id="assigned-client-dd" class="hidden mt-1.5 p-1.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl shadow-xl">
             <div id="assigned-client-dd-list" class="max-h-44 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-700/60 text-xs"></div>
           </div>
         </div>
@@ -805,14 +796,16 @@
         </div>
 
         <div class="relative">
-          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">3. Wybierz model z Bazy Urządzeń (lub wpisz ręcznie niżej)</label>
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">3. Wyszukaj model z Bazy Urządzeń (wpisz producenta lub model)</label>
           <input type="hidden" id="select-catalog-target">
-          <div onclick="toggleCustomDropdown('assigned-catalog-dd')" class="w-full px-3.5 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold flex justify-between items-center cursor-pointer text-zinc-800 dark:text-zinc-100">
-            <span id="assigned-catalog-selected-label" class="truncate">-- Kliknij, aby wybrać model z katalogu --</span>
-            <i data-lucide="chevron-down" class="w-4 h-4 text-zinc-500 shrink-0"></i>
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+            <input type="text" id="search-catalog-for-dev" onfocus="openCustomDropdown('assigned-catalog-dd'); renderCatalogDropdown();" oninput="openCustomDropdown('assigned-catalog-dd'); renderCatalogDropdown();" placeholder="Wpisz szukaną nazwę modelu z katalogu..." autocomplete="off" class="w-full pl-10 pr-9 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none text-zinc-800 dark:text-zinc-100">
+            <button type="button" onclick="clearAssignedCatalogSearch()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 p-1" title="Wyczyść">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
           </div>
-          <div id="assigned-catalog-dd" class="hidden mt-1.5 p-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl shadow-xl space-y-1.5">
-            <input type="text" id="search-catalog-for-dev" oninput="renderCatalogDropdown()" placeholder="Filtruj modele..." class="w-full px-3 py-1.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none">
+          <div id="assigned-catalog-dd" class="hidden mt-1.5 p-1.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl shadow-xl">
             <div id="assigned-catalog-dd-list" class="max-h-40 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-700/60 text-xs"></div>
           </div>
         </div>
@@ -934,7 +927,7 @@
         </label>
 
         <div class="pt-1 border-t border-zinc-200 dark:border-zinc-800">
-          <label class="block text-[11px] font-extrabold text-amber-700 dark:text-amber-400 mb-1">Hasło autoryzacyjne (456852)</label>
+          <label class="block text-[11px] font-extrabold text-amber-700 dark:text-amber-400 mb-1">Hasło autoryzacyjne</label>
           <input type="password" id="supp-password" required placeholder="Wpisz hasło..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-bold tracking-widest text-center outline-none focus:border-emerald-500">
           <p id="supp-password-error" class="text-xs text-rose-600 font-bold text-center mt-1 hidden">Nieprawidłowe hasło!</p>
         </div>
@@ -956,14 +949,16 @@
       </div>
       <form onsubmit="handleSaveVisit(event)" class="space-y-3.5">
         <div class="relative">
-          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">1. Wybrany klient</label>
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">1. Wyszukaj klienta (wpisz nazwisko, ulicę, miasto lub telefon)</label>
           <input type="hidden" id="visit-client-select" required>
-          <div onclick="toggleCustomDropdown('visit-client-dd')" class="w-full px-3.5 py-2.5 bg-emerald-50/70 dark:bg-emerald-950/40 border-2 border-emerald-500/70 dark:border-emerald-600 rounded-xl text-sm font-extrabold flex justify-between items-center cursor-pointer text-zinc-900 dark:text-white">
-            <span id="visit-client-selected-label" class="truncate">-- Kliknij, aby wybrać klienta --</span>
-            <i data-lucide="chevron-down" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 text-emerald-600 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+            <input type="text" id="visit-client-search" onfocus="openCustomDropdown('visit-client-dd'); renderVisitClientDropdown();" oninput="openCustomDropdown('visit-client-dd'); renderVisitClientDropdown();" placeholder="Zacznij pisać, aby wyszukać klienta..." autocomplete="off" class="w-full pl-10 pr-9 py-2.5 bg-emerald-50/70 dark:bg-emerald-950/40 border-2 border-emerald-500/70 dark:border-emerald-600 rounded-xl text-xs sm:text-sm font-extrabold outline-none text-zinc-900 dark:text-white">
+            <button type="button" onclick="clearVisitClientSearch()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 p-1" title="Wyczyść i wybierz innego klienta">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
           </div>
-          <div id="visit-client-dd" class="hidden mt-1.5 p-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl shadow-xl space-y-1.5">
-            <input type="text" id="visit-client-search" oninput="renderVisitClientDropdown()" placeholder="Wpisz nazwisko, ulicę lub miasto..." class="w-full px-3 py-1.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none">
+          <div id="visit-client-dd" class="hidden mt-1.5 p-1.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl shadow-xl">
             <div id="visit-client-dd-list" class="max-h-44 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-700/60 text-xs"></div>
           </div>
         </div>
@@ -989,8 +984,9 @@
           <input type="text" id="visit-type-custom" placeholder="np. Wymiana zaworu zwrotnego" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
         </div>
 
-        <div id="visit-existing-device-wrap">
-          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">3. Urządzenie u klienta, którego dotyczy wyjazd</label>
+        <div id="visit-existing-device-wrap" class="space-y-1.5">
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400">3. Urządzenie u klienta, którego dotyczy wyjazd</label>
+          <input type="text" id="visit-device-filter-input" oninput="renderVisitDeviceDropdown()" placeholder="Filtruj urządzenia klienta (wpisz model lub S/N)..." class="w-full px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none">
           <select id="visit-device-select" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-extrabold outline-none text-zinc-900 dark:text-white"></select>
         </div>
 
@@ -1009,7 +1005,8 @@
               </select>
             </div>
             <div>
-              <label class="block text-[10px] font-bold text-zinc-500 mb-1">Wybierz z Bazy Urządzeń</label>
+              <label class="block text-[10px] font-bold text-zinc-500 mb-1">Szukaj w Bazie Urządzeń</label>
+              <input type="text" id="visit-new-dev-cat-search" oninput="renderModalInstallCatalog()" placeholder="Wpisz model lub markę..." class="w-full px-2.5 py-1 mb-1 bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 rounded-lg text-[11px] outline-none">
               <select id="visit-new-dev-cat" onchange="onModalInstallCatalogPick()" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-bold outline-none"></select>
             </div>
           </div>
@@ -1121,7 +1118,7 @@
         <button onclick="closeModal('modal-export-password')"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
       <form onsubmit="confirmExportPassword(event)" class="space-y-3">
-        <p class="text-xs text-zinc-500 dark:text-zinc-400">Podaj hasło zabezpieczające (456852), aby pobrać bazę:</p>
+        <p class="text-xs text-zinc-500 dark:text-zinc-400">Podaj hasło autoryzacyjne, aby pobrać bazę:</p>
         <input type="password" id="export-password-input" required placeholder="Wpisz hasło..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-bold tracking-widest text-center outline-none focus:border-emerald-500">
         <p id="export-password-error" class="text-xs text-rose-600 font-bold text-center hidden">Nieprawidłowe hasło!</p>
         <div class="flex justify-end gap-2 pt-2">
@@ -1348,6 +1345,10 @@ service cloud.firestore {
 
     function toggleCustomDropdown(ddId) {
       document.getElementById(ddId)?.classList.toggle('hidden');
+    }
+
+    function openCustomDropdown(ddId) {
+      document.getElementById(ddId)?.classList.remove('hidden');
     }
 
     function showToast(msg) {
@@ -1791,9 +1792,25 @@ service cloud.firestore {
     }
 
     function filterClientsByWarranty(statusValue = 'all') {
-      const wf = document.getElementById('warranty-filter-select');
-      if (wf) wf.value = statusValue;
+      const searchInput = document.getElementById('client-search-input');
+      if (searchInput) {
+        const terms = {
+          under_warranty: 'na gwarancji',
+          expired_warranty: 'po gwarancji',
+          our_no_date: 'nasze',
+          external: 'obce'
+        };
+        searchInput.value = terms[statusValue] || '';
+      }
       switchTab('clients');
+    }
+
+    function clearClientSearch() {
+      const searchInput = document.getElementById('client-search-input');
+      if (searchInput) {
+        searchInput.value = '';
+        renderClients();
+      }
     }
 
     function onUrgentDaysChange(val) {
@@ -2133,13 +2150,23 @@ service cloud.firestore {
       const todayStr = toYMD(new Date());
       for (let d = 1; d <= daysCount; d++) {
         const ymd = toYMD(new Date(year, month, d));
-        const dayVisits = (window.appointmentsData || []).filter(a => a.date === ymd);
+        const dayVisits = (window.appointmentsData || []).filter(a => a.date === ymd && a.status !== 'canceled');
+        const unclosedVisits = dayVisits.filter(a => a.status !== 'completed');
+        const hasUnclosed = unclosedVisits.length > 0;
         const isToday = ymd === todayStr;
 
+        const cellClass = hasUnclosed
+          ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-500 dark:border-rose-600 text-rose-900 dark:text-rose-200 ring-1 ring-rose-500/30 font-extrabold'
+          : isToday
+            ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 font-bold'
+            : 'bg-white dark:bg-zinc-800/60 border-zinc-200 dark:border-zinc-800 hover:border-emerald-400';
+
+        const badgeColor = hasUnclosed ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white';
+
         html += `
-          <button onclick="selectDateFromCalendar('${ymd}')" class="h-14 rounded-xl p-1.5 flex flex-col justify-between items-center border text-left transition ${isToday ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 font-bold' : 'bg-white dark:bg-zinc-800/60 border-zinc-200 dark:border-zinc-800 hover:border-emerald-400'}">
-            <span class="text-xs font-bold text-zinc-800 dark:text-zinc-200">${d}</span>
-            ${dayVisits.length > 0 ? `<span class="px-1.5 rounded-full text-[10px] bg-emerald-600 text-white font-extrabold">${dayVisits.length}</span>` : ''}
+          <button onclick="selectDateFromCalendar('${ymd}')" title="${hasUnclosed ? `Niezamknięte zlecenia: ${unclosedVisits.length}` : dayVisits.length > 0 ? 'Wszystkie zlecenia zamknięte' : ''}" class="h-14 rounded-xl p-1.5 flex flex-col justify-between items-center border text-left transition ${cellClass}">
+            <span class="text-xs font-bold ${hasUnclosed ? 'text-rose-700 dark:text-rose-300' : 'text-zinc-800 dark:text-zinc-200'}">${d}</span>
+            ${dayVisits.length > 0 ? `<span class="px-1.5 rounded-full text-[10px] ${badgeColor} font-extrabold">${dayVisits.length}</span>` : ''}
           </button>
         `;
       }
@@ -2435,34 +2462,29 @@ service cloud.firestore {
     function renderClients() {
       const enriched = getEnrichedClients();
       const query = (document.getElementById('client-search-input')?.value || '').toLowerCase().trim();
-      const deviceFilter = document.getElementById('device-filter-select')?.value || 'all';
-      const warrantyFilter = document.getElementById('warranty-filter-select')?.value || 'all';
-      const inspectionFilter = document.getElementById('inspection-filter-select')?.value || 'all';
 
       const filtered = enriched.filter(c => {
-        const matchText = !query ||
-          c.name.toLowerCase().includes(query) ||
-          c.city.toLowerCase().includes(query) ||
-          c.street.toLowerCase().includes(query) ||
-          c.phone.toLowerCase().includes(query) ||
-          c.devices.some(d => d.deviceModel.toLowerCase().includes(query) || (d.serialNumber || '').toLowerCase().includes(query) || (d.deviceNotes || '').toLowerCase().includes(query));
+        if (!query) return true;
+        const clientText = `${c.name} ${c.city} ${c.street} ${c.phone} ${c.postalCode || ''} ${c.notes || ''}`.toLowerCase();
+        if (clientText.includes(query)) return true;
 
-        const matchDev = deviceFilter === 'all' || c.devices.some(d => d.deviceType === deviceFilter);
-        const matchWarranty =
-          warrantyFilter === 'all' ||
-          (warrantyFilter === 'under_warranty' && c.devices.some(d => d.status.isUnderWarranty)) ||
-          (warrantyFilter === 'expired_warranty' && c.devices.some(d => d.status.isExpiredWarranty)) ||
-          (warrantyFilter === 'our_no_date' && c.devices.some(d => d.status.ourUnknownDate)) ||
-          (warrantyFilter === 'external' && c.devices.some(d => d.status.isExternal));
-
-        const matchInspection =
-          inspectionFilter === 'all' ||
-          (inspectionFilter === 'ending_or_overdue' && c.devices.some(d => d.status.isOverdue || d.status.isSoon)) ||
-          (inspectionFilter === 'overdue' && c.devices.some(d => d.status.isOverdue)) ||
-          (inspectionFilter === 'soon' && c.devices.some(d => d.status.isSoon)) ||
-          (inspectionFilter === 'ok' && c.devices.some(d => !d.status.isOverdue && !d.status.isSoon));
-
-        return matchText && matchDev && matchWarranty && matchInspection;
+        return c.devices.some(d => {
+          const typeInfo = getDeviceInfo(d.deviceType);
+          const wStatus = d.status.ourUnknownDate
+            ? 'nasze brak daty'
+            : d.status.isExternal
+              ? 'obce brak gwarancji'
+              : d.status.isUnderWarranty
+                ? 'na gwarancji'
+                : 'po gwarancji';
+          const iStatus = d.status.isOverdue
+            ? 'po terminie'
+            : d.status.isSoon
+              ? 'wkrótce kończące się'
+              : 'przegląd ok';
+          const devText = `${d.deviceModel} ${d.serialNumber || ''} ${d.deviceNotes || ''} ${typeInfo.label} ${typeInfo.short} ${wStatus} ${iStatus}`.toLowerCase();
+          return devText.includes(query);
+        });
       });
 
       setText('badge-clients', enriched.length);
@@ -2737,6 +2759,8 @@ service cloud.firestore {
           else if (d.status.isExpiredWarranty) expiredWarrantyCount++;
 
           (d.inspectionHistory || []).forEach(h => {
+            const actType = (h.actionType || '').toLowerCase();
+            if (actType.includes('monta')) return;
             if (matchesStatsTimeFilter(h.date, scope, selectedYear, selectedMonth)) {
               allHistory.push({ ...h, clientName: c.name, clientCity: c.city, deviceModel: d.deviceModel });
             }
@@ -2752,7 +2776,11 @@ service cloud.firestore {
         ? periodAppointmentsAllWorkers
         : periodAppointmentsAllWorkers.filter(a => (a.workerName || 'Serwisant 1') === selectedWorker);
 
-      periodAppointmentsAllWorkers.filter(a => a.status === 'completed' && !a.savedToDeviceHistory).forEach(v => {
+      periodAppointmentsAllWorkers.filter(a => {
+        if (a.status !== 'completed' || a.savedToDeviceHistory) return false;
+        const sv = (a.serviceType || '').toLowerCase();
+        return !sv.includes('monta');
+      }).forEach(v => {
         const client = enriched.find(c => c.id === v.clientId);
         const dev = client?.devices?.find(d => d.id === v.deviceId);
         allHistory.push({
@@ -2760,9 +2788,9 @@ service cloud.firestore {
           date: v.date,
           clientName: client ? client.name : 'Klient',
           clientCity: client ? client.city : '',
-          deviceModel: dev ? dev.deviceModel : (v.serviceType || 'Wizyta serwisowa'),
+          deviceModel: dev ? dev.deviceModel : (v.serviceType || 'Serwis / Przegląd'),
           technician: v.workerName || 'Serwis PP',
-          notes: `Odbyta wizyta (${v.serviceType || 'Zlecenie'}) ${v.notes ? '• Notatka: ' + v.notes : ''}`
+          notes: `Wykonano: ${v.serviceType || 'Serwis'} ${v.completionComment ? '• ' + v.completionComment : v.notes ? '• ' + v.notes : ''}`
         });
       });
 
@@ -3244,7 +3272,7 @@ service cloud.firestore {
         selectAssignedClient(defaultClient.id, false);
       } else {
         document.getElementById('select-client-target').value = '';
-        setText('assigned-client-selected-label', '-- Brak klientów w bazie --');
+        document.getElementById('search-client-for-dev').value = '';
       }
 
       renderClientDropdown();
@@ -3256,24 +3284,52 @@ service cloud.firestore {
       const c = (window.clientsData || []).find(x => x.id === clientId);
       if (!c) return;
       document.getElementById('select-client-target').value = c.id;
-      setText('assigned-client-selected-label', `👤 ${c.name} (${c.city}, ${c.street})`);
+      const inputEl = document.getElementById('search-client-for-dev');
+      if (inputEl) inputEl.value = `${c.name} (${c.city}, ${c.street})`;
       if (closeDd) document.getElementById('assigned-client-dd').classList.add('hidden');
+      renderClientDropdown();
+    }
+
+    function clearAssignedClientSearch() {
+      document.getElementById('select-client-target').value = '';
+      const inputEl = document.getElementById('search-client-for-dev');
+      if (inputEl) {
+        inputEl.value = '';
+        inputEl.focus();
+      }
+      openCustomDropdown('assigned-client-dd');
       renderClientDropdown();
     }
 
     function onAssignedTypeChange() {
       document.getElementById('assigned-dev-model').value = '';
       document.getElementById('select-catalog-target').value = '';
-      setText('assigned-catalog-selected-label', '-- Kliknij, aby wybrać model z katalogu --');
+      const catInput = document.getElementById('search-catalog-for-dev');
+      if (catInput) catInput.value = '';
+      renderCatalogDropdown();
+    }
+
+    function clearAssignedCatalogSearch() {
+      document.getElementById('select-catalog-target').value = '';
+      const catInput = document.getElementById('search-catalog-for-dev');
+      if (catInput) {
+        catInput.value = '';
+        catInput.focus();
+      }
+      openCustomDropdown('assigned-catalog-dd');
       renderCatalogDropdown();
     }
 
     function renderClientDropdown() {
-      const q = (document.getElementById('search-client-for-dev')?.value || '').toLowerCase();
-      const listEl = document.getElementById('assigned-client-dd-list');
+      const rawQ = (document.getElementById('search-client-for-dev')?.value || '').toLowerCase().trim();
       const currentId = document.getElementById('select-client-target')?.value;
+      const currentClient = (window.clientsData || []).find(c => c.id === currentId);
+      const currentLabel = currentClient ? `${currentClient.name} (${currentClient.city}, ${currentClient.street})`.toLowerCase() : '';
+      const q = rawQ === currentLabel ? '' : rawQ;
+
+      const listEl = document.getElementById('assigned-client-dd-list');
       if (!listEl) return;
-      const filtered = (window.clientsData || []).filter(c => !q || c.name.toLowerCase().includes(q) || (c.city || '').toLowerCase().includes(q) || (c.phone || '').toLowerCase().includes(q));
+      const filtered = (window.clientsData || []).filter(c => !q || c.name.toLowerCase().includes(q) || (c.city || '').toLowerCase().includes(q) || (c.street || '').toLowerCase().includes(q) || (c.phone || '').toLowerCase().includes(q));
       listEl.innerHTML = filtered.length === 0
         ? `<div class="p-2 text-zinc-400 text-center">Brak pasujących klientów</div>`
         : filtered.map(c => `
@@ -3285,7 +3341,7 @@ service cloud.firestore {
     }
 
     function renderCatalogDropdown(preCatalogId = '') {
-      const q = (document.getElementById('search-catalog-for-dev')?.value || '').toLowerCase();
+      const q = (document.getElementById('search-catalog-for-dev')?.value || '').toLowerCase().trim();
       const selectedType = document.getElementById('assigned-dev-type')?.value || 'heat_pump';
       const listEl = document.getElementById('assigned-catalog-dd-list');
       const currentCatId = preCatalogId || document.getElementById('select-catalog-target')?.value;
@@ -3305,7 +3361,8 @@ service cloud.firestore {
       const item = (window.catalogData || []).find(x => x.id === catId);
       if (!item) return;
       document.getElementById('select-catalog-target').value = item.id;
-      setText('assigned-catalog-selected-label', `🔧 ${item.brand} ${item.model} (${item.defaultWarrantyMonths || 60}m gw.)`);
+      const catInput = document.getElementById('search-catalog-for-dev');
+      if (catInput) catInput.value = `${item.brand} ${item.model} (${item.defaultWarrantyMonths || 60}m gw.)`;
       document.getElementById('assigned-dev-type').value = item.deviceType || 'heat_pump';
       document.getElementById('assigned-dev-model').value = `${item.brand} ${item.model}`.trim();
       document.getElementById('assigned-dev-warranty').value = item.defaultWarrantyMonths || 60;
@@ -3377,6 +3434,8 @@ service cloud.firestore {
       populateWorkerSelects();
       document.getElementById('visit-client-search').value = '';
       document.getElementById('visit-client-dd').classList.add('hidden');
+      if (document.getElementById('visit-device-filter-input')) document.getElementById('visit-device-filter-input').value = '';
+      if (document.getElementById('visit-new-dev-cat-search')) document.getElementById('visit-new-dev-cat-search').value = '';
 
       const defaultClient = preselectedClientId
         ? (window.clientsData || []).find(c => c.id === preselectedClientId)
@@ -3386,7 +3445,7 @@ service cloud.firestore {
         selectVisitClient(defaultClient.id, false, preselectedDeviceId);
       } else {
         document.getElementById('visit-client-select').value = '';
-        setText('visit-client-selected-label', '-- Brak klientów w bazie --');
+        document.getElementById('visit-client-search').value = '';
       }
 
       renderVisitClientDropdown();
@@ -3418,10 +3477,15 @@ service cloud.firestore {
 
     function renderModalInstallCatalog() {
       const type = document.getElementById('visit-new-dev-type')?.value || 'heat_pump';
+      const q = (document.getElementById('visit-new-dev-cat-search')?.value || '').toLowerCase().trim();
       const catSel = document.getElementById('visit-new-dev-cat');
       if (!catSel) return;
-      const items = (window.catalogData || []).filter(x => x.deviceType === type);
-      catSel.innerHTML = `<option value="">-- Wybierz model z Bazy Urządzeń --</option>` + items.map(x => `<option value="${x.id}">${x.brand} ${x.model} (${x.defaultWarrantyMonths || 60}m gw.)</option>`).join('');
+      const items = (window.catalogData || []).filter(x => x.deviceType === type && (!q || `${x.brand} ${x.model}`.toLowerCase().includes(q)));
+      catSel.innerHTML = `<option value="">-- Wybierz model z Bazy Urządzeń (${items.length}) --</option>` + items.map(x => `<option value="${x.id}">${x.brand} ${x.model} (${x.defaultWarrantyMonths || 60}m gw.)</option>`).join('');
+      if (q && items.length === 1) {
+        catSel.value = items[0].id;
+        onModalInstallCatalogPick();
+      }
     }
 
     function onModalInstallCatalogPick() {
@@ -3501,18 +3565,35 @@ service cloud.firestore {
       const c = (window.clientsData || []).find(x => x.id === clientId);
       if (!c) return;
       document.getElementById('visit-client-select').value = c.id;
-      setText('visit-client-selected-label', `👤 ${c.name} (${c.city}, ${c.street})`);
+      const searchInput = document.getElementById('visit-client-search');
+      if (searchInput) searchInput.value = `${c.name} (${c.city}, ${c.street})`;
       if (closeDd) document.getElementById('visit-client-dd').classList.add('hidden');
       renderVisitClientDropdown();
       renderVisitDeviceDropdown(preselectedDeviceId);
     }
 
+    function clearVisitClientSearch() {
+      document.getElementById('visit-client-select').value = '';
+      const searchInput = document.getElementById('visit-client-search');
+      if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+      }
+      openCustomDropdown('visit-client-dd');
+      renderVisitClientDropdown();
+      renderVisitDeviceDropdown();
+    }
+
     function renderVisitClientDropdown() {
-      const q = (document.getElementById('visit-client-search')?.value || '').toLowerCase();
-      const listEl = document.getElementById('visit-client-dd-list');
+      const rawQ = (document.getElementById('visit-client-search')?.value || '').toLowerCase().trim();
       const currentId = document.getElementById('visit-client-select')?.value;
+      const currentClient = (window.clientsData || []).find(c => c.id === currentId);
+      const currentLabel = currentClient ? `${currentClient.name} (${currentClient.city}, ${currentClient.street})`.toLowerCase() : '';
+      const q = rawQ === currentLabel ? '' : rawQ;
+
+      const listEl = document.getElementById('visit-client-dd-list');
       if (!listEl) return;
-      const filtered = (window.clientsData || []).filter(c => !q || c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q) || (c.street || '').toLowerCase().includes(q));
+      const filtered = (window.clientsData || []).filter(c => !q || c.name.toLowerCase().includes(q) || (c.city || '').toLowerCase().includes(q) || (c.street || '').toLowerCase().includes(q) || (c.phone || '').toLowerCase().includes(q));
       listEl.innerHTML = filtered.length === 0
         ? `<div class="p-2 text-zinc-400 text-center">Brak pasujących klientów</div>`
         : filtered.map(c => `
@@ -3525,12 +3606,14 @@ service cloud.firestore {
 
     function renderVisitDeviceDropdown(preselectedDeviceId = '') {
       const clientId = document.getElementById('visit-client-select')?.value;
+      const devFilter = (document.getElementById('visit-device-filter-input')?.value || '').toLowerCase().trim();
       const devSel = document.getElementById('visit-device-select');
       if (!devSel) return;
       const client = (window.clientsData || []).find(c => c.id === clientId);
-      const devs = client?.devices || [];
+      const allDevs = client?.devices || [];
+      const devs = allDevs.filter(d => !devFilter || `${d.deviceModel} ${d.serialNumber || ''} ${getDeviceInfo(d.deviceType).short}`.toLowerCase().includes(devFilter));
       devSel.innerHTML = devs.length === 0
-        ? `<option value="">Ogólne (Brak przypisanego urządzenia)</option>`
+        ? `<option value="">Ogólne (Brak pasującego urządzenia)</option>`
         : devs.map((d, idx) => {
           const isSelected = preselectedDeviceId ? d.id === preselectedDeviceId : idx === 0;
           return `<option value="${d.id}" ${isSelected ? 'selected' : ''}>🔧 ${getDeviceInfo(d.deviceType).short}: ${d.deviceModel}${d.serialNumber ? ` (S/N: ${d.serialNumber})` : ''}</option>`;
@@ -3604,21 +3687,26 @@ service cloud.firestore {
       ` : '';
 
       document.getElementById('modal-insp-body').innerHTML = switchAllBanner + targetDevices.map(d => {
-        const deviceVisits = (window.appointmentsData || []).filter(v => v.clientId === c.id && (!v.deviceId || v.deviceId === d.id));
+        const completedDeviceVisits = (window.appointmentsData || []).filter(v => {
+          if (v.clientId !== c.id || v.status !== 'completed' || v.savedToDeviceHistory) return false;
+          if (v.deviceId && v.deviceId !== d.id) return false;
+          const sv = (v.serviceType || '').toLowerCase();
+          return !sv.includes('monta');
+        });
         const combinedActions = [
-          ...(d.inspectionHistory || []).map(h => ({
+          ...(d.inspectionHistory || []).filter(h => !(h.actionType || '').toLowerCase().includes('monta')).map(h => ({
             date: h.date,
             technician: h.technician || 'Serwis PP',
-            type: h.actionType || 'Przegląd / Wpis w karcie',
+            type: h.actionType || 'Przegląd / Serwis',
             notes: h.notes || '',
             badgeColor: 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
           })),
-          ...deviceVisits.filter(v => !v.savedToDeviceHistory).map(v => ({
+          ...completedDeviceVisits.map(v => ({
             date: v.date,
             technician: v.workerName || 'Serwis PP',
-            type: `${v.serviceType || 'Zlecenie'} (${v.status === 'completed' ? 'Zamknięte' : v.status === 'canceled' ? 'Anulowane' : 'Zaplanowane na ' + v.time})`,
-            notes: v.completionComment || v.cancelReason || v.notes || 'Brak dodatkowego komentarza',
-            badgeColor: v.status === 'completed' ? 'bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300' : v.status === 'canceled' ? 'bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300' : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
+            type: `${v.serviceType || 'Serwis / Przegląd'} (Wykonane)`,
+            notes: v.completionComment || v.notes || 'Wykonano zlecenie serwisowe',
+            badgeColor: 'bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300'
           }))
         ].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
@@ -3826,13 +3914,7 @@ service cloud.firestore {
           nextInspectionDate: addMonths(installDate, 12),
           inspectionIntervalMonths: 12,
           remindersCanceled: false,
-          inspectionHistory: [{
-            id: `h_install_${Date.now()}`,
-            date: installDate,
-            actionType: 'Montaż i uruchomienie',
-            technician: visit.workerName || 'Ekipa Montażowa',
-            notes: `${comment}${deviceNotes ? ' • Miejsce montażu: ' + deviceNotes : ''}`
-          }]
+          inspectionHistory: []
         };
         client.devices = [...(client.devices || []), newDevice];
         visit.deviceId = createdDevId;
