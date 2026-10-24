@@ -34,6 +34,8 @@
   <!-- Firebase SDK (Compat) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <!-- html2pdf.js do generowania PDF z protokołów -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     .leaflet-container { font-family: 'Inter', sans-serif; z-index: 10; }
     body { transition: background-color 0.2s ease, color 0.2s ease; }
@@ -51,6 +53,10 @@
       #map-container {
         height: 350px !important;
       }
+    }
+    .sig-canvas {
+      touch-action: none;
+      cursor: crosshair;
     }
   </style>
 </head>
@@ -1175,8 +1181,137 @@
           <p class="text-[10px] text-amber-800 dark:text-amber-300 font-semibold">Po zatwierdzeniu urządzenie zostanie automatycznie dopisane do konta klienta wraz z gwarancją i terminem pierwszego przeglądu za rok.</p>
         </div>
 
+        <!-- SEKCJA PROTOKOŁU CYFROWEGO (DLA KLIMATYZACJI: MONTAŻ / PRZEGLĄD) -->
+        <div id="close-visit-protocol-section" class="hidden p-3.5 rounded-xl bg-sky-50/90 dark:bg-sky-950/40 border border-sky-300 dark:border-sky-800 space-y-3">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <label class="flex items-center gap-2 cursor-pointer text-xs font-extrabold text-sky-950 dark:text-sky-200">
+              <input type="checkbox" id="close-visit-attach-protocol" onchange="toggleProtocolFormInCloseModal(this.checked)" checked class="rounded text-sky-600 w-4 h-4">
+              <span id="close-visit-protocol-title">📄 Wystaw cyfrowy protokół z podpisem klienta</span>
+            </label>
+            <span class="px-2 py-0.5 rounded bg-sky-600 text-white text-[10px] font-extrabold uppercase">PDF + Historia</span>
+          </div>
+
+          <div id="close-visit-protocol-fields" class="space-y-3 pt-2 border-t border-sky-200 dark:border-sky-800 text-xs">
+            <input type="hidden" id="proto-form-kind" value="ac_inspection">
+
+            <!-- POLA SPECYFICZNE DLA KARTY MONTAŻU KLIMATYZACJI -->
+            <div id="proto-fields-ac-install" class="hidden space-y-2.5">
+              <div class="font-extrabold text-[11px] text-sky-800 dark:text-sky-300 uppercase">Parametry z Karty Montażu Klimatyzacji:</div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Nr fabryczny jedn. wewnętrznej</label>
+                  <input type="text" id="proto-inst-sn-in" placeholder="S/N jedn. wewnętrznej" class="w-full px-2.5 py-1.5 rounded-lg border border-sky-300 dark:border-sky-700 bg-white dark:bg-zinc-900 font-mono text-xs">
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Nr fabryczny jedn. zewnętrznej</label>
+                  <input type="text" id="proto-inst-sn-out" placeholder="S/N jedn. zewnętrznej" class="w-full px-2.5 py-1.5 rounded-lg border border-sky-300 dark:border-sky-700 bg-white dark:bg-zinc-900 font-mono text-xs">
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Rodzaj i ilość czynnika chłodniczego</label>
+                  <input type="text" id="proto-inst-refrigerant" value="R32" placeholder="np. R32 - 0,75 kg" class="w-full px-2.5 py-1.5 rounded-lg border border-sky-300 dark:border-sky-700 bg-white dark:bg-zinc-900 text-xs font-semibold">
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Podłączenie elektryczne</label>
+                  <input type="text" id="proto-inst-electric" value="Do istniejącej instalacji" class="w-full px-2.5 py-1.5 rounded-lg border border-sky-300 dark:border-sky-700 bg-white dark:bg-zinc-900 text-xs">
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Miejsce montażu jedn. wewnętrznej</label>
+                  <input type="text" id="proto-inst-loc-in" placeholder="np. Salon, sypialnia..." class="w-full px-2.5 py-1.5 rounded-lg border border-sky-300 dark:border-sky-700 bg-white dark:bg-zinc-900 text-xs">
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Miejsce montażu jedn. zewnętrznej</label>
+                  <input type="text" id="proto-inst-loc-out" placeholder="np. Elewacja, balkon..." class="w-full px-2.5 py-1.5 rounded-lg border border-sky-300 dark:border-sky-700 bg-white dark:bg-zinc-900 text-xs">
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Odprowadzenie skroplin</label>
+                  <input type="text" id="proto-inst-condensate" value="Grawitacyjnie na zewnątrz" class="w-full px-2.5 py-1.5 rounded-lg border border-sky-300 dark:border-sky-700 bg-white dark:bg-zinc-900 text-xs">
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Próba szczelności i uruchomienie</label>
+                  <input type="text" id="proto-inst-tests" value="Pozytywna / Urządzenie sprawne" class="w-full px-2.5 py-1.5 rounded-lg border border-sky-300 dark:border-sky-700 bg-white dark:bg-zinc-900 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                </div>
+              </div>
+            </div>
+
+            <!-- POLA SPECYFICZNE DLA PROTOKOŁU PRZEGLĄDU KLIMATYZATORA -->
+            <div id="proto-fields-ac-inspection" class="hidden space-y-2.5">
+              <div class="font-extrabold text-[11px] text-sky-800 dark:text-sky-300 uppercase">Lista kontrolna Przeglądu Klimatyzatora:</div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-white dark:bg-zinc-900 p-2.5 rounded-xl border border-sky-200 dark:border-sky-800">
+                <label class="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold">
+                  <input type="checkbox" id="proto-chk-1" checked class="rounded text-emerald-600">
+                  <span>1. Czyszczenie filtrów j. wewn.</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold">
+                  <input type="checkbox" id="proto-chk-2" checked class="rounded text-emerald-600">
+                  <span>2. Czyszczenie i dezynfekcja parownika</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold">
+                  <input type="checkbox" id="proto-chk-3" checked class="rounded text-emerald-600">
+                  <span>3. Czyszczenie skraplacza j. zewn.</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold">
+                  <input type="checkbox" id="proto-chk-4" checked class="rounded text-emerald-600">
+                  <span>4. Drożność odpływu skroplin</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold">
+                  <input type="checkbox" id="proto-chk-5" checked class="rounded text-emerald-600">
+                  <span>5. Szczelność układu chłodniczego</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold">
+                  <input type="checkbox" id="proto-chk-6" checked class="rounded text-emerald-600">
+                  <span>6. Ciśnienie pracy / temp. nawiewu</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold">
+                  <input type="checkbox" id="proto-chk-7" checked class="rounded text-emerald-600">
+                  <span>7. Kontrola połączeń elektrycznych</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold">
+                  <input type="checkbox" id="proto-chk-8" checked class="rounded text-emerald-600">
+                  <span>8. Stan mocowań i wibroizolacji</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold sm:col-span-2">
+                  <input type="checkbox" id="proto-chk-9" checked class="rounded text-emerald-600">
+                  <span>9. Test poprawnego działania we wszystkich trybach</span>
+                </label>
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Narzędzie pomiarowe / Nr certyfikatu F-GAZ</label>
+                <input type="text" id="proto-insp-fgaz" value="Wykrywacz nieszczelności / FGAZ-P/27/0109/22" class="w-full px-2.5 py-1.5 rounded-lg border border-sky-300 dark:border-sky-700 bg-white dark:bg-zinc-900 text-xs">
+              </div>
+            </div>
+
+            <!-- PODPISY DOTYKOWE (PALCEM NA EKRANIE TELEFONU LUB MYSZKĄ) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div class="space-y-1">
+                <div class="flex justify-between items-center">
+                  <span class="text-[10px] font-extrabold uppercase text-zinc-600 dark:text-zinc-300">✍️ Podpis Serwisanta (palcem)</span>
+                  <button type="button" onclick="clearSignaturePad('sig-canvas-tech')" class="text-[10px] font-bold text-rose-600 hover:underline">Wyczyść</button>
+                </div>
+                <div class="bg-white rounded-xl border-2 border-dashed border-sky-400 overflow-hidden">
+                  <canvas id="sig-canvas-tech" width="280" height="110" class="sig-canvas w-full h-[100px] block bg-white"></canvas>
+                </div>
+              </div>
+              <div class="space-y-1">
+                <div class="flex justify-between items-center">
+                  <span class="text-[10px] font-extrabold uppercase text-emerald-700 dark:text-emerald-400">✍️ Podpis Klienta (palcem)</span>
+                  <button type="button" onclick="clearSignaturePad('sig-canvas-client')" class="text-[10px] font-bold text-rose-600 hover:underline">Wyczyść</button>
+                </div>
+                <div class="bg-white rounded-xl border-2 border-dashed border-emerald-500 overflow-hidden">
+                  <canvas id="sig-canvas-client" width="280" height="110" class="sig-canvas w-full h-[100px] block bg-white"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div>
-          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Komentarz powykonawczy (zostanie zapisany w historii urządzenia)</label>
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Komentarz powykonawczy / Uwagi (zostanie zapisany w historii i na protokole)</label>
           <textarea id="close-visit-comment" rows="3" required placeholder="Opisz wykonane czynności serwisowe / przeglądowe..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm outline-none focus:border-emerald-500"></textarea>
         </div>
         <label id="close-visit-next-insp-label" class="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 cursor-pointer text-xs font-bold text-emerald-900 dark:text-emerald-300">
@@ -1184,173 +1319,37 @@
           <span>Zaktualizuj również datę kolejnego przeglądu okresowego (+ interwał urządzenia)</span>
         </label>
         <div class="flex justify-end gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-          <button type="button" onclick="closeModal('modal-close-visit')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Anuluj</button>
-          <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm">Zatwierdź i zamknij zlecenie</button>
+          <button type="button" onclick="closeModal('modal-confirm-action')" class="px-3.5 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Anuluj</button>
+          <button type="button" onclick="executeConfirmedAction()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-extrabold shadow-sm">Tak, wykonaj</button>
         </div>
-      </form>
     </div>
   </div>
 
-  <!-- MODAL: PASSWORD FOR CSV EXPORT / ADMIN AUTH -->
-  <div id="modal-export-password" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-sm w-full shadow-2xl p-5 space-y-4 border border-zinc-200 dark:border-zinc-800">
-      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
+  <!-- MODAL: PODGLĄD I POBIERANIE PROTOKOŁU PDF -->
+  <div id="modal-protocol-preview" class="fixed inset-0 z-[80] bg-zinc-950/80 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-4xl w-full shadow-2xl p-4 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800 max-h-[95vh] flex flex-col">
+      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3 shrink-0 flex-wrap gap-2">
         <div class="flex items-center gap-2">
-          <i data-lucide="lock" class="w-4 h-4 text-emerald-600"></i>
-          <h3 id="auth-modal-title" class="text-sm font-extrabold">Autoryzacja hasłem</h3>
-        </div>
-        <button onclick="closeModal('modal-export-password')"><i data-lucide="x" class="w-4 h-4"></i></button>
-      </div>
-      <form onsubmit="confirmExportPassword(event)" class="space-y-3">
-        <p id="auth-modal-desc" class="text-xs text-zinc-500 dark:text-zinc-400">Podaj hasło autoryzacyjne, aby odblokować operację:</p>
-        <input type="password" id="export-password-input" required placeholder="Wpisz hasło..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-bold tracking-widest text-center outline-none focus:border-emerald-500">
-        <p id="export-password-error" class="text-xs text-rose-600 font-bold text-center hidden">Nieprawidłowe hasło!</p>
-        <div class="flex justify-end gap-2 pt-2">
-          <button type="button" onclick="closeModal('modal-export-password')" class="px-3.5 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Anuluj</button>
-          <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold">Odblokuj</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL: CSV IMPORT PREVIEW -->
-  <div id="modal-csv-preview" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-4xl w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800 max-h-[92vh] flex flex-col">
-      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3 shrink-0">
-        <div class="flex items-center gap-2">
-          <i data-lucide="file-spreadsheet" class="w-5 h-5 text-emerald-600"></i>
+          <i data-lucide="file-check-2" class="w-5 h-5 text-emerald-600"></i>
           <div>
-            <h3 class="text-base font-extrabold">Podgląd importu klientów z pliku CSV</h3>
-            <p id="csv-preview-subtitle" class="text-xs text-zinc-500 dark:text-zinc-400">Weryfikacja danych przed dopisaniem do bazy (obecni klienci nie zostaną usunięci)</p>
+            <h3 id="protocol-preview-modal-title" class="text-sm sm:text-base font-extrabold">Podgląd Protokołu Cyfrowego</h3>
+            <p class="text-[11px] text-zinc-500">Dokument zapisany w historii urządzenia — gotowy do pobrania w PDF lub wydruku</p>
           </div>
         </div>
-        <button onclick="closeModal('modal-csv-preview')"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-
-      <div id="csv-preview-stats" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 shrink-0"></div>
-
-      <div class="overflow-y-auto flex-1 border border-zinc-200 dark:border-zinc-800 rounded-xl">
-        <table class="w-full text-left border-collapse text-xs">
-          <thead class="sticky top-0 bg-zinc-900 dark:bg-zinc-800 text-zinc-100 text-[10px] uppercase font-bold">
-            <tr>
-              <th class="py-2.5 px-3">Klient</th>
-              <th class="py-2.5 px-3">Telefon</th>
-              <th class="py-2.5 px-3">Adres i Pinezka GPS</th>
-              <th class="py-2.5 px-3">Urządzenia do przypisania</th>
-              <th class="py-2.5 px-3">Tryb zapisu</th>
-            </tr>
-          </thead>
-          <tbody id="csv-preview-tbody" class="divide-y divide-zinc-200 dark:divide-zinc-800"></tbody>
-        </table>
-      </div>
-
-      <div id="csv-geocode-progress-box" class="hidden p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 text-xs space-y-1.5 shrink-0">
-        <div class="flex justify-between items-center font-extrabold text-emerald-900 dark:text-emerald-200">
-          <span id="csv-geocode-status-txt">📍 Automatyczne ustawianie pinezek na mapie wg adresów...</span>
-          <span id="csv-geocode-counter">0 / 0</span>
-        </div>
-        <div class="w-full h-2 bg-emerald-200/70 dark:bg-emerald-900 rounded-full overflow-hidden">
-          <div id="csv-geocode-bar" class="h-full bg-emerald-600 transition-all duration-300" style="width: 0%"></div>
-        </div>
-      </div>
-
-      <div class="flex justify-between items-center gap-2 pt-3 border-t border-zinc-200 dark:border-zinc-800 shrink-0 flex-wrap">
-        <span class="text-[11px] text-zinc-500">💡 Import obsługuje niepełne wiersze oraz automatycznie ustawia pinezki GPS dla wpisanych adresów.</span>
-        <div class="flex gap-2">
-          <button type="button" id="csv-cancel-btn" onclick="closeModal('modal-csv-preview')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Anuluj</button>
-          <button type="button" id="csv-confirm-btn" onclick="confirmCsvImport()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm">+ Dopisz do bazy klientów</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: WORKERS MANAGEMENT -->
-  <div id="modal-workers" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-md w-full shadow-2xl p-5 space-y-4 border border-zinc-200 dark:border-zinc-800">
-      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
-        <h3 class="text-base font-extrabold">Ekipy i serwisanci</h3>
-        <button onclick="closeModal('modal-workers')"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-      <form onsubmit="handleAddWorker(event)" class="flex gap-2">
-        <input type="text" id="new-worker-name" required placeholder="Imię / nazwa ekipy (np. Tomek)" class="flex-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
-        <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold">+ Dodaj</button>
-      </form>
-      <div id="workers-list-container" class="space-y-2 max-h-60 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800"></div>
-    </div>
-  </div>
-
-  <!-- MODAL: FIREBASE CLOUD CONFIG -->
-  <div id="modal-firebase" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-2xl w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800 max-h-[92vh] overflow-y-auto">
-      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
         <div class="flex items-center gap-2">
-          <i data-lucide="cloud" class="w-5 h-5 text-emerald-600"></i>
-          <h3 class="text-base font-extrabold">Konfiguracja i Diagnostyka Bazy Online (Firebase)</h3>
-        </div>
-        <button onclick="closeModal('modal-firebase')"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-
-      <div id="fb-diagnostic-box" class="p-3.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-xs space-y-1.5">
-        <div class="font-extrabold flex items-center justify-between">
-          <span>Status połączenia:</span>
-          <span id="fb-diag-badge" class="px-2 py-0.5 rounded bg-zinc-300 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold">Nie przetestowano</span>
-        </div>
-        <p id="fb-diag-message" class="text-zinc-600 dark:text-zinc-400 leading-relaxed">Wpisz dane projektu poniżej i kliknij „Połącz i Przetestuj Zapis”.</p>
-      </div>
-
-      <div class="p-4 rounded-xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800/80 text-xs space-y-2">
-        <div class="font-extrabold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
-          <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i> Wymagane reguły Firestore w konsoli Firebase (Rules):
-        </div>
-        <pre class="p-2.5 rounded-lg bg-zinc-900 text-emerald-400 font-mono text-[11px] overflow-x-auto select-all">rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
-    }
-  }
-}</pre>
-      </div>
-
-      <div class="p-3.5 rounded-xl bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 space-y-2.5">
-        <div class="text-xs font-extrabold text-zinc-800 dark:text-zinc-200">Szybki kreator (Wpisz 2 pola z konsoli Firebase):</div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <div>
-            <label class="block text-[11px] font-bold text-zinc-500 mb-1">Identyfikator projektu (Project ID)</label>
-            <input type="text" id="fb-quick-project-id" oninput="buildConfigFromQuickFields()" placeholder="np. pp-planer-12345" class="w-full px-3 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs outline-none">
-          </div>
-          <div>
-            <label class="block text-[11px] font-bold text-zinc-500 mb-1">Klucz API sieci Web (apiKey)</label>
-            <input type="text" id="fb-quick-api-key" oninput="buildConfigFromQuickFields()" placeholder="np. AIzaSyB..." class="w-full px-3 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs outline-none">
-          </div>
+          <button type="button" onclick="downloadCurrentProtocolPDF()" id="btn-download-protocol-pdf" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition">
+            <i data-lucide="download" class="w-4 h-4"></i> Pobierz PDF
+          </button>
+          <button type="button" onclick="printCurrentProtocol()" class="px-3 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
+            <i data-lucide="printer" class="w-4 h-4"></i> Drukuj
+          </button>
+          <button type="button" onclick="closeModal('modal-protocol-preview')" class="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
       </div>
 
-      <div>
-        <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Pełna konfiguracja JSON</label>
-        <textarea id="firebase-config-input" rows="4" placeholder='{"apiKey": "...", "projectId": "..."}' class="w-full p-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-mono outline-none"></textarea>
-      </div>
-      <div class="flex flex-wrap justify-between items-center gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-        <button type="button" onclick="disconnectFirebase()" class="px-3 py-2 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-bold">Rozłącz chmurę</button>
-        <div class="flex gap-2">
-          <button type="button" onclick="closeModal('modal-firebase')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Zamknij</button>
-          <button type="button" onclick="saveAndConnectFirebase()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-sm">Połącz i Przetestuj</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: CONFIRM ACTION -->
-  <div id="modal-confirm-action" class="fixed inset-0 z-[60] bg-zinc-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-sm w-full shadow-2xl p-5 space-y-4 border border-zinc-200 dark:border-zinc-800">
-      <div class="flex items-center gap-2.5 text-amber-600 dark:text-amber-400">
-        <i data-lucide="alert-triangle" class="w-5 h-5 shrink-0"></i>
-        <h3 id="confirm-action-title" class="text-sm font-extrabold text-zinc-900 dark:text-white">Potwierdzenie akcji</h3>
-      </div>
-      <p id="confirm-action-msg" class="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">Czy na pewno chcesz wykonać tę operację?</p>
-      <div class="flex justify-end gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-        <button type="button" onclick="closeModal('modal-confirm-action')" class="px-3.5 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Anuluj</button>
-        <button type="button" onclick="executeConfirmedAction()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-extrabold shadow-sm">Tak, wykonaj</button>
+      <!-- Kontener arkusza A4 protokołu -->
+      <div class="overflow-y-auto flex-1 bg-zinc-200/70 dark:bg-zinc-950 p-2 sm:p-6 rounded-xl border border-zinc-300 dark:border-zinc-800">
+        <div id="protocol-printable-area" class="bg-white text-zinc-900 mx-auto shadow-lg p-5 sm:p-8 rounded-sm max-w-[794px] text-xs leading-relaxed font-sans"></div>
       </div>
     </div>
   </div>
@@ -2083,6 +2082,7 @@ service cloud.firestore {
                       ${dev ? `<div class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5">🔧 ${dev.deviceModel} ${dev.serialNumber ? `<span class="font-mono text-zinc-500">(S/N: ${dev.serialNumber})</span>` : ''}</div>` : ''}
                       ${v.notes ? `<div class="text-[11px] text-amber-700 dark:text-amber-400 font-medium mt-0.5">📝 Notatka: ${v.notes}</div>` : ''}
                       ${v.completionComment ? `<div class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold mt-0.5">✅ Wykonano: ${v.completionComment}</div>` : ''}
+                      ${v.protocolData ? `<div class="mt-1"><button onclick="openProtocolPreviewByVisit('${v.id}')" class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-extrabold inline-flex items-center gap-1 shadow-sm"><i data-lucide="file-text" class="w-3 h-3"></i> Podgląd protokołu / PDF</button></div>` : ''}
                       ${v.cancelReason ? `<div class="text-[11px] text-rose-600 dark:text-rose-400 font-bold mt-0.5">❌ Powód anulowania: ${v.cancelReason}</div>` : ''}
                       ${client ? `<div class="text-xs text-zinc-600 dark:text-zinc-400 mt-1">📍 ${client.city}, ${client.street} • <a href="tel:${client.phone}" class="text-emerald-600 dark:text-emerald-400 font-bold underline">📞 ${client.phone}</a></div>` : ''}
                     </div>
@@ -3023,7 +3023,8 @@ service cloud.firestore {
           deviceModel: dev ? dev.deviceModel : (v.plannedInstallModel || v.serviceType || 'Serwis / Przegląd'),
           technician: v.workerName || 'Serwis PP',
           rawNotes: v.completionComment || v.notes || '',
-          notes: `Wykonano: ${v.serviceType || 'Serwis'} ${v.completionComment ? '• ' + v.completionComment : v.notes ? '• ' + v.notes : ''}`
+          notes: `Wykonano: ${v.serviceType || 'Serwis'} ${v.completionComment ? '• ' + v.completionComment : v.notes ? '• ' + v.notes : ''}`,
+          protocolData: v.protocolData || null
         });
       });
 
@@ -3144,7 +3145,14 @@ service cloud.firestore {
             <td class="py-3 px-4 font-bold text-zinc-900 dark:text-white">${h.clientName} <span class="text-xs text-zinc-400 font-normal">(${h.clientCity})</span></td>
             <td class="py-3 px-4 text-zinc-700 dark:text-zinc-300 font-medium">${h.deviceModel}</td>
             <td class="py-3 px-4 text-zinc-600 dark:text-zinc-400 font-semibold whitespace-nowrap">👷 ${h.technician || 'Serwis PP'}</td>
-            <td class="py-3 px-4 text-zinc-600 dark:text-zinc-300">${h.notes}</td>
+            <td class="py-3 px-4 text-zinc-600 dark:text-zinc-300">
+              <div>${h.notes}</div>
+              ${h.protocolData ? `
+                <button onclick="openProtocolPreviewModal('${h.sourceType}', '${h.clientId}', '${h.deviceId}', '${h.itemId}')" class="mt-1 px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-extrabold inline-flex items-center gap-1 shadow-sm">
+                  <i data-lucide="file-check-2" class="w-3.5 h-3.5"></i> Protokół / Pobierz PDF
+                </button>
+              ` : ''}
+            </td>
             <td class="py-3 px-4 text-right">
               <button onclick="openEditHistoryNoteModal('${h.sourceType}', '${h.clientId}', '${h.deviceId}', '${h.itemId}')" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs font-bold inline-flex items-center gap-1" title="Edytuj notatkę w historii (wymaga hasła)">
                 <i data-lucide="lock" class="w-3 h-3 text-emerald-600"></i> Edytuj
@@ -3984,6 +3992,7 @@ service cloud.firestore {
               technician: h.technician || 'Serwis PP',
               type: h.actionType || 'Przegląd / Serwis',
               notes: h.notes || '',
+              protocolData: h.protocolData || null,
               badgeColor: (h.actionType || '').toLowerCase().includes('monta')
                 ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
                 : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
@@ -3998,6 +4007,7 @@ service cloud.firestore {
             technician: v.workerName || 'Serwis PP',
             type: `${v.serviceType || 'Serwis / Przegląd'} (Wykonane)`,
             notes: v.completionComment || v.notes || 'Wykonano zlecenie serwisowe',
+            protocolData: v.protocolData || null,
             badgeColor: 'bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300'
           }))
         ].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
@@ -4039,8 +4049,13 @@ service cloud.firestore {
                 <div class="bg-white dark:bg-zinc-900 p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 space-y-1">
                   <div class="flex justify-between items-center flex-wrap gap-1">
                     <span class="font-extrabold">📅 ${formatDatePL(act.date)} • 👷 ${act.technician}</span>
-                    <div class="flex items-center gap-1.5">
+                    <div class="flex items-center gap-1.5 flex-wrap">
                       <span class="text-[10px] font-extrabold px-2 py-0.5 rounded ${act.badgeColor}">${act.type}</span>
+                      ${act.protocolData ? `
+                        <button onclick="openProtocolPreviewModal('${act.sourceType}', '${act.clientId}', '${act.deviceId}', '${act.itemId}')" class="px-2 py-0.5 bg-sky-600 hover:bg-sky-500 text-white rounded text-[10px] font-extrabold inline-flex items-center gap-1 shadow-sm">
+                          <i data-lucide="file-text" class="w-3 h-3"></i> Protokół PDF
+                        </button>
+                      ` : ''}
                       <button onclick="openEditHistoryNoteModal('${act.sourceType}', '${act.clientId}', '${act.deviceId}', '${act.itemId}')" class="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 rounded text-[10px] font-bold inline-flex items-center gap-1" title="Edytuj ten wpis (wymaga hasła)">
                         <i data-lucide="lock" class="w-2.5 h-2.5 text-emerald-600"></i> Edytuj
                       </button>
@@ -4237,6 +4252,7 @@ service cloud.firestore {
         if (document.getElementById('close-install-dev-notes')) {
           document.getElementById('close-install-dev-notes').value = visit.plannedInstallDeviceNotes || visit.notes || '';
         }
+        document.getElementById('close-install-type').onchange = () => refreshProtocolVisibilityInCloseModal(visit);
       } else {
         document.getElementById('close-visit-update-next-insp').checked = (visit.serviceType || '').toLowerCase().includes('przegl');
       }
@@ -4247,8 +4263,460 @@ service cloud.firestore {
         <div class="text-zinc-500">👷 Wykonawca: <strong>${visit.workerName || 'Serwis PP'}</strong> • Data: <strong>${formatDatePL(visit.date)}</strong></div>
       `;
 
+      refreshProtocolVisibilityInCloseModal(visit);
+
       openModal('modal-close-visit');
-      setTimeout(() => document.getElementById(isMontaz ? 'close-install-serial' : 'close-visit-comment')?.focus(), 80);
+      setTimeout(() => {
+        initSignaturePads();
+        document.getElementById(isMontaz ? 'close-install-serial' : 'close-visit-comment')?.focus();
+      }, 100);
+    }
+
+    /* ==========================================================================
+       10B. OBSŁUGA CYFROWYCH PROTOKOŁÓW, PODPISÓW DOTYKOWYCH I PDF
+       ========================================================================== */
+    const signaturePadsState = {};
+    let currentPreviewProtocolObj = null;
+
+    function initSignaturePads() {
+      ['sig-canvas-tech', 'sig-canvas-client'].forEach(canvasId => {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2.2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        if (signaturePadsState[canvasId]?.initialized) {
+          clearSignaturePad(canvasId);
+          return;
+        }
+
+        const state = { drawing: false, hasInk: false, initialized: true };
+        signaturePadsState[canvasId] = state;
+
+        const getPos = e => {
+          const rect = canvas.getBoundingClientRect();
+          const scaleX = canvas.width / rect.width;
+          const scaleY = canvas.height / rect.height;
+          const touch = e.touches ? e.touches[0] : e;
+          return {
+            x: (touch.clientX - rect.left) * scaleX,
+            y: (touch.clientY - rect.top) * scaleY
+          };
+        };
+
+        const startDraw = e => {
+          e.preventDefault();
+          state.drawing = true;
+          state.hasInk = true;
+          const p = getPos(e);
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+        };
+
+        const moveDraw = e => {
+          if (!state.drawing) return;
+          e.preventDefault();
+          const p = getPos(e);
+          ctx.lineTo(p.x, p.y);
+          ctx.stroke();
+        };
+
+        const endDraw = e => {
+          if (!state.drawing) return;
+          e.preventDefault();
+          state.drawing = false;
+        };
+
+        canvas.addEventListener('mousedown', startDraw);
+        canvas.addEventListener('mousemove', moveDraw);
+        window.addEventListener('mouseup', endDraw);
+
+        canvas.addEventListener('touchstart', startDraw, { passive: false });
+        canvas.addEventListener('touchmove', moveDraw, { passive: false });
+        canvas.addEventListener('touchend', endDraw);
+      });
+    }
+
+    function clearSignaturePad(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (signaturePadsState[canvasId]) signaturePadsState[canvasId].hasInk = false;
+    }
+
+    function getSignatureDataUrl(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas || !signaturePadsState[canvasId]?.hasInk) return '';
+      return canvas.toDataURL('image/png');
+    }
+
+    function toggleProtocolFormInCloseModal(checked) {
+      document.getElementById('close-visit-protocol-fields')?.classList.toggle('hidden', !checked);
+    }
+
+    function refreshProtocolVisibilityInCloseModal(visit) {
+      if (!visit) return;
+      const client = (window.clientsData || []).find(c => c.id === visit.clientId);
+      const dev = client?.devices?.find(d => d.id === visit.deviceId) || client?.devices?.[0];
+      const isMontaz = (visit.serviceType || '').toLowerCase().includes('monta');
+
+      const currentDevType = isMontaz
+        ? (document.getElementById('close-install-type')?.value || visit.plannedInstallType || 'heat_pump')
+        : (dev?.deviceType || 'heat_pump');
+
+      const sectionEl = document.getElementById('close-visit-protocol-section');
+      const installFieldsEl = document.getElementById('proto-fields-ac-install');
+      const inspFieldsEl = document.getElementById('proto-fields-ac-inspection');
+      const attachCheckbox = document.getElementById('close-visit-attach-protocol');
+      const kindInput = document.getElementById('proto-form-kind');
+
+      // Obecnie wdrożone wzory protokołów: Montaż Klimatyzacji (ac) oraz Przegląd Klimatyzatora (ac)
+      if (currentDevType === 'ac') {
+        sectionEl?.classList.remove('hidden');
+        if (attachCheckbox) attachCheckbox.checked = true;
+        toggleProtocolFormInCloseModal(true);
+
+        if (isMontaz) {
+          kindInput.value = 'ac_install';
+          setText('close-visit-protocol-title', '📄 Wystaw Kartę Montażu Klimatyzacji (z podpisem klienta)');
+          installFieldsEl?.classList.remove('hidden');
+          inspFieldsEl?.classList.add('hidden');
+
+          document.getElementById('proto-inst-sn-in').value = '';
+          document.getElementById('proto-inst-sn-out').value = '';
+          document.getElementById('proto-inst-refrigerant').value = 'R32';
+          document.getElementById('proto-inst-loc-in').value = visit.plannedInstallDeviceNotes || '';
+          document.getElementById('proto-inst-loc-out').value = 'Na zewnątrz budynku';
+        } else {
+          kindInput.value = 'ac_inspection';
+          setText('close-visit-protocol-title', '📄 Wystaw Protokół Przeglądu Klimatyzatora (z podpisem klienta)');
+          installFieldsEl?.classList.add('hidden');
+          inspFieldsEl?.classList.remove('hidden');
+          for (let i = 1; i <= 9; i++) {
+            const cb = document.getElementById(`proto-chk-${i}`);
+            if (cb) cb.checked = true;
+          }
+        }
+      } else {
+        sectionEl?.classList.add('hidden');
+        if (attachCheckbox) attachCheckbox.checked = false;
+      }
+    }
+
+    function buildProtocolDataFromModal(visit, client, deviceModel, serialNumber, warrantyMonths, deviceNotes, comment) {
+      const attach = document.getElementById('close-visit-attach-protocol')?.checked;
+      const sectionHidden = document.getElementById('close-visit-protocol-section')?.classList.contains('hidden');
+      if (!attach || sectionHidden) return null;
+
+      const kind = document.getElementById('proto-form-kind')?.value || 'ac_inspection';
+      const dateStr = visit.date || toYMD(new Date());
+      const techSig = getSignatureDataUrl('sig-canvas-tech');
+      const clientSig = getSignatureDataUrl('sig-canvas-client');
+
+      const baseProtocol = {
+        id: 'prot_' + Date.now(),
+        kind,
+        createdAt: new Date().toISOString(),
+        date: dateStr,
+        technician: visit.workerName || 'Paweł Płócienniczak',
+        clientName: client?.name || 'Klient',
+        clientNip: client?.nip || '',
+        clientAddress: client ? `${client.postalCode ? client.postalCode + ' ' : ''}${client.city || ''}, ${client.street || ''}` : '',
+        clientPhone: client?.phone || '',
+        deviceModel: deviceModel || 'Klimatyzator',
+        serialNumber: serialNumber || '',
+        warrantyMonths: warrantyMonths || 60,
+        deviceNotes: deviceNotes || '',
+        comments: comment || '',
+        techSignature: techSig,
+        clientSignature: clientSig
+      };
+
+      if (kind === 'ac_install') {
+        const snIn = (document.getElementById('proto-inst-sn-in')?.value || '').trim() || serialNumber || '—';
+        const snOut = (document.getElementById('proto-inst-sn-out')?.value || '').trim() || '—';
+        return {
+          ...baseProtocol,
+          title: 'KARTA MONTAŻU KLIMATYZACJI',
+          snIndoor: snIn,
+          snOutdoor: snOut,
+          refrigerant: (document.getElementById('proto-inst-refrigerant')?.value || 'R32').trim(),
+          electricConn: (document.getElementById('proto-inst-electric')?.value || 'Do istniejącej instalacji').trim(),
+          locIndoor: (document.getElementById('proto-inst-loc-in')?.value || deviceNotes || 'Pomieszczenie').trim(),
+          locOutdoor: (document.getElementById('proto-inst-loc-out')?.value || 'Zewnątrz').trim(),
+          condensate: (document.getElementById('proto-inst-condensate')?.value || 'Grawitacyjnie').trim(),
+          testsResult: (document.getElementById('proto-inst-tests')?.value || 'Pozytywna / Urządzenie sprawne').trim()
+        };
+      }
+
+      const checklistLabels = [
+        'Czyszczenie filtrów jednostki wewnętrznej',
+        'Czyszczenie i dezynfekcja parownika jednostki wewnętrznej',
+        'Czyszczenie skraplacza jednostki zewnętrznej',
+        'Sprawdzenie drożności układu odprowadzenia skroplin',
+        'Sprawdzenie szczelności układu chłodniczego',
+        'Pomiar ciśnienia pracy i temperatury nawiewu',
+        'Kontrola połączeń elektrycznych i zasilania',
+        'Kontrola stanu mocowań i wibroizolacji',
+        'Test poprawnego działania klimatyzatora we wszystkich trybach'
+      ];
+
+      const checklist = checklistLabels.map((label, idx) => ({
+        label,
+        done: Boolean(document.getElementById(`proto-chk-${idx + 1}`)?.checked)
+      }));
+
+      return {
+        ...baseProtocol,
+        title: 'PROTOKÓŁ PRZEGLĄDU KLIMATYZATORA',
+        fgazTool: (document.getElementById('proto-insp-fgaz')?.value || 'Wykrywacz nieszczelności / FGAZ-P/27/0109/22').trim(),
+        checklist
+      };
+    }
+
+    function renderProtocolSheetHtml(p) {
+      if (!p) return '<div class="p-6 text-center text-zinc-400">Brak danych protokołu</div>';
+
+      const companyHeader = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #059669;padding-bottom:12px;margin-bottom:16px;">
+          <div>
+            <div style="font-size:18px;font-weight:900;color:#064e3b;letter-spacing:-0.5px;">PRO-INSTAL Paweł Płócienniczak</div>
+            <div style="font-size:11px;color:#3f3f46;font-weight:600;">ul. Czereśniowa 9, 62-040 Puszczykowo • tel. +48 797 922 496</div>
+            <div style="font-size:10px;color:#52525b;">Certyfikat F-GAZ Przedsiębiorcy: FGAZ-P/27/0109/22</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:14px;font-weight:900;color:#18181b;background:#d1fae5;padding:4px 10px;border-radius:6px;border:1px solid #10b981;">${p.title}</div>
+            <div style="font-size:11px;color:#52525b;margin-top:4px;font-weight:700;">Data wykonania: ${formatDatePL(p.date)}</div>
+          </div>
+        </div>
+      `;
+
+      const clientAndDeviceTable = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+          <div style="border:1px solid #d4d4d8;border-radius:8px;padding:10px;background:#fafafa;">
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#059669;margin-bottom:4px;">1. Dane Zleceniodawcy (Klienta)</div>
+            <div style="font-size:12px;font-weight:800;color:#18181b;">${p.clientName}</div>
+            ${p.clientNip ? `<div style="font-size:11px;color:#3f3f46;"><strong>NIP:</strong> ${p.clientNip}</div>` : ''}
+            <div style="font-size:11px;color:#3f3f46;"><strong>Adres:</strong> ${p.clientAddress || '—'}</div>
+            <div style="font-size:11px;color:#3f3f46;"><strong>Telefon:</strong> ${p.clientPhone || '—'}</div>
+          </div>
+          <div style="border:1px solid #d4d4d8;border-radius:8px;padding:10px;background:#fafafa;">
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#059669;margin-bottom:4px;">2. Dane Urządzenia (Klimatyzatora)</div>
+            <div style="font-size:12px;font-weight:800;color:#18181b;">${p.deviceModel || 'Klimatyzator'}</div>
+            <div style="font-size:11px;color:#3f3f46;"><strong>Nr seryjny (S/N):</strong> ${p.snIndoor || p.serialNumber || '—'}</div>
+            ${p.snOutdoor ? `<div style="font-size:11px;color:#3f3f46;"><strong>S/N jedn. zewn.:</strong> ${p.snOutdoor}</div>` : ''}
+            <div style="font-size:11px;color:#3f3f46;"><strong>Lokalizacja:</strong> ${p.locIndoor || p.deviceNotes || 'Zgodnie z miejscem montażu'}</div>
+          </div>
+        </div>
+      `;
+
+      let detailsSection = '';
+      if (p.kind === 'ac_install') {
+        detailsSection = `
+          <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#064e3b;margin-bottom:6px;">3. Szczegóły wykonania montażu i uruchomienia</div>
+            <table style="width:100%;border-collapse:collapse;font-size:11px;">
+              <tbody>
+                <tr>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;background:#f4f4f5;font-weight:700;width:42%;">Model i typ urządzenia</td>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;font-weight:700;">${p.deviceModel}</td>
+                </tr>
+                <tr>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;background:#f4f4f5;font-weight:700;">Nr fabryczny jednostki wewnętrznej / zewnętrznej</td>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;font-family:monospace;">JW: ${p.snIndoor || '—'} &nbsp;|&nbsp; JZ: ${p.snOutdoor || '—'}</td>
+                </tr>
+                <tr>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;background:#f4f4f5;font-weight:700;">Miejsce montażu jedn. wewnętrznej / zewnętrznej</td>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;">JW: ${p.locIndoor || '—'} &nbsp;|&nbsp; JZ: ${p.locOutdoor || '—'}</td>
+                </tr>
+                <tr>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;background:#f4f4f5;font-weight:700;">Rodzaj i ilość czynnika chłodniczego</td>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;">${p.refrigerant || 'R32'}</td>
+                </tr>
+                <tr>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;background:#f4f4f5;font-weight:700;">Odprowadzenie skroplin</td>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;">${p.condensate || 'Grawitacyjnie'}</td>
+                </tr>
+                <tr>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;background:#f4f4f5;font-weight:700;">Podłączenie elektryczne</td>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;">${p.electricConn || 'Do istniejącej instalacji'}</td>
+                </tr>
+                <tr>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;background:#f4f4f5;font-weight:700;">Próba szczelności, próżnia i uruchomienie testowe</td>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;font-weight:800;color:#047857;">${p.testsResult || 'Pozytywna / Urządzenie sprawne'}</td>
+                </tr>
+                <tr>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;background:#f4f4f5;font-weight:700;">Okres gwarancji (wymagane przeglądy co 12 msc)</td>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;font-weight:700;">${p.warrantyMonths || 60} miesięcy (Następny przegląd: ${formatDatePL(addMonths(p.date, 12))})</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        `;
+      } else {
+        const rowsHtml = (p.checklist || []).map((item, idx) => `
+          <tr>
+            <td style="border:1px solid #d4d4d8;padding:5px 8px;text-align:center;width:32px;font-weight:700;">${idx + 1}.</td>
+            <td style="border:1px solid #d4d4d8;padding:5px 10px;">${item.label}</td>
+            <td style="border:1px solid #d4d4d8;padding:5px 10px;text-align:center;width:110px;font-weight:800;color:${item.done ? '#047857' : '#71717a'};">
+              ${item.done ? '✓ WYKONANO' : 'Nie dotyczy'}
+            </td>
+          </tr>
+        `).join('');
+
+        detailsSection = `
+          <div style="margin-bottom:14px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#064e3b;margin-bottom:6px;">3. Zakres wykonanych czynności przeglądowych i kontrolnych</div>
+            <table style="width:100%;border-collapse:collapse;font-size:11px;">
+              <thead>
+                <tr style="background:#e4e4e7;font-weight:800;">
+                  <th style="border:1px solid #d4d4d8;padding:6px;">Lp.</th>
+                  <th style="border:1px solid #d4d4d8;padding:6px;text-align:left;">Czynność kontrolna / serwisowa</th>
+                  <th style="border:1px solid #d4d4d8;padding:6px;text-align:center;">Status</th>
+                </tr>
+              </thead>
+              <tbody>${rowsHtml}</tbody>
+            </table>
+            <div style="margin-top:6px;font-size:10px;color:#52525b;">
+              <strong>Przyrząd pomiarowy / Uprawnienia:</strong> ${p.fgazTool || 'Wykrywacz nieszczelności / FGAZ-P/27/0109/22'} &nbsp;•&nbsp;
+              <strong>Termin kolejnego przeglądu:</strong> ${formatDatePL(addMonths(p.date, 12))}
+            </div>
+          </div>
+        `;
+      }
+
+      const commentsAndStatement = `
+        <div style="border:1px solid #d4d4d8;border-radius:8px;padding:10px;margin-bottom:14px;background:#fff;">
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#059669;margin-bottom:4px;">4. Uwagi serwisowe i zalecenia</div>
+          <div style="font-size:11px;color:#18181b;min-height:28px;">${p.comments || 'Urządzenie sprawne technicznie, przekazane do dalszej eksploatacji.'}</div>
+        </div>
+        <div style="font-size:10px;color:#52525b;margin-bottom:14px;padding:8px;background:#f4f4f5;border-radius:6px;">
+          <strong>Oświadczenie:</strong> Zamawiający (Klient) potwierdza wykonanie powyższych prac zgodnie ze sztuką instalatorską, odbiór sprawnego urządzenia bez zastrzeżeń oraz przeszkolenie z zakresu podstawowej obsługi klimatyzatora.
+        </div>
+      `;
+
+      const signaturesSection = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px;">
+          <div style="border:1px solid #d4d4d8;border-radius:8px;padding:10px;text-align:center;background:#fff;">
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#52525b;margin-bottom:6px;">Wykonawca / Serwisant (${p.technician})</div>
+            <div style="height:85px;display:flex;align-items:center;justify-content:center;border-bottom:1px dashed #a1a1aa;margin-bottom:4px;">
+              ${p.techSignature ? `<img src="${p.techSignature}" style="max-height:80px;max-width:100%;object-fit:contain;" alt="Podpis serwisanta">` : `<span style="font-size:10px;color:#a1a1aa;">(Podpis elektroniczny)</span>`}
+            </div>
+            <div style="font-size:9px;color:#71717a;">Podpis osoby uprawnionej</div>
+          </div>
+          <div style="border:1px solid #d4d4d8;border-radius:8px;padding:10px;text-align:center;background:#fff;">
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#059669;margin-bottom:6px;">Zleceniodawca / Klient (${p.clientName})</div>
+            <div style="height:85px;display:flex;align-items:center;justify-content:center;border-bottom:1px dashed #a1a1aa;margin-bottom:4px;">
+              ${p.clientSignature ? `<img src="${p.clientSignature}" style="max-height:80px;max-width:100%;object-fit:contain;" alt="Podpis klienta">` : `<span style="font-size:10px;color:#a1a1aa;">(Brak podpisu dotykowego)</span>`}
+            </div>
+            <div style="font-size:9px;color:#71717a;">Czytelny podpis Klienta (potwierdzenie odbioru)</div>
+          </div>
+        </div>
+      `;
+
+      return companyHeader + clientAndDeviceTable + detailsSection + commentsAndStatement + signaturesSection;
+    }
+
+    function openProtocolPreviewModal(sourceType, clientId, deviceId, itemId) {
+      let proto = null;
+      if (sourceType === 'device_history') {
+        const client = (window.clientsData || []).find(c => c.id === clientId);
+        const dev = (client?.devices || []).find(d => d.id === deviceId);
+        const hItem = (dev?.inspectionHistory || []).find(h => h.id === itemId);
+        proto = hItem?.protocolData || null;
+      } else if (sourceType === 'appointment') {
+        const visit = (window.appointmentsData || []).find(a => a.id === itemId);
+        proto = visit?.protocolData || null;
+      }
+      if (!proto) {
+        showToast('Brak zapisanego protokołu dla tego wpisu.');
+        return;
+      }
+      showProtocolObjectInModal(proto);
+    }
+
+    function openProtocolPreviewByVisit(visitId) {
+      const visit = (window.appointmentsData || []).find(a => a.id === visitId);
+      if (visit?.protocolData) {
+        showProtocolObjectInModal(visit.protocolData);
+        return;
+      }
+      // Szukamy w historii urządzenia klienta
+      const client = (window.clientsData || []).find(c => c.id === visit?.clientId);
+      for (const dev of (client?.devices || [])) {
+        const found = (dev.inspectionHistory || []).find(h => h.visitId === visitId && h.protocolData);
+        if (found) {
+          showProtocolObjectInModal(found.protocolData);
+          return;
+        }
+      }
+      showToast('Nie znaleziono protokołu dla tej wizyty.');
+    }
+
+    function showProtocolObjectInModal(proto) {
+      currentPreviewProtocolObj = proto;
+      setText('protocol-preview-modal-title', `${proto.title} — ${proto.clientName} (${formatDatePL(proto.date)})`);
+      const area = document.getElementById('protocol-printable-area');
+      if (area) area.innerHTML = renderProtocolSheetHtml(proto);
+      openModal('modal-protocol-preview');
+    }
+
+    function downloadCurrentProtocolPDF() {
+      if (!currentPreviewProtocolObj) return;
+      const element = document.getElementById('protocol-printable-area');
+      if (!element || !window.html2pdf) {
+        showToast('Biblioteka PDF jeszcze się ładuje — spróbuj ponownie.');
+        return;
+      }
+      const btn = document.getElementById('btn-download-protocol-pdf');
+      const oldText = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>Generowanie PDF...</span>';
+      }
+
+      const safeName = (currentPreviewProtocolObj.clientName || 'Klient').replace(/[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ_-]/g, '_');
+      const fileName = `${currentPreviewProtocolObj.kind === 'ac_install' ? 'Karta_Montazu_Klimatyzacji' : 'Protokol_Przegladu_Klimatyzacji'}_${safeName}_${currentPreviewProtocolObj.date || toYMD(new Date())}.pdf`;
+
+      const opt = {
+        margin: [8, 8, 8, 8],
+        filename: fileName,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = oldText;
+          lucide.createIcons();
+        }
+        showToast('Pobrano protokół w formacie PDF!');
+      }).catch(() => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = oldText;
+          lucide.createIcons();
+        }
+        showToast('Błąd generowania pliku PDF.');
+      });
+    }
+
+    function printCurrentProtocol() {
+      const area = document.getElementById('protocol-printable-area');
+      if (!area) return;
+      const win = window.open('', '_blank', 'width=860,height=900');
+      if (!win) {
+        showToast('Odblokuj wyskakujące okienka lub użyj przycisku Pobierz PDF.');
+        return;
+      }
+      win.document.write(`<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8"><title>Protokół PRO-INSTAL</title><style>body{font-family:Arial,sans-serif;margin:20px;color:#18181b;}</style></head><body>${area.innerHTML}<script>window.onload=function(){window.print();}<\/script></body></html>`);
+      win.document.close();
     }
 
     function handleConfirmCloseVisit(e) {
@@ -4264,23 +4732,28 @@ service cloud.firestore {
       const client = (window.clientsData || []).find(c => c.id === visit.clientId);
       const installDate = visit.date || toYMD(new Date());
 
-      visit.status = 'completed';
-      visit.completionComment = comment;
-      visit.savedToDeviceHistory = true;
+      let protocolObj = null;
 
       if (isMontaz && client) {
         const createdDevId = `dev_${Date.now()}`;
+        const deviceType = document.getElementById('close-install-type').value || 'heat_pump';
+        const deviceModel = (document.getElementById('close-install-model').value || '').trim() || visit.plannedInstallModel || 'Urządzenie HVAC';
+        const serialInline = (document.getElementById('close-install-serial').value || '').trim() || (document.getElementById('proto-inst-sn-in')?.value || '').trim();
+        const warrantyMonths = Number(document.getElementById('close-install-warranty').value) || 60;
         const deviceNotes = (document.getElementById('close-install-dev-notes')?.value || '').trim();
+
+        protocolObj = buildProtocolDataFromModal(visit, client, deviceModel, serialInline, warrantyMonths, deviceNotes, comment);
+
         const newDevice = {
           id: createdDevId,
-          deviceType: document.getElementById('close-install-type').value || 'heat_pump',
-          deviceModel: (document.getElementById('close-install-model').value || '').trim() || visit.plannedInstallModel || 'Urządzenie HVAC',
-          serialNumber: (document.getElementById('close-install-serial').value || '').trim(),
+          deviceType,
+          deviceModel,
+          serialNumber: serialInline,
           deviceNotes,
           ourUnknownDate: false,
           noInstallDate: false,
           installDate,
-          warrantyMonths: Number(document.getElementById('close-install-warranty').value) || 60,
+          warrantyMonths,
           lastInspectionDate: installDate,
           nextInspectionDate: addMonths(installDate, 12),
           inspectionIntervalMonths: 12,
@@ -4288,10 +4761,12 @@ service cloud.firestore {
           inspectionHistory: [
             {
               id: `h_install_${Date.now()}`,
+              visitId: visit.id,
               date: installDate,
               actionType: 'Montaż i uruchomienie',
               technician: visit.workerName || 'Ekipa Montażowa',
-              notes: comment
+              notes: comment,
+              protocolData: protocolObj
             }
           ]
         };
@@ -4299,6 +4774,18 @@ service cloud.firestore {
         visit.deviceId = createdDevId;
       } else if (client && Array.isArray(client.devices) && client.devices.length > 0) {
         const targetDevId = visit.deviceId || client.devices[0].id;
+        const targetDevObj = client.devices.find(d => d.id === targetDevId) || client.devices[0];
+
+        protocolObj = buildProtocolDataFromModal(
+          visit,
+          client,
+          targetDevObj?.deviceModel,
+          targetDevObj?.serialNumber,
+          targetDevObj?.warrantyMonths,
+          targetDevObj?.deviceNotes,
+          comment
+        );
+
         client.devices = client.devices.map(d => {
           if (d.id !== targetDevId) return d;
           const interval = Number(d.inspectionIntervalMonths || 12);
@@ -4308,17 +4795,36 @@ service cloud.firestore {
             nextInspectionDate: shouldUpdateNextInsp ? addMonths(installDate, interval) : d.nextInspectionDate,
             remindersCanceled: shouldUpdateNextInsp ? false : d.remindersCanceled,
             inspectionHistory: [
-              { id: `h_visit_${Date.now()}`, date: installDate, actionType: visit.serviceType || 'Serwis', technician: visit.workerName || 'Serwis PP', notes: comment },
+              {
+                id: `h_visit_${Date.now()}`,
+                visitId: visit.id,
+                date: installDate,
+                actionType: visit.serviceType || 'Serwis',
+                technician: visit.workerName || 'Serwis PP',
+                notes: comment,
+                protocolData: protocolObj
+              },
               ...(d.inspectionHistory || [])
             ]
           };
         });
       }
 
+      visit.status = 'completed';
+      visit.completionComment = comment;
+      visit.savedToDeviceHistory = true;
+      if (protocolObj) visit.protocolData = protocolObj;
+
       persistData();
       closeModal('modal-close-visit');
       refreshAllViews();
-      showToast(isMontaz ? 'Montaż zamknięty — nowe urządzenie przypisano do klienta!' : 'Zlecenie zamknięte i dopisane do historii urządzenia!');
+
+      if (protocolObj) {
+        showProtocolObjectInModal(protocolObj);
+        showToast('Zlecenie zamknięte i wygenerowano protokół z podpisem!');
+      } else {
+        showToast(isMontaz ? 'Montaż zamknięty — nowe urządzenie przypisano do klienta!' : 'Zlecenie zamknięte i dopisane do historii urządzenia!');
+      }
     }
 
     function skipInspection(clientId, devId) {
