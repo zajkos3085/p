@@ -748,9 +748,12 @@
         </div>
 
         <div class="border-t border-zinc-200 dark:border-zinc-800 pt-3">
-          <div class="flex justify-between items-center mb-2">
-            <h4 class="text-xs font-extrabold uppercase text-zinc-500">Urządzenia klienta (najpierw wybierz typ, potem model)</h4>
-            <button type="button" onclick="addDeviceFieldInModal()" class="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 hover:underline">+ Dodaj kolejne urządzenie</button>
+          <div class="flex justify-between items-center mb-2 flex-wrap gap-2">
+            <div>
+              <h4 class="text-xs font-extrabold uppercase text-zinc-500">Urządzenia klienta (opcjonalnie)</h4>
+              <p class="text-[11px] text-zinc-400">Możesz dodać klienta bez urządzenia (usuń pozycję poniżej) lub od razu przypisać mu sprzęt</p>
+            </div>
+            <button type="button" onclick="addDeviceFieldInModal()" class="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 hover:underline">+ Dodaj urządzenie</button>
           </div>
           <div id="modal-devices-container" class="space-y-3"></div>
         </div>
@@ -1066,59 +1069,18 @@
             <div>
               <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Typ urządzenia</label>
               <select id="close-install-type" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-bold">
-                <option value="heat_pump">🔥 Pompa ciepła</option>
-                <option value="ac">❄️ Klimatyzacja</option>
-                <option value="ventilation">💨 Wentylacja / Rekuperacja</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Gwarancja (msc)</label>
-              <input type="number" id="close-install-warranty" value="60" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-bold">
-            </div>
-          </div>
-          <div>
-            <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Zamontowany model urządzenia</label>
-            <input type="text" id="close-install-model" placeholder="np. Panasonic Aquarea 9kW" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-bold">
-          </div>
-          <div>
-            <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Numer seryjny zamontowanej jednostki (S/N)</label>
-            <input type="text" id="close-install-serial" placeholder="Wpisz S/N z tabliczki znamionowej..." class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-mono">
-          </div>
-          <div>
-            <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Miejsce montażu / Notatki urządzenia (widoczne w karcie urządzenia)</label>
-            <input type="text" id="close-install-dev-notes" placeholder="np. Kotłownia na parterze, agregat za budynkiem..." class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs">
-          </div>
-          <p class="text-[10px] text-amber-800 dark:text-amber-300 font-semibold">Po zatwierdzeniu urządzenie zostanie automatycznie dopisane do konta klienta wraz z gwarancją i terminem pierwszego przeglądu za rok.</p>
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Komentarz powykonawczy (zostanie zapisany w historii urządzenia)</label>
-          <textarea id="close-visit-comment" rows="3" required placeholder="Opisz wykonane czynności serwisowe / przeglądowe..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm outline-none focus:border-emerald-500"></textarea>
-        </div>
-        <label id="close-visit-next-insp-label" class="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 cursor-pointer text-xs font-bold text-emerald-900 dark:text-emerald-300">
-          <input type="checkbox" id="close-visit-update-next-insp" checked class="rounded text-emerald-600">
-          <span>Zaktualizuj również datę kolejnego przeglądu okresowego (+ interwał urządzenia)</span>
-        </label>
-        <div class="flex justify-end gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-          <button type="button" onclick="closeModal('modal-close-visit')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Anuluj</button>
-          <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm">Zatwierdź i zamknij zlecenie</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL: PASSWORD FOR CSV EXPORT -->
+  <!-- MODAL: PASSWORD FOR CSV EXPORT / ADMIN AUTH -->
   <div id="modal-export-password" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-sm w-full shadow-2xl p-5 space-y-4 border border-zinc-200 dark:border-zinc-800">
       <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
         <div class="flex items-center gap-2">
           <i data-lucide="lock" class="w-4 h-4 text-emerald-600"></i>
-          <h3 class="text-sm font-extrabold">Autoryzacja eksportu danych</h3>
+          <h3 id="auth-modal-title" class="text-sm font-extrabold">Autoryzacja hasłem</h3>
         </div>
         <button onclick="closeModal('modal-export-password')"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
       <form onsubmit="confirmExportPassword(event)" class="space-y-3">
-        <p class="text-xs text-zinc-500 dark:text-zinc-400">Podaj hasło autoryzacyjne, aby pobrać bazę:</p>
+        <p id="auth-modal-desc" class="text-xs text-zinc-500 dark:text-zinc-400">Podaj hasło autoryzacyjne, aby odblokować operację:</p>
         <input type="password" id="export-password-input" required placeholder="Wpisz hasło..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-bold tracking-widest text-center outline-none focus:border-emerald-500">
         <p id="export-password-error" class="text-xs text-rose-600 font-bold text-center hidden">Nieprawidłowe hasło!</p>
         <div class="flex justify-end gap-2 pt-2">
@@ -1126,6 +1088,47 @@
           <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold">Odblokuj</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CSV IMPORT PREVIEW -->
+  <div id="modal-csv-preview" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-4xl w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800 max-h-[92vh] flex flex-col">
+      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3 shrink-0">
+        <div class="flex items-center gap-2">
+          <i data-lucide="file-spreadsheet" class="w-5 h-5 text-emerald-600"></i>
+          <div>
+            <h3 class="text-base font-extrabold">Podgląd importu klientów z pliku CSV</h3>
+            <p id="csv-preview-subtitle" class="text-xs text-zinc-500 dark:text-zinc-400">Weryfikacja danych przed dopisaniem do bazy (obecni klienci nie zostaną usunięci)</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-csv-preview')"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div id="csv-preview-stats" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 shrink-0"></div>
+
+      <div class="overflow-y-auto flex-1 border border-zinc-200 dark:border-zinc-800 rounded-xl">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead class="sticky top-0 bg-zinc-900 dark:bg-zinc-800 text-zinc-100 text-[10px] uppercase font-bold">
+            <tr>
+              <th class="py-2.5 px-3">Klient</th>
+              <th class="py-2.5 px-3">Telefon</th>
+              <th class="py-2.5 px-3">Adres</th>
+              <th class="py-2.5 px-3">Urządzenia do przypisania</th>
+              <th class="py-2.5 px-3">Tryb zapisu</th>
+            </tr>
+          </thead>
+          <tbody id="csv-preview-tbody" class="divide-y divide-zinc-200 dark:divide-zinc-800"></tbody>
+        </table>
+      </div>
+
+      <div class="flex justify-between items-center gap-2 pt-3 border-t border-zinc-200 dark:border-zinc-800 shrink-0 flex-wrap">
+        <span class="text-[11px] text-zinc-500">💡 Import obsługuje także niepełne wiersze oraz samych klientów bez urządzeń.</span>
+        <div class="flex gap-2">
+          <button type="button" onclick="closeModal('modal-csv-preview')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Anuluj</button>
+          <button type="button" onclick="confirmCsvImport()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm">+ Dopisz do bazy klientów</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1264,6 +1267,8 @@ service cloud.firestore {
     let quickMapSelectedClientId = null;
     let editingClientId = null;
     let pendingConfirmCallback = null;
+    let pendingAuthCallback = null;
+    let pendingCsvImportClients = [];
 
     // Instancje Map Leaflet
     let mapInstance = null;
@@ -2512,7 +2517,7 @@ service cloud.firestore {
             </a>
           </div>
           <div class="space-y-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-            ${c.devices.map(dev => {
+            ${c.devices.length === 0 ? `<div class="text-xs text-zinc-400 italic py-1">Brak przypisanych urządzeń</div>` : c.devices.map(dev => {
               const info = getDeviceInfo(dev.deviceType);
               return `
                 <div onclick="openInspectionModal('${c.id}', '${dev.id}')" class="p-2.5 rounded-xl border text-xs cursor-pointer space-y-1.5 ${info.bg} ${info.border}">
@@ -2535,8 +2540,8 @@ service cloud.firestore {
             <button onclick="openInspectionModal('${c.id}')" class="py-2 px-2 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900 rounded-xl text-xs font-bold flex items-center justify-center gap-1"><i data-lucide="history" class="w-3.5 h-3.5"></i><span>Historia</span></button>
           </div>
           <div class="grid grid-cols-2 gap-1.5">
-            <button onclick="openEditClientModal('${c.id}')" class="py-1.5 px-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i><span>Edytuj klienta</span></button>
-            <button onclick="deleteClient('${c.id}')" class="py-1.5 px-2 bg-rose-50 dark:bg-rose-950/40 text-rose-600 rounded-xl text-xs font-bold flex items-center justify-center gap-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i><span>Usuń</span></button>
+            <button onclick="requestEditClientWithPin('${c.id}')" class="py-1.5 px-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1"><i data-lucide="lock" class="w-3 h-3 text-emerald-600"></i><span>Edytuj klienta</span></button>
+            <button onclick="requestDeleteClientWithPin('${c.id}')" class="py-1.5 px-2 bg-rose-50 dark:bg-rose-950/40 text-rose-600 rounded-xl text-xs font-bold flex items-center justify-center gap-1"><i data-lucide="lock" class="w-3 h-3"></i><span>Usuń</span></button>
           </div>
         </div>
       `).join('');
@@ -2549,11 +2554,11 @@ service cloud.firestore {
               <span class="shrink-0 whitespace-nowrap text-[11px] bg-zinc-900 dark:bg-zinc-700 text-white px-2 py-0.5 rounded-full font-extrabold">${c.devices.length} urz.</span>
             </div>
           </td>
-          <td class="py-3.5 px-4 text-zinc-600 dark:text-zinc-300">${c.city}, ${c.street}</td>
-          <td class="py-3.5 px-4"><a href="tel:${c.phone}" class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold hover:underline whitespace-nowrap">📞 ${c.phone}</a></td>
+          <td class="py-3.5 px-4 text-zinc-600 dark:text-zinc-300">${c.city || '—'}${c.street ? `, ${c.street}` : ''}</td>
+          <td class="py-3.5 px-4"><a href="tel:${c.phone}" class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold hover:underline whitespace-nowrap">📞 ${c.phone || '—'}</a></td>
           <td class="py-2.5 px-4">
             <div class="flex flex-col gap-2">
-              ${c.devices.map(dev => {
+              ${c.devices.length === 0 ? `<span class="text-xs text-zinc-400 italic">Brak przypisanych urządzeń</span>` : c.devices.map(dev => {
                 const info = getDeviceInfo(dev.deviceType);
                 return `
                   <div onclick="openInspectionModal('${c.id}', '${dev.id}')" class="inline-flex flex-col gap-1 px-3 py-1.5 rounded-xl border text-xs cursor-pointer w-fit ${info.bg} ${info.border}">
@@ -2576,8 +2581,8 @@ service cloud.firestore {
               </div>
               <div class="inline-flex items-center gap-1.5">
                 <button onclick="openInspectionModal('${c.id}')" class="px-2.5 py-1.5 bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-lg text-xs font-bold whitespace-nowrap">Historia działań</button>
-                <button onclick="openEditClientModal('${c.id}')" class="px-2.5 py-1.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg text-xs font-bold inline-flex items-center gap-1 whitespace-nowrap" title="Edytuj klienta"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Edytuj</button>
-                <button onclick="deleteClient('${c.id}')" class="px-2.5 py-1.5 bg-rose-50 dark:bg-rose-950/40 text-rose-600 hover:bg-rose-100 rounded-lg text-xs font-bold inline-flex items-center gap-1 whitespace-nowrap" title="Usuń klienta"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Usuń</button>
+                <button onclick="requestEditClientWithPin('${c.id}')" class="px-2.5 py-1.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg text-xs font-bold inline-flex items-center gap-1 whitespace-nowrap" title="Edytuj klienta (wymaga hasła)"><i data-lucide="lock" class="w-3 h-3 text-emerald-600"></i> Edytuj</button>
+                <button onclick="requestDeleteClientWithPin('${c.id}')" class="px-2.5 py-1.5 bg-rose-50 dark:bg-rose-950/40 text-rose-600 hover:bg-rose-100 rounded-lg text-xs font-bold inline-flex items-center gap-1 whitespace-nowrap" title="Usuń klienta (wymaga hasła)"><i data-lucide="lock" class="w-3 h-3"></i> Usuń</button>
               </div>
             </div>
           </td>
@@ -2759,8 +2764,6 @@ service cloud.firestore {
           else if (d.status.isExpiredWarranty) expiredWarrantyCount++;
 
           (d.inspectionHistory || []).forEach(h => {
-            const actType = (h.actionType || '').toLowerCase();
-            if (actType.includes('monta')) return;
             if (matchesStatsTimeFilter(h.date, scope, selectedYear, selectedMonth)) {
               allHistory.push({ ...h, clientName: c.name, clientCity: c.city, deviceModel: d.deviceModel });
             }
@@ -2776,11 +2779,7 @@ service cloud.firestore {
         ? periodAppointmentsAllWorkers
         : periodAppointmentsAllWorkers.filter(a => (a.workerName || 'Serwisant 1') === selectedWorker);
 
-      periodAppointmentsAllWorkers.filter(a => {
-        if (a.status !== 'completed' || a.savedToDeviceHistory) return false;
-        const sv = (a.serviceType || '').toLowerCase();
-        return !sv.includes('monta');
-      }).forEach(v => {
+      periodAppointmentsAllWorkers.filter(a => a.status === 'completed' && !a.savedToDeviceHistory).forEach(v => {
         const client = enriched.find(c => c.id === v.clientId);
         const dev = client?.devices?.find(d => d.id === v.deviceId);
         allHistory.push({
@@ -2788,7 +2787,7 @@ service cloud.firestore {
           date: v.date,
           clientName: client ? client.name : 'Klient',
           clientCity: client ? client.city : '',
-          deviceModel: dev ? dev.deviceModel : (v.serviceType || 'Serwis / Przegląd'),
+          deviceModel: dev ? dev.deviceModel : (v.plannedInstallModel || v.serviceType || 'Serwis / Przegląd'),
           technician: v.workerName || 'Serwis PP',
           notes: `Wykonano: ${v.serviceType || 'Serwis'} ${v.completionComment ? '• ' + v.completionComment : v.notes ? '• ' + v.notes : ''}`
         });
@@ -3208,7 +3207,7 @@ service cloud.firestore {
         lat: parseFloat(document.getElementById('client-lat').value) || 52.4064,
         lng: parseFloat(document.getElementById('client-lng').value) || 16.9252,
         notes: document.getElementById('client-notes').value.trim(),
-        devices: devices.length > 0 ? devices : [{ id: 'dev_1', deviceType: 'heat_pump', deviceModel: 'Pompa ciepła', installDate: today, warrantyMonths: 60, lastInspectionDate: today, nextInspectionDate: addMonths(today, 12), inspectionIntervalMonths: 12, remindersCanceled: false, inspectionHistory: [] }]
+        devices
       };
 
       if (editingClientId) {
@@ -3216,12 +3215,40 @@ service cloud.firestore {
         showToast('Zaktualizowano dane klienta.');
       } else {
         window.clientsData.push(clientData);
-        showToast('Dodano nowego klienta.');
+        showToast(devices.length > 0 ? 'Dodano nowego klienta z urządzeniem.' : 'Dodano nowego klienta (bez przypisanego urządzenia).');
       }
 
       persistData();
       closeModal('modal-client');
       refreshAllViews();
+    }
+
+    function requestAdminPin(title, desc, callback) {
+      pendingAuthCallback = callback;
+      setText('auth-modal-title', title || 'Autoryzacja hasłem');
+      setText('auth-modal-desc', desc || 'Podaj hasło autoryzacyjne, aby kontynuować:');
+      document.getElementById('export-password-input').value = '';
+      document.getElementById('export-password-error').classList.add('hidden');
+      openModal('modal-export-password');
+      setTimeout(() => document.getElementById('export-password-input')?.focus(), 80);
+    }
+
+    function requestEditClientWithPin(clientId) {
+      const c = (window.clientsData || []).find(x => x.id === clientId);
+      requestAdminPin(
+        'Autoryzacja edycji klienta',
+        `Podaj hasło autoryzacyjne, aby edytować dane klienta „${c ? c.name : ''}”:`,
+        () => openEditClientModal(clientId)
+      );
+    }
+
+    function requestDeleteClientWithPin(clientId) {
+      const c = (window.clientsData || []).find(x => x.id === clientId);
+      requestAdminPin(
+        'Autoryzacja usunięcia klienta',
+        `Podaj hasło autoryzacyjne, aby usunąć klienta „${c ? c.name : ''}”:`,
+        () => deleteClient(clientId)
+      );
     }
 
     function deleteClient(id) {
@@ -3686,20 +3713,32 @@ service cloud.firestore {
         </div>
       ` : '';
 
+      if (targetDevices.length === 0) {
+        document.getElementById('modal-insp-body').innerHTML = `
+          <div class="p-6 text-center rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 space-y-3">
+            <p class="text-xs text-zinc-500">Ten klient nie ma jeszcze przypisanych żadnych urządzeń.</p>
+            <button onclick="closeModal('modal-inspections'); openAddDeviceModal('${c.id}');" class="px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-extrabold">+ Przypisz pierwsze urządzenie</button>
+          </div>
+        `;
+        openModal('modal-inspections');
+        return;
+      }
+
       document.getElementById('modal-insp-body').innerHTML = switchAllBanner + targetDevices.map(d => {
         const completedDeviceVisits = (window.appointmentsData || []).filter(v => {
           if (v.clientId !== c.id || v.status !== 'completed' || v.savedToDeviceHistory) return false;
           if (v.deviceId && v.deviceId !== d.id) return false;
-          const sv = (v.serviceType || '').toLowerCase();
-          return !sv.includes('monta');
+          return true;
         });
         const combinedActions = [
-          ...(d.inspectionHistory || []).filter(h => !(h.actionType || '').toLowerCase().includes('monta')).map(h => ({
+          ...(d.inspectionHistory || []).map(h => ({
             date: h.date,
             technician: h.technician || 'Serwis PP',
             type: h.actionType || 'Przegląd / Serwis',
             notes: h.notes || '',
-            badgeColor: 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+            badgeColor: (h.actionType || '').toLowerCase().includes('monta')
+              ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
+              : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
           })),
           ...completedDeviceVisits.map(v => ({
             date: v.date,
@@ -3914,7 +3953,15 @@ service cloud.firestore {
           nextInspectionDate: addMonths(installDate, 12),
           inspectionIntervalMonths: 12,
           remindersCanceled: false,
-          inspectionHistory: []
+          inspectionHistory: [
+            {
+              id: `h_install_${Date.now()}`,
+              date: installDate,
+              actionType: 'Montaż i uruchomienie',
+              technician: visit.workerName || 'Ekipa Montażowa',
+              notes: comment
+            }
+          ]
         };
         client.devices = [...(client.devices || []), newDevice];
         visit.deviceId = createdDevId;
@@ -4033,10 +4080,11 @@ service cloud.firestore {
        ========================================================================== */
     function requestExportClientsCSV() {
       if (getEnrichedClients().length === 0) { showToast('Brak klientów do eksportu.'); return; }
-      document.getElementById('export-password-input').value = '';
-      document.getElementById('export-password-error').classList.add('hidden');
-      openModal('modal-export-password');
-      setTimeout(() => document.getElementById('export-password-input')?.focus(), 80);
+      requestAdminPin(
+        'Autoryzacja eksportu danych',
+        'Podaj hasło autoryzacyjne, aby pobrać bazę klientów do pliku CSV:',
+        () => exportClientsCSV()
+      );
     }
 
     function confirmExportPassword(e) {
@@ -4045,21 +4093,27 @@ service cloud.firestore {
         document.getElementById('export-password-error').classList.remove('hidden');
         return;
       }
+      const cb = pendingAuthCallback;
+      pendingAuthCallback = null;
       closeModal('modal-export-password');
-      exportClientsCSV();
+      if (typeof cb === 'function') cb();
     }
 
     function exportClientsCSV() {
       const enriched = getEnrichedClients();
       const headers = ['Imię i Nazwisko', 'Telefon', 'Kod pocztowy', 'Miasto', 'Ulica', 'Lat', 'Lng', 'Typ urządzenia', 'Model', 'Data montażu', 'Gwarancja (msc)', 'Status Gwarancji', 'Ostatni przegląd', 'Następny przegląd', 'Notatki'];
-      const escape = val => `"${String(val || '').replace(/"/g, '""')}"`;
+      const escape = val => `"${String(val ?? '').replace(/"/g, '""')}"`;
       const rows = [];
 
       enriched.forEach(c => {
-        c.devices.forEach(d => {
-          const wStatus = d.status.noInstallDate ? 'Obce' : d.status.isUnderWarranty ? `Na gwarancji do ${d.status.warrantyEndFormatted}` : `Po gwarancji (${d.status.warrantyEndFormatted})`;
-          rows.push([c.name, c.phone, c.postalCode, c.city, c.street, c.lat, c.lng, getDeviceInfo(d.deviceType).short, d.deviceModel, d.installDate, d.warrantyMonths, wStatus, d.lastInspectionDate, d.nextInspectionDate, c.notes].map(escape).join(';'));
-        });
+        if (!c.devices || c.devices.length === 0) {
+          rows.push([c.name, c.phone, c.postalCode, c.city, c.street, c.lat, c.lng, '', '', '', '', 'Brak urządzenia', '', '', c.notes].map(escape).join(';'));
+        } else {
+          c.devices.forEach(d => {
+            const wStatus = d.status.ourUnknownDate ? 'Nasze (Brak daty)' : d.status.noInstallDate ? 'Obce' : d.status.isUnderWarranty ? `Na gwarancji do ${d.status.warrantyEndFormatted}` : `Po gwarancji (${d.status.warrantyEndFormatted})`;
+            rows.push([c.name, c.phone, c.postalCode, c.city, c.street, c.lat, c.lng, getDeviceInfo(d.deviceType).short, d.deviceModel, d.installDate, d.warrantyMonths, wStatus, d.lastInspectionDate, d.nextInspectionDate, c.notes].map(escape).join(';'));
+          });
+        }
       });
 
       const csv = '\uFEFF' + [headers.map(escape).join(';'), ...rows].join('\r\n');
@@ -4074,64 +4128,265 @@ service cloud.firestore {
       showToast('Wyeksportowano bazę klientów do pliku CSV!');
     }
 
+    function parseCsvRow(line, sep) {
+      const result = [];
+      let cur = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQuotes && line[i + 1] === '"') {
+            cur += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (ch === sep && !inQuotes) {
+          result.push(cur.trim());
+          cur = '';
+        } else {
+          cur += ch;
+        }
+      }
+      result.push(cur.trim());
+      return result;
+    }
+
+    function normalizeHeaderIndexMap(headerCols) {
+      const map = {};
+      headerCols.forEach((h, idx) => {
+        const low = (h || '').toLowerCase();
+        if (low.includes('imi') || low.includes('nazw') || low.includes('klient') || low === 'name') map.name = idx;
+        else if (low.includes('tel') || low.includes('phone')) map.phone = idx;
+        else if (low.includes('kod') || low.includes('poczt') || low.includes('postal')) map.postal = idx;
+        else if (low.includes('miast') || low.includes('miejscow') || low === 'city') map.city = idx;
+        else if (low.includes('ulic') || low.includes('adres') || low === 'street') map.street = idx;
+        else if (low === 'lat' || low.includes('szeroko')) map.lat = idx;
+        else if (low === 'lng' || low === 'lon' || low.includes('długo')) map.lng = idx;
+        else if (low.includes('typ')) map.typeStr = idx;
+        else if (low.includes('model') || low.includes('urządz')) map.model = idx;
+        else if (low.includes('monta') || low.includes('instal')) map.install = idx;
+        else if (low.includes('gwarancj') && !low.includes('status')) map.warranty = idx;
+        else if (low.includes('status')) map.warrantyStatus = idx;
+        else if (low.includes('ostatni')) map.lastInsp = idx;
+        else if (low.includes('następn') || low.includes('kolejn')) map.nextInsp = idx;
+        else if (low.includes('notatk') || low.includes('uwag') || low.includes('opis')) map.notes = idx;
+      });
+      return map;
+    }
+
     function importClientsCSV(e) {
-      const file = e.target.files?.[0];
+      const inputEl = e.target;
+      const file = inputEl.files?.[0];
       if (!file) return;
+
       file.text().then(text => {
+        inputEl.value = '';
         const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-        if (lines.length < 2) return;
-        const sep = lines[0].includes(';') ? ';' : ',';
-        const parseLine = l => l.split(sep).map(c => c.replace(/^"|"$/g, '').replace(/""/g, '"').trim());
+        if (lines.length === 0) {
+          showToast('Plik CSV jest pusty.');
+          return;
+        }
 
-        const map = new Map();
-        for (let i = 1; i < lines.length; i++) {
-          const cols = parseLine(lines[i]);
-          if (cols.length < 4) continue;
-          const [name, phone, postal, city, street, lat, lng, typeStr, model, install, warranty, lastInsp, nextInsp, notes] = cols;
-          if (!name) continue;
+        const sep = lines[0].includes(';') ? ';' : lines[0].includes('\t') ? '\t' : ',';
+        const firstCols = parseCsvRow(lines[0], sep);
+        const headerMap = normalizeHeaderIndexMap(firstCols);
+        const hasHeader = Object.keys(headerMap).length >= 1 && (
+          firstCols.some(c => /imi|nazw|klient|tel|miast|ulic|model/i.test(c))
+        );
 
-          let type = 'heat_pump';
-          const t = (typeStr || '').toLowerCase();
-          if (t.includes('klima')) type = 'ac';
-          if (t.includes('went') || t.includes('reku')) type = 'ventilation';
+        const startIdx = hasHeader ? 1 : 0;
+        const groupedMap = new Map();
+        const today = toYMD(new Date());
 
-          const dev = {
-            id: `dev_imp_${Math.random()}`,
-            deviceType: type,
-            deviceModel: model || 'Urządzenie HVAC',
-            installDate: install || toYMD(new Date()),
-            warrantyMonths: Number(warranty) || 60,
-            lastInspectionDate: lastInsp || install || toYMD(new Date()),
-            nextInspectionDate: nextInsp || addMonths(install || toYMD(new Date()), 12),
-            inspectionIntervalMonths: 12,
-            remindersCanceled: false,
-            inspectionHistory: []
+        for (let i = startIdx; i < lines.length; i++) {
+          const cols = parseCsvRow(lines[i], sep);
+          if (cols.every(c => !c)) continue;
+
+          const getCol = (key, fallbackIdx) => {
+            if (hasHeader && headerMap[key] !== undefined) return cols[headerMap[key]] || '';
+            if (!hasHeader && fallbackIdx < cols.length) return cols[fallbackIdx] || '';
+            return '';
           };
 
-          const key = `${name.toLowerCase()}|${(phone || '').toLowerCase()}`;
-          if (!map.has(key)) {
-            map.set(key, {
-              id: 'c_' + Math.random(),
-              name,
-              phone,
-              postalCode: postal,
-              city: city || 'Poznań',
-              street,
-              lat: parseFloat(lat) || 52.4064,
-              lng: parseFloat(lng) || 16.9252,
-              notes,
-              devices: [dev]
+          let rawName = getCol('name', 0);
+          let rawPhone = getCol('phone', 1);
+          let rawPostal = getCol('postal', 2);
+          let rawCity = getCol('city', 3);
+          let rawStreet = getCol('street', 4);
+          let rawLat = getCol('lat', 5);
+          let rawLng = getCol('lng', 6);
+          let rawType = getCol('typeStr', 7);
+          let rawModel = getCol('model', 8);
+          let rawInstall = getCol('install', 9);
+          let rawWarranty = getCol('warranty', 10);
+          let rawWarrantyStatus = getCol('warrantyStatus', 11);
+          let rawLastInsp = getCol('lastInsp', 12);
+          let rawNextInsp = getCol('nextInsp', 13);
+          let rawNotes = getCol('notes', cols.length === 15 ? 14 : 13);
+
+          // Obsługa krótkich niepełnych wierszy (np. 1-4 kolumny bez nagłówka: Nazwa;Telefon;Miasto;Ulica)
+          if (!hasHeader && cols.length <= 4) {
+            rawName = cols[0] || '';
+            rawPhone = cols[1] || '';
+            rawCity = cols[2] || '';
+            rawStreet = cols[3] || '';
+            rawPostal = '';
+            rawType = '';
+            rawModel = '';
+          }
+
+          if (!rawName && !rawPhone && !rawCity && !rawStreet) continue;
+
+          const finalName = capitalizeWords(rawName || `Klient (${rawCity || rawPhone || 'Import'})`);
+          const finalPhone = rawPhone ? ensurePhonePrefix(rawPhone) : '+48 ';
+          const finalCity = capitalizeWords(rawCity || '');
+          const finalStreet = capitalizeWords(rawStreet || '');
+
+          let dev = null;
+          const hasDeviceInfo = Boolean((rawModel && rawModel.trim()) || (rawType && rawType.trim()));
+          if (hasDeviceInfo) {
+            let type = 'heat_pump';
+            const t = (rawType || '').toLowerCase();
+            if (t.includes('klima') || t === 'ac') type = 'ac';
+            else if (t.includes('went') || t.includes('reku') || t === 'ventilation') type = 'ventilation';
+
+            const statusLow = (rawWarrantyStatus || '').toLowerCase();
+            const ourUnknownDate = statusLow.includes('nasze') && !rawInstall;
+            const noInstallDate = ourUnknownDate || statusLow.includes('obce') || !rawInstall;
+            const installDate = noInstallDate ? '' : rawInstall;
+
+            dev = {
+              id: `dev_imp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+              deviceType: type,
+              deviceModel: (rawModel || '').trim() || getDeviceInfo(type).short,
+              serialNumber: '',
+              deviceNotes: '',
+              ourUnknownDate,
+              noInstallDate,
+              installDate,
+              warrantyMonths: noInstallDate ? 0 : (Number(rawWarranty) || 60),
+              lastInspectionDate: rawLastInsp || installDate || today,
+              nextInspectionDate: rawNextInsp || addMonths(installDate || today, 12),
+              inspectionIntervalMonths: 12,
+              remindersCanceled: false,
+              inspectionHistory: []
+            };
+          }
+
+          const key = `${finalName.toLowerCase()}|${finalPhone.replace(/\s+/g, '')}|${finalCity.toLowerCase()}`;
+          if (!groupedMap.has(key)) {
+            const existingMatch = (window.clientsData || []).find(ec =>
+              ec.name.toLowerCase() === finalName.toLowerCase() &&
+              (ec.city || '').toLowerCase() === finalCity.toLowerCase()
+            );
+
+            groupedMap.set(key, {
+              id: `c_imp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+              name: finalName,
+              phone: finalPhone,
+              postalCode: rawPostal,
+              city: finalCity || 'Poznań',
+              street: finalStreet,
+              lat: parseFloat(rawLat) || 52.4064,
+              lng: parseFloat(rawLng) || 16.9252,
+              notes: rawNotes || '',
+              devices: dev ? [dev] : [],
+              existingClientId: existingMatch ? existingMatch.id : null
             });
-          } else {
-            map.get(key).devices.push(dev);
+          } else if (dev) {
+            groupedMap.get(key).devices.push(dev);
           }
         }
 
-        map.forEach(clientData => window.clientsData.push(clientData));
-        persistData();
-        refreshAllViews();
-        showToast('Zaimportowano klientów!');
+        pendingCsvImportClients = Array.from(groupedMap.values());
+        if (pendingCsvImportClients.length === 0) {
+          showToast('Nie znaleziono żadnych poprawnych wierszy klientów w pliku CSV.');
+          return;
+        }
+
+        openCsvPreviewModal();
+      }).catch(() => {
+        showToast('Błąd odczytu pliku CSV.');
       });
+    }
+
+    function openCsvPreviewModal() {
+      const totalClients = pendingCsvImportClients.length;
+      const newClients = pendingCsvImportClients.filter(c => !c.existingClientId).length;
+      const existingMerged = pendingCsvImportClients.filter(c => c.existingClientId).length;
+      const withoutDevices = pendingCsvImportClients.filter(c => c.devices.length === 0).length;
+
+      document.getElementById('csv-preview-stats').innerHTML = `
+        <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
+          <div class="text-[10px] font-bold uppercase text-zinc-400">Wykryci klienci</div>
+          <div class="text-lg font-extrabold text-zinc-900 dark:text-white">${totalClients}</div>
+        </div>
+        <div class="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800">
+          <div class="text-[10px] font-bold uppercase text-emerald-600">Nowi do dopisania</div>
+          <div class="text-lg font-extrabold text-emerald-600">${newClients}</div>
+        </div>
+        <div class="p-3 rounded-xl bg-sky-50/70 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800">
+          <div class="text-[10px] font-bold uppercase text-sky-600">Istniejący (uzupełnienie)</div>
+          <div class="text-lg font-extrabold text-sky-600">${existingMerged}</div>
+        </div>
+        <div class="p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+          <div class="text-[10px] font-bold uppercase text-amber-600">Bez urządzenia</div>
+          <div class="text-lg font-extrabold text-amber-600">${withoutDevices}</div>
+        </div>
+      `;
+
+      document.getElementById('csv-preview-tbody').innerHTML = pendingCsvImportClients.map(c => `
+        <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
+          <td class="py-2.5 px-3 font-bold text-zinc-900 dark:text-white">${c.name}</td>
+          <td class="py-2.5 px-3 text-zinc-600 dark:text-zinc-300">${c.phone || '—'}</td>
+          <td class="py-2.5 px-3 text-zinc-600 dark:text-zinc-300">${c.city || '—'}${c.street ? `, ${c.street}` : ''}</td>
+          <td class="py-2.5 px-3">
+            ${c.devices.length === 0
+              ? `<span class="px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-[10px] font-bold">Brak urządzenia (sam klient)</span>`
+              : c.devices.map(d => `<span class="inline-block mr-1 mb-1 px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold">${getDeviceInfo(d.deviceType).short}: ${d.deviceModel}</span>`).join('')}
+          </td>
+          <td class="py-2.5 px-3">
+            ${c.existingClientId
+              ? `<span class="px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 text-[10px] font-extrabold">Uzupełnij istniejącego</span>`
+              : `<span class="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-extrabold">+ Nowy klient</span>`}
+          </td>
+        </tr>
+      `).join('');
+
+      openModal('modal-csv-preview');
+    }
+
+    function confirmCsvImport() {
+      if (!pendingCsvImportClients || pendingCsvImportClients.length === 0) return;
+      let addedCount = 0;
+      let updatedCount = 0;
+
+      pendingCsvImportClients.forEach(imp => {
+        if (imp.existingClientId) {
+          const existing = (window.clientsData || []).find(c => c.id === imp.existingClientId);
+          if (existing) {
+            if ((!existing.phone || existing.phone.trim() === '+48') && imp.phone) existing.phone = imp.phone;
+            if (!existing.street && imp.street) existing.street = imp.street;
+            if (!existing.postalCode && imp.postalCode) existing.postalCode = imp.postalCode;
+            if (!existing.notes && imp.notes) existing.notes = imp.notes;
+            if (imp.devices && imp.devices.length > 0) {
+              existing.devices = [...(existing.devices || []), ...imp.devices];
+            }
+            updatedCount++;
+          }
+        } else {
+          const { existingClientId, ...cleanClient } = imp;
+          window.clientsData.push(cleanClient);
+          addedCount++;
+        }
+      });
+
+      pendingCsvImportClients = [];
+      persistData();
+      closeModal('modal-csv-preview');
+      refreshAllViews();
+      showToast(`Import zakończony: dopisano ${addedCount} nowych klientów, uzupełniono ${updatedCount}!`);
     }
 
     function seedSampleData() {
