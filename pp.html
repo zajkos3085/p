@@ -4231,8 +4231,23 @@ service cloud.firestore {
       const file = inputEl.files?.[0];
       if (!file) return;
 
-      file.text().then(text => {
+      // Naprawa polskich znaków: Odczyt pliku jako bufor binarny z automatycznym wykrywaniem UTF-8 lub Windows-1250
+      file.arrayBuffer().then(buffer => {
         inputEl.value = '';
+        let text = '';
+        try {
+          const decoderUtf8 = new TextDecoder('utf-8', { fatal: true });
+          text = decoderUtf8.decode(buffer);
+        } catch (err) {
+          try {
+            const decoderAnsi = new TextDecoder('windows-1250');
+            text = decoderAnsi.decode(buffer);
+          } catch (e2) {
+            const fallbackDecoder = new TextDecoder('iso-8859-2');
+            text = fallbackDecoder.decode(buffer);
+          }
+        }
+
         const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
         if (lines.length === 0) {
           showToast('Plik CSV jest pusty.');
@@ -4276,7 +4291,6 @@ service cloud.firestore {
           let rawNextInsp = getCol('nextInsp', 13);
           let rawNotes = getCol('notes', cols.length === 15 ? 14 : 13);
 
-          // Obsługa krótkich niepełnych wierszy (np. 1-4 kolumny bez nagłówka: Nazwa;Telefon;Miasto;Ulica)
           if (!hasHeader && cols.length <= 4) {
             rawName = cols[0] || '';
             rawPhone = cols[1] || '';
