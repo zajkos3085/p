@@ -433,6 +433,7 @@
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <select id="quick-map-new-type" onchange="renderQuickInstallCatalog()" class="w-full px-2 py-1.5 rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-zinc-900 text-xs font-bold">
                       <option value="heat_pump">🔥 Pompa ciepła</option>
+                      <option value="gas_boiler">🔥 Kocioł gazowy</option>
                       <option value="ac">❄️ Klimatyzacja</option>
                       <option value="ventilation">💨 Wentylacja</option>
                     </select>
@@ -461,7 +462,7 @@
 
       <!-- 3. TAB: CLIENTS (KLIENCI) -->
       <div id="tab-clients" class="tab-content space-y-4 hidden">
-        <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row gap-3 justify-between items-center">
+        <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col xl:flex-row gap-3 justify-between items-center">
           <div class="relative flex-1 w-full">
             <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
             <input type="text" id="client-search-input" oninput="renderClients()" placeholder="Szukaj (np. nazwisko, NIP lub kilka miast po spacji: Poznań Luboń Swarzędz)..." class="w-full pl-10 pr-9 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:border-emerald-500 text-zinc-800 dark:text-zinc-100">
@@ -469,15 +470,28 @@
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
           </div>
-          <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto shrink-0">
+          <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto shrink-0">
+            <select id="client-device-type-filter" onchange="renderClients()" class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2.5 text-xs font-bold outline-none text-zinc-800 dark:text-zinc-100">
+              <option value="all">🔧 Wszystkie rodzaje urządzeń</option>
+              <option value="heat_pump">🔥 Tylko Pompy ciepła</option>
+              <option value="gas_boiler">🔥 Tylko Kotły gazowe</option>
+              <option value="ac">❄️ Tylko Klimatyzacja</option>
+              <option value="ventilation">💨 Tylko Wentylacja</option>
+              <option value="none">🚫 Klienci bez urządzenia</option>
+            </select>
+            <select id="client-sort-select" onchange="renderClients()" class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2.5 text-xs font-bold outline-none text-zinc-800 dark:text-zinc-100">
+              <option value="default">↕️ Sortuj: Domyślnie</option>
+              <option value="city_asc">📍 Miejscowość (A-Z)</option>
+              <option value="city_desc">📍 Miejscowość (Z-A)</option>
+              <option value="install_desc">📅 Data montażu (od najnowszych)</option>
+              <option value="install_asc">📅 Data montażu (od najstarszych)</option>
+              <option value="name_asc">👤 Klient (A-Z)</option>
+            </select>
             <button onclick="requestExportClientsCSV(true)" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition" title="Eksportuj tylko aktualnie wyświetlanych klientów po wyszukaniu">
               <i data-lucide="lock" class="w-3.5 h-3.5"></i> <span id="export-filtered-btn-label">Eksport widocznych (CSV)</span>
             </button>
             <button onclick="requestExportClientsCSV(false)" class="bg-teal-700 hover:bg-teal-600 text-white px-3 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition" title="Eksportuj całą bazę wszystkich klientów">
               <i data-lucide="download" class="w-3.5 h-3.5"></i> Cała baza
-            </button>
-            <button onclick="regeocodeAllClients()" id="btn-fix-gps" class="bg-amber-600 hover:bg-amber-500 text-white px-3 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition" title="Przelicz i ustaw pinezki GPS dla klientów na podstawie ich miejscowości i ulicy">
-              <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> <span>Napraw pinezki GPS</span>
             </button>
             <input type="file" id="csv-file-input" accept=".csv" onchange="importClientsCSV(event)" class="hidden">
             <button onclick="document.getElementById('csv-file-input').click()" class="bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
@@ -512,6 +526,7 @@
             <form onsubmit="handleSaveCatalogItem(event)" class="space-y-3">
               <select id="catalog-type" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none text-zinc-800 dark:text-zinc-100">
                 <option value="heat_pump">🔥 Pompa ciepła</option>
+                <option value="gas_boiler">🔥 Kocioł gazowy</option>
                 <option value="ac">❄️ Klimatyzacja</option>
                 <option value="ventilation">💨 Wentylacja / Rekuperacja</option>
               </select>
@@ -539,6 +554,7 @@
               <select id="catalog-type-filter" onchange="renderCatalog()" class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-bold outline-none text-zinc-800 dark:text-zinc-100">
                 <option value="all">Wszystkie typy urządzeń</option>
                 <option value="heat_pump">🔥 Pompy ciepła</option>
+                <option value="gas_boiler">🔥 Kotły gazowe</option>
                 <option value="ac">❄️ Klimatyzacja</option>
                 <option value="ventilation">💨 Wentylacja / Rekuperacja</option>
               </select>
@@ -807,6 +823,7 @@
           <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">2. Wybierz typ urządzenia</label>
           <select id="assigned-dev-type" onchange="onAssignedTypeChange()" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none">
             <option value="heat_pump">🔥 Pompa ciepła</option>
+            <option value="gas_boiler">🔥 Kocioł gazowy</option>
             <option value="ac">❄️ Klimatyzacja</option>
             <option value="ventilation">💨 Wentylacja / Rekuperacja</option>
           </select>
@@ -1065,6 +1082,7 @@
               <label class="block text-[10px] font-bold text-zinc-500 mb-1">Typ urządzenia</label>
               <select id="visit-new-dev-type" onchange="renderModalInstallCatalog()" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-bold outline-none">
                 <option value="heat_pump">🔥 Pompa ciepła</option>
+                <option value="gas_boiler">🔥 Kocioł gazowy</option>
                 <option value="ac">❄️ Klimatyzacja</option>
                 <option value="ventilation">💨 Wentylacja / Rekuperacja</option>
               </select>
@@ -1132,6 +1150,7 @@
               <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Typ urządzenia</label>
               <select id="close-install-type" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-bold">
                 <option value="heat_pump">🔥 Pompa ciepła</option>
+                <option value="gas_boiler">🔥 Kocioł gazowy</option>
                 <option value="ac">❄️ Klimatyzacja</option>
                 <option value="ventilation">💨 Wentylacja / Rekuperacja</option>
               </select>
@@ -1513,6 +1532,7 @@ service cloud.firestore {
     function getDeviceInfo(type) {
       const types = {
         heat_pump: { label: 'Pompa ciepła', short: 'Pompa ciepła', bg: 'bg-orange-50 dark:bg-orange-950/40', border: 'border-orange-200 dark:border-orange-900', color: '#ea580c' },
+        gas_boiler: { label: 'Kocioł gazowy', short: 'Kocioł gazowy', bg: 'bg-amber-50 dark:bg-amber-950/40', border: 'border-amber-200 dark:border-amber-900', color: '#d97706' },
         ac: { label: 'Klimatyzacja', short: 'Klimatyzacja', bg: 'bg-sky-50 dark:bg-sky-950/40', border: 'border-sky-200 dark:border-sky-900', color: '#0284c7' },
         ventilation: { label: 'Wentylacja / Rekuperacja', short: 'Rekuperacja', bg: 'bg-teal-50 dark:bg-teal-950/40', border: 'border-teal-200 dark:border-teal-900', color: '#0d9488' }
       };
@@ -1834,7 +1854,8 @@ service cloud.firestore {
           { id: 'cat_1', deviceType: 'heat_pump', brand: 'Panasonic', model: 'Aquarea T-CAP 9kW', defaultWarrantyMonths: 60, defaultIntervalMonths: 12 },
           { id: 'cat_2', deviceType: 'heat_pump', brand: 'Daikin', model: 'Altherma 3 R 8kW', defaultWarrantyMonths: 60, defaultIntervalMonths: 12 },
           { id: 'cat_3', deviceType: 'ac', brand: 'Gree', model: 'Amber Prestige 3.5kW', defaultWarrantyMonths: 60, defaultIntervalMonths: 12 },
-          { id: 'cat_4', deviceType: 'ventilation', brand: 'Zehnder', model: 'ComfoAir Q350 TR', defaultWarrantyMonths: 24, defaultIntervalMonths: 12 }
+          { id: 'cat_4', deviceType: 'ventilation', brand: 'Zehnder', model: 'ComfoAir Q350 TR', defaultWarrantyMonths: 24, defaultIntervalMonths: 12 },
+          { id: 'cat_5', deviceType: 'gas_boiler', brand: 'Viessmann', model: 'Vitodens 100-W 19kW', defaultWarrantyMonths: 60, defaultIntervalMonths: 12 }
         ];
       }
 
@@ -1925,10 +1946,12 @@ service cloud.firestore {
 
     function clearClientSearch() {
       const searchInput = document.getElementById('client-search-input');
-      if (searchInput) {
-        searchInput.value = '';
-        renderClients();
-      }
+      const typeFilter = document.getElementById('client-device-type-filter');
+      const sortSelect = document.getElementById('client-sort-select');
+      if (searchInput) searchInput.value = '';
+      if (typeFilter) typeFilter.value = 'all';
+      if (sortSelect) sortSelect.value = 'default';
+      renderClients();
     }
 
     function onUrgentDaysChange(val) {
@@ -2581,49 +2604,99 @@ service cloud.firestore {
     function getFilteredEnrichedClients() {
       const enriched = getEnrichedClients();
       const rawQuery = (document.getElementById('client-search-input')?.value || '').toLowerCase().trim();
-      if (!rawQuery) return enriched;
+      const deviceTypeFilter = document.getElementById('client-device-type-filter')?.value || 'all';
+      const sortBy = document.getElementById('client-sort-select')?.value || 'default';
 
-      const buildSearchableBlob = c => {
-        const clientText = `${c.name || ''} ${c.nip || ''} ${c.city || ''} ${c.street || ''} ${c.phone || ''} ${c.postalCode || ''} ${c.notes || ''}`.toLowerCase();
-        const devsText = (c.devices || []).map(d => {
-          const typeInfo = getDeviceInfo(d.deviceType);
-          const wStatus = d.status.ourUnknownDate
-            ? 'nasze brak daty'
-            : d.status.isExternal
-              ? 'obce brak gwarancji'
-              : d.status.isUnderWarranty
-                ? 'na gwarancji'
-                : 'po gwarancji';
-          const iStatus = d.status.isOverdue
-            ? 'po terminie'
-            : d.status.isSoon
-              ? 'wkrótce kończące się'
-              : 'przegląd ok';
-          return `${d.deviceModel || ''} ${d.serialNumber || ''} ${d.deviceNotes || ''} ${typeInfo.label} ${typeInfo.short} ${wStatus} ${iStatus}`.toLowerCase();
-        }).join(' ');
-        return { fullText: `${clientText} ${devsText}`, cityText: (c.city || '').toLowerCase().trim() };
+      // 1. Odsianie po rodzaju urządzenia (jeśli wybrano konkretny typ, klientom zostają na widoku tylko urządzenia tego typu)
+      let list = enriched.map(c => {
+        if (deviceTypeFilter === 'all') return c;
+        if (deviceTypeFilter === 'none') {
+          return (c.devices || []).length === 0 ? c : null;
+        }
+        const matchingDevs = (c.devices || []).filter(d => d.deviceType === deviceTypeFilter);
+        if (matchingDevs.length === 0) return null;
+        return { ...c, devices: matchingDevs };
+      }).filter(Boolean);
+
+      // 2. Filtrowanie po wyszukiwarce tekstowej (obsługa wielu słów / miejscowości naraz)
+      if (rawQuery) {
+        const buildSearchableBlob = c => {
+          const clientText = `${c.name || ''} ${c.nip || ''} ${c.city || ''} ${c.street || ''} ${c.phone || ''} ${c.postalCode || ''} ${c.notes || ''}`.toLowerCase();
+          const devsText = (c.devices || []).map(d => {
+            const typeInfo = getDeviceInfo(d.deviceType);
+            const wStatus = d.status.ourUnknownDate
+              ? 'nasze brak daty'
+              : d.status.isExternal
+                ? 'obce brak gwarancji'
+                : d.status.isUnderWarranty
+                  ? 'na gwarancji'
+                  : 'po gwarancji';
+            const iStatus = d.status.isOverdue
+              ? 'po terminie'
+              : d.status.isSoon
+                ? 'wkrótce kończące się'
+                : 'przegląd ok';
+            return `${d.deviceModel || ''} ${d.serialNumber || ''} ${d.deviceNotes || ''} ${typeInfo.label} ${typeInfo.short} ${wStatus} ${iStatus}`.toLowerCase();
+          }).join(' ');
+          return { fullText: `${clientText} ${devsText}`, cityText: (c.city || '').toLowerCase().trim() };
+        };
+
+        const exactMatches = list.filter(c => buildSearchableBlob(c).fullText.includes(rawQuery));
+        const tokens = rawQuery.split(/[\s,;]+/).map(t => t.trim()).filter(Boolean);
+
+        if (tokens.length <= 1) {
+          list = exactMatches;
+        } else {
+          const andMatches = list.filter(c => {
+            const blob = buildSearchableBlob(c).fullText;
+            return tokens.every(tok => blob.includes(tok));
+          });
+          list = andMatches.length > 0
+            ? andMatches
+            : list.filter(c => {
+                const blob = buildSearchableBlob(c).fullText;
+                return tokens.some(tok => blob.includes(tok));
+              });
+        }
+      }
+
+      // 3. Sortowanie wyników (po miejscowości, po dacie montażu lub alfabetycznie po kliencie)
+      const getClientInstallDateForSort = (client, mode) => {
+        const validDates = (client.devices || [])
+          .map(d => (!d.noInstallDate && !d.ourUnknownDate && d.installDate) ? d.installDate : '')
+          .filter(Boolean)
+          .sort();
+        if (validDates.length === 0) return null;
+        return mode === 'newest' ? validDates[validDates.length - 1] : validDates[0];
       };
 
-      // Najpierw sprawdzamy dopasowanie całej frazy (np. "na gwarancji", "po gwarancji", "Jan Kowalski")
-      const exactMatches = enriched.filter(c => buildSearchableBlob(c).fullText.includes(rawQuery));
+      if (sortBy === 'city_asc') {
+        list.sort((a, b) => (a.city || '').localeCompare(b.city || '', 'pl') || (a.name || '').localeCompare(b.name || '', 'pl'));
+      } else if (sortBy === 'city_desc') {
+        list.sort((a, b) => (b.city || '').localeCompare(a.city || '', 'pl') || (a.name || '').localeCompare(b.name || '', 'pl'));
+      } else if (sortBy === 'name_asc') {
+        list.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pl'));
+      } else if (sortBy === 'install_desc') {
+        list.sort((a, b) => {
+          const da = getClientInstallDateForSort(a, 'newest');
+          const db = getClientInstallDateForSort(b, 'newest');
+          if (!da && !db) return (a.name || '').localeCompare(b.name || '', 'pl');
+          if (!da) return 1;
+          if (!db) return -1;
+          return db.localeCompare(da);
+        });
+      } else if (sortBy === 'install_asc') {
+        list.sort((a, b) => {
+          const da = getClientInstallDateForSort(a, 'oldest');
+          const db = getClientInstallDateForSort(b, 'oldest');
+          if (!da && !db) return (a.name || '').localeCompare(b.name || '', 'pl');
+          if (!da) return 1;
+          if (!db) return -1;
+          return da.localeCompare(db);
+        });
+      }
 
-      // Dzielimy wpisane zapytanie na pojedyncze słowa (po spacjach, przecinkach lub średnikach)
-      const tokens = rawQuery.split(/[\s,;]+/).map(t => t.trim()).filter(Boolean);
-      if (tokens.length <= 1) return exactMatches;
-
-      // Sprawdzamy, czy wszystkie wpisane słowa pasują jednocześnie do jednego klienta (logika AND, np. "Jan Poznań")
-      const andMatches = enriched.filter(c => {
-        const blob = buildSearchableBlob(c).fullText;
-        return tokens.every(tok => blob.includes(tok));
-      });
-      if (andMatches.length > 0) return andMatches;
-
-      // Jeśli żaden pojedynczy klient nie zawiera wszystkich słów naraz (np. użytkownik wpisał kilka miejscowości: "Poznań Luboń Swarzędz"),
-      // wyświetlamy klientów, którzy pasują do KTÓREGOKOLWIEK z wpisanych słów (logika OR dla każdego słowa osobno)
-      return enriched.filter(c => {
-        const blob = buildSearchableBlob(c).fullText;
-        return tokens.some(tok => blob.includes(tok));
-      });
+      return list;
     }
 
     function renderClients() {
@@ -2709,6 +2782,9 @@ service cloud.firestore {
                       <span class="font-bold text-zinc-900 dark:text-white">${dev.deviceModel} ${dev.serialNumber ? `<span class="text-[10px] font-mono text-zinc-500">[S/N: ${dev.serialNumber}]</span>` : ''}</span>
                       ${getWarrantyBadgeHtml(dev.status)}
                       ${getInspectionStatusBadgeHtml(dev.status, true)}
+                    </div>
+                    <div class="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">
+                      📅 Montaż: <span class="font-bold text-zinc-700 dark:text-zinc-300">${dev.ourUnknownDate ? 'Nasze (Brak daty)' : dev.noInstallDate ? 'Brak (Obce)' : formatDatePL(dev.installDate)}</span>
                     </div>
                     ${dev.deviceNotes ? `<div class="text-[10px] font-semibold text-teal-800 dark:text-teal-300">📍 ${dev.deviceNotes}</div>` : ''}
                   </div>
@@ -2893,7 +2969,7 @@ service cloud.firestore {
       const enriched = getEnrichedClients();
       let allHistory = [];
       let totalDevices = 0, underWarranty = 0, expiredWarrantyCount = 0, ourNoDateCount = 0, external = 0;
-      const devTypeCounts = { heat_pump: 0, ac: 0, ventilation: 0 };
+      const devTypeCounts = { heat_pump: 0, gas_boiler: 0, ac: 0, ventilation: 0 };
       const citiesSet = new Set();
 
       enriched.forEach(c => {
@@ -2972,6 +3048,7 @@ service cloud.firestore {
       if (devBarsEl) {
         const items = [
           { label: '🔥 Pompy ciepła', count: devTypeCounts.heat_pump || 0, color: 'bg-orange-500' },
+          { label: '🔥 Kotły gazowe', count: devTypeCounts.gas_boiler || 0, color: 'bg-amber-500' },
           { label: '❄️ Klimatyzacja', count: devTypeCounts.ac || 0, color: 'bg-sky-500' },
           { label: '💨 Wentylacja', count: devTypeCounts.ventilation || 0, color: 'bg-teal-500' }
         ];
@@ -3148,6 +3225,7 @@ service cloud.firestore {
             <span class="text-[11px] font-extrabold text-zinc-500 whitespace-nowrap">Typ:</span>
             <select onchange="onModalDeviceTypeChange(this)" class="dev-type flex-1 px-2.5 py-1.5 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs font-bold outline-none bg-white dark:bg-zinc-800">
               <option value="heat_pump" ${selectedType === 'heat_pump' ? 'selected' : ''}>🔥 Pompa ciepła</option>
+              <option value="gas_boiler" ${selectedType === 'gas_boiler' ? 'selected' : ''}>🔥 Kocioł gazowy</option>
               <option value="ac" ${selectedType === 'ac' ? 'selected' : ''}>❄️ Klimatyzacja</option>
               <option value="ventilation" ${selectedType === 'ventilation' ? 'selected' : ''}>💨 Wentylacja / Rekuperacja</option>
             </select>
@@ -4424,7 +4502,7 @@ service cloud.firestore {
         else if (low === 'lat' || low.includes('szeroko')) map.lat = idx;
         else if (low === 'lng' || low === 'lon' || low.includes('długo')) map.lng = idx;
         else if (low.includes('typ') || low.includes('rodzaj')) map.typeStr = idx;
-        else if (low.includes('model') || low.includes('urządz') || low.includes('sprzęt') || low.includes('pompa') || low.includes('klima')) map.model = idx;
+        else if (low.includes('model') || low.includes('urządz') || low.includes('sprzęt') || low.includes('pompa') || low.includes('kocioł') || low.includes('kociol') || low.includes('piec') || low.includes('klima')) map.model = idx;
         else if (low.includes('monta') || low.includes('instal') || low.includes('uruchom')) map.install = idx;
         else if (low.includes('gwarancj') && !low.includes('status')) map.warranty = idx;
         else if (low.includes('status')) map.warrantyStatus = idx;
@@ -4584,8 +4662,9 @@ service cloud.firestore {
           const hasDeviceInfo = Boolean((rawModel && rawModel.trim()) || (rawType && rawType.trim()));
           if (hasDeviceInfo) {
             let type = 'heat_pump';
-            const t = (rawType || '').toLowerCase();
-            if (t.includes('klima') || t === 'ac') type = 'ac';
+            const t = `${rawType || ''} ${rawModel || ''}`.toLowerCase();
+            if (t.includes('kocioł') || t.includes('kociol') || t.includes('gaz') || t.includes('piec') || t.includes('kondens') || t === 'gas_boiler') type = 'gas_boiler';
+            else if (t.includes('klima') || t === 'ac') type = 'ac';
             else if (t.includes('went') || t.includes('reku') || t === 'ventilation') type = 'ventilation';
 
             const statusLow = (rawWarrantyStatus || '').toLowerCase();
