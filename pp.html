@@ -130,7 +130,8 @@
         <button onclick="switchTab('devices_db')" id="nav-btn-devices_db" class="nav-btn relative flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 md:gap-2.5 px-1 md:px-3.5 py-2 md:py-2.5 rounded-xl text-[10px] md:text-sm font-semibold transition text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800">
           <div class="flex flex-col md:flex-row items-center gap-1 md:gap-2.5">
             <i data-lucide="wrench" class="w-5 h-5 md:w-4 md:h-4 shrink-0"></i>
-            <span class="truncate">Urządzenia</span>
+            <span class="truncate md:hidden">Urz. i Prot.</span>
+            <span class="hidden md:inline whitespace-nowrap">Urządzenia i Protokoły</span>
           </div>
           <span id="badge-catalog" class="hidden md:inline text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">0</span>
         </button>
@@ -631,7 +632,7 @@
             <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
               <div>
                 <h2 id="tpl-form-header" class="text-sm font-extrabold text-zinc-900 dark:text-white">Edytor Wzoru Protokołu</h2>
-                <p class="text-[11px] text-zinc-500">Dodaj własny wzór lub edytuj punkty kontrolne istniejącego</p>
+                <p class="text-[11px] text-zinc-500">Formularz dopasowuje się do rodzaju akcji: Przegląd, Montaż lub Serwis</p>
               </div>
               <button type="button" onclick="resetProtocolTemplateForm()" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 rounded-lg text-[11px] font-bold text-emerald-600">+ Nowy wzór</button>
             </div>
@@ -639,7 +640,7 @@
               <input type="hidden" id="tpl-edit-id">
               <div>
                 <label class="block text-[11px] font-bold text-zinc-600 dark:text-zinc-400 mb-1">Nazwa / Tytuł protokołu na dokumencie PDF</label>
-                <input type="text" id="tpl-title" required placeholder="np. PROTOKÓŁ PRZEGLĄDU REKUPERACJI" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-extrabold outline-none">
+                <input type="text" id="tpl-title" required placeholder="np. PROTOKÓŁ MONTAŻU REKUPERACJI" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-extrabold outline-none">
               </div>
               <div class="grid grid-cols-2 gap-2.5">
                 <div>
@@ -654,8 +655,8 @@
                   </select>
                 </div>
                 <div>
-                  <label class="block text-[11px] font-bold text-zinc-600 dark:text-zinc-400 mb-1">Rodzaj akcji</label>
-                  <select id="tpl-action-category" class="w-full px-2.5 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none">
+                  <label class="block text-[11px] font-bold text-zinc-600 dark:text-zinc-400 mb-1">Rodzaj akcji (Układ protokołu)</label>
+                  <select id="tpl-action-category" onchange="onTemplateEditorCategoryChange(this.value)" class="w-full px-2.5 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none">
                     <option value="inspection">🛠️ Przegląd okresowy</option>
                     <option value="install">🏗️ Montaż / Odbiór</option>
                     <option value="service">⚡ Serwis / Naprawa</option>
@@ -666,12 +667,33 @@
                 <label class="block text-[11px] font-bold text-amber-700 dark:text-amber-400 mb-1">Wpisz nazwę własnej grupy urządzeń (np. Zmiękczacz wody)</label>
                 <input type="text" id="tpl-custom-group-name" placeholder="np. Zmiękczacz wody" class="w-full px-3 py-2 bg-amber-50/60 dark:bg-zinc-800 border border-amber-300 dark:border-amber-700 rounded-xl text-xs font-bold outline-none">
               </div>
-              <div>
-                <div class="flex justify-between items-center mb-1">
-                  <label class="text-[11px] font-bold text-zinc-600 dark:text-zinc-400">Podpunkty kontrolne / Czynności (każdy punkt w nowej linii)</label>
-                  <span class="text-[10px] text-emerald-600 font-bold">Wyświetlą się w tabeli na PDF</span>
+
+              <!-- Sekcja parametrów technicznych dla MONTAŻU -->
+              <div id="tpl-editor-install-params-wrap" class="hidden p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 space-y-2">
+                <div class="flex justify-between items-center">
+                  <label class="text-[11px] font-extrabold text-amber-900 dark:text-amber-300">🏗️ Tabela parametrów montażowych i odbiorowych</label>
+                  <span class="text-[10px] font-bold text-amber-700">Format: Nazwa parametru | Domyślna wartość</span>
                 </div>
-                <textarea id="tpl-checklist-items" rows="8" placeholder="Wpisz podpunkty kontrolne — każdy w osobnym wierszu, np.:&#10;Czyszczenie wymiennika ciepła&#10;Kontrola szczelności układu&#10;Test automatyki i zabezpieczeń" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-medium outline-none leading-relaxed"></textarea>
+                <p class="text-[10px] text-zinc-500">Każdy wiersz utworzy osobną rubrykę do wypełnienia podczas zamykania montażu i w tabeli na PDF:</p>
+                <textarea id="tpl-install-params" rows="5" placeholder="Miejsce montażu urządzenia | Kotłownia / Pomieszczenie techniczne&#10;Podłączenie hydrauliczne / technologiczne | Zgodnie z DTR producenta&#10;Podłączenie elektryczne i zabezpieczenia | Do istniejącej instalacji 230V&#10;Próba szczelności i uruchomienie testowe | Pozytywna — urządzenie sprawne&#10;Przeszkolenie Inwestora z obsługi | Wykonano" class="w-full px-3 py-2 bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 rounded-xl text-xs font-medium outline-none leading-relaxed"></textarea>
+              </div>
+
+              <!-- Sekcja układu diagnostycznego dla SERWISU / NAPRAWY -->
+              <div id="tpl-editor-service-fields-wrap" class="hidden p-3 rounded-xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 space-y-2">
+                <div class="flex justify-between items-center">
+                  <label class="text-[11px] font-extrabold text-rose-900 dark:text-rose-300">⚡ Dodatkowe pola pomiarowe / diagnostyczne na protokole serwisowym</label>
+                </div>
+                <p class="text-[10px] text-zinc-500">Protokół serwisowy zawsze zawiera tabelę: <strong>Objawy (ze zgłoszenia)</strong>, <strong>Diagnozę</strong>, <strong>Przebieg prac</strong> oraz <strong>Status po naprawie</strong>. Poniżej możesz dopisać własne wiersze diagnostyczne (Format: <code>Nazwa pola | Domyślna wartość</code>):</p>
+                <textarea id="tpl-service-fields" rows="4" placeholder="Kod błędu na sterowniku | Brak / Zresetowano&#10;Pomiar napięcia i zabezpieczeń | W normie (230V)&#10;Wymienione części / podzespoły | Zgodnie ze specyfikacją&#10;Zalecenia po naprawie | Dalsza eksploatacja bez zastrzeżeń" class="w-full px-3 py-2 bg-white dark:bg-zinc-900 border border-rose-300 dark:border-rose-700 rounded-xl text-xs font-medium outline-none leading-relaxed"></textarea>
+              </div>
+
+              <!-- Sekcja punktów kontrolnych (Główna dla Przeglądu, pomocnicza dla Montażu/Serwisu) -->
+              <div id="tpl-editor-checklist-wrap">
+                <div class="flex justify-between items-center mb-1">
+                  <label id="tpl-checklist-label" class="text-[11px] font-bold text-zinc-600 dark:text-zinc-400">Podpunkty kontrolne / Czynności przeglądowe (każdy punkt w nowej linii)</label>
+                  <span class="text-[10px] text-emerald-600 font-bold">Tabela TAK / NIE DOTYCZY na PDF</span>
+                </div>
+                <textarea id="tpl-checklist-items" rows="7" placeholder="Wpisz podpunkty kontrolne — każdy w osobnym wierszu, np.:&#10;Czyszczenie wymiennika ciepła&#10;Kontrola szczelności układu&#10;Test automatyki i zabezpieczeń" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-medium outline-none leading-relaxed"></textarea>
               </div>
               <div class="flex gap-2">
                 <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold py-2.5 rounded-xl text-xs shadow-sm transition">💾 Zapisz wzór protokołu</button>
@@ -685,8 +707,8 @@
           <div class="lg:col-span-7 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-5 space-y-4">
             <div class="flex justify-between items-center flex-wrap gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
               <div>
-                <h2 class="text-sm font-extrabold text-zinc-900 dark:text-white">Dostępne wzory protokołów (Przypisane do grup urządzeń)</h2>
-                <p class="text-[11px] text-zinc-500">Kliknij „Edytuj podpunkty”, aby zmienić listę kontrolną, lub „Podgląd A4”, aby zobaczyć wydruk</p>
+                <h2 class="text-sm font-extrabold text-zinc-900 dark:text-white">Zapisane Wzory Protokołów (Przypisane do urządzeń)</h2>
+                <p class="text-[11px] text-zinc-500">Kliknij „Podgląd A4”, aby zobaczyć wydruk, lub „Edytuj”, aby zmienić podpunkty kontrolne</p>
               </div>
               <button onclick="restoreDefaultProtocolTemplates()" class="px-2.5 py-1.5 border border-zinc-300 dark:border-zinc-700 rounded-xl text-[11px] font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100">Przywróć domyślne</button>
             </div>
@@ -1552,10 +1574,16 @@
               </div>
             </div>
 
-            <!-- 5B. DYNAMICZNA LISTA KONTROLNA (DLA UNIWERSALNEGO PRZEGLĄDU / MONTAŻU ORAZ WŁASNYCH SZABLONÓW) -->
+            <!-- 5B. DYNAMICZNA LISTA KONTROLNA ORAZ POLA MONTAŻOWE / SERWISOWE Z EDYTORA WZORÓW -->
             <div id="proto-fields-dynamic-checklist" class="hidden space-y-2.5">
-              <div id="proto-dynamic-checklist-title" class="font-extrabold text-[11px] text-indigo-800 dark:text-indigo-300 uppercase">Lista kontrolna czynności:</div>
-              <div id="proto-dynamic-checklist-box" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-white dark:bg-zinc-900 p-2.5 rounded-xl border border-indigo-200 dark:border-indigo-800"></div>
+              <div id="proto-dynamic-custom-fields-wrap" class="hidden space-y-2 bg-white dark:bg-zinc-900 p-2.5 rounded-xl border border-amber-300 dark:border-amber-800">
+                <div id="proto-dynamic-custom-fields-title" class="font-extrabold text-[11px] text-amber-800 dark:text-amber-300 uppercase">Parametry techniczne i odbiorowe:</div>
+                <div id="proto-dynamic-custom-fields-box" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+              </div>
+              <div id="proto-dynamic-checklist-wrap" class="space-y-1.5">
+                <div id="proto-dynamic-checklist-title" class="font-extrabold text-[11px] text-indigo-800 dark:text-indigo-300 uppercase">Lista kontrolna czynności:</div>
+                <div id="proto-dynamic-checklist-box" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-white dark:bg-zinc-900 p-2.5 rounded-xl border border-indigo-200 dark:border-indigo-800"></div>
+              </div>
               <div id="proto-fields-universal-install-extra" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
                   <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Miejsce montażu i podłączenie</label>
@@ -1570,7 +1598,7 @@
 
             <!-- 6. POLA SPECYFICZNE DLA UNIWERSALNEGO PROTOKOŁU SERWISU / NAPRAWY -->
             <div id="proto-fields-universal-service" class="hidden space-y-2.5">
-              <div class="font-extrabold text-[11px] text-rose-800 dark:text-rose-300 uppercase">Dane z Uniwersalnego Protokołu Serwisowego / Naprawy:</div>
+              <div class="font-extrabold text-[11px] text-rose-800 dark:text-rose-300 uppercase">Dane z Protokołu Serwisowego / Naprawy:</div>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
                   <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Objawy / Zgłoszona usterka (przepisane ze zgłoszenia)</label>
@@ -1589,6 +1617,7 @@
                 <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Status urządzenia po interwencji serwisowej</label>
                 <input type="text" id="proto-srv-status" value="Urządzenie sprawne, przetestowane i przekazane do eksploatacji" class="w-full px-2.5 py-1.5 rounded-lg border border-rose-300 dark:border-rose-700 bg-white dark:bg-zinc-900 text-xs font-bold text-emerald-700 dark:text-emerald-400">
               </div>
+              <div id="proto-srv-extra-fields-wrap" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1"></div>
             </div>
 
             <!-- PODPISY DOTYKOWE (PALCEM NA EKRANIE TELEFONU LUB MYSZKĄ) -->
@@ -1799,7 +1828,7 @@ service cloud.firestore {
 
   <!-- MODAL: PODGLĄD I POBIERANIE PROTOKOŁU PDF -->
   <div id="modal-protocol-preview" class="fixed inset-0 z-[80] bg-zinc-950/80 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4">
-    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-4xl w-full shadow-2xl p-4 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800 max-h-[95vh] flex flex-col">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-4xl w-full shadow-2xl p-4 sm:p-6 space-y-3 border border-zinc-200 dark:border-zinc-800 max-h-[95vh] flex flex-col">
       <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3 shrink-0 flex-wrap gap-2">
         <div class="flex items-center gap-2">
           <i data-lucide="file-check-2" class="w-5 h-5 text-emerald-600"></i>
@@ -1809,7 +1838,11 @@ service cloud.firestore {
           </div>
         </div>
         <div class="flex items-center gap-1.5 flex-wrap">
-          <button type="button" onclick="exportProtocolToGmail()" id="btn-gmail-protocol" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition" title="Pobiera plik PDF, kopiuje e-mail klienta do schowka i otwiera nową wiadomość w Gmailu">
+          <div class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1.5 rounded-xl border border-zinc-300 dark:border-zinc-700" title="Wpisz swój firmowy adres Gmail — dzięki temu od razu widzisz, z jakiego konta wysyłasz wiadomość, a Gmail automatycznie przełączy się na to konto (nawet gdy jesteś zalogowany na kilku kontach Google)">
+            <span class="text-[10px] font-extrabold text-zinc-500 dark:text-zinc-400 whitespace-nowrap">Nadawca (Twoje konto):</span>
+            <input type="email" id="sender-gmail-account-input" oninput="saveSenderGmailAccount(this.value)" placeholder="np. biuro@instal.pl" class="bg-transparent text-xs font-extrabold text-emerald-700 dark:text-emerald-400 outline-none w-36 sm:w-44">
+          </div>
+          <button type="button" onclick="exportProtocolToGmail()" id="btn-gmail-protocol" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition" title="Pobiera plik PDF, kopiuje e-mail klienta do schowka i otwiera nową wiadomość na wybranym koncie Gmail">
             <i data-lucide="mail" class="w-4 h-4"></i> Wyślij PDF przez Gmail
           </button>
           <button type="button" onclick="downloadCurrentProtocolPDF()" id="btn-download-protocol-pdf" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition">
@@ -1881,6 +1914,7 @@ service cloud.firestore {
       CATALOG: 'pp_hvac_catalog_v4',
       WORKERS: 'pp_hvac_workers_v4',
       TEMPLATES: 'pp_hvac_protocol_templates_v1',
+      SENDER_EMAIL: 'pp_sender_gmail_account',
       DARK_MODE: 'pp_dark_mode',
       FIREBASE_CFG: 'pp_firebase_config_json',
       URGENT_DAYS: 'pp_urgent_days_threshold'
@@ -2594,7 +2628,7 @@ service cloud.firestore {
         dashboard: 'Pulpit główny',
         map_planner: 'Mapa i Planer Dnia',
         clients: 'Baza Klientów',
-        devices_db: 'Baza Urządzeń HVAC',
+        devices_db: 'Urządzenia i Protokoły',
         history: 'Historia i Statystyki'
       };
       setText('header-title', titles[tabId] || 'PP');
@@ -3664,6 +3698,8 @@ service cloud.firestore {
             ? (t.customGroupName || 'Inne / Własne urządzenia')
             : getDeviceInfo(t.deviceGroup, t.customGroupName).short;
 
+        const customParamsCount = (t.customFields || []).length;
+
         return `
           <div class="p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/40 space-y-2">
             <div class="flex justify-between items-start gap-2 flex-wrap">
@@ -3673,14 +3709,17 @@ service cloud.firestore {
                   ${catBadge(t.actionCategory)}
                   <span class="px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 text-[10px] font-bold">Grupa: ${groupInfo}</span>
                 </div>
-                <p class="text-[11px] text-zinc-500 mt-1">Liczba punktów kontrolnych: <strong>${(t.checklist || []).length}</strong></p>
+                <p class="text-[11px] text-zinc-500 mt-1">
+                  Punkty kontrolne: <strong>${(t.checklist || []).length}</strong>
+                  ${customParamsCount > 0 ? ` • Pola parametrów technicznych: <strong>${customParamsCount}</strong>` : ''}
+                </p>
               </div>
               <div class="flex items-center gap-1.5">
                 <button onclick="previewSampleProtocolTemplate('${t.id}')" class="px-2.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-[11px] font-extrabold flex items-center gap-1">
                   <i data-lucide="eye" class="w-3.5 h-3.5"></i> Podgląd A4
                 </button>
                 <button onclick="editProtocolTemplate('${t.id}')" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[11px] font-extrabold flex items-center gap-1">
-                  <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Edytuj podpunkty
+                  <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Edytuj wzór
                 </button>
                 ${!t.isBuiltIn ? `
                   <button onclick="deleteProtocolTemplate('${t.id}')" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg" title="Usuń wzór">
@@ -3689,6 +3728,12 @@ service cloud.firestore {
                 ` : ''}
               </div>
             </div>
+            ${(t.customFields || []).length > 0 ? `
+              <div class="text-[11px] text-amber-900 dark:text-amber-300 bg-amber-50/70 dark:bg-amber-950/30 p-2 rounded-xl border border-amber-200 dark:border-amber-800 space-y-0.5">
+                <div class="font-extrabold text-[10px] uppercase">Parametry w tabeli:</div>
+                ${(t.customFields || []).slice(0, 3).map(cf => `<div>• <strong>${cf.label}:</strong> ${cf.defaultValue || '—'}</div>`).join('')}
+              </div>
+            ` : ''}
             ${(t.checklist || []).length > 0 ? `
               <div class="text-[11px] text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900 p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800 space-y-0.5">
                 ${(t.checklist || []).slice(0, 4).map((item, i) => `<div>${i + 1}. ${item}</div>`).join('')}
@@ -3701,6 +3746,45 @@ service cloud.firestore {
       lucide.createIcons();
     }
 
+    function onTemplateEditorCategoryChange(category) {
+      const installWrap = document.getElementById('tpl-editor-install-params-wrap');
+      const serviceWrap = document.getElementById('tpl-editor-service-fields-wrap');
+      const checklistLabel = document.getElementById('tpl-checklist-label');
+
+      installWrap?.classList.toggle('hidden', category !== 'install');
+      serviceWrap?.classList.toggle('hidden', category !== 'service');
+
+      if (checklistLabel) {
+        if (category === 'install') {
+          checklistLabel.innerText = 'Czynności montażowe i odbiorowe (Tabela TAK / NIE DOTYCZY — każdy punkt w nowej linii)';
+        } else if (category === 'service') {
+          checklistLabel.innerText = 'Dodatkowa lista kontrolna przy serwisie (opcjonalnie — każdy punkt w nowej linii)';
+        } else {
+          checklistLabel.innerText = 'Podpunkty kontrolne / Czynności przeglądowe (każdy punkt w nowej linii)';
+        }
+      }
+    }
+
+    function parsePipeLinesToFields(rawText) {
+      return (rawText || '')
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(Boolean)
+        .map(line => {
+          const parts = line.split('|');
+          return {
+            label: (parts[0] || '').trim(),
+            defaultValue: parts.slice(1).join('|').trim()
+          };
+        })
+        .filter(f => f.label);
+    }
+
+    function formatFieldsToPipeLines(fieldsArr) {
+      if (!Array.isArray(fieldsArr) || fieldsArr.length === 0) return '';
+      return fieldsArr.map(f => `${f.label} | ${f.defaultValue || ''}`).join('\n');
+    }
+
     function editProtocolTemplate(tplId) {
       const tpl = (window.protocolTemplatesData || []).find(t => t.id === tplId);
       if (!tpl) return;
@@ -3710,8 +3794,16 @@ service cloud.firestore {
       document.getElementById('tpl-device-group').value = tpl.deviceGroup || 'custom';
       document.getElementById('tpl-custom-group-wrap')?.classList.toggle('hidden', tpl.deviceGroup !== 'custom');
       document.getElementById('tpl-custom-group-name').value = tpl.customGroupName || '';
-      document.getElementById('tpl-action-category').value = tpl.actionCategory || 'inspection';
+      const cat = tpl.actionCategory || 'inspection';
+      document.getElementById('tpl-action-category').value = cat;
+      onTemplateEditorCategoryChange(cat);
+
       document.getElementById('tpl-checklist-items').value = (tpl.checklist || []).join('\n');
+      if (cat === 'install') {
+        document.getElementById('tpl-install-params').value = formatFieldsToPipeLines(tpl.customFields);
+      } else if (cat === 'service') {
+        document.getElementById('tpl-service-fields').value = formatFieldsToPipeLines(tpl.customFields);
+      }
       showToast(`Wczytano wzór „${tpl.title}” do edycji.`);
     }
 
@@ -3723,7 +3815,10 @@ service cloud.firestore {
       document.getElementById('tpl-custom-group-wrap')?.classList.remove('hidden');
       document.getElementById('tpl-custom-group-name').value = '';
       document.getElementById('tpl-action-category').value = 'inspection';
+      onTemplateEditorCategoryChange('inspection');
       document.getElementById('tpl-checklist-items').value = '';
+      if (document.getElementById('tpl-install-params')) document.getElementById('tpl-install-params').value = '';
+      if (document.getElementById('tpl-service-fields')) document.getElementById('tpl-service-fields').value = '';
     }
 
     function handleSaveProtocolTemplate(e) {
@@ -3735,11 +3830,18 @@ service cloud.firestore {
       const actionCategory = document.getElementById('tpl-action-category').value || 'inspection';
       const rawLines = (document.getElementById('tpl-checklist-items').value || '').split(/\r?\n/).map(s => s.replace(/^\d+[\.\)]\s*/, '').trim()).filter(Boolean);
 
+      let customFields = [];
+      if (actionCategory === 'install') {
+        customFields = parsePipeLinesToFields(document.getElementById('tpl-install-params')?.value || '');
+      } else if (actionCategory === 'service') {
+        customFields = parsePipeLinesToFields(document.getElementById('tpl-service-fields')?.value || '');
+      }
+
       if (!title) return;
 
       if (editId) {
         window.protocolTemplatesData = (window.protocolTemplatesData || []).map(t =>
-          t.id === editId ? { ...t, title, deviceGroup, customGroupName, actionCategory, checklist: rawLines } : t
+          t.id === editId ? { ...t, title, deviceGroup, customGroupName, actionCategory, checklist: rawLines, customFields } : t
         );
         showToast('Zaktualizowano wzór protokołu!');
       } else {
@@ -3751,7 +3853,8 @@ service cloud.firestore {
           customGroupName,
           actionCategory,
           isBuiltIn: false,
-          checklist: rawLines
+          checklist: rawLines,
+          customFields
         });
         showToast('Dodano nowy wzór protokołu i przypisano do grupy urządzeń!');
       }
@@ -3783,9 +3886,11 @@ service cloud.firestore {
     function previewSampleProtocolTemplate(tplId) {
       const tpl = getProtocolTemplateById(tplId);
       if (!tpl) return;
+      const isSrv = tpl.actionCategory === 'service' || tpl.id === 'universal_service';
       const sampleProto = {
         id: 'preview_' + Date.now(),
-        kind: tpl.id,
+        kind: isSrv ? 'universal_service' : tpl.id,
+        actionCategory: tpl.actionCategory || 'inspection',
         title: tpl.title,
         date: toYMD(new Date()),
         technician: window.workersData?.[0] || 'INSTAL',
@@ -3801,12 +3906,13 @@ service cloud.firestore {
         snOutdoor: 'SN-JZ-2026-002',
         warrantyMonths: 60,
         checklist: (tpl.checklist || []).map(label => ({ label, done: true })),
+        customFieldsValues: (tpl.customFields || []).map(f => ({ label: f.label, value: f.defaultValue || 'Wykonano / W normie' })),
         reportedFault: 'Przykładowe objawy / opis zgłoszenia z notatki',
         diagnosis: 'Diagnoza serwisowa urządzenia',
         workCourse: '1. Weryfikacja zgłoszonych objawów\n2. Czyszczenie i regulacja podzespołów\n3. Test poprawności działania',
         postServiceStatus: 'Urządzenie sprawne, przekazane do eksploatacji',
         usedMaterials: 'Brak / Zgodnie ze specyfikacją',
-        comments: 'Podgląd wydruku wzoru protokołu z sekcji Urządzenia.'
+        comments: 'Podgląd wydruku wzoru protokołu z sekcji Urządzenia i Protokoły.'
       };
       showProtocolObjectInModal(sampleProto);
     }
@@ -3815,9 +3921,16 @@ service cloud.firestore {
       const title = (document.getElementById('tpl-title').value || 'WZÓR PROTOKOŁU').trim();
       const rawLines = (document.getElementById('tpl-checklist-items').value || '').split(/\r?\n/).map(s => s.replace(/^\d+[\.\)]\s*/, '').trim()).filter(Boolean);
       const actionCategory = document.getElementById('tpl-action-category').value || 'inspection';
+      const customFieldsRaw = actionCategory === 'install'
+        ? parsePipeLinesToFields(document.getElementById('tpl-install-params')?.value || '')
+        : actionCategory === 'service'
+          ? parsePipeLinesToFields(document.getElementById('tpl-service-fields')?.value || '')
+          : [];
+
       const sampleProto = {
         id: 'preview_editor',
         kind: actionCategory === 'service' ? 'universal_service' : actionCategory === 'install' ? 'universal_install' : 'universal_inspection',
+        actionCategory,
         title,
         date: toYMD(new Date()),
         technician: window.workersData?.[0] || 'INSTAL',
@@ -3828,8 +3941,11 @@ service cloud.firestore {
         deviceModel: 'Model testowy',
         serialNumber: 'SN-TEST-01',
         checklist: rawLines.map(label => ({ label, done: true })),
+        customFieldsValues: customFieldsRaw.map(f => ({ label: f.label, value: f.defaultValue || 'Zgodnie z DTR' })),
         reportedFault: 'Objawy przepisane ze zgłoszenia',
+        diagnosis: 'Przykładowa diagnoza serwisowa',
         workCourse: 'Szczegółowy przebieg prac serwisowych',
+        postServiceStatus: 'Urządzenie sprawne, przetestowane',
         comments: 'Uwagi końcowe na protokole.'
       };
       showProtocolObjectInModal(sampleProto);
@@ -5469,9 +5585,31 @@ service cloud.firestore {
     function renderDynamicChecklistInModal(kind) {
       const tpl = getProtocolTemplateById(kind);
       const box = document.getElementById('proto-dynamic-checklist-box');
+      const wrap = document.getElementById('proto-dynamic-checklist-wrap');
       const titleEl = document.getElementById('proto-dynamic-checklist-title');
+
+      const customFieldsWrap = document.getElementById('proto-dynamic-custom-fields-wrap');
+      const customFieldsBox = document.getElementById('proto-dynamic-custom-fields-box');
+      const customFields = tpl?.customFields || [];
+
+      if (customFieldsWrap && customFieldsBox) {
+        if (customFields.length > 0) {
+          customFieldsWrap.classList.remove('hidden');
+          customFieldsBox.innerHTML = customFields.map((f, i) => `
+            <div>
+              <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">${f.label}</label>
+              <input type="text" id="proto-dyn-param-${i}" data-label="${(f.label || '').replace(/"/g, '&quot;')}" value="${(f.defaultValue || '').replace(/"/g, '&quot;')}" class="w-full px-2.5 py-1.5 rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-zinc-900 text-xs font-semibold">
+            </div>
+          `).join('');
+        } else {
+          customFieldsWrap.classList.add('hidden');
+          customFieldsBox.innerHTML = '';
+        }
+      }
+
       if (!box) return;
       const items = tpl?.checklist || [];
+      if (wrap) wrap.classList.toggle('hidden', items.length === 0);
       if (titleEl) titleEl.innerText = `Zakres czynności (${tpl?.title || 'Protokół'}):`;
       box.innerHTML = items.map((label, idx) => `
         <label class="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold">
@@ -5495,6 +5633,7 @@ service cloud.firestore {
       ];
       allSections.forEach(id => document.getElementById(id)?.classList.add('hidden'));
 
+      const tpl = getProtocolTemplateById(kind);
       const mapId = {
         ac_install: 'proto-fields-ac-install',
         ac_inspection: 'proto-fields-ac-inspection',
@@ -5507,17 +5646,31 @@ service cloud.firestore {
 
       if (mapId[kind]) {
         document.getElementById(mapId[kind])?.classList.remove('hidden');
+      } else if (tpl?.actionCategory === 'service') {
+        document.getElementById('proto-fields-universal-service')?.classList.remove('hidden');
+        const extraSrvWrap = document.getElementById('proto-srv-extra-fields-wrap');
+        if (extraSrvWrap) {
+          const cFields = tpl.customFields || [];
+          extraSrvWrap.classList.toggle('hidden', cFields.length === 0);
+          extraSrvWrap.innerHTML = cFields.map((f, i) => `
+            <div>
+              <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">${f.label}</label>
+              <input type="text" id="proto-srv-custom-${i}" data-label="${(f.label || '').replace(/"/g, '&quot;')}" value="${(f.defaultValue || '').replace(/"/g, '&quot;')}" class="w-full px-2.5 py-1.5 rounded-lg border border-rose-300 dark:border-rose-700 bg-white dark:bg-zinc-900 text-xs font-semibold">
+            </div>
+          `).join('');
+        }
+        if ((tpl.checklist || []).length > 0) {
+          document.getElementById('proto-fields-dynamic-checklist')?.classList.remove('hidden');
+          renderDynamicChecklistInModal(kind);
+        }
       } else {
-        // Obsługa universal_inspection, universal_install oraz własnych szablonów dodanych w sekcji Urządzenia
         document.getElementById('proto-fields-dynamic-checklist')?.classList.remove('hidden');
         renderDynamicChecklistInModal(kind);
-        const tpl = getProtocolTemplateById(kind);
-        if (kind === 'universal_install' || tpl?.actionCategory === 'install') {
+        if ((kind === 'universal_install' || tpl?.actionCategory === 'install') && !(tpl?.customFields?.length > 0)) {
           document.getElementById('proto-fields-universal-install-extra')?.classList.remove('hidden');
         }
       }
 
-      // Jeśli dla kotła gazowego montaż ma też punkty kontrolne z szablonu, renderujemy je pomocniczo
       if (kind === 'gas_boiler_install') {
         document.getElementById('proto-fields-dynamic-checklist')?.classList.remove('hidden');
         renderDynamicChecklistInModal(kind);
@@ -5737,7 +5890,7 @@ service cloud.firestore {
           title: tpl?.title || 'PROTOKÓŁ PRZEGLĄDU POMPY CIEPŁA',
           checklist: hpLabels.map((label, idx) => ({ label, done: Boolean(document.getElementById(`proto-hp-chk-${idx + 1}`)?.checked ?? true) })),
           hpPressure: (document.getElementById('proto-hp-pressure')?.value || '1,5 bar').trim(),
-          fgazTool: (document.getElementById('proto-hp-fgaz')?.value || 'Wykrywacz nieszczelności / Certyfikat F-GAZ').trim()
+          fgazTool: (document.getElementById('proto-hp-fgaz')?.value || 'Certyfikat F-GAZ').trim()
         };
       }
 
@@ -5747,21 +5900,33 @@ service cloud.firestore {
           title: tpl?.title || 'PROTOKÓŁ ODBIORU I MONTAŻU POMPY CIEPŁA',
           hpSystemType: (document.getElementById('proto-hp-inst-type')?.value || 'Powietrze-Woda').trim(),
           refrigerant: (document.getElementById('proto-hp-inst-refrig')?.value || 'R32 / R290').trim(),
-          electricConn: (document.getElementById('proto-hp-inst-elec')?.value || 'Zgodnie z DTR producenta').trim(),
-          hydraulicsInfo: (document.getElementById('proto-hp-inst-hydr')?.value || 'Zamontowano filtr magnetyczny, próbę ciśnieniową wykonano').trim(),
-          testsResult: (document.getElementById('proto-hp-inst-test')?.value || 'Pozytywne / Inwestor przeszkolony z obsługi').trim()
+          electricConn: (document.getElementById('proto-hp-inst-elec')?.value || 'Zgodnie z DTR').trim(),
+          hydraulicsInfo: (document.getElementById('proto-hp-inst-hydr')?.value || 'Zamontowano filtr magnetyczny').trim(),
+          testsResult: (document.getElementById('proto-hp-inst-test')?.value || 'Pozytywne / Inwestor przeszkolony').trim()
         };
       }
 
-      if (kind === 'universal_service') {
+      if (kind === 'universal_service' || tpl?.actionCategory === 'service') {
         const workCourseVal = (document.getElementById('proto-srv-work-course')?.value || '').trim();
+        const extraSrvFields = (tpl?.customFields || []).map((f, i) => ({
+          label: f.label,
+          value: (document.getElementById(`proto-srv-custom-${i}`)?.value || f.defaultValue || '—').trim()
+        }));
+        const srvChecklist = (tpl?.checklist || []).map((label, idx) => ({
+          label,
+          done: Boolean(document.getElementById(`proto-dyn-chk-${idx}`)?.checked ?? true)
+        }));
         return {
           ...baseProtocol,
+          kind: 'universal_service',
+          actionCategory: 'service',
           title: tpl?.title || 'PROTOKÓŁ SERWISOWY / NAPRAWY URZĄDZENIA',
           reportedFault: (document.getElementById('proto-srv-fault')?.value || visit.notes || 'Zgłoszenie serwisowe').trim(),
           diagnosis: (document.getElementById('proto-srv-diagnosis')?.value || 'Przeprowadzono diagnostykę i naprawę').trim(),
           workCourse: workCourseVal || comment || 'Przeprowadzono diagnostykę oraz czynności naprawcze zgodnie ze zgłoszeniem.',
-          postServiceStatus: (document.getElementById('proto-srv-status')?.value || 'Urządzenie sprawne, przekazane do eksploatacji').trim()
+          postServiceStatus: (document.getElementById('proto-srv-status')?.value || 'Urządzenie sprawne, przekazane do eksploatacji').trim(),
+          customFieldsValues: extraSrvFields,
+          checklist: srvChecklist
         };
       }
 
@@ -5785,6 +5950,10 @@ service cloud.firestore {
         label,
         done: Boolean(document.getElementById(`proto-dyn-chk-${idx}`)?.checked ?? true)
       }));
+      const dynCustomParams = (tpl?.customFields || []).map((f, i) => ({
+        label: f.label,
+        value: (document.getElementById(`proto-dyn-param-${i}`)?.value || f.defaultValue || '—').trim()
+      }));
 
       return {
         ...baseProtocol,
@@ -5792,6 +5961,7 @@ service cloud.firestore {
         actionCategory: tpl?.actionCategory || (kind === 'universal_install' ? 'install' : 'inspection'),
         locIndoor: (document.getElementById('proto-univ-inst-loc')?.value || deviceNotes || 'Zgodnie z miejscem instalacji').trim(),
         testsResult: (document.getElementById('proto-univ-inst-test')?.value || 'Pozytywny — urządzenie sprawne').trim(),
+        customFieldsValues: dynCustomParams,
         checklist: dynChecklist
       };
     }
@@ -5978,42 +6148,8 @@ service cloud.firestore {
             </table>
           </div>
         `;
-      } else if (p.kind === 'hp_install') {
-        detailsSection = `
-          <div style="margin-bottom:12px;">
-            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#173d7a;margin-bottom:6px;">3. Szczegóły montażu i uruchomienia pompy ciepła</div>
-            <table style="width:100%;border-collapse:collapse;font-size:11px;">
-              <tbody>
-                <tr>
-                  <td style="border:1px solid #d4d4d8;padding:5px 10px;background:#f4f4f5;font-weight:700;width:42%;">Model pompy ciepła / Układ</td>
-                  <td style="border:1px solid #d4d4d8;padding:5px 10px;font-weight:700;">${p.deviceModel} (${p.hpSystemType || 'Powietrze-Woda'})</td>
-                </tr>
-                <tr>
-                  <td style="border:1px solid #d4d4d8;padding:5px 10px;background:#f4f4f5;font-weight:700;">Numery fabryczne JW / JZ</td>
-                  <td style="border:1px solid #d4d4d8;padding:5px 10px;font-family:monospace;font-weight:700;">JW: ${snIndoorVal} &nbsp;|&nbsp; JZ: ${snOutdoorVal}</td>
-                </tr>
-                <tr>
-                  <td style="border:1px solid #d4d4d8;padding:5px 10px;background:#f4f4f5;font-weight:700;">Czynnik chłodniczy / Zasilanie elektryczne</td>
-                  <td style="border:1px solid #d4d4d8;padding:5px 10px;">${p.refrigerant || 'R32 / R290'} &nbsp;|&nbsp; ${p.electricConn || 'Zgodnie z DTR'}</td>
-                </tr>
-                <tr>
-                  <td style="border:1px solid #d4d4d8;padding:5px 10px;background:#f4f4f5;font-weight:700;">Układ hydrauliczny i filtracja</td>
-                  <td style="border:1px solid #d4d4d8;padding:5px 10px;">${p.hydraulicsInfo || 'Zamontowano filtr magnetyczny, próba szczelności pozytywna'}</td>
-                </tr>
-                <tr>
-                  <td style="border:1px solid #d4d4d8;padding:5px 10px;background:#f4f4f5;font-weight:700;">Uruchomienie testowe i przeszkolenie Inwestora</td>
-                  <td style="border:1px solid #d4d4d8;padding:5px 10px;font-weight:800;color:#047857;">${p.testsResult || 'Pozytywne / Inwestor przeszkolony z obsługi'}</td>
-                </tr>
-                <tr>
-                  <td style="border:1px solid #d4d4d8;padding:5px 10px;background:#f4f4f5;font-weight:700;">Okres gwarancji</td>
-                  <td style="border:1px solid #d4d4d8;padding:5px 10px;font-weight:700;">${p.warrantyMonths || 60} miesięcy (Następny przegląd: ${formatDatePL(addMonths(p.date, 12))})</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        `;
       } else if (p.kind === 'gas_boiler_install') {
-        const gbInstallChecklistRows = (p.checklist || []).map((item, idx) => `
+        const gbInstallRows = (p.checklist || []).map((item, idx) => `
           <tr>
             <td style="border:1px solid #d4d4d8;padding:3.5px 8px;text-align:center;width:30px;font-weight:700;">${idx + 1}.</td>
             <td style="border:1px solid #d4d4d8;padding:3.5px 10px;">${item.label}</td>
@@ -6023,20 +6159,20 @@ service cloud.firestore {
 
         detailsSection = `
           <div style="margin-bottom:10px;">
-            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#173d7a;margin-bottom:5px;">3. Parametry techniczne montażu i pierwszego uruchomienia kotła gazowego</div>
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#173d7a;margin-bottom:6px;">3. Parametry techniczne montażu i pierwszego uruchomienia kotła gazowego</div>
             <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px;">
               <tbody>
                 <tr>
-                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;background:#f4f4f5;font-weight:700;width:42%;">Model kotła / Nr fabryczny (S/N)</td>
-                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;font-weight:700;">${p.deviceModel} &nbsp;|&nbsp; S/N: <span style="font-family:monospace;">${snIndoorVal}</span></td>
+                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;background:#f4f4f5;font-weight:700;width:42%;">Model kotła gazowego / Nr fabryczny (S/N)</td>
+                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;font-weight:700;">${p.deviceModel} &nbsp;|&nbsp; <span style="font-family:monospace;">S/N: ${snIndoorVal}</span></td>
                 </tr>
                 <tr>
-                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;background:#f4f4f5;font-weight:700;">Rodzaj gazu i zasilanie / Układ spalinowy</td>
-                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;">${p.gasTypeSupply || 'GZ-50 (E) / 230V'} &nbsp;|&nbsp; ${p.flueSystem || 'Koncentryczny'}</td>
+                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;background:#f4f4f5;font-weight:700;">Rodzaj gazu i zasilanie elektryczne</td>
+                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;">${p.gasTypeSupply || 'GZ-50 (E) / 230V'}</td>
                 </tr>
                 <tr>
-                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;background:#f4f4f5;font-weight:700;">Armatura zabezpieczająca / Filtr magnetyczny / Syfon</td>
-                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;">${p.hydraulicsInfo || 'Zamontowano filtr magnetyczny, syfon kondensatu podłączony'}</td>
+                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;background:#f4f4f5;font-weight:700;">Układ powietrzno-spalinowy / Filtracja i kondensat</td>
+                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;">${p.flueSystem || 'Koncentryczny'} &nbsp;|&nbsp; ${p.hydraulicsInfo || 'Filtr magnetyczny, syfon podłączony'}</td>
                 </tr>
                 <tr>
                   <td style="border:1px solid #d4d4d8;padding:4.5px 10px;background:#f4f4f5;font-weight:700;">Próba szczelności gazu oraz analiza spalin</td>
@@ -6048,21 +6184,49 @@ service cloud.firestore {
                 </tr>
               </tbody>
             </table>
-            ${gbInstallChecklistRows ? `
+            ${gbInstallRows ? `
               <table style="width:100%;border-collapse:collapse;font-size:10.5px;">
                 <thead>
                   <tr style="background:#e4e4e7;font-weight:800;">
                     <th style="border:1px solid #d4d4d8;padding:3.5px;">Lp.</th>
-                    <th style="border:1px solid #d4d4d8;padding:3.5px;text-align:left;">Czynność montażowa / odbiorowa</th>
+                    <th style="border:1px solid #d4d4d8;padding:3.5px;text-align:left;">Czynność odbiorowa</th>
                     <th style="border:1px solid #d4d4d8;padding:3.5px;text-align:center;">Status</th>
                   </tr>
                 </thead>
-                <tbody>${gbInstallChecklistRows}</tbody>
+                <tbody>${gbInstallRows}</tbody>
               </table>
             ` : ''}
           </div>
         `;
-      } else if (p.kind === 'universal_service') {
+      } else if (p.kind === 'universal_service' || p.actionCategory === 'service') {
+        const extraSrvRows = (p.customFieldsValues || []).map(cf => `
+          <tr>
+            <td style="border:1px solid #d4d4d8;padding:6px 10px;background:#f4f4f5;font-weight:800;">${cf.label}</td>
+            <td style="border:1px solid #d4d4d8;padding:6px 10px;font-weight:600;">${cf.value || '—'}</td>
+          </tr>
+        `).join('');
+
+        const srvChecklistTable = (p.checklist || []).length > 0 ? `
+          <table style="width:100%;border-collapse:collapse;font-size:10.5px;margin-top:8px;">
+            <thead>
+              <tr style="background:#e4e4e7;font-weight:800;">
+                <th style="border:1px solid #d4d4d8;padding:3.5px;">Lp.</th>
+                <th style="border:1px solid #d4d4d8;padding:3.5px;text-align:left;">Dodatkowa czynność kontrolna</th>
+                <th style="border:1px solid #d4d4d8;padding:3.5px;text-align:center;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(p.checklist || []).map((item, idx) => `
+                <tr>
+                  <td style="border:1px solid #d4d4d8;padding:3.5px 8px;text-align:center;width:30px;font-weight:700;">${idx + 1}.</td>
+                  <td style="border:1px solid #d4d4d8;padding:3.5px 10px;">${item.label}</td>
+                  <td style="border:1px solid #d4d4d8;padding:3.5px 10px;text-align:center;width:105px;font-weight:800;color:${item.done ? '#047857' : '#71717a'};">${item.done ? '✓ WYKONANO' : 'Nie dotyczy'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : '';
+
         detailsSection = `
           <div style="margin-bottom:12px;">
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#173d7a;margin-bottom:6px;">3. Zgłoszone objawy, diagnoza oraz przebieg prac serwisowych</div>
@@ -6080,15 +6244,36 @@ service cloud.firestore {
                   <td style="border:1px solid #d4d4d8;padding:6px 10px;background:#f4f4f5;font-weight:800;">Przebieg prac serwisowych</td>
                   <td style="border:1px solid #d4d4d8;padding:6px 10px;white-space:pre-line;font-weight:600;">${p.workCourse || p.comments || 'Wykonano diagnostykę i czynności serwisowe.'}</td>
                 </tr>
+                ${extraSrvRows}
                 <tr>
                   <td style="border:1px solid #d4d4d8;padding:6px 10px;background:#f4f4f5;font-weight:800;">Status urządzenia po naprawie</td>
                   <td style="border:1px solid #d4d4d8;padding:6px 10px;font-weight:800;color:#047857;">${p.postServiceStatus || 'Urządzenie sprawne'}</td>
                 </tr>
               </tbody>
             </table>
+            ${srvChecklistTable}
           </div>
         `;
       } else {
+        const customParamRowsHtml = (p.customFieldsValues || []).map(cf => `
+          <tr>
+            <td style="border:1px solid #d4d4d8;padding:4.5px 10px;background:#f4f4f5;font-weight:700;width:42%;">${cf.label}</td>
+            <td style="border:1px solid #d4d4d8;padding:4.5px 10px;font-weight:700;">${cf.value || '—'}</td>
+          </tr>
+        `).join('');
+
+        const customParamsTableBlock = customParamRowsHtml ? `
+          <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px;">
+            <tbody>
+              ${customParamRowsHtml}
+              <tr>
+                <td style="border:1px solid #d4d4d8;padding:4.5px 10px;background:#f4f4f5;font-weight:700;">Okres gwarancji</td>
+                <td style="border:1px solid #d4d4d8;padding:4.5px 10px;font-weight:700;">${p.warrantyMonths || 60} miesięcy (Kolejny przegląd: ${formatDatePL(addMonths(p.date, 12))})</td>
+              </tr>
+            </tbody>
+          </table>
+        ` : '';
+
         const rowsHtml = (p.checklist || []).map((item, idx) => `
           <tr>
             <td style="border:1px solid #d4d4d8;padding:4px 8px;text-align:center;width:32px;font-weight:700;">${idx + 1}.</td>
@@ -6117,7 +6302,7 @@ service cloud.firestore {
               <strong>Termin kolejnego przeglądu:</strong> ${formatDatePL(addMonths(p.date, 12))}
             </div>
           `;
-        } else if (p.kind === 'universal_install' || p.actionCategory === 'install') {
+        } else if ((p.kind === 'universal_install' || p.actionCategory === 'install') && !customParamRowsHtml) {
           extraParamsRow = `
             <div style="margin-top:6px;padding:6px 10px;border:1px solid #d4d4d8;border-radius:6px;background:#fafafa;font-size:10.5px;color:#18181b;">
               <strong>Miejsce montażu:</strong> ${p.locIndoor || p.deviceNotes || 'Zgodnie z DTR'} &nbsp;|&nbsp;
@@ -6125,7 +6310,7 @@ service cloud.firestore {
               <strong>Gwarancja:</strong> ${p.warrantyMonths || 60} msc (Kolejny przegląd: ${formatDatePL(addMonths(p.date, 12))})
             </div>
           `;
-        } else {
+        } else if (!customParamRowsHtml) {
           extraParamsRow = `
             <div style="margin-top:6px;font-size:10px;color:#52525b;">
               <strong>Wynik kontroli:</strong> Urządzenie sprawne &nbsp;•&nbsp;
@@ -6135,22 +6320,25 @@ service cloud.firestore {
         }
 
         const sectionHeaderTitle = (p.kind === 'universal_install' || p.actionCategory === 'install')
-          ? '3. Zakres wykonanych czynności montażowych i odbiorowych'
+          ? '3. Parametry techniczne oraz zakres czynności montażowych i odbiorowych'
           : '3. Zakres wykonanych czynności przeglądowych i kontrolnych';
 
         detailsSection = `
           <div style="margin-bottom:10px;">
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#173d7a;margin-bottom:6px;">${sectionHeaderTitle}</div>
+            ${customParamsTableBlock}
+            ${rowsHtml ? `
             <table style="width:100%;border-collapse:collapse;font-size:11px;">
               <thead>
                 <tr style="background:#e4e4e7;font-weight:800;">
                   <th style="border:1px solid #d4d4d8;padding:4px;">Lp.</th>
-                  <th style="border:1px solid #d4d4d8;padding:4px;text-align:left;">Czynność kontrolna / serwisowa</th>
+                  <th style="border:1px solid #d4d4d8;padding:4px;text-align:left;">Czynność kontrolna / odbiorowa</th>
                   <th style="border:1px solid #d4d4d8;padding:4px;text-align:center;">Status</th>
                 </tr>
               </thead>
               <tbody>${rowsHtml}</tbody>
             </table>
+            ` : ''}
             ${extraParamsRow}
           </div>
         `;
@@ -6249,15 +6437,32 @@ service cloud.firestore {
     function showProtocolObjectInModal(proto) {
       currentPreviewProtocolObj = proto;
       setText('protocol-preview-modal-title', `${proto.title} — ${proto.clientName}`);
+      const senderInput = document.getElementById('sender-gmail-account-input');
+      const savedSender = localStorage.getItem(STORAGE_KEYS.SENDER_EMAIL) || '';
+      if (senderInput) senderInput.value = savedSender;
+
       const emailInfoEl = document.getElementById('protocol-preview-email-info');
       if (emailInfoEl) {
+        const senderNote = savedSender ? ` • Nadawca: ${savedSender}` : '';
         emailInfoEl.innerText = proto.clientEmail
-          ? `✉️ E-mail klienta: ${proto.clientEmail} (zostanie automatycznie skopiowany i wstawiony do Gmaila)`
-          : 'Dokument zapisany w historii urządzenia — gotowy do pobrania w PDF lub wydruku';
+          ? `✉️ Odbiorca (Klient): ${proto.clientEmail}${senderNote}`
+          : `Dokument zapisany w historii urządzenia — gotowy do pobrania w PDF lub wydruku${senderNote}`;
       }
       const area = document.getElementById('protocol-printable-area');
       if (area) area.innerHTML = renderProtocolSheetHtml(proto);
       openModal('modal-protocol-preview');
+    }
+
+    function saveSenderGmailAccount(val) {
+      const clean = (val || '').trim();
+      localStorage.setItem(STORAGE_KEYS.SENDER_EMAIL, clean);
+      const emailInfoEl = document.getElementById('protocol-preview-email-info');
+      if (emailInfoEl && currentPreviewProtocolObj) {
+        const senderNote = clean ? ` • Nadawca: ${clean}` : '';
+        emailInfoEl.innerText = currentPreviewProtocolObj.clientEmail
+          ? `✉️ Odbiorca (Klient): ${currentPreviewProtocolObj.clientEmail}${senderNote}`
+          : `Dokument zapisany w historii urządzenia${senderNote}`;
+      }
     }
 
     function copyTextToClipboardFallback(text) {
@@ -6281,7 +6486,7 @@ service cloud.firestore {
       if (!currentPreviewProtocolObj) return;
       const p = currentPreviewProtocolObj;
 
-      // 1. Szukamy adresu e-mail w protokole lub bezpośrednio w karcie klienta
+      // 1. Szukamy adresu e-mail klienta w protokole lub bezpośrednio w karcie klienta
       let clientEmail = (p.clientEmail || '').trim();
       if (!clientEmail) {
         const matchedClient = (window.clientsData || []).find(c => c.name === p.clientName);
@@ -6293,22 +6498,26 @@ service cloud.firestore {
         copyTextToClipboardFallback(clientEmail);
       }
 
-      // 3. Pobieramy plik PDF na urządzenie, aby użytkownik mógł go od razu załączyć
+      // 3. Pobieramy plik PDF na urządzenie
       await downloadCurrentProtocolPDF();
 
-      // 4. Otwieramy okno tworzenia nowej wiadomości w Gmailu z wypełnionym odbiorcą, tematem i treścią
+      // 4. Sprawdzamy wpisane konto nadawcy Gmail (authuser), aby otworzyć właściwe konto Google
+      const senderAccount = (document.getElementById('sender-gmail-account-input')?.value || localStorage.getItem(STORAGE_KEYS.SENDER_EMAIL) || '').trim();
+
+      // 5. Otwieramy okno tworzenia wiadomości w Gmailu z czystą, profesjonalną treścią
       const subject = encodeURIComponent(`${p.title || 'Protokół serwisowy'} - ${p.deviceModel || 'Urządzenie HVAC'} (${formatDatePL(p.date)})`);
       const body = encodeURIComponent(
-        `Dzień dobry,\n\nW załączeniu przesyłamy ${p.title || 'protokół serwisowy'} z dnia ${formatDatePL(p.date)} dla urządzenia ${p.deviceModel || 'HVAC'}.\n\n(Plik PDF został automatycznie pobrany na urządzenie — prosimy o przeciągnięcie go do tej wiadomości jako załącznik).\n\nPozdrawiamy,\nZespół INSTAL`
+        `Dzień dobry,\n\nW załączeniu przesyłamy ${p.title || 'protokół serwisowy'} z dnia ${formatDatePL(p.date)} dla urządzenia ${p.deviceModel || 'HVAC'}.\n\nPozdrawiamy,\nZespół INSTAL`
       );
-      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(clientEmail)}&su=${subject}&body=${body}`;
+      const authUserParam = senderAccount ? `&authuser=${encodeURIComponent(senderAccount)}` : '';
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(clientEmail)}&su=${subject}&body=${body}${authUserParam}`;
 
       window.open(gmailUrl, '_blank', 'noopener,noreferrer');
 
       showToast(
         clientEmail
-          ? `Pobrano PDF, skopiowano e-mail (${clientEmail}) do schowka i otwarto Gmaila!`
-          : 'Pobrano PDF i otwarto Gmaila (klient nie ma przypisanego adresu e-mail).'
+          ? `Pobrano PDF, skopiowano e-mail (${clientEmail}) i otwarto Gmaila${senderAccount ? ' na koncie ' + senderAccount : ''}!`
+          : `Pobrano PDF i otwarto Gmaila${senderAccount ? ' na koncie ' + senderAccount : ''}.`
       );
     }
 
