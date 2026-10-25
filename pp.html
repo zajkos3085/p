@@ -1282,7 +1282,7 @@
               </div>
               <div>
                 <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Narzędzie pomiarowe / Nr certyfikatu F-GAZ</label>
-                <input type="text" id="proto-insp-fgaz" value="Wykrywacz nieszczelności / FGAZ-P/27/0109/22" class="w-full px-2.5 py-1.5 rounded-lg border border-sky-300 dark:border-sky-700 bg-white dark:bg-zinc-900 text-xs">
+                <input type="text" id="proto-insp-fgaz" value="Wykrywacz nieszczelności / Certyfikat F-GAZ" class="w-full px-2.5 py-1.5 rounded-lg border border-sky-300 dark:border-sky-700 bg-white dark:bg-zinc-900 text-xs">
               </div>
             </div>
 
@@ -1319,9 +1319,171 @@
           <span>Zaktualizuj również datę kolejnego przeglądu okresowego (+ interwał urządzenia)</span>
         </label>
         <div class="flex justify-end gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-          <button type="button" onclick="closeModal('modal-confirm-action')" class="px-3.5 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Anuluj</button>
-          <button type="button" onclick="executeConfirmedAction()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-extrabold shadow-sm">Tak, wykonaj</button>
+          <button type="button" onclick="closeModal('modal-close-visit')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">Anuluj</button>
+          <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm transition">Zatwierdź i zamknij zlecenie</button>
         </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: PASSWORD FOR CSV EXPORT & ADMIN ACTIONS -->
+  <div id="modal-export-password" class="fixed inset-0 z-[75] bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-sm w-full shadow-2xl p-5 space-y-4 border border-zinc-200 dark:border-zinc-800">
+      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="lock" class="w-4 h-4 text-emerald-600"></i>
+          <h3 id="auth-modal-title" class="text-sm font-extrabold">Autoryzacja hasłem</h3>
+        </div>
+        <button type="button" onclick="closeModal('modal-export-password')"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <form onsubmit="confirmExportPassword(event)" class="space-y-3">
+        <p id="auth-modal-desc" class="text-xs text-zinc-500 dark:text-zinc-400">Podaj hasło autoryzacyjne, aby kontynuować:</p>
+        <input type="password" id="export-password-input" required placeholder="Wpisz hasło..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-bold tracking-widest text-center outline-none focus:border-emerald-500">
+        <p id="export-password-error" class="text-xs text-rose-600 font-bold text-center hidden">Nieprawidłowe hasło!</p>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('modal-export-password')" class="px-3.5 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Anuluj</button>
+          <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold">Odblokuj</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: WORKERS MANAGEMENT -->
+  <div id="modal-workers" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-md w-full shadow-2xl p-5 space-y-4 border border-zinc-200 dark:border-zinc-800">
+      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
+        <h3 class="text-base font-extrabold">Ekipy i serwisanci</h3>
+        <button type="button" onclick="closeModal('modal-workers')"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form onsubmit="handleAddWorker(event)" class="flex gap-2">
+        <input type="text" id="new-worker-name" required placeholder="Imię / nazwa ekipy (np. Tomek)" class="flex-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
+        <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold">+ Dodaj</button>
+      </form>
+      <div id="workers-list-container" class="space-y-2 max-h-60 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: FIREBASE CLOUD CONFIG -->
+  <div id="modal-firebase" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-2xl w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800 max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="cloud" class="w-5 h-5 text-emerald-600"></i>
+          <h3 class="text-base font-extrabold">Konfiguracja i Diagnostyka Bazy Online (Firebase)</h3>
+        </div>
+        <button type="button" onclick="closeModal('modal-firebase')"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div id="fb-diagnostic-box" class="p-3.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-xs space-y-1.5">
+        <div class="font-extrabold flex items-center justify-between">
+          <span>Status połączenia:</span>
+          <span id="fb-diag-badge" class="px-2 py-0.5 rounded bg-zinc-300 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold">Nie przetestowano</span>
+        </div>
+        <p id="fb-diag-message" class="text-zinc-600 dark:text-zinc-400 leading-relaxed">Wpisz dane projektu poniżej i kliknij „Połącz i Przetestuj”.</p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800/80 text-xs space-y-2">
+        <div class="font-extrabold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+          <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i> Wymagane reguły Firestore w konsoli Firebase (Rules):
+        </div>
+        <pre class="p-2.5 rounded-lg bg-zinc-900 text-emerald-400 font-mono text-[11px] overflow-x-auto select-all">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}</pre>
+      </div>
+
+      <div class="p-3.5 rounded-xl bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 space-y-2.5">
+        <div class="text-xs font-extrabold text-zinc-800 dark:text-zinc-200">Szybki kreator (Wpisz 2 pola z konsoli Firebase):</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-[11px] font-bold text-zinc-500 mb-1">Identyfikator projektu (Project ID)</label>
+            <input type="text" id="fb-quick-project-id" oninput="buildConfigFromQuickFields()" placeholder="np. pp-planer-12345" class="w-full px-3 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-zinc-500 mb-1">Klucz API sieci Web (apiKey)</label>
+            <input type="text" id="fb-quick-api-key" oninput="buildConfigFromQuickFields()" placeholder="np. AIzaSyB..." class="w-full px-3 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs outline-none">
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Pełna konfiguracja JSON</label>
+        <textarea id="firebase-config-input" rows="4" placeholder='{"apiKey": "...", "projectId": "..."}' class="w-full p-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-mono outline-none"></textarea>
+      </div>
+      <div class="flex flex-wrap justify-between items-center gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+        <button type="button" onclick="disconnectFirebase()" class="px-3 py-2 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-bold">Rozłącz chmurę</button>
+        <div class="flex gap-2">
+          <button type="button" onclick="closeModal('modal-firebase')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Zamknij</button>
+          <button type="button" onclick="saveAndConnectFirebase()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-sm">Połącz i Przetestuj</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CSV IMPORT PREVIEW -->
+  <div id="modal-csv-preview" class="fixed inset-0 z-[70] bg-zinc-950/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-4xl w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800 max-h-[92vh] flex flex-col">
+      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3 shrink-0">
+        <div class="flex items-center gap-2">
+          <i data-lucide="file-spreadsheet" class="w-5 h-5 text-emerald-600"></i>
+          <div>
+            <h3 class="text-base font-extrabold">Podgląd importu klientów z pliku CSV</h3>
+            <p class="text-[11px] text-zinc-500">Nowi klienci zostaną dopisani do bazy, a istniejący uzupełnieni (obecni klienci nie zostaną usunięci)</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('modal-csv-preview')"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div id="csv-preview-stats" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 shrink-0"></div>
+
+      <div id="csv-geocode-progress-box" class="hidden p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 space-y-1.5 shrink-0">
+        <div class="flex justify-between text-xs font-extrabold text-amber-900 dark:text-amber-300">
+          <span id="csv-geocode-status-txt">📍 Namierzanie współrzędnych GPS dla adresów...</span>
+          <span id="csv-geocode-counter">0 / 0</span>
+        </div>
+        <div class="w-full h-2 bg-amber-200 dark:bg-amber-900 rounded-full overflow-hidden">
+          <div id="csv-geocode-bar" class="bg-emerald-600 h-full transition-all duration-200" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div class="overflow-y-auto flex-1 border border-zinc-200 dark:border-zinc-800 rounded-xl">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead class="sticky top-0 bg-zinc-900 text-white text-[10px] uppercase font-bold">
+            <tr>
+              <th class="py-2.5 px-3">Klient i NIP</th>
+              <th class="py-2.5 px-3">Telefon</th>
+              <th class="py-2.5 px-3">Adres i GPS</th>
+              <th class="py-2.5 px-3">Urządzenia z pliku</th>
+              <th class="py-2.5 px-3">Tryb zapisu</th>
+            </tr>
+          </thead>
+          <tbody id="csv-preview-tbody" class="divide-y divide-zinc-200 dark:divide-zinc-800"></tbody>
+        </table>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 shrink-0">
+        <button type="button" id="csv-cancel-btn" onclick="closeModal('modal-csv-preview')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Anuluj</button>
+        <button type="button" id="csv-confirm-btn" onclick="confirmCsvImport()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm">+ Dopisz do bazy klientów</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIRM ACTION -->
+  <div id="modal-confirm-action" class="fixed inset-0 z-[85] bg-zinc-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-sm w-full shadow-2xl p-5 space-y-4 border border-zinc-200 dark:border-zinc-800">
+      <div class="flex items-center gap-2.5 text-amber-600 dark:text-amber-400">
+        <i data-lucide="alert-triangle" class="w-5 h-5 shrink-0"></i>
+        <h3 id="confirm-action-title" class="text-sm font-extrabold text-zinc-900 dark:text-white">Potwierdzenie akcji</h3>
+      </div>
+      <p id="confirm-action-msg" class="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">Czy na pewno chcesz wykonać tę operację?</p>
+      <div class="flex justify-end gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+        <button type="button" onclick="closeModal('modal-confirm-action')" class="px-3.5 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Anuluj</button>
+        <button type="button" onclick="executeConfirmedAction()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-extrabold shadow-sm">Tak, wykonaj</button>
+      </div>
     </div>
   </div>
 
@@ -4422,7 +4584,7 @@
         kind,
         createdAt: new Date().toISOString(),
         date: dateStr,
-        technician: visit.workerName || 'Paweł Płócienniczak',
+        technician: visit.workerName || 'INSTAL-STENCEL',
         clientName: client?.name || 'Klient',
         clientNip: client?.nip || '',
         clientAddress: client ? `${client.postalCode ? client.postalCode + ' ' : ''}${client.city || ''}, ${client.street || ''}` : '',
@@ -4473,7 +4635,7 @@
       return {
         ...baseProtocol,
         title: 'PROTOKÓŁ PRZEGLĄDU KLIMATYZATORA',
-        fgazTool: (document.getElementById('proto-insp-fgaz')?.value || 'Wykrywacz nieszczelności / FGAZ-P/27/0109/22').trim(),
+        fgazTool: (document.getElementById('proto-insp-fgaz')?.value || 'Wykrywacz nieszczelności / Certyfikat F-GAZ').trim(),
         checklist
       };
     }
@@ -4484,9 +4646,9 @@
       const companyHeader = `
         <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #059669;padding-bottom:12px;margin-bottom:16px;">
           <div>
-            <div style="font-size:18px;font-weight:900;color:#064e3b;letter-spacing:-0.5px;">PRO-INSTAL Paweł Płócienniczak</div>
-            <div style="font-size:11px;color:#3f3f46;font-weight:600;">ul. Czereśniowa 9, 62-040 Puszczykowo • tel. +48 797 922 496</div>
-            <div style="font-size:10px;color:#52525b;">Certyfikat F-GAZ Przedsiębiorcy: FGAZ-P/27/0109/22</div>
+            <div style="font-size:20px;font-weight:900;color:#064e3b;letter-spacing:-0.5px;">INSTAL-STENCEL</div>
+            <div style="font-size:11px;color:#3f3f46;font-weight:700;">Instalacje grzewcze, klimatyzacja, wentylacja i pompy ciepła</div>
+            <div style="font-size:10px;color:#52525b;">Wykonawca / Serwisant prowadzący: <strong>${p.technician || 'INSTAL-STENCEL'}</strong></div>
           </div>
           <div style="text-align:right;">
             <div style="font-size:14px;font-weight:900;color:#18181b;background:#d1fae5;padding:4px 10px;border-radius:6px;border:1px solid #10b981;">${p.title}</div>
@@ -4582,7 +4744,7 @@
               <tbody>${rowsHtml}</tbody>
             </table>
             <div style="margin-top:6px;font-size:10px;color:#52525b;">
-              <strong>Przyrząd pomiarowy / Uprawnienia:</strong> ${p.fgazTool || 'Wykrywacz nieszczelności / FGAZ-P/27/0109/22'} &nbsp;•&nbsp;
+              <strong>Przyrząd pomiarowy / Uprawnienia:</strong> ${p.fgazTool || 'Wykrywacz nieszczelności / Certyfikat F-GAZ'} &nbsp;•&nbsp;
               <strong>Termin kolejnego przeglądu:</strong> ${formatDatePL(addMonths(p.date, 12))}
             </div>
           </div>
@@ -4715,7 +4877,7 @@
         showToast('Odblokuj wyskakujące okienka lub użyj przycisku Pobierz PDF.');
         return;
       }
-      win.document.write(`<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8"><title>Protokół PRO-INSTAL</title><style>body{font-family:Arial,sans-serif;margin:20px;color:#18181b;}</style></head><body>${area.innerHTML}<script>window.onload=function(){window.print();}<\/script></body></html>`);
+      win.document.write(`<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8"><title>Protokół INSTAL-STENCEL</title><style>body{font-family:Arial,sans-serif;margin:20px;color:#18181b;}</style></head><body>${area.innerHTML}<script>window.onload=function(){window.print();}<\/script></body></html>`);
       win.document.close();
     }
 
