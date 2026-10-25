@@ -1295,15 +1295,9 @@
                   <span>9. Test poprawnego działania we wszystkich trybach</span>
                 </label>
               </div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div>
-                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Zużyte materiały / części eksploatacyjne</label>
-                  <input type="text" id="proto-insp-materials" value="Preparat do dezynfekcji i odgrzybiania parownika, środki czyszczące" placeholder="np. Preparat grzybobójczy, wkład filtra..." class="w-full px-2.5 py-1.5 rounded-lg border border-sky-300 dark:border-sky-700 bg-white dark:bg-zinc-900 text-xs font-semibold">
-                </div>
-                <div>
-                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Narzędzie pomiarowe / Nr certyfikatu F-GAZ</label>
-                  <input type="text" id="proto-insp-fgaz" value="Wykrywacz nieszczelności / Certyfikat F-GAZ" class="w-full px-2.5 py-1.5 rounded-lg border border-sky-300 dark:border-sky-700 bg-white dark:bg-zinc-900 text-xs">
-                </div>
+              <div>
+                <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Narzędzie pomiarowe / Nr certyfikatu F-GAZ</label>
+                <input type="text" id="proto-insp-fgaz" value="Wykrywacz nieszczelności / Certyfikat F-GAZ" class="w-full px-2.5 py-1.5 rounded-lg border border-sky-300 dark:border-sky-700 bg-white dark:bg-zinc-900 text-xs">
               </div>
             </div>
 
@@ -1329,6 +1323,11 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <div id="close-visit-materials-wrap" class="hidden">
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Zużyte materiały / części eksploatacyjne (zostaną wpisane na protokole nad uwagami)</label>
+          <input type="text" id="proto-insp-materials" value="Preparat do dezynfekcji i odgrzybiania parownika, środki czyszczące" placeholder="np. Preparat grzybobójczy, wkład filtra, bezpiecznik..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold outline-none focus:border-emerald-500">
         </div>
 
         <div>
@@ -4598,17 +4597,19 @@ service cloud.firestore {
 
     function toggleProtocolFormInCloseModal(checked) {
       document.getElementById('close-visit-protocol-fields')?.classList.toggle('hidden', !checked);
+      const kind = document.getElementById('proto-form-kind')?.value;
+      document.getElementById('close-visit-materials-wrap')?.classList.toggle('hidden', !checked || kind !== 'ac_inspection');
     }
 
     function refreshProtocolVisibilityInCloseModal(visit) {
       if (!visit) return;
       const client = (window.clientsData || []).find(c => c.id === visit.clientId);
-      const dev = client?.devices?.find(d => d.id === visit.deviceId) || client?.devices?.[0];
+      const acDev = client?.devices?.find(d => d.id === visit.deviceId) || client?.devices?.find(d => d.deviceType === 'ac') || client?.devices?.[0];
       const isMontaz = (visit.serviceType || '').toLowerCase().includes('monta');
 
       const currentDevType = isMontaz
         ? (document.getElementById('close-install-type')?.value || visit.plannedInstallType || 'heat_pump')
-        : (dev?.deviceType || 'heat_pump');
+        : (acDev?.deviceType || 'heat_pump');
 
       const outSerialWrap = document.getElementById('close-install-serial-out-wrap');
       if (outSerialWrap) outSerialWrap.classList.toggle('hidden', currentDevType !== 'ac');
@@ -4616,6 +4617,7 @@ service cloud.firestore {
       const sectionEl = document.getElementById('close-visit-protocol-section');
       const installFieldsEl = document.getElementById('proto-fields-ac-install');
       const inspFieldsEl = document.getElementById('proto-fields-ac-inspection');
+      const materialsWrapEl = document.getElementById('close-visit-materials-wrap');
       const attachCheckbox = document.getElementById('close-visit-attach-protocol');
       const kindInput = document.getElementById('proto-form-kind');
 
@@ -4623,13 +4625,13 @@ service cloud.firestore {
       if (currentDevType === 'ac') {
         sectionEl?.classList.remove('hidden');
         if (attachCheckbox) attachCheckbox.checked = true;
-        toggleProtocolFormInCloseModal(true);
 
         if (isMontaz) {
           kindInput.value = 'ac_install';
           setText('close-visit-protocol-title', '📄 Wystaw Kartę Montażu Klimatyzacji (z podpisem klienta)');
           installFieldsEl?.classList.remove('hidden');
           inspFieldsEl?.classList.add('hidden');
+          materialsWrapEl?.classList.add('hidden');
 
           document.getElementById('proto-inst-sn-in').value = document.getElementById('close-install-serial')?.value || '';
           document.getElementById('proto-inst-sn-out').value = document.getElementById('close-install-serial-outdoor')?.value || '';
@@ -4641,10 +4643,11 @@ service cloud.firestore {
           setText('close-visit-protocol-title', '📄 Wystaw Protokół Przeglądu Klimatyzatora (z podpisem klienta)');
           installFieldsEl?.classList.add('hidden');
           inspFieldsEl?.classList.remove('hidden');
+          materialsWrapEl?.classList.remove('hidden');
 
           // Automatyczne uzupełnienie numerów seryjnych jednostki wewnętrznej i zewnętrznej z karty urządzenia
-          document.getElementById('proto-inst-sn-in').value = dev?.serialNumber || '';
-          document.getElementById('proto-inst-sn-out').value = dev?.serialNumberOutdoor || '';
+          document.getElementById('proto-inst-sn-in').value = acDev?.serialNumber || '';
+          document.getElementById('proto-inst-sn-out').value = acDev?.serialNumberOutdoor || '';
           if (document.getElementById('proto-insp-materials')) {
             document.getElementById('proto-insp-materials').value = 'Preparat do dezynfekcji i odgrzybiania parownika, środki czyszczące';
           }
@@ -4654,8 +4657,10 @@ service cloud.firestore {
             if (cb) cb.checked = true;
           }
         }
+        toggleProtocolFormInCloseModal(true);
       } else {
         sectionEl?.classList.add('hidden');
+        materialsWrapEl?.classList.add('hidden');
         if (attachCheckbox) attachCheckbox.checked = false;
       }
     }
@@ -4670,8 +4675,10 @@ service cloud.firestore {
       const techSig = getSignatureDataUrl('sig-canvas-tech');
       const clientSig = getSignatureDataUrl('sig-canvas-client');
 
-      const snIn = (document.getElementById('proto-inst-sn-in')?.value || '').trim() || serialNumber || '—';
-      const snOut = (document.getElementById('proto-inst-sn-out')?.value || '').trim() || serialNumberOutdoor || '—';
+      const rawSnIn = (document.getElementById('proto-inst-sn-in')?.value || '').trim();
+      const rawSnOut = (document.getElementById('proto-inst-sn-out')?.value || '').trim();
+      const snIn = rawSnIn || serialNumber || '—';
+      const snOut = rawSnOut || serialNumberOutdoor || '—';
 
       const baseProtocol = {
         id: 'prot_' + Date.now(),
@@ -4733,40 +4740,103 @@ service cloud.firestore {
       };
     }
 
-    function getInstalLogoSvgHtml() {
-      return `
-        <svg viewBox="0 0 540 115" style="height:46px;width:auto;display:block;" xmlns="http://www.w3.org/2000/svg" aria-label="INSTAL">
-          <defs>
-            <linearGradient id="instalBlueGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#9cb5e2"/>
-              <stop offset="55%" stop-color="#4e74b5"/>
-              <stop offset="100%" stop-color="#173d7a"/>
-            </linearGradient>
-            <linearGradient id="instalGreyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#a8aaad"/>
-              <stop offset="60%" stop-color="#4b4d50"/>
-              <stop offset="100%" stop-color="#090a0b"/>
-            </linearGradient>
-            <linearGradient id="instalOrangeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#f58426"/>
-              <stop offset="55%" stop-color="#f26739"/>
-              <stop offset="100%" stop-color="#f05346"/>
-            </linearGradient>
-          </defs>
-          <!-- I -->
-          <rect x="8" y="14" width="18" height="88" fill="url(#instalBlueGrad)"/>
-          <!-- N -->
-          <path d="M 44 102 L 44 14 L 62 14 L 110 74 L 110 14 L 128 14 L 128 102 L 110 102 L 62 42 L 62 102 Z" fill="url(#instalBlueGrad)"/>
-          <!-- S -->
-          <path d="M 225 31 C 212 18 190 14 174 17 C 155 21 146 35 153 49 C 159 60 175 63 194 66 C 212 69 216 76 213 83 C 209 90 192 92 177 88 C 165 85 157 79 151 73 L 140 87 C 150 97 167 104 188 104 C 214 104 233 93 233 76 C 233 58 215 53 194 50 C 176 47 169 43 171 35 C 173 28 187 26 201 30 C 208 32 213 36 217 40 Z" fill="url(#instalGreyGrad)"/>
-          <!-- T -->
-          <path d="M 244 14 L 330 14 L 330 30 L 296 30 L 296 102 L 278 102 L 278 30 L 244 30 Z" fill="url(#instalGreyGrad)"/>
-          <!-- A (stylizowane bez poprzeczki jak w logo) -->
-          <path d="M 336 102 L 376 14 L 395 14 L 435 102 L 415 102 L 385.5 34 L 356 102 Z" fill="url(#instalOrangeGrad)"/>
-          <!-- L -->
-          <path d="M 450 14 L 468 14 L 468 86 L 526 86 L 526 102 L 450 102 Z" fill="url(#instalOrangeGrad)"/>
-        </svg>
-      `;
+    let cachedInstalLogoDataUrl = null;
+    function getInstalLogoImgHtml() {
+      if (!cachedInstalLogoDataUrl) {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = 540;
+          canvas.height = 115;
+          const ctx = canvas.getContext('2d');
+
+          // Gradient 1: IN (niebieski)
+          const blueGrad = ctx.createLinearGradient(0, 14, 0, 102);
+          blueGrad.addColorStop(0, '#9cb5e2');
+          blueGrad.addColorStop(0.55, '#4e74b5');
+          blueGrad.addColorStop(1, '#173d7a');
+
+          // Gradient 2: ST (szaro-czarny)
+          const greyGrad = ctx.createLinearGradient(0, 14, 0, 102);
+          greyGrad.addColorStop(0, '#a8aaad');
+          greyGrad.addColorStop(0.6, '#4b4d50');
+          greyGrad.addColorStop(1, '#090a0b');
+
+          // Gradient 3: AL (pomarańczowo-czerwony)
+          const orangeGrad = ctx.createLinearGradient(0, 14, 0, 102);
+          orangeGrad.addColorStop(0, '#f58426');
+          orangeGrad.addColorStop(0.55, '#f26739');
+          orangeGrad.addColorStop(1, '#f05346');
+
+          // I
+          ctx.fillStyle = blueGrad;
+          ctx.fillRect(8, 14, 18, 88);
+
+          // N
+          ctx.beginPath();
+          ctx.moveTo(44, 102);
+          ctx.lineTo(44, 14);
+          ctx.lineTo(62, 14);
+          ctx.lineTo(110, 74);
+          ctx.lineTo(110, 14);
+          ctx.lineTo(128, 14);
+          ctx.lineTo(128, 102);
+          ctx.lineTo(110, 102);
+          ctx.lineTo(62, 42);
+          ctx.lineTo(62, 102);
+          ctx.closePath();
+          ctx.fill();
+
+          // S
+          ctx.fillStyle = greyGrad;
+          const sPath = new Path2D('M 225 31 C 212 18 190 14 174 17 C 155 21 146 35 153 49 C 159 60 175 63 194 66 C 212 69 216 76 213 83 C 209 90 192 92 177 88 C 165 85 157 79 151 73 L 140 87 C 150 97 167 104 188 104 C 214 104 233 93 233 76 C 233 58 215 53 194 50 C 176 47 169 43 171 35 C 173 28 187 26 201 30 C 208 32 213 36 217 40 Z');
+          ctx.fill(sPath);
+
+          // T
+          ctx.beginPath();
+          ctx.moveTo(244, 14);
+          ctx.lineTo(330, 14);
+          ctx.lineTo(330, 30);
+          ctx.lineTo(296, 30);
+          ctx.lineTo(296, 102);
+          ctx.lineTo(278, 102);
+          ctx.lineTo(278, 30);
+          ctx.lineTo(244, 30);
+          ctx.closePath();
+          ctx.fill();
+
+          // A (bez poprzeczki jak w logo)
+          ctx.fillStyle = orangeGrad;
+          ctx.beginPath();
+          ctx.moveTo(336, 102);
+          ctx.lineTo(376, 14);
+          ctx.lineTo(395, 14);
+          ctx.lineTo(435, 102);
+          ctx.lineTo(415, 102);
+          ctx.lineTo(385.5, 34);
+          ctx.lineTo(356, 102);
+          ctx.closePath();
+          ctx.fill();
+
+          // L
+          ctx.beginPath();
+          ctx.moveTo(450, 14);
+          ctx.lineTo(468, 14);
+          ctx.lineTo(468, 86);
+          ctx.lineTo(526, 86);
+          ctx.lineTo(526, 102);
+          ctx.lineTo(450, 102);
+          ctx.closePath();
+          ctx.fill();
+
+          cachedInstalLogoDataUrl = canvas.toDataURL('image/png');
+        } catch (err) {
+          cachedInstalLogoDataUrl = '';
+        }
+      }
+      if (!cachedInstalLogoDataUrl) {
+        return `<div style="font-size:28px;font-weight:900;letter-spacing:2px;color:#173d7a;">INSTAL</div>`;
+      }
+      return `<img src="${cachedInstalLogoDataUrl}" alt="INSTAL" style="height:44px;width:auto;display:block;object-fit:contain;" />`;
     }
 
     function renderProtocolSheetHtml(p) {
@@ -4778,7 +4848,7 @@ service cloud.firestore {
       const companyHeader = `
         <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #173d7a;padding-bottom:12px;margin-bottom:16px;gap:16px;">
           <div>
-            ${getInstalLogoSvgHtml()}
+            ${getInstalLogoImgHtml()}
             <div style="font-size:11px;color:#3f3f46;font-weight:700;margin-top:4px;">Instalacje grzewcze, klimatyzacja, wentylacja i pompy ciepła</div>
             <div style="font-size:10px;color:#52525b;">Wykonawca / Serwisant prowadzący: <strong>${p.technician || 'INSTAL'}</strong></div>
           </div>
@@ -4879,10 +4949,6 @@ service cloud.firestore {
               </thead>
               <tbody>${rowsHtml}</tbody>
             </table>
-            <div style="border:1px solid #d4d4d8;border-radius:8px;padding:8px 10px;margin-top:8px;background:#fafafa;">
-              <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#173d7a;margin-bottom:2px;">Zużyte materiały / części eksploatacyjne:</div>
-              <div style="font-size:11px;color:#18181b;font-weight:600;">${p.usedMaterials || 'Preparat do dezynfekcji i odgrzybiania parownika, środki czyszczące'}</div>
-            </div>
             <div style="margin-top:6px;font-size:10px;color:#52525b;">
               <strong>Przyrząd pomiarowy / Uprawnienia:</strong> ${p.fgazTool || 'Wykrywacz nieszczelności / Certyfikat F-GAZ'} &nbsp;•&nbsp;
               <strong>Termin kolejnego przeglądu:</strong> ${formatDatePL(addMonths(p.date, 12))}
@@ -4891,9 +4957,19 @@ service cloud.firestore {
         `;
       }
 
+      const materialsAboveCommentsHtml = p.kind !== 'ac_install' ? `
+        <div style="border:1px solid #d4d4d8;border-radius:8px;padding:10px;margin-bottom:10px;background:#fafafa;">
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#173d7a;margin-bottom:4px;">4. Zużyte materiały / części eksploatacyjne</div>
+          <div style="font-size:11px;color:#18181b;font-weight:600;">${p.usedMaterials || 'Preparat do dezynfekcji i odgrzybiania parownika, środki czyszczące'}</div>
+        </div>
+      ` : '';
+
+      const commentsSectionNumber = p.kind === 'ac_install' ? '4' : '5';
+
       const commentsAndStatement = `
+        ${materialsAboveCommentsHtml}
         <div style="border:1px solid #d4d4d8;border-radius:8px;padding:10px;margin-bottom:12px;background:#fff;">
-          <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#173d7a;margin-bottom:4px;">4. Uwagi serwisowe i zalecenia</div>
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#173d7a;margin-bottom:4px;">${commentsSectionNumber}. Uwagi serwisowe i zalecenia</div>
           <div style="font-size:11px;color:#18181b;min-height:24px;">${p.comments || 'Urządzenie sprawne technicznie, przekazane do dalszej eksploatacji.'}</div>
         </div>
         <div style="font-size:10px;color:#52525b;margin-bottom:12px;padding:8px;background:#f4f4f5;border-radius:6px;">
@@ -5035,13 +5111,15 @@ service cloud.firestore {
       const installDate = visit.date || toYMD(new Date());
 
       let protocolObj = null;
+      const protoSnInInput = (document.getElementById('proto-inst-sn-in')?.value || '').trim();
+      const protoSnOutInput = (document.getElementById('proto-inst-sn-out')?.value || '').trim();
 
       if (isMontaz && client) {
         const createdDevId = `dev_${Date.now()}`;
         const deviceType = document.getElementById('close-install-type').value || 'heat_pump';
         const deviceModel = (document.getElementById('close-install-model').value || '').trim() || visit.plannedInstallModel || 'Urządzenie HVAC';
-        const serialInline = (document.getElementById('proto-inst-sn-in')?.value || '').trim() || (document.getElementById('close-install-serial').value || '').trim();
-        const serialOutdoorInline = (document.getElementById('proto-inst-sn-out')?.value || '').trim() || (document.getElementById('close-install-serial-outdoor')?.value || '').trim();
+        const serialInline = protoSnInInput || (document.getElementById('close-install-serial').value || '').trim();
+        const serialOutdoorInline = protoSnOutInput || (document.getElementById('close-install-serial-outdoor')?.value || '').trim();
         const warrantyMonths = Number(document.getElementById('close-install-warranty').value) || 60;
         const deviceNotes = (document.getElementById('close-install-dev-notes')?.value || '').trim();
 
@@ -5076,12 +5154,38 @@ service cloud.firestore {
         };
         client.devices = [...(client.devices || []), newDevice];
         visit.deviceId = createdDevId;
-      } else if (client && Array.isArray(client.devices) && client.devices.length > 0) {
-        const targetDevId = visit.deviceId || client.devices[0].id;
-        const targetDevObj = client.devices.find(d => d.id === targetDevId) || client.devices[0];
+      } else if (client) {
+        if (!Array.isArray(client.devices) || client.devices.length === 0) {
+          // Gdy klient nie miał jeszcze przypisanego urządzenia w bazie, a wpisano dane na protokole — tworzymy kartę urządzenia automatycznie
+          const autoDevId = `dev_${Date.now()}`;
+          client.devices = [{
+            id: autoDevId,
+            deviceType: 'ac',
+            deviceModel: 'Klimatyzator',
+            serialNumber: protoSnInInput,
+            serialNumberOutdoor: protoSnOutInput,
+            deviceNotes: '',
+            ourUnknownDate: true,
+            noInstallDate: true,
+            installDate: '',
+            warrantyMonths: 0,
+            lastInspectionDate: installDate,
+            nextInspectionDate: addMonths(installDate, 12),
+            inspectionIntervalMonths: 12,
+            remindersCanceled: false,
+            inspectionHistory: []
+          }];
+          visit.deviceId = autoDevId;
+        }
 
-        const updatedSnIn = (document.getElementById('proto-inst-sn-in')?.value || '').trim() || targetDevObj?.serialNumber || '';
-        const updatedSnOut = (document.getElementById('proto-inst-sn-out')?.value || '').trim() || targetDevObj?.serialNumberOutdoor || '';
+        const targetDevObj = client.devices.find(d => d.id === visit.deviceId)
+          || client.devices.find(d => d.deviceType === 'ac')
+          || client.devices[0];
+        const targetDevId = targetDevObj.id;
+        visit.deviceId = targetDevId;
+
+        const updatedSnIn = protoSnInInput || targetDevObj?.serialNumber || '';
+        const updatedSnOut = protoSnOutInput || targetDevObj?.serialNumberOutdoor || '';
 
         protocolObj = buildProtocolDataFromModal(
           visit,
@@ -5099,8 +5203,8 @@ service cloud.firestore {
           const interval = Number(d.inspectionIntervalMonths || 12);
           return {
             ...d,
-            serialNumber: updatedSnIn || d.serialNumber,
-            serialNumberOutdoor: updatedSnOut || d.serialNumberOutdoor,
+            serialNumber: updatedSnIn,
+            serialNumberOutdoor: updatedSnOut,
             lastInspectionDate: shouldUpdateNextInsp ? installDate : d.lastInspectionDate,
             nextInspectionDate: shouldUpdateNextInsp ? addMonths(installDate, interval) : d.nextInspectionDate,
             remindersCanceled: shouldUpdateNextInsp ? false : d.remindersCanceled,
