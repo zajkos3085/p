@@ -86,6 +86,10 @@
         </div>
 
         <div class="flex items-center gap-1.5">
+          <button onclick="openBackupModal()" class="p-2 sm:px-2.5 sm:py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[11px] font-extrabold flex items-center gap-1 transition" title="Kopia zapasowa całej bazy (Backup JSON)">
+            <i data-lucide="database-backup" class="w-4 h-4"></i>
+            <span class="hidden lg:inline">Backup</span>
+          </button>
           <button onclick="openFirebaseModal()" class="md:hidden flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-[11px] font-bold text-zinc-700 dark:text-zinc-200" title="Konfiguracja chmury">
             <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0" id="cloud-dot-mobile"></span>
             <i data-lucide="cloud" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
@@ -157,6 +161,9 @@
           <i data-lucide="cloud-upload" class="w-3.5 h-3.5 text-sky-600"></i> Wyślij
         </button>
       </div>
+      <button onclick="openBackupModal()" class="w-full py-2 px-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800 text-xs font-extrabold text-emerald-800 dark:text-emerald-300 flex items-center justify-center gap-2 transition">
+        <i data-lucide="hard-drive-download" class="w-4 h-4 text-emerald-600"></i> Pełny Backup Bazy (JSON)
+      </button>
     </div>
   </aside>
 
@@ -515,6 +522,9 @@
             <button onclick="document.getElementById('csv-file-input').click()" class="bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
               <i data-lucide="upload" class="w-4 h-4"></i> Import CSV
             </button>
+            <button onclick="openBackupModal()" class="bg-amber-500 hover:bg-amber-400 text-zinc-950 px-3.5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition" title="Pobierz lub wgraj pełną kopię zapasową z historią i protokołami">
+              <i data-lucide="database-backup" class="w-4 h-4"></i> Backup Całej Bazy
+            </button>
           </div>
         </div>
 
@@ -538,7 +548,21 @@
 
       <!-- 4. TAB: DEVICES DB (URZĄDZENIA) -->
       <div id="tab-devices_db" class="tab-content space-y-6 hidden">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Przełącznik podwidoków w zakładce Urządzenia: Katalog modeli vs Wzory Protokołów -->
+        <div class="bg-white dark:bg-zinc-900 p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <button onclick="switchDevicesSubView('catalog')" id="subbtn-dev-catalog" class="px-4 py-2 rounded-xl text-xs font-extrabold bg-emerald-600 text-white shadow-sm transition flex items-center gap-1.5">
+              <i data-lucide="wrench" class="w-4 h-4"></i> Katalog Modeli Urządzeń
+            </button>
+            <button onclick="switchDevicesSubView('templates')" id="subbtn-dev-templates" class="px-4 py-2 rounded-xl text-xs font-extrabold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 transition flex items-center gap-1.5">
+              <i data-lucide="file-check-2" class="w-4 h-4 text-sky-600"></i> Wzory Protokołów i Listy Kontrolne (Edytor)
+            </button>
+          </div>
+          <span class="text-[11px] text-zinc-500 font-medium">Zarządzaj modelami urządzeń oraz dostosowuj punkty kontrolne protokołów przypisane do grup urządzeń</span>
+        </div>
+
+        <!-- PODWIDOK 1: KATALOG URZĄDZEŃ -->
+        <div id="devices-subview-catalog" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div class="lg:col-span-4 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-5 space-y-4 h-fit">
             <h2 class="text-sm font-extrabold text-zinc-900 dark:text-white">Dodaj model do Bazy Urządzeń</h2>
             <form onsubmit="handleSaveCatalogItem(event)" class="space-y-3">
@@ -598,6 +622,75 @@
                 <tbody id="catalog-table-body" class="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs sm:text-sm"></tbody>
               </table>
             </div>
+          </div>
+        </div>
+
+        <!-- PODWIDOK 2: WZORY PROTOKOŁÓW, PODGLĄD I EDYTOR PODPUNKTÓW -->
+        <div id="devices-subview-templates" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div class="lg:col-span-5 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-5 space-y-4 h-fit">
+            <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
+              <div>
+                <h2 id="tpl-form-header" class="text-sm font-extrabold text-zinc-900 dark:text-white">Edytor Wzoru Protokołu</h2>
+                <p class="text-[11px] text-zinc-500">Dodaj własny wzór lub edytuj punkty kontrolne istniejącego</p>
+              </div>
+              <button type="button" onclick="resetProtocolTemplateForm()" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 rounded-lg text-[11px] font-bold text-emerald-600">+ Nowy wzór</button>
+            </div>
+            <form onsubmit="handleSaveProtocolTemplate(event)" class="space-y-3">
+              <input type="hidden" id="tpl-edit-id">
+              <div>
+                <label class="block text-[11px] font-bold text-zinc-600 dark:text-zinc-400 mb-1">Nazwa / Tytuł protokołu na dokumencie PDF</label>
+                <input type="text" id="tpl-title" required placeholder="np. PROTOKÓŁ PRZEGLĄDU REKUPERACJI" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-extrabold outline-none">
+              </div>
+              <div class="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label class="block text-[11px] font-bold text-zinc-600 dark:text-zinc-400 mb-1">Przypisz do grupy urządzeń</label>
+                  <select id="tpl-device-group" onchange="document.getElementById('tpl-custom-group-wrap')?.classList.toggle('hidden', this.value !== 'custom')" class="w-full px-2.5 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none">
+                    <option value="ac">❄️ Klimatyzacja</option>
+                    <option value="heat_pump">🔥 Pompa ciepła</option>
+                    <option value="gas_boiler">🔥 Kocioł gazowy</option>
+                    <option value="ventilation">💨 Wentylacja / Rekuperacja</option>
+                    <option value="all">🛠️ Wszystkie / Uniwersalny</option>
+                    <option value="custom">✏️ Własna grupa urządzeń...</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-zinc-600 dark:text-zinc-400 mb-1">Rodzaj akcji</label>
+                  <select id="tpl-action-category" class="w-full px-2.5 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none">
+                    <option value="inspection">🛠️ Przegląd okresowy</option>
+                    <option value="install">🏗️ Montaż / Odbiór</option>
+                    <option value="service">⚡ Serwis / Naprawa</option>
+                  </select>
+                </div>
+              </div>
+              <div id="tpl-custom-group-wrap" class="hidden">
+                <label class="block text-[11px] font-bold text-amber-700 dark:text-amber-400 mb-1">Wpisz nazwę własnej grupy urządzeń (np. Zmiękczacz wody)</label>
+                <input type="text" id="tpl-custom-group-name" placeholder="np. Zmiękczacz wody" class="w-full px-3 py-2 bg-amber-50/60 dark:bg-zinc-800 border border-amber-300 dark:border-amber-700 rounded-xl text-xs font-bold outline-none">
+              </div>
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="text-[11px] font-bold text-zinc-600 dark:text-zinc-400">Podpunkty kontrolne / Czynności (każdy punkt w nowej linii)</label>
+                  <span class="text-[10px] text-emerald-600 font-bold">Wyświetlą się w tabeli na PDF</span>
+                </div>
+                <textarea id="tpl-checklist-items" rows="8" placeholder="Wpisz podpunkty kontrolne — każdy w osobnym wierszu, np.:&#10;Czyszczenie wymiennika ciepła&#10;Kontrola szczelności układu&#10;Test automatyki i zabezpieczeń" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-medium outline-none leading-relaxed"></textarea>
+              </div>
+              <div class="flex gap-2">
+                <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold py-2.5 rounded-xl text-xs shadow-sm transition">💾 Zapisz wzór protokołu</button>
+                <button type="button" onclick="previewTemplateFromEditor()" class="px-3.5 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-extrabold rounded-xl text-xs shadow-sm transition flex items-center gap-1">
+                  <i data-lucide="eye" class="w-3.5 h-3.5"></i> Podgląd A4
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="lg:col-span-7 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-5 space-y-4">
+            <div class="flex justify-between items-center flex-wrap gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+              <div>
+                <h2 class="text-sm font-extrabold text-zinc-900 dark:text-white">Dostępne wzory protokołów (Przypisane do grup urządzeń)</h2>
+                <p class="text-[11px] text-zinc-500">Kliknij „Edytuj podpunkty”, aby zmienić listę kontrolną, lub „Podgląd A4”, aby zobaczyć wydruk</p>
+              </div>
+              <button onclick="restoreDefaultProtocolTemplates()" class="px-2.5 py-1.5 border border-zinc-300 dark:border-zinc-700 rounded-xl text-[11px] font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100">Przywróć domyślne</button>
+            </div>
+            <div id="protocol-templates-list" class="space-y-3 max-h-[620px] overflow-y-auto pr-1"></div>
           </div>
         </div>
       </div>
@@ -728,7 +821,7 @@
       </div>
       <form onsubmit="handleSaveClient(event)" class="space-y-4">
         <input type="hidden" id="edit-client-id">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div>
             <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Imię i nazwisko / Firma</label>
             <input type="text" id="client-name" oninput="autoCapitalizeInput(this)" required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm capitalize outline-none focus:border-emerald-500">
@@ -740,6 +833,10 @@
           <div>
             <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Telefon</label>
             <input type="text" id="client-phone" value="+48 " required class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">E-mail (do wysyłki PDF)</label>
+            <input type="email" id="client-email" placeholder="np. klient@domena.pl" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:border-emerald-500">
           </div>
         </div>
         <div class="grid grid-cols-3 gap-3">
@@ -1231,8 +1328,11 @@
                 <option value="ac_inspection">❄️ Protokół przeglądu klimatyzatora</option>
                 <option value="ac_install">❄️ Karta montażu klimatyzacji</option>
                 <option value="gas_boiler_inspection">🔥 Protokół przeglądu kotła gazowego</option>
+                <option value="gas_boiler_install">🔥 Protokół montażu i odbioru kotła gazowego</option>
                 <option value="hp_inspection">🔥 Protokół przeglądu pompy ciepła</option>
                 <option value="hp_install">🔥 Protokół odbioru / montażu pompy ciepła</option>
+                <option value="universal_inspection">📋 Uniwersalny protokół przeglądu urządzenia</option>
+                <option value="universal_install">🏗️ Uniwersalny protokół montażu urządzenia</option>
                 <option value="universal_service">🛠️ Uniwersalny protokół serwisu / naprawy</option>
               </select>
             </div>
@@ -1369,6 +1469,35 @@
               </div>
             </div>
 
+            <!-- 3B. POLA SPECYFICZNE DLA PROTOKOŁU MONTAŻU KOTŁA GAZOWEGO -->
+            <div id="proto-fields-gas-boiler-install" class="hidden space-y-2.5">
+              <div class="font-extrabold text-[11px] text-amber-800 dark:text-amber-300 uppercase">Parametry Montażu i Pierwszego Uruchomienia Kotła Gazowego:</div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div>
+                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Rodzaj gazu / Zasilanie</label>
+                  <input type="text" id="proto-gb-inst-gas" value="GZ-50 (E) / 230V" class="w-full px-2.5 py-1.5 rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-zinc-900 text-xs font-semibold">
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Układ powietrzno-spalinowy</label>
+                  <input type="text" id="proto-gb-inst-flue-sys" value="Koncentryczny 60/100 lub wkład kominowy" class="w-full px-2.5 py-1.5 rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-zinc-900 text-xs">
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Próba szczelności gazu i C.O.</label>
+                  <input type="text" id="proto-gb-inst-tight" value="Pozytywna (Instalacja szczelna)" class="w-full px-2.5 py-1.5 rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-zinc-900 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Filtr magnetyczny / Odprowadzenie kondensatu</label>
+                  <input type="text" id="proto-gb-inst-hydr" value="Zamontowano filtr magnetyczny, syfon podłączony" class="w-full px-2.5 py-1.5 rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-zinc-900 text-xs">
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Analiza spalin i regulacja przy uruchomieniu</label>
+                  <input type="text" id="proto-gb-inst-comb" value="Wykonano analizę spalin — parametry w normie" class="w-full px-2.5 py-1.5 rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-zinc-900 text-xs font-semibold">
+                </div>
+              </div>
+            </div>
+
             <!-- 4. POLA SPECYFICZNE DLA PROTOKOŁU PRZEGLĄDU POMPY CIEPŁA -->
             <div id="proto-fields-hp-inspection" class="hidden space-y-2.5">
               <div class="font-extrabold text-[11px] text-orange-800 dark:text-orange-300 uppercase">Lista kontrolna — Przegląd Okresowy Pompy Ciepła:</div>
@@ -1423,18 +1552,38 @@
               </div>
             </div>
 
+            <!-- 5B. DYNAMICZNA LISTA KONTROLNA (DLA UNIWERSALNEGO PRZEGLĄDU / MONTAŻU ORAZ WŁASNYCH SZABLONÓW) -->
+            <div id="proto-fields-dynamic-checklist" class="hidden space-y-2.5">
+              <div id="proto-dynamic-checklist-title" class="font-extrabold text-[11px] text-indigo-800 dark:text-indigo-300 uppercase">Lista kontrolna czynności:</div>
+              <div id="proto-dynamic-checklist-box" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-white dark:bg-zinc-900 p-2.5 rounded-xl border border-indigo-200 dark:border-indigo-800"></div>
+              <div id="proto-fields-universal-install-extra" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Miejsce montażu i podłączenie</label>
+                  <input type="text" id="proto-univ-inst-loc" placeholder="np. Pomieszczenie techniczne, instalacja kompletna" class="w-full px-2.5 py-1.5 rounded-lg border border-indigo-300 dark:border-indigo-700 bg-white dark:bg-zinc-900 text-xs">
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Wynik próby szczelności i uruchomienia</label>
+                  <input type="text" id="proto-univ-inst-test" value="Pozytywny — urządzenie sprawne, przeszkolono użytkownika" class="w-full px-2.5 py-1.5 rounded-lg border border-indigo-300 dark:border-indigo-700 bg-white dark:bg-zinc-900 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                </div>
+              </div>
+            </div>
+
             <!-- 6. POLA SPECYFICZNE DLA UNIWERSALNEGO PROTOKOŁU SERWISU / NAPRAWY -->
             <div id="proto-fields-universal-service" class="hidden space-y-2.5">
               <div class="font-extrabold text-[11px] text-rose-800 dark:text-rose-300 uppercase">Dane z Uniwersalnego Protokołu Serwisowego / Naprawy:</div>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
-                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Zgłoszona usterka / Powód wezwania serwisu</label>
+                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Objawy / Zgłoszona usterka (przepisane ze zgłoszenia)</label>
                   <input type="text" id="proto-srv-fault" placeholder="np. Błąd komunikacji, spadek ciśnienia, brak grzania..." class="w-full px-2.5 py-1.5 rounded-lg border border-rose-300 dark:border-rose-700 bg-white dark:bg-zinc-900 text-xs font-semibold">
                 </div>
                 <div>
                   <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Diagnoza serwisowa / Przyczyna usterki</label>
                   <input type="text" id="proto-srv-diagnosis" placeholder="np. Uszkodzony czujnik NTC, zabrudzony filtr..." class="w-full px-2.5 py-1.5 rounded-lg border border-rose-300 dark:border-rose-700 bg-white dark:bg-zinc-900 text-xs">
                 </div>
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Przebieg prac serwisowych (szczegółowy opis wykonanych czynności)</label>
+                <textarea id="proto-srv-work-course" rows="2" placeholder="np. Weryfikacja parametrów pracy, czyszczenie styków, wymiana uszkodzonego podzespołu, test pracy..." class="w-full px-2.5 py-1.5 rounded-lg border border-rose-300 dark:border-rose-700 bg-white dark:bg-zinc-900 text-xs"></textarea>
               </div>
               <div>
                 <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Status urządzenia po interwencji serwisowej</label>
@@ -1656,10 +1805,13 @@ service cloud.firestore {
           <i data-lucide="file-check-2" class="w-5 h-5 text-emerald-600"></i>
           <div>
             <h3 id="protocol-preview-modal-title" class="text-sm sm:text-base font-extrabold">Podgląd Protokołu Cyfrowego</h3>
-            <p class="text-[11px] text-zinc-500">Dokument zapisany w historii urządzenia — gotowy do pobrania w PDF lub wydruku</p>
+            <p id="protocol-preview-email-info" class="text-[11px] text-zinc-500">Dokument zapisany w historii urządzenia — gotowy do pobrania w PDF lub wysyłki</p>
           </div>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <button type="button" onclick="exportProtocolToGmail()" id="btn-gmail-protocol" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition" title="Pobiera plik PDF, kopiuje e-mail klienta do schowka i otwiera nową wiadomość w Gmailu">
+            <i data-lucide="mail" class="w-4 h-4"></i> Wyślij PDF przez Gmail
+          </button>
           <button type="button" onclick="downloadCurrentProtocolPDF()" id="btn-download-protocol-pdf" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition">
             <i data-lucide="download" class="w-4 h-4"></i> Pobierz PDF
           </button>
@@ -1677,6 +1829,45 @@ service cloud.firestore {
     </div>
   </div>
 
+  <!-- MODAL: PEŁNY BACKUP CAŁEJ BAZY DANYCH (Z HISTORIĄ, PRZEGLĄDAMI I PROTOKOŁAMI) -->
+  <div id="modal-backup" class="fixed inset-0 z-[85] bg-zinc-950/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-lg w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800">
+      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="database-backup" class="w-5 h-5 text-emerald-600"></i>
+          <h3 class="text-base font-extrabold">Kopia zapasowa całej bazy (Pełny Backup)</h3>
+        </div>
+        <button type="button" onclick="closeModal('modal-backup')"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="p-3.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-xs space-y-2">
+        <div class="font-extrabold text-emerald-900 dark:text-emerald-200">Co zawiera pełny plik Backup (.json)?</div>
+        <ul class="list-disc list-inside text-zinc-600 dark:text-zinc-300 space-y-1">
+          <li>Wszystkich klientów wraz z adresami, NIP, telefonami, e-mailami i współrzędnymi GPS</li>
+          <li>Wszystkie przypisane urządzenia, numery seryjne JW/JZ, daty gwarancji i przeglądów</li>
+          <li>Pełną historię działań, przeglądów, serwisów i montaży</li>
+          <li>Wszystkie zapisane cyfrowe protokoły wraz z podpisami klientów</li>
+          <li>Katalog modeli urządzeń, ekipy serwisowe oraz własne wzory protokołów</li>
+        </ul>
+      </div>
+
+      <div id="backup-summary-stats" class="grid grid-cols-3 gap-2 text-center"></div>
+
+      <div class="space-y-2.5 pt-2">
+        <button type="button" onclick="downloadFullDatabaseBackup()" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 shadow-md transition">
+          <i data-lucide="download" class="w-4 h-4"></i> Pobierz pełny Backup bazy na dysk (.JSON)
+        </button>
+
+        <div class="relative pt-2 border-t border-zinc-200 dark:border-zinc-800">
+          <input type="file" id="backup-restore-input" accept=".json" onchange="handleRestoreFullBackupFile(event)" class="hidden">
+          <button type="button" onclick="document.getElementById('backup-restore-input').click()" class="w-full py-2.5 px-4 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition">
+            <i data-lucide="upload" class="w-4 h-4"></i> Wgraj i przywróć bazę z pliku Backup (.JSON)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     /* ==========================================================================
        1. KONFIGURACJA, STAŁE I STAN GLOBALNY
@@ -1689,6 +1880,7 @@ service cloud.firestore {
       APPOINTMENTS: 'pp_hvac_appointments_v4',
       CATALOG: 'pp_hvac_catalog_v4',
       WORKERS: 'pp_hvac_workers_v4',
+      TEMPLATES: 'pp_hvac_protocol_templates_v1',
       DARK_MODE: 'pp_dark_mode',
       FIREBASE_CFG: 'pp_firebase_config_json',
       URGENT_DAYS: 'pp_urgent_days_threshold'
@@ -1710,6 +1902,148 @@ service cloud.firestore {
     window.appointmentsData = [];
     window.catalogData = [];
     window.workersData = [];
+    window.protocolTemplatesData = [];
+
+    const DEFAULT_PROTOCOL_TEMPLATES = [
+      {
+        id: 'ac_inspection',
+        title: 'PROTOKÓŁ PRZEGLĄDU KLIMATYZATORA',
+        deviceGroup: 'ac',
+        customGroupName: '',
+        actionCategory: 'inspection',
+        isBuiltIn: true,
+        checklist: [
+          'Czyszczenie filtrów jednostki wewnętrznej',
+          'Czyszczenie i dezynfekcja parownika jednostki wewnętrznej',
+          'Czyszczenie skraplacza jednostki zewnętrznej',
+          'Sprawdzenie drożności układu odprowadzenia skroplin',
+          'Sprawdzenie szczelności układu chłodniczego',
+          'Pomiar ciśnienia pracy i temperatury nawiewu',
+          'Kontrola połączeń elektrycznych i zasilania',
+          'Kontrola stanu mocowań i wibroizolacji',
+          'Test poprawnego działania klimatyzatora we wszystkich trybach'
+        ]
+      },
+      {
+        id: 'ac_install',
+        title: 'KARTA MONTAŻU KLIMATYZACJI',
+        deviceGroup: 'ac',
+        customGroupName: '',
+        actionCategory: 'install',
+        isBuiltIn: true,
+        checklist: [
+          'Montaż jednostki wewnętrznej i zewnętrznej',
+          'Wykonanie instalacji freonowej i odprowadzenia skroplin',
+          'Próba szczelności, próżnia układu i uruchomienie testowe'
+        ]
+      },
+      {
+        id: 'gas_boiler_inspection',
+        title: 'PROTOKÓŁ PRZEGLĄDU KOTŁA GAZOWEGO',
+        deviceGroup: 'gas_boiler',
+        customGroupName: '',
+        actionCategory: 'inspection',
+        isBuiltIn: true,
+        checklist: [
+          'Czyszczenie wymiennika ciepła',
+          'Czyszczenie palnika oraz elektrod (zapłonowej / jonizacyjnej)',
+          'Czyszczenie syfonu kondensatu i kontrola odpływu',
+          'Czyszczenie filtrów (C.O., C.W.U., gazu)',
+          'Kontrola ciśnienia w naczyniu przeponowym i układzie C.O.',
+          'Kontrola szczelności instalacji gazowej przy kotle',
+          'Kontrola szczelności układu powietrzno-spalinowego',
+          'Kontrola zabezpieczeń i automatyki kotła',
+          'Pomiar obecności tlenku węgla (CO) w pomieszczeniu',
+          'Analiza spalin i regulacja parametrów spalania'
+        ]
+      },
+      {
+        id: 'gas_boiler_install',
+        title: 'PROTOKÓŁ MONTAŻU I ODBIORU KOTŁA GAZOWEGO',
+        deviceGroup: 'gas_boiler',
+        customGroupName: '',
+        actionCategory: 'install',
+        isBuiltIn: true,
+        checklist: [
+          'Montaż kotła gazowego i podłączenie do instalacji C.O. oraz C.W.U.',
+          'Podłączenie do instalacji gazowej i wykonanie próby szczelności gazu',
+          'Montaż i kontrola szczelności układu powietrzno-spalinowego',
+          'Napełnienie układu C.O., odpowietrzenie i próba ciśnieniowa',
+          'Pierwsze uruchomienie, analiza spalin i przeszkolenie użytkownika'
+        ]
+      },
+      {
+        id: 'hp_inspection',
+        title: 'PROTOKÓŁ PRZEGLĄDU POMPY CIEPŁA',
+        deviceGroup: 'heat_pump',
+        customGroupName: '',
+        actionCategory: 'inspection',
+        isBuiltIn: true,
+        checklist: [
+          'Czyszczenie filtra magnetycznego / odmulacza i siatkowego',
+          'Czyszczenie i kontrola parownika jednostki zewnętrznej',
+          'Kontrola szczelności układu chłodniczego i hydraulicznego',
+          'Kontrola ciśnienia instalacji C.O. oraz naczyń przeponowych',
+          'Sprawdzenie drożności odpływu skroplin i tacy ociekowej',
+          'Kontrola połączeń elektrycznych, zabezpieczeń i grzałki',
+          'Odczyt rejestru błędów, czasu pracy i startów sprężarki',
+          'Weryfikacja krzywej grzewczej oraz pracy zaworu 3D'
+        ]
+      },
+      {
+        id: 'hp_install',
+        title: 'PROTOKÓŁ ODBIORU I MONTAŻU POMPY CIEPŁA',
+        deviceGroup: 'heat_pump',
+        customGroupName: '',
+        actionCategory: 'install',
+        isBuiltIn: true,
+        checklist: [
+          'Montaż jednostki zewnętrznej i wewnętrznej (hydroboksu)',
+          'Wykonanie połączeń hydraulicznych, montaż filtra magnetycznego',
+          'Próba ciśnieniowa, odpowietrzenie i uruchomienie pompy ciepła'
+        ]
+      },
+      {
+        id: 'universal_inspection',
+        title: 'PROTOKÓŁ PRZEGLĄDU OKRESOWEGO URZĄDZENIA',
+        deviceGroup: 'custom',
+        customGroupName: 'Pozostałe urządzenia / Własne',
+        actionCategory: 'inspection',
+        isBuiltIn: true,
+        checklist: [
+          'Wizualna kontrola stanu technicznego urządzenia i podzespołów',
+          'Czyszczenie filtrów, wymienników oraz elementów roboczych',
+          'Kontrola szczelności połączeń hydraulicznych / gazowych / chłodniczych',
+          'Kontrola połączeń elektrycznych, zasilania i automatyki sterującej',
+          'Sprawdzenie parametrów pracy i zabezpieczeń urządzenia',
+          'Test poprawnego działania urządzenia w trybie roboczym'
+        ]
+      },
+      {
+        id: 'universal_install',
+        title: 'PROTOKÓŁ MONTAŻU I ODBIORU URZĄDZENIA',
+        deviceGroup: 'custom',
+        customGroupName: 'Pozostałe urządzenia / Własne',
+        actionCategory: 'install',
+        isBuiltIn: true,
+        checklist: [
+          'Montaż mechaniczny urządzenia w miejscu docelowym zgodnie z DTR',
+          'Podłączenie do instalacji technologicznej oraz zasilania elektrycznego',
+          'Wykonanie próby szczelności oraz kontroli zabezpieczeń',
+          'Uruchomienie testowe i regulacja parametrów pracy',
+          'Przeszkolenie Inwestora / Użytkownika z zakresu obsługi i konserwacji'
+        ]
+      },
+      {
+        id: 'universal_service',
+        title: 'PROTOKÓŁ SERWISOWY / NAPRAWY URZĄDZENIA',
+        deviceGroup: 'all',
+        customGroupName: '',
+        actionCategory: 'service',
+        isBuiltIn: true,
+        checklist: []
+      }
+    ];
 
     let currentTab = 'dashboard';
     let selectedDate = toYMD(new Date());
@@ -1952,6 +2286,7 @@ service cloud.firestore {
       localStorage.setItem(STORAGE_KEYS.APPOINTMENTS, JSON.stringify(window.appointmentsData));
       localStorage.setItem(STORAGE_KEYS.CATALOG, JSON.stringify(window.catalogData));
       localStorage.setItem(STORAGE_KEYS.WORKERS, JSON.stringify(window.workersData));
+      localStorage.setItem(STORAGE_KEYS.TEMPLATES, JSON.stringify(window.protocolTemplatesData));
     }
 
     function getCloudPayload() {
@@ -1960,6 +2295,7 @@ service cloud.firestore {
         appointments: window.appointmentsData || [],
         catalog: window.catalogData || [],
         workers: window.workersData || [],
+        protocolTemplates: window.protocolTemplatesData || [],
         updatedAt: new Date().toISOString()
       };
     }
@@ -1969,6 +2305,7 @@ service cloud.firestore {
       window.appointmentsData = data.appointments || [];
       if (Array.isArray(data.catalog) && data.catalog.length > 0) window.catalogData = data.catalog;
       if (Array.isArray(data.workers) && data.workers.length > 0) window.workersData = data.workers;
+      if (Array.isArray(data.protocolTemplates) && data.protocolTemplates.length > 0) window.protocolTemplatesData = data.protocolTemplates;
       saveStateToLocalStorage();
       refreshAllViews();
     }
@@ -2172,6 +2509,18 @@ service cloud.firestore {
       window.appointmentsData = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPOINTMENTS) || '[]');
       window.catalogData = JSON.parse(localStorage.getItem(STORAGE_KEYS.CATALOG) || '[]');
       window.workersData = JSON.parse(localStorage.getItem(STORAGE_KEYS.WORKERS) || '[]');
+      window.protocolTemplatesData = JSON.parse(localStorage.getItem(STORAGE_KEYS.TEMPLATES) || '[]');
+
+      if (!Array.isArray(window.protocolTemplatesData) || window.protocolTemplatesData.length === 0) {
+        window.protocolTemplatesData = JSON.parse(JSON.stringify(DEFAULT_PROTOCOL_TEMPLATES));
+      } else {
+        // Upewnij się, że nowe wbudowane wzory (np. gas_boiler_install, universal_inspection, universal_install) są obecne
+        DEFAULT_PROTOCOL_TEMPLATES.forEach(defTpl => {
+          if (!window.protocolTemplatesData.some(t => t.id === defTpl.id)) {
+            window.protocolTemplatesData.push(JSON.parse(JSON.stringify(defTpl)));
+          }
+        });
+      }
 
       if (window.catalogData.length === 0) {
         window.catalogData = [
@@ -2219,7 +2568,10 @@ service cloud.firestore {
         if (!document.getElementById('planner-week-view').classList.contains('hidden')) renderWeekView();
       }
       if (currentTab === 'clients') renderClients();
-      if (currentTab === 'devices_db') renderCatalog();
+      if (currentTab === 'devices_db') {
+        renderCatalog();
+        renderProtocolTemplatesManager();
+      }
       if (currentTab === 'history') renderHistoryTable();
     }
 
@@ -2250,8 +2602,27 @@ service cloud.firestore {
       if (tabId === 'dashboard') renderDashboard();
       if (tabId === 'map_planner') { renderPlanner(); setTimeout(initMap, 120); }
       if (tabId === 'clients') renderClients();
-      if (tabId === 'devices_db') renderCatalog();
+      if (tabId === 'devices_db') { renderCatalog(); renderProtocolTemplatesManager(); }
       if (tabId === 'history') { initStatsTimeFilters(); renderHistoryTable(); }
+    }
+
+    function switchDevicesSubView(subView) {
+      const isCat = subView === 'catalog';
+      document.getElementById('devices-subview-catalog')?.classList.toggle('hidden', !isCat);
+      document.getElementById('devices-subview-templates')?.classList.toggle('hidden', isCat);
+
+      const btnCat = document.getElementById('subbtn-dev-catalog');
+      const btnTpl = document.getElementById('subbtn-dev-templates');
+      if (btnCat && btnTpl) {
+        btnCat.className = isCat
+          ? 'px-4 py-2 rounded-xl text-xs font-extrabold bg-emerald-600 text-white shadow-sm transition flex items-center gap-1.5'
+          : 'px-4 py-2 rounded-xl text-xs font-extrabold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 transition flex items-center gap-1.5';
+        btnTpl.className = !isCat
+          ? 'px-4 py-2 rounded-xl text-xs font-extrabold bg-emerald-600 text-white shadow-sm transition flex items-center gap-1.5'
+          : 'px-4 py-2 rounded-xl text-xs font-extrabold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 transition flex items-center gap-1.5';
+      }
+      if (!isCat) renderProtocolTemplatesManager();
+      lucide.createIcons();
     }
 
     function filterClientsByWarranty(statusValue = 'all') {
@@ -2980,7 +3351,7 @@ service cloud.firestore {
       // 2. Filtrowanie po wyszukiwarce tekstowej (obsługa wielu słów / miejscowości naraz)
       if (rawQuery) {
         const buildSearchableBlob = c => {
-          const clientText = `${c.name || ''} ${c.nip || ''} ${c.city || ''} ${c.street || ''} ${c.phone || ''} ${c.postalCode || ''} ${c.notes || ''}`.toLowerCase();
+          const clientText = `${c.name || ''} ${c.nip || ''} ${c.email || ''} ${c.city || ''} ${c.street || ''} ${c.phone || ''} ${c.postalCode || ''} ${c.notes || ''}`.toLowerCase();
           const devsText = (c.devices || []).map(d => {
             const typeInfo = getDeviceInfo(d.deviceType, d.customTypeLabel);
             const wStatus = d.status.ourUnknownDate
@@ -3082,6 +3453,7 @@ service cloud.firestore {
                 <span class="shrink-0 whitespace-nowrap text-[11px] bg-zinc-900 dark:bg-zinc-700 text-white px-2 py-0.5 rounded-full font-bold">${c.devices.length} urz.</span>
               </div>
               ${c.nip ? `<div class="text-[11px] font-mono font-bold text-emerald-700 dark:text-emerald-400 mt-0.5">NIP: ${c.nip}</div>` : ''}
+              ${c.email ? `<div class="text-[11px] font-semibold text-sky-600 dark:text-sky-400 mt-0.5">✉️ ${c.email}</div>` : ''}
               <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">📍 ${c.city}, ${c.street}</p>
             </div>
             <a href="tel:${c.phone}" class="px-3 py-2 bg-emerald-600 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 shadow-sm">
@@ -3127,6 +3499,7 @@ service cloud.firestore {
                 <span class="shrink-0 whitespace-nowrap text-[11px] bg-zinc-900 dark:bg-zinc-700 text-white px-2 py-0.5 rounded-full font-extrabold">${c.devices.length} urz.</span>
               </div>
               ${c.nip ? `<span class="text-[11px] font-mono font-bold text-emerald-700 dark:text-emerald-400 mt-0.5">NIP: ${c.nip}</span>` : ''}
+              ${c.email ? `<span class="text-[11px] font-semibold text-sky-600 dark:text-sky-400 mt-0.5">✉️ ${c.email}</span>` : ''}
             </div>
           </td>
           <td class="py-3.5 px-4 text-zinc-600 dark:text-zinc-300">${c.city || '—'}${c.street ? `, ${c.street}` : ''}</td>
@@ -3243,6 +3616,223 @@ service cloud.firestore {
         renderCatalog();
         showToast('Usunięto model z katalogu.');
       });
+    }
+
+    /* ==========================================================================
+       7B. ZARZĄDZANIE WZORAMI PROTOKOŁÓW W SEKCJI URZĄDZENIA
+       ========================================================================== */
+    function getProtocolTemplateById(kindId) {
+      return (window.protocolTemplatesData || []).find(t => t.id === kindId)
+        || DEFAULT_PROTOCOL_TEMPLATES.find(t => t.id === kindId)
+        || null;
+    }
+
+    function populateProtocolKindSelectDropdown() {
+      const sel = document.getElementById('proto-form-kind');
+      if (!sel) return;
+      const prevVal = sel.value;
+      const templates = window.protocolTemplatesData || DEFAULT_PROTOCOL_TEMPLATES;
+      const iconForGroup = grp => {
+        if (grp === 'ac') return '❄️';
+        if (grp === 'heat_pump' || grp === 'gas_boiler') return '🔥';
+        if (grp === 'ventilation') return '💨';
+        if (grp === 'all') return '🛠️';
+        return '📋';
+      };
+      sel.innerHTML = templates.map(t => {
+        const grpLabel = t.deviceGroup === 'custom' && t.customGroupName ? ` [${t.customGroupName}]` : '';
+        return `<option value="${t.id}">${iconForGroup(t.deviceGroup)} ${t.title}${grpLabel}</option>`;
+      }).join('');
+      if (prevVal && templates.some(t => t.id === prevVal)) sel.value = prevVal;
+    }
+
+    function renderProtocolTemplatesManager() {
+      populateProtocolKindSelectDropdown();
+      const listEl = document.getElementById('protocol-templates-list');
+      if (!listEl) return;
+      const templates = window.protocolTemplatesData || [];
+      const catBadge = act => {
+        if (act === 'install') return '<span class="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[10px] font-extrabold">🏗️ Montaż / Odbiór</span>';
+        if (act === 'service') return '<span class="px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 text-[10px] font-extrabold">⚡ Serwis / Naprawa</span>';
+        return '<span class="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-extrabold">🛠️ Przegląd okresowy</span>';
+      };
+
+      listEl.innerHTML = templates.map(t => {
+        const groupInfo = t.deviceGroup === 'all'
+          ? 'Wszystkie urządzenia'
+          : t.deviceGroup === 'custom'
+            ? (t.customGroupName || 'Inne / Własne urządzenia')
+            : getDeviceInfo(t.deviceGroup, t.customGroupName).short;
+
+        return `
+          <div class="p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/40 space-y-2">
+            <div class="flex justify-between items-start gap-2 flex-wrap">
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-extrabold text-xs sm:text-sm text-zinc-900 dark:text-white">${t.title}</span>
+                  ${catBadge(t.actionCategory)}
+                  <span class="px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 text-[10px] font-bold">Grupa: ${groupInfo}</span>
+                </div>
+                <p class="text-[11px] text-zinc-500 mt-1">Liczba punktów kontrolnych: <strong>${(t.checklist || []).length}</strong></p>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button onclick="previewSampleProtocolTemplate('${t.id}')" class="px-2.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-[11px] font-extrabold flex items-center gap-1">
+                  <i data-lucide="eye" class="w-3.5 h-3.5"></i> Podgląd A4
+                </button>
+                <button onclick="editProtocolTemplate('${t.id}')" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[11px] font-extrabold flex items-center gap-1">
+                  <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Edytuj podpunkty
+                </button>
+                ${!t.isBuiltIn ? `
+                  <button onclick="deleteProtocolTemplate('${t.id}')" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg" title="Usuń wzór">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+            ${(t.checklist || []).length > 0 ? `
+              <div class="text-[11px] text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900 p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800 space-y-0.5">
+                ${(t.checklist || []).slice(0, 4).map((item, i) => `<div>${i + 1}. ${item}</div>`).join('')}
+                ${(t.checklist || []).length > 4 ? `<div class="text-[10px] font-bold text-emerald-600">+ jeszcze ${(t.checklist || []).length - 4} pkt...</div>` : ''}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function editProtocolTemplate(tplId) {
+      const tpl = (window.protocolTemplatesData || []).find(t => t.id === tplId);
+      if (!tpl) return;
+      document.getElementById('tpl-edit-id').value = tpl.id;
+      setText('tpl-form-header', `Edycja wzoru: ${tpl.title}`);
+      document.getElementById('tpl-title').value = tpl.title || '';
+      document.getElementById('tpl-device-group').value = tpl.deviceGroup || 'custom';
+      document.getElementById('tpl-custom-group-wrap')?.classList.toggle('hidden', tpl.deviceGroup !== 'custom');
+      document.getElementById('tpl-custom-group-name').value = tpl.customGroupName || '';
+      document.getElementById('tpl-action-category').value = tpl.actionCategory || 'inspection';
+      document.getElementById('tpl-checklist-items').value = (tpl.checklist || []).join('\n');
+      showToast(`Wczytano wzór „${tpl.title}” do edycji.`);
+    }
+
+    function resetProtocolTemplateForm() {
+      document.getElementById('tpl-edit-id').value = '';
+      setText('tpl-form-header', 'Nowy Wzór Protokołu');
+      document.getElementById('tpl-title').value = '';
+      document.getElementById('tpl-device-group').value = 'custom';
+      document.getElementById('tpl-custom-group-wrap')?.classList.remove('hidden');
+      document.getElementById('tpl-custom-group-name').value = '';
+      document.getElementById('tpl-action-category').value = 'inspection';
+      document.getElementById('tpl-checklist-items').value = '';
+    }
+
+    function handleSaveProtocolTemplate(e) {
+      e.preventDefault();
+      const editId = document.getElementById('tpl-edit-id').value;
+      const title = (document.getElementById('tpl-title').value || '').trim();
+      const deviceGroup = document.getElementById('tpl-device-group').value || 'custom';
+      const customGroupName = deviceGroup === 'custom' ? (document.getElementById('tpl-custom-group-name').value || '').trim() : '';
+      const actionCategory = document.getElementById('tpl-action-category').value || 'inspection';
+      const rawLines = (document.getElementById('tpl-checklist-items').value || '').split(/\r?\n/).map(s => s.replace(/^\d+[\.\)]\s*/, '').trim()).filter(Boolean);
+
+      if (!title) return;
+
+      if (editId) {
+        window.protocolTemplatesData = (window.protocolTemplatesData || []).map(t =>
+          t.id === editId ? { ...t, title, deviceGroup, customGroupName, actionCategory, checklist: rawLines } : t
+        );
+        showToast('Zaktualizowano wzór protokołu!');
+      } else {
+        const newId = 'custom_tpl_' + Date.now();
+        window.protocolTemplatesData.push({
+          id: newId,
+          title,
+          deviceGroup,
+          customGroupName,
+          actionCategory,
+          isBuiltIn: false,
+          checklist: rawLines
+        });
+        showToast('Dodano nowy wzór protokołu i przypisano do grupy urządzeń!');
+      }
+
+      persistData();
+      renderProtocolTemplatesManager();
+      resetProtocolTemplateForm();
+    }
+
+    function deleteProtocolTemplate(tplId) {
+      askConfirmation('Usuwanie wzoru protokołu', 'Czy na pewno chcesz usunąć ten własny wzór protokołu?', () => {
+        window.protocolTemplatesData = (window.protocolTemplatesData || []).filter(t => t.id !== tplId);
+        persistData();
+        renderProtocolTemplatesManager();
+        showToast('Usunięto wzór protokołu.');
+      });
+    }
+
+    function restoreDefaultProtocolTemplates() {
+      askConfirmation('Przywracanie domyślnych wzorów', 'Czy chcesz przywrócić fabryczne listy kontrolne we wbudowanych wzorach protokołów?', () => {
+        const customOnes = (window.protocolTemplatesData || []).filter(t => !t.isBuiltIn);
+        window.protocolTemplatesData = [...JSON.parse(JSON.stringify(DEFAULT_PROTOCOL_TEMPLATES)), ...customOnes];
+        persistData();
+        renderProtocolTemplatesManager();
+        showToast('Przywrócono domyślne wzory protokołów.');
+      });
+    }
+
+    function previewSampleProtocolTemplate(tplId) {
+      const tpl = getProtocolTemplateById(tplId);
+      if (!tpl) return;
+      const sampleProto = {
+        id: 'preview_' + Date.now(),
+        kind: tpl.id,
+        title: tpl.title,
+        date: toYMD(new Date()),
+        technician: window.workersData?.[0] || 'INSTAL',
+        clientName: 'Jan Kowalski (Podgląd Wzoru)',
+        clientNip: '777-000-11-22',
+        clientEmail: 'klient@instal.pl',
+        clientAddress: '60-101 Poznań, ul. Słoneczna 15',
+        clientPhone: '+48 600 100 200',
+        deviceTypeLabel: tpl.deviceGroup === 'custom' ? (tpl.customGroupName || 'Urządzenie') : getDeviceInfo(tpl.deviceGroup).short,
+        deviceModel: 'Przykładowy Model Urządzenia',
+        serialNumber: 'SN-2026-001',
+        snIndoor: 'SN-JW-2026-001',
+        snOutdoor: 'SN-JZ-2026-002',
+        warrantyMonths: 60,
+        checklist: (tpl.checklist || []).map(label => ({ label, done: true })),
+        reportedFault: 'Przykładowe objawy / opis zgłoszenia z notatki',
+        diagnosis: 'Diagnoza serwisowa urządzenia',
+        workCourse: '1. Weryfikacja zgłoszonych objawów\n2. Czyszczenie i regulacja podzespołów\n3. Test poprawności działania',
+        postServiceStatus: 'Urządzenie sprawne, przekazane do eksploatacji',
+        usedMaterials: 'Brak / Zgodnie ze specyfikacją',
+        comments: 'Podgląd wydruku wzoru protokołu z sekcji Urządzenia.'
+      };
+      showProtocolObjectInModal(sampleProto);
+    }
+
+    function previewTemplateFromEditor() {
+      const title = (document.getElementById('tpl-title').value || 'WZÓR PROTOKOŁU').trim();
+      const rawLines = (document.getElementById('tpl-checklist-items').value || '').split(/\r?\n/).map(s => s.replace(/^\d+[\.\)]\s*/, '').trim()).filter(Boolean);
+      const actionCategory = document.getElementById('tpl-action-category').value || 'inspection';
+      const sampleProto = {
+        id: 'preview_editor',
+        kind: actionCategory === 'service' ? 'universal_service' : actionCategory === 'install' ? 'universal_install' : 'universal_inspection',
+        title,
+        date: toYMD(new Date()),
+        technician: window.workersData?.[0] || 'INSTAL',
+        clientName: 'Jan Kowalski (Podgląd Edytora)',
+        clientAddress: '60-101 Poznań, ul. Słoneczna 15',
+        clientPhone: '+48 600 100 200',
+        deviceTypeLabel: 'Urządzenie HVAC',
+        deviceModel: 'Model testowy',
+        serialNumber: 'SN-TEST-01',
+        checklist: rawLines.map(label => ({ label, done: true })),
+        reportedFault: 'Objawy przepisane ze zgłoszenia',
+        workCourse: 'Szczegółowy przebieg prac serwisowych',
+        comments: 'Uwagi końcowe na protokole.'
+      };
+      showProtocolObjectInModal(sampleProto);
     }
 
     /* ==========================================================================
@@ -3561,6 +4151,7 @@ service cloud.firestore {
       document.getElementById('client-name').value = '';
       document.getElementById('client-nip').value = '';
       document.getElementById('client-phone').value = '+48 ';
+      if (document.getElementById('client-email')) document.getElementById('client-email').value = '';
       document.getElementById('client-postal').value = '';
       document.getElementById('client-city').value = '';
       document.getElementById('client-street').value = '';
@@ -3582,6 +4173,7 @@ service cloud.firestore {
       document.getElementById('client-name').value = capitalizeWords(c.name || '');
       document.getElementById('client-nip').value = c.nip || '';
       document.getElementById('client-phone').value = ensurePhonePrefix(c.phone || '+48 ');
+      if (document.getElementById('client-email')) document.getElementById('client-email').value = c.email || '';
       document.getElementById('client-postal').value = c.postalCode || '';
       document.getElementById('client-city').value = capitalizeWords(c.city || '');
       document.getElementById('client-street').value = capitalizeWords(c.street || '');
@@ -3857,6 +4449,7 @@ service cloud.firestore {
         name: capitalizeWords(document.getElementById('client-name').value.trim()),
         nip: (document.getElementById('client-nip')?.value || '').trim(),
         phone: ensurePhonePrefix(document.getElementById('client-phone').value.trim()),
+        email: (document.getElementById('client-email')?.value || '').trim(),
         postalCode: document.getElementById('client-postal').value.trim(),
         city: capitalizeWords(document.getElementById('client-city').value.trim()),
         street: capitalizeWords(document.getElementById('client-street').value.trim()),
@@ -4873,13 +5466,31 @@ service cloud.firestore {
       document.getElementById('close-visit-materials-wrap')?.classList.toggle('hidden', !checked);
     }
 
+    function renderDynamicChecklistInModal(kind) {
+      const tpl = getProtocolTemplateById(kind);
+      const box = document.getElementById('proto-dynamic-checklist-box');
+      const titleEl = document.getElementById('proto-dynamic-checklist-title');
+      if (!box) return;
+      const items = tpl?.checklist || [];
+      if (titleEl) titleEl.innerText = `Zakres czynności (${tpl?.title || 'Protokół'}):`;
+      box.innerHTML = items.map((label, idx) => `
+        <label class="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold">
+          <input type="checkbox" id="proto-dyn-chk-${idx}" checked class="rounded text-emerald-600">
+          <span>${idx + 1}. ${label}</span>
+        </label>
+      `).join('');
+    }
+
     function onProtocolKindSelectChange(kind) {
       const allSections = [
         'proto-fields-ac-install',
         'proto-fields-ac-inspection',
         'proto-fields-gas-boiler-inspection',
+        'proto-fields-gas-boiler-install',
         'proto-fields-hp-inspection',
         'proto-fields-hp-install',
+        'proto-fields-dynamic-checklist',
+        'proto-fields-universal-install-extra',
         'proto-fields-universal-service'
       ];
       allSections.forEach(id => document.getElementById(id)?.classList.add('hidden'));
@@ -4888,11 +5499,29 @@ service cloud.firestore {
         ac_install: 'proto-fields-ac-install',
         ac_inspection: 'proto-fields-ac-inspection',
         gas_boiler_inspection: 'proto-fields-gas-boiler-inspection',
+        gas_boiler_install: 'proto-fields-gas-boiler-install',
         hp_inspection: 'proto-fields-hp-inspection',
         hp_install: 'proto-fields-hp-install',
         universal_service: 'proto-fields-universal-service'
       };
-      if (mapId[kind]) document.getElementById(mapId[kind])?.classList.remove('hidden');
+
+      if (mapId[kind]) {
+        document.getElementById(mapId[kind])?.classList.remove('hidden');
+      } else {
+        // Obsługa universal_inspection, universal_install oraz własnych szablonów dodanych w sekcji Urządzenia
+        document.getElementById('proto-fields-dynamic-checklist')?.classList.remove('hidden');
+        renderDynamicChecklistInModal(kind);
+        const tpl = getProtocolTemplateById(kind);
+        if (kind === 'universal_install' || tpl?.actionCategory === 'install') {
+          document.getElementById('proto-fields-universal-install-extra')?.classList.remove('hidden');
+        }
+      }
+
+      // Jeśli dla kotła gazowego montaż ma też punkty kontrolne z szablonu, renderujemy je pomocniczo
+      if (kind === 'gas_boiler_install') {
+        document.getElementById('proto-fields-dynamic-checklist')?.classList.remove('hidden');
+        renderDynamicChecklistInModal(kind);
+      }
 
       const hasOutdoorUnit = ['ac_install', 'ac_inspection', 'hp_install', 'hp_inspection'].includes(kind);
       document.getElementById('proto-sn-out-wrap')?.classList.toggle('hidden', !hasOutdoorUnit);
@@ -4903,19 +5532,13 @@ service cloud.firestore {
           : 'Numer fabryczny / seryjny urządzenia (S/N)';
       }
 
-      const titles = {
-        ac_install: '📄 Wystaw Kartę Montażu Klimatyzacji (z podpisem klienta)',
-        ac_inspection: '📄 Wystaw Protokół Przeglądu Klimatyzatora (z podpisem klienta)',
-        gas_boiler_inspection: '📄 Wystaw Protokół Przeglądu Kotła Gazowego (z podpisem klienta)',
-        hp_inspection: '📄 Wystaw Protokół Przeglądu Pompy Ciepła (z podpisem klienta)',
-        hp_install: '📄 Wystaw Protokół Odbioru i Montażu Pompy Ciepła (z podpisem klienta)',
-        universal_service: '📄 Wystaw Uniwersalny Protokół Serwisu / Naprawy (z podpisem klienta)'
-      };
-      setText('close-visit-protocol-title', titles[kind] || '📄 Wystaw cyfrowy protokół z podpisem klienta');
+      const tplObj = getProtocolTemplateById(kind);
+      setText('close-visit-protocol-title', tplObj ? `📄 Wystaw: ${tplObj.title} (z podpisem)` : '📄 Wystaw cyfrowy protokół z podpisem klienta');
     }
 
     function refreshProtocolVisibilityInCloseModal(visit) {
       if (!visit) return;
+      populateProtocolKindSelectDropdown();
       const client = (window.clientsData || []).find(c => c.id === visit.clientId);
       const targetDev = client?.devices?.find(d => d.id === visit.deviceId) || client?.devices?.[0];
       const srvLow = (visit.serviceType || '').toLowerCase();
@@ -4925,6 +5548,10 @@ service cloud.firestore {
       const currentDevType = isMontaz
         ? (document.getElementById('close-install-type')?.value || visit.plannedInstallType || 'heat_pump')
         : (targetDev?.deviceType || 'heat_pump');
+
+      const customTypeName = isMontaz
+        ? ((document.getElementById('close-install-custom-type')?.value || visit.plannedInstallCustomType || '').trim())
+        : ((targetDev?.customTypeLabel || '').trim());
 
       const outSerialWrap = document.getElementById('close-install-serial-out-wrap');
       if (outSerialWrap) outSerialWrap.classList.toggle('hidden', !['ac', 'heat_pump'].includes(currentDevType));
@@ -4936,18 +5563,30 @@ service cloud.firestore {
       sectionEl?.classList.remove('hidden');
       if (attachCheckbox) attachCheckbox.checked = true;
 
+      const wantedCategory = isSerwis ? 'service' : isMontaz ? 'install' : 'inspection';
+
+      // Sprawdzamy, czy istnieje dedykowany własny wzór przypisany do tej grupy urządzeń
+      const customMatchedTpl = (window.protocolTemplatesData || []).find(t =>
+        !t.isBuiltIn &&
+        t.actionCategory === wantedCategory &&
+        (t.deviceGroup === currentDevType || (currentDevType === 'custom' && t.customGroupName && customTypeName && t.customGroupName.toLowerCase() === customTypeName.toLowerCase()))
+      );
+
       let defaultKind = 'universal_service';
-      if (isSerwis) {
+      if (customMatchedTpl) {
+        defaultKind = customMatchedTpl.id;
+      } else if (isSerwis) {
         defaultKind = 'universal_service';
       } else if (isMontaz) {
         if (currentDevType === 'ac') defaultKind = 'ac_install';
         else if (currentDevType === 'heat_pump') defaultKind = 'hp_install';
-        else defaultKind = 'universal_service';
+        else if (currentDevType === 'gas_boiler') defaultKind = 'gas_boiler_install';
+        else defaultKind = 'universal_install';
       } else {
         if (currentDevType === 'ac') defaultKind = 'ac_inspection';
         else if (currentDevType === 'gas_boiler') defaultKind = 'gas_boiler_inspection';
         else if (currentDevType === 'heat_pump') defaultKind = 'hp_inspection';
-        else defaultKind = 'universal_service';
+        else defaultKind = 'universal_inspection';
       }
 
       if (kindSelect) kindSelect.value = defaultKind;
@@ -4957,29 +5596,53 @@ service cloud.firestore {
         document.getElementById('proto-inst-sn-in').value = document.getElementById('close-install-serial')?.value || '';
         document.getElementById('proto-inst-sn-out').value = document.getElementById('close-install-serial-outdoor')?.value || '';
         document.getElementById('proto-inst-loc-in').value = visit.plannedInstallDeviceNotes || '';
+        if (document.getElementById('proto-univ-inst-loc')) {
+          document.getElementById('proto-univ-inst-loc').value = visit.plannedInstallDeviceNotes || '';
+        }
       } else {
         document.getElementById('proto-inst-sn-in').value = targetDev?.serialNumber || '';
         document.getElementById('proto-inst-sn-out').value = targetDev?.serialNumberOutdoor || '';
       }
 
+      // Przepisanie notatek ze zgłoszenia jako Objawy w protokole serwisowym
       if (document.getElementById('proto-srv-fault')) {
         document.getElementById('proto-srv-fault').value = visit.notes || visit.serviceType || 'Zgłoszenie serwisowe';
+      }
+      if (document.getElementById('proto-srv-work-course')) {
+        document.getElementById('proto-srv-work-course').value = '';
       }
       if (document.getElementById('proto-insp-materials')) {
         document.getElementById('proto-insp-materials').value = '';
       }
 
+      // Aktualizacja tekstów punktów kontrolnych z edytora wzorów
+      const acTpl = getProtocolTemplateById('ac_inspection');
+      const gbTpl = getProtocolTemplateById('gas_boiler_inspection');
+      const hpTpl = getProtocolTemplateById('hp_inspection');
+
       for (let i = 1; i <= 9; i++) {
         const cb = document.getElementById(`proto-chk-${i}`);
-        if (cb) cb.checked = true;
+        if (cb) {
+          cb.checked = true;
+          const span = cb.nextElementSibling;
+          if (span && acTpl?.checklist?.[i - 1]) span.innerText = `${i}. ${acTpl.checklist[i - 1]}`;
+        }
       }
       for (let i = 1; i <= 10; i++) {
         const cb = document.getElementById(`proto-gb-chk-${i}`);
-        if (cb) cb.checked = true;
+        if (cb) {
+          cb.checked = true;
+          const span = cb.nextElementSibling;
+          if (span && gbTpl?.checklist?.[i - 1]) span.innerText = `${i}. ${gbTpl.checklist[i - 1]}`;
+        }
       }
       for (let i = 1; i <= 8; i++) {
         const cb = document.getElementById(`proto-hp-chk-${i}`);
-        if (cb) cb.checked = true;
+        if (cb) {
+          cb.checked = true;
+          const span = cb.nextElementSibling;
+          if (span && hpTpl?.checklist?.[i - 1]) span.innerText = `${i}. ${hpTpl.checklist[i - 1]}`;
+        }
       }
 
       onProtocolKindSelectChange(defaultKind);
@@ -4992,6 +5655,7 @@ service cloud.firestore {
       if (!attach || sectionHidden) return null;
 
       const kind = document.getElementById('proto-form-kind')?.value || 'ac_inspection';
+      const tpl = getProtocolTemplateById(kind);
       const dateStr = visit.date || toYMD(new Date());
       const techSig = getSignatureDataUrl('sig-canvas-tech');
       const clientSig = getSignatureDataUrl('sig-canvas-client');
@@ -5010,6 +5674,7 @@ service cloud.firestore {
         technician: visit.workerName || 'INSTAL',
         clientName: client?.name || 'Klient',
         clientNip: client?.nip || '',
+        clientEmail: client?.email || '',
         clientAddress: client ? `${client.postalCode ? client.postalCode + ' ' : ''}${client.city || ''}, ${client.street || ''}` : '',
         clientPhone: client?.phone || '',
         deviceTypeLabel: deviceTypeLabel || 'Urządzenie HVAC',
@@ -5028,7 +5693,7 @@ service cloud.firestore {
       if (kind === 'ac_install') {
         return {
           ...baseProtocol,
-          title: 'KARTA MONTAŻU KLIMATYZACJI',
+          title: tpl?.title || 'KARTA MONTAŻU KLIMATYZACJI',
           refrigerant: (document.getElementById('proto-inst-refrigerant')?.value || 'R32').trim(),
           installLength: (document.getElementById('proto-inst-length')?.value || 'do 3 mb').trim(),
           electricConn: (document.getElementById('proto-inst-electric')?.value || 'Do istniejącej instalacji').trim(),
@@ -5040,43 +5705,37 @@ service cloud.firestore {
       }
 
       if (kind === 'gas_boiler_inspection') {
-        const gbLabels = [
-          'Czyszczenie wymiennika ciepła',
-          'Czyszczenie palnika oraz elektrod (zapłonowej / jonizacyjnej)',
-          'Czyszczenie syfonu kondensatu i kontrola odpływu',
-          'Czyszczenie filtrów (C.O., C.W.U., gazu)',
-          'Kontrola ciśnienia w naczyniu przeponowym i układzie C.O.',
-          'Kontrola szczelności instalacji gazowej przy kotle',
-          'Kontrola szczelności układu powietrzno-spalinowego',
-          'Kontrola zabezpieczeń i automatyki kotła',
-          'Pomiar obecności tlenku węgla (CO) w pomieszczeniu',
-          'Analiza spalin i regulacja parametrów spalania'
-        ];
+        const gbLabels = tpl?.checklist || DEFAULT_PROTOCOL_TEMPLATES.find(t => t.id === 'gas_boiler_inspection').checklist;
         return {
           ...baseProtocol,
-          title: 'PROTOKÓŁ PRZEGLĄDU KOTŁA GAZOWEGO',
-          checklist: gbLabels.map((label, idx) => ({ label, done: Boolean(document.getElementById(`proto-gb-chk-${idx + 1}`)?.checked) })),
+          title: tpl?.title || 'PROTOKÓŁ PRZEGLĄDU KOTŁA GAZOWEGO',
+          checklist: gbLabels.map((label, idx) => ({ label, done: Boolean(document.getElementById(`proto-gb-chk-${idx + 1}`)?.checked ?? true) })),
           flueGasAnalysis: (document.getElementById('proto-gb-flue')?.value || 'W normie').trim(),
           boilerPressure: (document.getElementById('proto-gb-pressure')?.value || '1,5 bar').trim(),
           gasTightness: (document.getElementById('proto-gb-gas-tight')?.value || 'Szczelna').trim()
         };
       }
 
-      if (kind === 'hp_inspection') {
-        const hpLabels = [
-          'Czyszczenie filtra magnetycznego / odmulacza i siatkowego',
-          'Czyszczenie i kontrola parownika jednostki zewnętrznej',
-          'Kontrola szczelności układu chłodniczego i hydraulicznego',
-          'Kontrola ciśnienia instalacji C.O. oraz naczyń przeponowych',
-          'Sprawdzenie drożności odpływu skroplin i tacy ociekowej',
-          'Kontrola połączeń elektrycznych, zabezpieczeń i grzałki',
-          'Odczyt rejestru błędów, czasu pracy i startów sprężarki',
-          'Weryfikacja krzywej grzewczej oraz pracy zaworu 3D'
-        ];
+      if (kind === 'gas_boiler_install') {
+        const gbInstLabels = tpl?.checklist || DEFAULT_PROTOCOL_TEMPLATES.find(t => t.id === 'gas_boiler_install').checklist;
         return {
           ...baseProtocol,
-          title: 'PROTOKÓŁ PRZEGLĄDU POMPY CIEPŁA',
-          checklist: hpLabels.map((label, idx) => ({ label, done: Boolean(document.getElementById(`proto-hp-chk-${idx + 1}`)?.checked) })),
+          title: tpl?.title || 'PROTOKÓŁ MONTAŻU I ODBIORU KOTŁA GAZOWEGO',
+          checklist: gbInstLabels.map((label, idx) => ({ label, done: Boolean(document.getElementById(`proto-dyn-chk-${idx}`)?.checked ?? true) })),
+          gasTypeSupply: (document.getElementById('proto-gb-inst-gas')?.value || 'GZ-50 (E) / 230V').trim(),
+          flueSystem: (document.getElementById('proto-gb-inst-flue-sys')?.value || 'Koncentryczny').trim(),
+          tightnessTest: (document.getElementById('proto-gb-inst-tight')?.value || 'Pozytywna (Instalacja szczelna)').trim(),
+          hydraulicsInfo: (document.getElementById('proto-gb-inst-hydr')?.value || 'Zamontowano filtr magnetyczny, syfon podłączony').trim(),
+          combustionTest: (document.getElementById('proto-gb-inst-comb')?.value || 'Wykonano analizę spalin — parametry w normie').trim()
+        };
+      }
+
+      if (kind === 'hp_inspection') {
+        const hpLabels = tpl?.checklist || DEFAULT_PROTOCOL_TEMPLATES.find(t => t.id === 'hp_inspection').checklist;
+        return {
+          ...baseProtocol,
+          title: tpl?.title || 'PROTOKÓŁ PRZEGLĄDU POMPY CIEPŁA',
+          checklist: hpLabels.map((label, idx) => ({ label, done: Boolean(document.getElementById(`proto-hp-chk-${idx + 1}`)?.checked ?? true) })),
           hpPressure: (document.getElementById('proto-hp-pressure')?.value || '1,5 bar').trim(),
           fgazTool: (document.getElementById('proto-hp-fgaz')?.value || 'Wykrywacz nieszczelności / Certyfikat F-GAZ').trim()
         };
@@ -5085,7 +5744,7 @@ service cloud.firestore {
       if (kind === 'hp_install') {
         return {
           ...baseProtocol,
-          title: 'PROTOKÓŁ ODBIORU I MONTAŻU POMPY CIEPŁA',
+          title: tpl?.title || 'PROTOKÓŁ ODBIORU I MONTAŻU POMPY CIEPŁA',
           hpSystemType: (document.getElementById('proto-hp-inst-type')?.value || 'Powietrze-Woda').trim(),
           refrigerant: (document.getElementById('proto-hp-inst-refrig')?.value || 'R32 / R290').trim(),
           electricConn: (document.getElementById('proto-hp-inst-elec')?.value || 'Zgodnie z DTR producenta').trim(),
@@ -5095,37 +5754,45 @@ service cloud.firestore {
       }
 
       if (kind === 'universal_service') {
+        const workCourseVal = (document.getElementById('proto-srv-work-course')?.value || '').trim();
         return {
           ...baseProtocol,
-          title: 'PROTOKÓŁ SERWISOWY / NAPRAWY URZĄDZENIA',
-          reportedFault: (document.getElementById('proto-srv-fault')?.value || 'Zgłoszenie serwisowe').trim(),
+          title: tpl?.title || 'PROTOKÓŁ SERWISOWY / NAPRAWY URZĄDZENIA',
+          reportedFault: (document.getElementById('proto-srv-fault')?.value || visit.notes || 'Zgłoszenie serwisowe').trim(),
           diagnosis: (document.getElementById('proto-srv-diagnosis')?.value || 'Przeprowadzono diagnostykę i naprawę').trim(),
+          workCourse: workCourseVal || comment || 'Przeprowadzono diagnostykę oraz czynności naprawcze zgodnie ze zgłoszeniem.',
           postServiceStatus: (document.getElementById('proto-srv-status')?.value || 'Urządzenie sprawne, przekazane do eksploatacji').trim()
         };
       }
 
-      const checklistLabels = [
-        'Czyszczenie filtrów jednostki wewnętrznej',
-        'Czyszczenie i dezynfekcja parownika jednostki wewnętrznej',
-        'Czyszczenie skraplacza jednostki zewnętrznej',
-        'Sprawdzenie drożności układu odprowadzenia skroplin',
-        'Sprawdzenie szczelności układu chłodniczego',
-        'Pomiar ciśnienia pracy i temperatury nawiewu',
-        'Kontrola połączeń elektrycznych i zasilania',
-        'Kontrola stanu mocowań i wibroizolacji',
-        'Test poprawnego działania klimatyzatora we wszystkich trybach'
-      ];
+      if (kind === 'ac_inspection') {
+        const checklistLabels = tpl?.checklist || DEFAULT_PROTOCOL_TEMPLATES.find(t => t.id === 'ac_inspection').checklist;
+        const checklist = checklistLabels.map((label, idx) => ({
+          label,
+          done: Boolean(document.getElementById(`proto-chk-${idx + 1}`)?.checked ?? true)
+        }));
+        return {
+          ...baseProtocol,
+          title: tpl?.title || 'PROTOKÓŁ PRZEGLĄDU KLIMATYZATORA',
+          fgazTool: (document.getElementById('proto-insp-fgaz')?.value || 'Wykrywacz nieszczelności / Certyfikat F-GAZ').trim(),
+          checklist
+        };
+      }
 
-      const checklist = checklistLabels.map((label, idx) => ({
+      // Pozostałe wzory: universal_inspection, universal_install oraz dowolne własne szablony dodane przez użytkownika
+      const dynLabels = tpl?.checklist || [];
+      const dynChecklist = dynLabels.map((label, idx) => ({
         label,
-        done: Boolean(document.getElementById(`proto-chk-${idx + 1}`)?.checked)
+        done: Boolean(document.getElementById(`proto-dyn-chk-${idx}`)?.checked ?? true)
       }));
 
       return {
         ...baseProtocol,
-        title: 'PROTOKÓŁ PRZEGLĄDU KLIMATYZATORA',
-        fgazTool: (document.getElementById('proto-insp-fgaz')?.value || 'Wykrywacz nieszczelności / Certyfikat F-GAZ').trim(),
-        checklist
+        title: tpl?.title || (kind === 'universal_install' ? 'PROTOKÓŁ MONTAŻU I ODBIORU URZĄDZENIA' : 'PROTOKÓŁ PRZEGLĄDU URZĄDZENIA'),
+        actionCategory: tpl?.actionCategory || (kind === 'universal_install' ? 'install' : 'inspection'),
+        locIndoor: (document.getElementById('proto-univ-inst-loc')?.value || deviceNotes || 'Zgodnie z miejscem instalacji').trim(),
+        testsResult: (document.getElementById('proto-univ-inst-test')?.value || 'Pozytywny — urządzenie sprawne').trim(),
+        checklist: dynChecklist
       };
     }
 
@@ -5256,7 +5923,7 @@ service cloud.firestore {
             <div style="font-size:12px;font-weight:800;color:#18181b;">${p.clientName}</div>
             ${p.clientNip ? `<div style="font-size:11px;color:#3f3f46;"><strong>NIP:</strong> ${p.clientNip}</div>` : ''}
             <div style="font-size:11px;color:#3f3f46;"><strong>Adres:</strong> ${p.clientAddress || '—'}</div>
-            <div style="font-size:11px;color:#3f3f46;"><strong>Telefon:</strong> ${p.clientPhone || '—'}</div>
+            <div style="font-size:11px;color:#3f3f46;"><strong>Telefon:</strong> ${p.clientPhone || '—'}${p.clientEmail ? ` &nbsp;|&nbsp; <strong>E-mail:</strong> ${p.clientEmail}` : ''}</div>
           </div>
           <div style="border:1px solid #d4d4d8;border-radius:8px;padding:10px;background:#fafafa;">
             <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#173d7a;margin-bottom:4px;">2. Dane Urządzenia (${p.deviceTypeLabel || 'HVAC'})</div>
@@ -5345,22 +6012,76 @@ service cloud.firestore {
             </table>
           </div>
         `;
+      } else if (p.kind === 'gas_boiler_install') {
+        const gbInstallChecklistRows = (p.checklist || []).map((item, idx) => `
+          <tr>
+            <td style="border:1px solid #d4d4d8;padding:3.5px 8px;text-align:center;width:30px;font-weight:700;">${idx + 1}.</td>
+            <td style="border:1px solid #d4d4d8;padding:3.5px 10px;">${item.label}</td>
+            <td style="border:1px solid #d4d4d8;padding:3.5px 10px;text-align:center;width:105px;font-weight:800;color:${item.done ? '#047857' : '#71717a'};">${item.done ? '✓ WYKONANO' : 'Nie dotyczy'}</td>
+          </tr>
+        `).join('');
+
+        detailsSection = `
+          <div style="margin-bottom:10px;">
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#173d7a;margin-bottom:5px;">3. Parametry techniczne montażu i pierwszego uruchomienia kotła gazowego</div>
+            <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px;">
+              <tbody>
+                <tr>
+                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;background:#f4f4f5;font-weight:700;width:42%;">Model kotła / Nr fabryczny (S/N)</td>
+                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;font-weight:700;">${p.deviceModel} &nbsp;|&nbsp; S/N: <span style="font-family:monospace;">${snIndoorVal}</span></td>
+                </tr>
+                <tr>
+                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;background:#f4f4f5;font-weight:700;">Rodzaj gazu i zasilanie / Układ spalinowy</td>
+                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;">${p.gasTypeSupply || 'GZ-50 (E) / 230V'} &nbsp;|&nbsp; ${p.flueSystem || 'Koncentryczny'}</td>
+                </tr>
+                <tr>
+                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;background:#f4f4f5;font-weight:700;">Armatura zabezpieczająca / Filtr magnetyczny / Syfon</td>
+                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;">${p.hydraulicsInfo || 'Zamontowano filtr magnetyczny, syfon kondensatu podłączony'}</td>
+                </tr>
+                <tr>
+                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;background:#f4f4f5;font-weight:700;">Próba szczelności gazu oraz analiza spalin</td>
+                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;font-weight:800;color:#047857;">${p.tightnessTest || 'Pozytywna'} &nbsp;|&nbsp; ${p.combustionTest || 'Analiza spalin w normie'}</td>
+                </tr>
+                <tr>
+                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;background:#f4f4f5;font-weight:700;">Okres gwarancji</td>
+                  <td style="border:1px solid #d4d4d8;padding:4.5px 10px;font-weight:700;">${p.warrantyMonths || 60} miesięcy (Kolejny przegląd: ${formatDatePL(addMonths(p.date, 12))})</td>
+                </tr>
+              </tbody>
+            </table>
+            ${gbInstallChecklistRows ? `
+              <table style="width:100%;border-collapse:collapse;font-size:10.5px;">
+                <thead>
+                  <tr style="background:#e4e4e7;font-weight:800;">
+                    <th style="border:1px solid #d4d4d8;padding:3.5px;">Lp.</th>
+                    <th style="border:1px solid #d4d4d8;padding:3.5px;text-align:left;">Czynność montażowa / odbiorowa</th>
+                    <th style="border:1px solid #d4d4d8;padding:3.5px;text-align:center;">Status</th>
+                  </tr>
+                </thead>
+                <tbody>${gbInstallChecklistRows}</tbody>
+              </table>
+            ` : ''}
+          </div>
+        `;
       } else if (p.kind === 'universal_service') {
         detailsSection = `
           <div style="margin-bottom:12px;">
-            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#173d7a;margin-bottom:6px;">3. Szczegóły interwencji serwisowej / naprawy</div>
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#173d7a;margin-bottom:6px;">3. Zgłoszone objawy, diagnoza oraz przebieg prac serwisowych</div>
             <table style="width:100%;border-collapse:collapse;font-size:11px;">
               <tbody>
                 <tr>
-                  <td style="border:1px solid #d4d4d8;padding:6px 10px;background:#f4f4f5;font-weight:700;width:38%;">Zgłoszona usterka / Powód wezwania</td>
-                  <td style="border:1px solid #d4d4d8;padding:6px 10px;font-weight:700;">${p.reportedFault || 'Zgłoszenie serwisowe'}</td>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;background:#f4f4f5;font-weight:800;width:35%;">Objawy / Zgłoszona usterka<br><span style="font-size:9.5px;font-weight:600;color:#52525b;">(dane ze zgłoszenia)</span></td>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;font-weight:700;color:#18181b;">${p.reportedFault || 'Zgłoszenie serwisowe'}</td>
                 </tr>
                 <tr>
-                  <td style="border:1px solid #d4d4d8;padding:6px 10px;background:#f4f4f5;font-weight:700;">Diagnoza i przyczyna usterki</td>
-                  <td style="border:1px solid #d4d4d8;padding:6px 10px;">${p.diagnosis || 'Zgodnie z opisem w uwagach'}</td>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;background:#f4f4f5;font-weight:800;">Diagnoza i przyczyna usterki</td>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;">${p.diagnosis || 'Zgodnie z weryfikacją serwisową'}</td>
                 </tr>
                 <tr>
-                  <td style="border:1px solid #d4d4d8;padding:6px 10px;background:#f4f4f5;font-weight:700;">Status urządzenia po naprawie</td>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;background:#f4f4f5;font-weight:800;">Przebieg prac serwisowych</td>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;white-space:pre-line;font-weight:600;">${p.workCourse || p.comments || 'Wykonano diagnostykę i czynności serwisowe.'}</td>
+                </tr>
+                <tr>
+                  <td style="border:1px solid #d4d4d8;padding:6px 10px;background:#f4f4f5;font-weight:800;">Status urządzenia po naprawie</td>
                   <td style="border:1px solid #d4d4d8;padding:6px 10px;font-weight:800;color:#047857;">${p.postServiceStatus || 'Urządzenie sprawne'}</td>
                 </tr>
               </tbody>
@@ -5396,18 +6117,30 @@ service cloud.firestore {
               <strong>Termin kolejnego przeglądu:</strong> ${formatDatePL(addMonths(p.date, 12))}
             </div>
           `;
+        } else if (p.kind === 'universal_install' || p.actionCategory === 'install') {
+          extraParamsRow = `
+            <div style="margin-top:6px;padding:6px 10px;border:1px solid #d4d4d8;border-radius:6px;background:#fafafa;font-size:10.5px;color:#18181b;">
+              <strong>Miejsce montażu:</strong> ${p.locIndoor || p.deviceNotes || 'Zgodnie z DTR'} &nbsp;|&nbsp;
+              <strong>Próba odbiorowa:</strong> <span style="color:#047857;font-weight:800;">${p.testsResult || 'Pozytywna'}</span> &nbsp;|&nbsp;
+              <strong>Gwarancja:</strong> ${p.warrantyMonths || 60} msc (Kolejny przegląd: ${formatDatePL(addMonths(p.date, 12))})
+            </div>
+          `;
         } else {
           extraParamsRow = `
             <div style="margin-top:6px;font-size:10px;color:#52525b;">
-              <strong>Przyrząd pomiarowy / Uprawnienia:</strong> ${p.fgazTool || 'Wykrywacz nieszczelności / Certyfikat F-GAZ'} &nbsp;•&nbsp;
+              <strong>Wynik kontroli:</strong> Urządzenie sprawne &nbsp;•&nbsp;
               <strong>Termin kolejnego przeglądu:</strong> ${formatDatePL(addMonths(p.date, 12))}
             </div>
           `;
         }
 
+        const sectionHeaderTitle = (p.kind === 'universal_install' || p.actionCategory === 'install')
+          ? '3. Zakres wykonanych czynności montażowych i odbiorowych'
+          : '3. Zakres wykonanych czynności przeglądowych i kontrolnych';
+
         detailsSection = `
           <div style="margin-bottom:10px;">
-            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#173d7a;margin-bottom:6px;">3. Zakres wykonanych czynności przeglądowych i kontrolnych</div>
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#173d7a;margin-bottom:6px;">${sectionHeaderTitle}</div>
             <table style="width:100%;border-collapse:collapse;font-size:11px;">
               <thead>
                 <tr style="background:#e4e4e7;font-weight:800;">
@@ -5423,7 +6156,7 @@ service cloud.firestore {
         `;
       }
 
-      const showMaterialsBlock = !['ac_install', 'hp_install'].includes(p.kind);
+      const showMaterialsBlock = !['ac_install', 'hp_install', 'gas_boiler_install', 'universal_install'].includes(p.kind) && p.actionCategory !== 'install';
       const materialsAboveCommentsHtml = showMaterialsBlock ? `
         <div style="border:1px solid #d4d4d8;border-radius:8px;padding:8px 10px;margin-bottom:8px;background:#fafafa;">
           <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#173d7a;margin-bottom:3px;">4. Zużyte materiały / części eksploatacyjne</div>
@@ -5516,9 +6249,67 @@ service cloud.firestore {
     function showProtocolObjectInModal(proto) {
       currentPreviewProtocolObj = proto;
       setText('protocol-preview-modal-title', `${proto.title} — ${proto.clientName}`);
+      const emailInfoEl = document.getElementById('protocol-preview-email-info');
+      if (emailInfoEl) {
+        emailInfoEl.innerText = proto.clientEmail
+          ? `✉️ E-mail klienta: ${proto.clientEmail} (zostanie automatycznie skopiowany i wstawiony do Gmaila)`
+          : 'Dokument zapisany w historii urządzenia — gotowy do pobrania w PDF lub wydruku';
+      }
       const area = document.getElementById('protocol-printable-area');
       if (area) area.innerHTML = renderProtocolSheetHtml(proto);
       openModal('modal-protocol-preview');
+    }
+
+    function copyTextToClipboardFallback(text) {
+      if (!text) return false;
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    async function exportProtocolToGmail() {
+      if (!currentPreviewProtocolObj) return;
+      const p = currentPreviewProtocolObj;
+
+      // 1. Szukamy adresu e-mail w protokole lub bezpośrednio w karcie klienta
+      let clientEmail = (p.clientEmail || '').trim();
+      if (!clientEmail) {
+        const matchedClient = (window.clientsData || []).find(c => c.name === p.clientName);
+        if (matchedClient?.email) clientEmail = matchedClient.email.trim();
+      }
+
+      // 2. Automatycznie kopiujemy e-mail klienta do schowka
+      if (clientEmail) {
+        copyTextToClipboardFallback(clientEmail);
+      }
+
+      // 3. Pobieramy plik PDF na urządzenie, aby użytkownik mógł go od razu załączyć
+      await downloadCurrentProtocolPDF();
+
+      // 4. Otwieramy okno tworzenia nowej wiadomości w Gmailu z wypełnionym odbiorcą, tematem i treścią
+      const subject = encodeURIComponent(`${p.title || 'Protokół serwisowy'} - ${p.deviceModel || 'Urządzenie HVAC'} (${formatDatePL(p.date)})`);
+      const body = encodeURIComponent(
+        `Dzień dobry,\n\nW załączeniu przesyłamy ${p.title || 'protokół serwisowy'} z dnia ${formatDatePL(p.date)} dla urządzenia ${p.deviceModel || 'HVAC'}.\n\n(Plik PDF został automatycznie pobrany na urządzenie — prosimy o przeciągnięcie go do tej wiadomości jako załącznik).\n\nPozdrawiamy,\nZespół INSTAL`
+      );
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(clientEmail)}&su=${subject}&body=${body}`;
+
+      window.open(gmailUrl, '_blank', 'noopener,noreferrer');
+
+      showToast(
+        clientEmail
+          ? `Pobrano PDF, skopiowano e-mail (${clientEmail}) do schowka i otwarto Gmaila!`
+          : 'Pobrano PDF i otwarto Gmaila (klient nie ma przypisanego adresu e-mail).'
+      );
     }
 
     async function downloadCurrentProtocolPDF() {
@@ -5858,6 +6649,100 @@ service cloud.firestore {
       );
     }
 
+    function openBackupModal() {
+      const clientsCount = (window.clientsData || []).length;
+      let devicesCount = 0;
+      let protocolsCount = 0;
+      (window.clientsData || []).forEach(c => {
+        (c.devices || []).forEach(d => {
+          devicesCount++;
+          (d.inspectionHistory || []).forEach(h => {
+            if (h.protocolData) protocolsCount++;
+          });
+        });
+      });
+
+      const statsEl = document.getElementById('backup-summary-stats');
+      if (statsEl) {
+        statsEl.innerHTML = `
+          <div class="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800">
+            <div class="text-base font-extrabold text-zinc-900 dark:text-white">${clientsCount}</div>
+            <div class="text-[10px] font-bold text-zinc-500 uppercase">Klientów</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800">
+            <div class="text-base font-extrabold text-emerald-600">${devicesCount}</div>
+            <div class="text-[10px] font-bold text-zinc-500 uppercase">Urządzeń</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800">
+            <div class="text-base font-extrabold text-sky-600">${protocolsCount}</div>
+            <div class="text-[10px] font-bold text-zinc-500 uppercase">Protokołów PDF</div>
+          </div>
+        `;
+      }
+      openModal('modal-backup');
+    }
+
+    function downloadFullDatabaseBackup() {
+      requestAdminPin(
+        'Pobieranie pełnego Backupu bazy',
+        'Podaj hasło autoryzacyjne, aby pobrać pełną kopię zapasową z historią i protokołami:',
+        () => {
+          const fullBackup = {
+            backupVersion: 1,
+            createdAt: new Date().toISOString(),
+            clients: window.clientsData || [],
+            appointments: window.appointmentsData || [],
+            catalog: window.catalogData || [],
+            workers: window.workersData || [],
+            protocolTemplates: window.protocolTemplatesData || []
+          };
+          const jsonStr = JSON.stringify(fullBackup, null, 2);
+          const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `INSTAL_Pelny_Backup_Bazy_${toYMD(new Date())}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          showToast('Pobrano pełny plik Backup (.JSON) z historią i protokołami!');
+        }
+      );
+    }
+
+    function handleRestoreFullBackupFile(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      e.target.value = '';
+
+      file.text().then(rawText => {
+        try {
+          const parsed = JSON.parse(rawText);
+          if (!parsed || !Array.isArray(parsed.clients)) {
+            showToast('Nieprawidłowy plik kopii zapasowej JSON!');
+            return;
+          }
+          requestAdminPin(
+            'Przywracanie bazy z pliku Backup',
+            `Plik zawiera ${parsed.clients.length} klientów. Podaj hasło autoryzacyjne, aby przywrócić bazę:`,
+            () => {
+              window.clientsData = parsed.clients || [];
+              window.appointmentsData = parsed.appointments || [];
+              if (Array.isArray(parsed.catalog) && parsed.catalog.length > 0) window.catalogData = parsed.catalog;
+              if (Array.isArray(parsed.workers) && parsed.workers.length > 0) window.workersData = parsed.workers;
+              if (Array.isArray(parsed.protocolTemplates) && parsed.protocolTemplates.length > 0) window.protocolTemplatesData = parsed.protocolTemplates;
+              persistData();
+              closeModal('modal-backup');
+              refreshAllViews();
+              showToast(`Pomyślnie przywrócono pełny Backup (${window.clientsData.length} klientów)!`);
+            }
+          );
+        } catch (err) {
+          showToast('Błąd odczytu pliku JSON.');
+        }
+      });
+    }
+
     function confirmExportPassword(e) {
       e.preventDefault();
       if (document.getElementById('export-password-input').value !== ADMIN_PIN) {
@@ -5872,17 +6757,17 @@ service cloud.firestore {
 
     function exportClientsCSV(onlyFiltered = true) {
       const targetClients = onlyFiltered ? getFilteredEnrichedClients() : getEnrichedClients();
-      const headers = ['Imię i Nazwisko', 'NIP', 'Telefon', 'Kod pocztowy', 'Miasto', 'Ulica', 'Lat', 'Lng', 'Typ urządzenia', 'Model', 'Data montażu', 'Gwarancja (msc)', 'Status Gwarancji', 'Ostatni przegląd', 'Następny przegląd', 'Notatki'];
+      const headers = ['Imię i Nazwisko', 'NIP', 'Telefon', 'Email', 'Kod pocztowy', 'Miasto', 'Ulica', 'Lat', 'Lng', 'Typ urządzenia', 'Model', 'Data montażu', 'Gwarancja (msc)', 'Status Gwarancji', 'Ostatni przegląd', 'Następny przegląd', 'Notatki'];
       const escape = val => `"${String(val ?? '').replace(/"/g, '""')}"`;
       const rows = [];
 
       targetClients.forEach(c => {
         if (!c.devices || c.devices.length === 0) {
-          rows.push([c.name, c.nip || '', c.phone, c.postalCode, c.city, c.street, c.lat, c.lng, '', '', '', '', 'Brak urządzenia', '', '', c.notes].map(escape).join(';'));
+          rows.push([c.name, c.nip || '', c.phone, c.email || '', c.postalCode, c.city, c.street, c.lat, c.lng, '', '', '', '', 'Brak urządzenia', '', '', c.notes].map(escape).join(';'));
         } else {
           c.devices.forEach(d => {
             const wStatus = d.status.ourUnknownDate ? 'Nasze (Brak daty)' : d.status.noInstallDate ? 'Obce' : d.status.isUnderWarranty ? `Na gwarancji do ${d.status.warrantyEndFormatted}` : `Po gwarancji (${d.status.warrantyEndFormatted})`;
-            rows.push([c.name, c.nip || '', c.phone, c.postalCode, c.city, c.street, c.lat, c.lng, getDeviceInfo(d.deviceType).short, d.deviceModel, d.installDate, d.warrantyMonths, wStatus, d.lastInspectionDate, d.nextInspectionDate, c.notes].map(escape).join(';'));
+            rows.push([c.name, c.nip || '', c.phone, c.email || '', c.postalCode, c.city, c.street, c.lat, c.lng, getDeviceInfo(d.deviceType, d.customTypeLabel).short, d.deviceModel, d.installDate, d.warrantyMonths, wStatus, d.lastInspectionDate, d.nextInspectionDate, c.notes].map(escape).join(';'));
           });
         }
       });
@@ -5931,6 +6816,7 @@ service cloud.firestore {
           if (map.name === undefined) map.name = idx;
         }
         else if (low.includes('nip')) map.nip = idx;
+        else if (low.includes('mail') || low.includes('e-mail')) map.email = idx;
         else if (low.includes('tel') || low.includes('phone') || low.includes('kom')) map.phone = idx;
         else if (low.includes('kod') || low.includes('poczt') || low.includes('postal')) map.postal = idx;
         else if (low.includes('miast') || low.includes('miejscow') || low.includes('poczta') || low === 'city') map.city = idx;
@@ -6061,6 +6947,7 @@ service cloud.firestore {
 
           let rawName = getCol('name', 0);
           let rawNip = getCol('nip', undefined);
+          let rawEmail = getCol('email', undefined);
           let rawPhone = getCol('phone', 1);
           let rawPostal = getCol('postal', 2);
           let rawCity = getCol('city', 3);
@@ -6091,6 +6978,7 @@ service cloud.firestore {
           const parsedAddr = extractCityPostalStreet(rawCity, rawStreet, rawPostal);
           const finalName = capitalizeWords(rawName || `Klient (${parsedAddr.city || rawPhone || 'Import'})`);
           const finalNip = (rawNip || '').trim();
+          const finalEmail = (rawEmail || '').trim();
           const finalPhone = rawPhone ? ensurePhonePrefix(rawPhone) : '+48 ';
           const finalCity = parsedAddr.city;
           const finalStreet = parsedAddr.street;
@@ -6148,6 +7036,7 @@ service cloud.firestore {
               id: `c_imp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
               name: finalName,
               nip: finalNip,
+              email: finalEmail,
               phone: finalPhone,
               postalCode: finalPostal,
               city: finalCity,
@@ -6487,6 +7376,7 @@ service cloud.firestore {
           const existing = (window.clientsData || []).find(c => c.id === imp.existingClientId);
           if (existing) {
             if (!existing.nip && imp.nip) existing.nip = imp.nip;
+            if (!existing.email && imp.email) existing.email = imp.email;
             if ((!existing.phone || existing.phone.trim() === '+48') && imp.phone) existing.phone = imp.phone;
             if (!existing.street && imp.street) existing.street = imp.street;
             if (!existing.postalCode && imp.postalCode) existing.postalCode = imp.postalCode;
