@@ -486,52 +486,53 @@
 
       <!-- 3. TAB: CLIENTS (KLIENCI) -->
       <div id="tab-clients" class="tab-content space-y-4 hidden">
-        <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col xl:flex-row gap-3 justify-between items-center">
-          <div class="relative flex-1 w-full">
-            <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-            <input type="text" id="client-search-input" oninput="renderClients()" placeholder="Szukaj (np. nazwisko, NIP lub kilka miast po spacji: Poznań Luboń Swarzędz)..." class="w-full pl-10 pr-9 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:border-emerald-500 text-zinc-800 dark:text-zinc-100">
-            <button type="button" onclick="clearClientSearch()" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200" title="Wyczyść wyszukiwanie">
+        <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-3">
+          <div class="relative w-full">
+            <i data-lucide="search" class="w-5 h-5 text-emerald-600 dark:text-emerald-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+            <input type="text" id="client-search-input" oninput="renderClients()" onkeyup="renderClients()" placeholder="Szukaj klienta po nazwisku, NIP, adresie, telefonie, modelu urządzenia lub wpisz kilka miast po spacji (np. Poznań Luboń Swarzędz)..." class="w-full pl-11 pr-10 py-3 bg-zinc-50 dark:bg-zinc-800/90 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-medium outline-none focus:border-emerald-500 dark:focus:border-emerald-500 text-zinc-900 dark:text-zinc-100 transition shadow-inner">
+            <button type="button" onclick="clearClientSearch()" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-1 rounded-lg hover:bg-zinc-200/60 dark:hover:bg-zinc-700 transition" title="Wyczyść wyszukiwanie i filtry">
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
           </div>
-          <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto shrink-0">
-            <select id="client-device-type-filter" onchange="renderClients()" class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2.5 text-xs font-bold outline-none text-zinc-800 dark:text-zinc-100">
-              <option value="all">🔧 Wszystkie rodzaje urządzeń</option>
-              <option value="heat_pump">🔥 Tylko Pompy ciepła</option>
-              <option value="gas_boiler">🔥 Tylko Kotły gazowe</option>
-              <option value="ac">❄️ Tylko Klimatyzacja</option>
-              <option value="ventilation">💨 Tylko Wentylacja</option>
-              <option value="custom">🔧 Inne / Własne rodzaje</option>
-              <option value="none">🚫 Klienci bez urządzenia</option>
-            </select>
-            <select id="client-warranty-filter" onchange="renderClients()" class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2.5 text-xs font-bold outline-none text-zinc-800 dark:text-zinc-100">
-              <option value="all">🛡️ Wszystkie gwarancje</option>
-              <option value="under_warranty">🛡️ Tylko Na gwarancji</option>
-              <option value="expired_warranty">⚠️ Tylko Po gwarancji</option>
-              <option value="our_no_date">🏠 Nasze (Brak daty montażu)</option>
-              <option value="external">🔧 Obce urządzenia (Brak gw.)</option>
-            </select>
-            <select id="client-sort-select" onchange="renderClients()" class="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2.5 text-xs font-bold outline-none text-zinc-800 dark:text-zinc-100">
-              <option value="default">↕️ Sortuj: Domyślnie</option>
-              <option value="city_asc">📍 Miejscowość (A-Z)</option>
-              <option value="city_desc">📍 Miejscowość (Z-A)</option>
-              <option value="install_desc">📅 Data montażu (od najnowszych)</option>
-              <option value="install_asc">📅 Data montażu (od najstarszych)</option>
-              <option value="name_asc">👤 Klient (A-Z)</option>
-            </select>
-            <button onclick="requestExportClientsCSV(true)" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition" title="Eksportuj tylko aktualnie wyświetlanych klientów po wyszukaniu">
-              <i data-lucide="lock" class="w-3.5 h-3.5"></i> <span id="export-filtered-btn-label">Eksport widocznych (CSV)</span>
-            </button>
-            <button onclick="requestExportClientsCSV(false)" class="bg-teal-700 hover:bg-teal-600 text-white px-3 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition" title="Eksportuj całą bazę wszystkich klientów">
-              <i data-lucide="download" class="w-3.5 h-3.5"></i> Cała baza
-            </button>
-            <input type="file" id="csv-file-input" accept=".csv" onchange="importClientsCSV(event)" class="hidden">
-            <button onclick="document.getElementById('csv-file-input').click()" class="bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
-              <i data-lucide="upload" class="w-4 h-4"></i> Import CSV
-            </button>
-            <button onclick="openBackupModal()" class="bg-amber-500 hover:bg-amber-400 text-zinc-950 px-3.5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition" title="Pobierz lub wgraj pełną kopię zapasową z historią i protokołami">
-              <i data-lucide="database-backup" class="w-4 h-4"></i> Backup Całej Bazy
-            </button>
+          <div class="flex flex-wrap items-center justify-between gap-2 w-full pt-0.5">
+            <div class="flex flex-wrap items-center gap-2 flex-1">
+              <select id="client-device-type-filter" onchange="renderClients()" class="flex-1 sm:flex-none bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-bold outline-none text-zinc-800 dark:text-zinc-100">
+                <option value="all">🔧 Wszystkie rodzaje urządzeń</option>
+                <option value="heat_pump">🔥 Tylko Pompy ciepła</option>
+                <option value="gas_boiler">🔥 Tylko Kotły gazowe</option>
+                <option value="ac">❄️ Tylko Klimatyzacja</option>
+                <option value="ventilation">💨 Tylko Wentylacja</option>
+                <option value="custom">🔧 Inne / Własne rodzaje</option>
+                <option value="none">🚫 Klienci bez urządzenia</option>
+              </select>
+              <select id="client-warranty-filter" onchange="renderClients()" class="flex-1 sm:flex-none bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-bold outline-none text-zinc-800 dark:text-zinc-100">
+                <option value="all">🛡️ Wszystkie gwarancje</option>
+                <option value="under_warranty">🛡️ Tylko Na gwarancji</option>
+                <option value="expired_warranty">⚠️ Tylko Po gwarancji</option>
+                <option value="our_no_date">🏠 Nasze (Brak daty montażu)</option>
+                <option value="external">🔧 Obce urządzenia (Brak gw.)</option>
+              </select>
+              <select id="client-sort-select" onchange="renderClients()" class="flex-1 sm:flex-none bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-bold outline-none text-zinc-800 dark:text-zinc-100">
+                <option value="default">↕️ Sortuj: Domyślnie</option>
+                <option value="city_asc">📍 Miejscowość (A-Z)</option>
+                <option value="city_desc">📍 Miejscowość (Z-A)</option>
+                <option value="install_desc">📅 Data montażu (od najnowszych)</option>
+                <option value="install_asc">📅 Data montażu (od najstarszych)</option>
+                <option value="name_asc">👤 Klient (A-Z)</option>
+              </select>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="requestExportClientsCSV(true)" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition" title="Eksportuj tylko aktualnie wyświetlanych klientów po wyszukaniu">
+                <i data-lucide="lock" class="w-3.5 h-3.5"></i> <span id="export-filtered-btn-label">Eksport widocznych (CSV)</span>
+              </button>
+              <button onclick="requestExportClientsCSV(false)" class="bg-teal-700 hover:bg-teal-600 text-white px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition" title="Eksportuj całą bazę wszystkich klientów">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i> Cała baza
+              </button>
+              <input type="file" id="csv-file-input" accept=".csv" onchange="importClientsCSV(event)" class="hidden">
+              <button onclick="document.getElementById('csv-file-input').click()" class="bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
+                <i data-lucide="upload" class="w-4 h-4"></i> Import CSV
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1769,152 +1770,14 @@ service cloud.firestore {
     </div>
   </div>
 
-  <!-- MODAL: CSV IMPORT PREVIEW -->
-  <div id="modal-csv-preview" class="fixed inset-0 z-[70] bg-zinc-950/75 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-4xl w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800 max-h-[92vh] flex flex-col">
-      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3 shrink-0">
-        <div class="flex items-center gap-2">
-          <i data-lucide="file-spreadsheet" class="w-5 h-5 text-emerald-600"></i>
-          <div>
-            <h3 class="text-base font-extrabold">Podgląd importu klientów z pliku CSV</h3>
-            <p class="text-[11px] text-zinc-500">Nowi klienci zostaną dopisani do bazy, a istniejący uzupełnieni (obecni klienci nie zostaną usunięci)</p>
-          </div>
-        </div>
-        <button type="button" onclick="closeModal('modal-csv-preview')"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-
-      <div id="csv-preview-stats" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 shrink-0"></div>
-
-      <div id="csv-geocode-progress-box" class="hidden p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 space-y-1.5 shrink-0">
-        <div class="flex justify-between text-xs font-extrabold text-amber-900 dark:text-amber-300">
-          <span id="csv-geocode-status-txt">📍 Namierzanie współrzędnych GPS dla adresów...</span>
-          <span id="csv-geocode-counter">0 / 0</span>
-        </div>
-        <div class="w-full h-2 bg-amber-200 dark:bg-amber-900 rounded-full overflow-hidden">
-          <div id="csv-geocode-bar" class="bg-emerald-600 h-full transition-all duration-200" style="width: 0%"></div>
-        </div>
-      </div>
-
-      <div class="overflow-y-auto flex-1 border border-zinc-200 dark:border-zinc-800 rounded-xl">
-        <table class="w-full text-left text-xs border-collapse">
-          <thead class="sticky top-0 bg-zinc-900 text-white text-[10px] uppercase font-bold">
-            <tr>
-              <th class="py-2.5 px-3">Klient i NIP</th>
-              <th class="py-2.5 px-3">Telefon</th>
-              <th class="py-2.5 px-3">Adres i GPS</th>
-              <th class="py-2.5 px-3">Urządzenia z pliku</th>
-              <th class="py-2.5 px-3">Tryb zapisu</th>
-            </tr>
-          </thead>
-          <tbody id="csv-preview-tbody" class="divide-y divide-zinc-200 dark:divide-zinc-800"></tbody>
-        </table>
-      </div>
-
-      <div class="flex justify-end gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800 shrink-0">
-        <button type="button" id="csv-cancel-btn" onclick="closeModal('modal-csv-preview')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Anuluj</button>
-        <button type="button" id="csv-confirm-btn" onclick="confirmCsvImport()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm">+ Dopisz do bazy klientów</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: CONFIRM ACTION -->
-  <div id="modal-confirm-action" class="fixed inset-0 z-[85] bg-zinc-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-sm w-full shadow-2xl p-5 space-y-4 border border-zinc-200 dark:border-zinc-800">
-      <div class="flex items-center gap-2.5 text-amber-600 dark:text-amber-400">
-        <i data-lucide="alert-triangle" class="w-5 h-5 shrink-0"></i>
-        <h3 id="confirm-action-title" class="text-sm font-extrabold text-zinc-900 dark:text-white">Potwierdzenie akcji</h3>
-      </div>
-      <p id="confirm-action-msg" class="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">Czy na pewno chcesz wykonać tę operację?</p>
-      <div class="flex justify-end gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-        <button type="button" onclick="closeModal('modal-confirm-action')" class="px-3.5 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold">Anuluj</button>
-        <button type="button" onclick="executeConfirmedAction()" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-extrabold shadow-sm">Tak, wykonaj</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: PODGLĄD I POBIERANIE PROTOKOŁU PDF -->
-  <div id="modal-protocol-preview" class="fixed inset-0 z-[80] bg-zinc-950/80 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4">
-    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-4xl w-full shadow-2xl p-4 sm:p-6 space-y-3 border border-zinc-200 dark:border-zinc-800 max-h-[95vh] flex flex-col">
-      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3 shrink-0 flex-wrap gap-2">
-        <div class="flex items-center gap-2">
-          <i data-lucide="file-check-2" class="w-5 h-5 text-emerald-600"></i>
-          <div>
-            <h3 id="protocol-preview-modal-title" class="text-sm sm:text-base font-extrabold">Podgląd Protokołu Cyfrowego</h3>
-            <p id="protocol-preview-email-info" class="text-[11px] text-zinc-500">Dokument zapisany w historii urządzenia — gotowy do pobrania w PDF lub wysyłki</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-1.5 flex-wrap">
-          <div class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1.5 rounded-xl border border-zinc-300 dark:border-zinc-700" title="Wpisz swój firmowy adres Gmail — dzięki temu od razu widzisz, z jakiego konta wysyłasz wiadomość, a Gmail automatycznie przełączy się na to konto (nawet gdy jesteś zalogowany na kilku kontach Google)">
-            <span class="text-[10px] font-extrabold text-zinc-500 dark:text-zinc-400 whitespace-nowrap">Nadawca (Twoje konto):</span>
-            <input type="email" id="sender-gmail-account-input" oninput="saveSenderGmailAccount(this.value)" placeholder="np. biuro@instal.pl" class="bg-transparent text-xs font-extrabold text-emerald-700 dark:text-emerald-400 outline-none w-36 sm:w-44">
-          </div>
-          <button type="button" onclick="exportProtocolToGmail()" id="btn-gmail-protocol" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition" title="Pobiera plik PDF, kopiuje e-mail klienta do schowka i otwiera nową wiadomość na wybranym koncie Gmail">
-            <i data-lucide="mail" class="w-4 h-4"></i> Wyślij PDF przez Gmail
-          </button>
-          <button type="button" onclick="downloadCurrentProtocolPDF()" id="btn-download-protocol-pdf" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition">
-            <i data-lucide="download" class="w-4 h-4"></i> Pobierz PDF
-          </button>
-          <button type="button" onclick="printCurrentProtocol()" class="px-3 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
-            <i data-lucide="printer" class="w-4 h-4"></i> Drukuj
-          </button>
-          <button type="button" onclick="closeModal('modal-protocol-preview')" class="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"><i data-lucide="x" class="w-5 h-5"></i></button>
-        </div>
-      </div>
-
-      <!-- Kontener arkusza A4 protokołu -->
-      <div class="overflow-y-auto flex-1 bg-zinc-200/70 dark:bg-zinc-950 p-2 sm:p-6 rounded-xl border border-zinc-300 dark:border-zinc-800">
-        <div id="protocol-printable-area" class="bg-white text-zinc-900 mx-auto shadow-lg p-5 sm:p-8 rounded-sm max-w-[794px] text-xs leading-relaxed font-sans"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: PEŁNY BACKUP CAŁEJ BAZY DANYCH (Z HISTORIĄ, PRZEGLĄDAMI I PROTOKOŁAMI) -->
-  <div id="modal-backup" class="fixed inset-0 z-[85] bg-zinc-950/75 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-lg w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800">
-      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
-        <div class="flex items-center gap-2">
-          <i data-lucide="database-backup" class="w-5 h-5 text-emerald-600"></i>
-          <h3 class="text-base font-extrabold">Kopia zapasowa całej bazy (Pełny Backup)</h3>
-        </div>
-        <button type="button" onclick="closeModal('modal-backup')"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-
-      <div class="p-3.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-xs space-y-2">
-        <div class="font-extrabold text-emerald-900 dark:text-emerald-200">Co zawiera pełny plik Backup (.json)?</div>
-        <ul class="list-disc list-inside text-zinc-600 dark:text-zinc-300 space-y-1">
-          <li>Wszystkich klientów wraz z adresami, NIP, telefonami, e-mailami i współrzędnymi GPS</li>
-          <li>Wszystkie przypisane urządzenia, numery seryjne JW/JZ, daty gwarancji i przeglądów</li>
-          <li>Pełną historię działań, przeglądów, serwisów i montaży</li>
-          <li>Wszystkie zapisane cyfrowe protokoły wraz z podpisami klientów</li>
-          <li>Katalog modeli urządzeń, ekipy serwisowe oraz własne wzory protokołów</li>
-        </ul>
-      </div>
-
-      <div id="backup-summary-stats" class="grid grid-cols-3 gap-2 text-center"></div>
-
-      <div class="space-y-2.5 pt-2">
-        <button type="button" onclick="downloadFullDatabaseBackup()" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 shadow-md transition">
-          <i data-lucide="download" class="w-4 h-4"></i> Pobierz pełny Backup bazy na dysk (.JSON)
-        </button>
-
-        <div class="relative pt-2 border-t border-zinc-200 dark:border-zinc-800">
-          <input type="file" id="backup-restore-input" accept=".json" onchange="handleRestoreFullBackupFile(event)" class="hidden">
-          <button type="button" onclick="document.getElementById('backup-restore-input').click()" class="w-full py-2.5 px-4 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition">
-            <i data-lucide="upload" class="w-4 h-4"></i> Wgraj i przywróć bazę z pliku Backup (.JSON)
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: ZMIANA SERWISANTA / EKIPY DLA ZLECENIA (TABELKA + KOLIZJA GODZIN) -->
+  <!-- MODAL: PRZENIESIENIE ZLECENIA (ZMIANA DNIA, GODZINY ORAZ SERWISANTA / EKIPY) -->
   <div id="modal-reassign-worker" class="fixed inset-0 z-[88] bg-zinc-950/75 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-lg w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-xl w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800 max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
         <div class="flex items-center gap-2">
-          <i data-lucide="user-Check" class="w-5 h-5 text-sky-600"></i>
+          <i data-lucide="calendar-clock" class="w-5 h-5 text-sky-600"></i>
           <div>
-            <h3 class="text-base font-extrabold">Zmień serwisanta / ekipę dla zlecenia</h3>
+            <h3 class="text-base font-extrabold">Przenieś zlecenie (Dzień, Godzina, Serwisant)</h3>
             <p id="reassign-visit-subtitle" class="text-[11px] text-zinc-500"></p>
           </div>
         </div>
@@ -1924,15 +1787,44 @@ service cloud.firestore {
       <input type="hidden" id="reassign-visit-id">
       <input type="hidden" id="reassign-target-worker">
 
-      <!-- Widok 1: Tabelka z serwisantami -->
-      <div id="reassign-step-table" class="space-y-3">
+      <!-- Wybór docelowej daty, godziny i serwisanta -->
+      <div class="p-3.5 rounded-2xl bg-sky-50/70 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/80 space-y-3">
+        <div class="text-[11px] font-extrabold uppercase tracking-wider text-sky-900 dark:text-sky-300 flex items-center gap-1.5">
+          <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i> 1. Ustaw nowy termin lub zmień wykonawcę:
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div>
+            <label class="block text-[10px] font-bold text-zinc-500 dark:text-zinc-400 mb-1">Data wizyty</label>
+            <input type="date" id="reassign-date-input" onchange="renderReassignWorkersTable()" class="w-full px-2.5 py-2 bg-white dark:bg-zinc-900 border border-sky-300 dark:border-sky-700 rounded-xl text-xs font-extrabold outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-zinc-500 dark:text-zinc-400 mb-1">Godzina wizyty</label>
+            <input type="time" id="reassign-time-input" onchange="renderReassignWorkersTable()" class="w-full px-2.5 py-2 bg-white dark:bg-zinc-900 border border-sky-300 dark:border-sky-700 rounded-xl text-xs font-extrabold outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-zinc-500 dark:text-zinc-400 mb-1">Serwisant / Ekipa</label>
+            <select id="reassign-worker-select" onchange="renderReassignWorkersTable()" class="w-full px-2.5 py-2 bg-white dark:bg-zinc-900 border border-sky-300 dark:border-sky-700 rounded-xl text-xs font-extrabold outline-none focus:border-emerald-500"></select>
+          </div>
+        </div>
+        <div class="flex justify-end pt-1">
+          <button type="button" onclick="saveFullReassignmentFromForm()" class="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm transition flex items-center justify-center gap-1.5">
+            <i data-lucide="check" class="w-4 h-4"></i> Zapisz zmianę terminu / serwisanta
+          </button>
+        </div>
+      </div>
+
+      <!-- Widok 1: Tabelka z serwisantami i ich obłożeniem w wybranym dniu -->
+      <div id="reassign-step-table" class="space-y-2">
+        <div class="flex items-center justify-between text-[11px] font-bold text-zinc-500 px-1">
+          <span id="reassign-table-day-label">2. Podgląd obłożenia ekip w wybranym dniu (kliknij, aby szybko przepisać):</span>
+        </div>
         <div class="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700">
           <table class="w-full text-left text-xs border-collapse">
             <thead>
               <tr class="bg-zinc-900 dark:bg-zinc-800 text-white text-[10px] uppercase font-bold">
                 <th class="py-2.5 px-3">Serwisant / Ekipa</th>
-                <th class="py-2.5 px-3">Obłożenie w tym dniu</th>
-                <th class="py-2.5 px-3 text-right">Wybór</th>
+                <th class="py-2.5 px-3">Zajęte godziny w wybranym dniu</th>
+                <th class="py-2.5 px-3 text-right">Szybki wybór</th>
               </tr>
             </thead>
             <tbody id="reassign-workers-tbody" class="divide-y divide-zinc-200 dark:divide-zinc-800"></tbody>
@@ -1949,14 +1841,20 @@ service cloud.firestore {
             <p id="reassign-conflict-msg" class="leading-relaxed"></p>
           </div>
         </div>
-        <div>
-          <label class="block text-[11px] font-extrabold text-zinc-700 dark:text-zinc-200 mb-1">Wybierz nową godzinę dla przepisywanego zlecenia:</label>
-          <input type="time" id="reassign-new-time-input" class="w-full px-3 py-2 bg-white dark:bg-zinc-900 border border-amber-400 dark:border-amber-700 rounded-xl text-sm font-extrabold outline-none">
-          <p id="reassign-conflict-error" class="text-[11px] text-rose-600 font-bold mt-1 hidden">O tej godzinie ten serwisant również ma już zlecenie! Wybierz inną godzinę.</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-[11px] font-extrabold text-zinc-700 dark:text-zinc-200 mb-1">Dzień zlecenia:</label>
+            <input type="date" id="reassign-conflict-date-input" class="w-full px-3 py-2 bg-white dark:bg-zinc-900 border border-amber-400 dark:border-amber-700 rounded-xl text-sm font-extrabold outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-extrabold text-zinc-700 dark:text-zinc-200 mb-1">Wybierz wolną godzinę:</label>
+            <input type="time" id="reassign-new-time-input" class="w-full px-3 py-2 bg-white dark:bg-zinc-900 border border-amber-400 dark:border-amber-700 rounded-xl text-sm font-extrabold outline-none">
+          </div>
         </div>
+        <p id="reassign-conflict-error" class="text-[11px] text-rose-600 font-bold mt-1 hidden">W tym dniu o tej godzinie ten serwisant również ma już zlecenie! Wybierz inną godzinę lub dzień.</p>
         <div class="flex justify-end gap-2 pt-2">
           <button type="button" onclick="backToReassignTable()" class="px-3.5 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold">← Wróć do tabelki</button>
-          <button type="button" onclick="confirmReassignWithNewTime()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm">Zmień godzinę i przepisz zlecenie</button>
+          <button type="button" onclick="confirmReassignWithNewTime()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm">Zatwierdź nowy termin i przepisz</button>
         </div>
       </div>
     </div>
@@ -2867,8 +2765,8 @@ service cloud.firestore {
                         <span class="text-xs font-extrabold ${isCanceled ? 'text-rose-700 bg-rose-100 dark:bg-rose-950 dark:text-rose-300 line-through' : 'text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950'} px-2 py-0.5 rounded-md">${v.time}</span>
                         <span class="font-bold text-sm text-zinc-900 dark:text-white ${(isDone || isCanceled) ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</span>
                         <span class="text-[11px] font-bold ${isMontaz ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200'} px-2 py-0.5 rounded">${v.serviceType}</span>
-                        <button type="button" onclick="openReassignWorkerModal('${v.id}')" class="px-2.5 py-0.5 rounded-lg bg-sky-50 dark:bg-sky-950/70 hover:bg-sky-100 dark:hover:bg-sky-900 border border-sky-300 dark:border-sky-800 text-[11px] font-extrabold text-sky-800 dark:text-sky-300 inline-flex items-center gap-1 transition" title="Kliknij, aby otworzyć tabelkę zmiany serwisanta">
-                          👷 ${v.workerName || 'Serwisant 1'} <i data-lucide="repeat" class="w-3 h-3"></i>
+                        <button type="button" onclick="openReassignWorkerModal('${v.id}')" class="px-2.5 py-0.5 rounded-lg bg-sky-50 dark:bg-sky-950/70 hover:bg-sky-100 dark:hover:bg-sky-900 border border-sky-300 dark:border-sky-800 text-[11px] font-extrabold text-sky-800 dark:text-sky-300 inline-flex items-center gap-1 transition" title="Przenieś zlecenie (zmień dzień, godzinę lub serwisanta)">
+                          👷 ${v.workerName || 'Serwisant 1'} • 📅 Przenieś <i data-lucide="calendar-clock" class="w-3 h-3"></i>
                         </button>
                         ${isCanceled ? '<span class="px-2 py-0.5 rounded bg-rose-600 text-white text-[10px] font-extrabold uppercase">Anulowane</span>' : ''}
                       </div>
@@ -3031,8 +2929,8 @@ service cloud.firestore {
                     <span class="px-2.5 py-0.5 rounded-lg bg-emerald-600 text-white text-[11px] font-extrabold flex items-center gap-1">
                       📅 ${formatDatePL(scheduledVisit.date)} o ${scheduledVisit.time}
                     </span>
-                    <button type="button" onclick="openReassignWorkerModal('${scheduledVisit.id}')" class="px-2.5 py-0.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-extrabold inline-flex items-center gap-1 shadow-sm transition" title="Zmień serwisanta przypisanego do tego wyjazdu">
-                      👷 ${scheduledVisit.workerName || 'Serwisant 1'} <i data-lucide="repeat" class="w-3 h-3"></i>
+                    <button type="button" onclick="openReassignWorkerModal('${scheduledVisit.id}')" class="px-2.5 py-0.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-extrabold inline-flex items-center gap-1 shadow-sm transition" title="Przenieś zlecenie na inny dzień, godzinę lub zmień serwisanta">
+                      👷 ${scheduledVisit.workerName || 'Serwisant 1'} • Przenieś <i data-lucide="calendar-clock" class="w-3 h-3"></i>
                     </button>
                     <span class="font-extrabold text-sm text-zinc-900 dark:text-white">${client.name}</span>
                     ${getWarrantyBadgeHtml(status)}
@@ -3376,9 +3274,9 @@ service cloud.firestore {
                     ${isCanceled ? '<div class="text-[10px] font-extrabold text-rose-600 uppercase">Anulowane</div>' : ''}
                     ${dev ? `<div class="text-[10px] text-teal-600 dark:text-teal-400 font-semibold truncate">🔧 ${dev.deviceModel}</div>` : ''}
                     ${v.notes ? `<div class="text-[10px] text-amber-600 dark:text-amber-400 font-medium truncate">📝 ${v.notes}</div>` : ''}
-                    <button type="button" onclick="openReassignWorkerModal('${v.id}')" class="w-full mt-1 px-2 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 border border-sky-200 dark:border-sky-800 text-[10px] font-extrabold text-sky-700 dark:text-sky-300 flex items-center justify-between transition">
+                    <button type="button" onclick="openReassignWorkerModal('${v.id}')" class="w-full mt-1 px-2 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 border border-sky-200 dark:border-sky-800 text-[10px] font-extrabold text-sky-700 dark:text-sky-300 flex items-center justify-between transition" title="Przenieś zlecenie (zmień dzień, godzinę lub serwisanta)">
                       <span class="truncate">👷 ${v.workerName || 'Serwisant 1'}</span>
-                      <span class="underline shrink-0">Zmień</span>
+                      <span class="underline shrink-0">Przenieś 📅</span>
                     </button>
                   </div>
                 `;
@@ -3437,9 +3335,19 @@ service cloud.firestore {
     /* ==========================================================================
        7. BAZA KLIENTÓW, KATALOG URZĄDZEŃ I FORMULARZE
        ========================================================================== */
+    function normalizeSearchStr(str) {
+      return String(str || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/ł/g, 'l')
+        .trim();
+    }
+
     function getFilteredEnrichedClients() {
       const enriched = getEnrichedClients();
-      const rawQuery = (document.getElementById('client-search-input')?.value || '').toLowerCase().trim();
+      const searchEl = document.getElementById('client-search-input');
+      const rawQuery = normalizeSearchStr(searchEl ? searchEl.value : '');
       const deviceTypeFilter = document.getElementById('client-device-type-filter')?.value || 'all';
       const warrantyFilter = document.getElementById('client-warranty-filter')?.value || 'all';
       const sortBy = document.getElementById('client-sort-select')?.value || 'default';
@@ -3477,10 +3385,10 @@ service cloud.firestore {
         return { ...c, devices: (deviceTypeFilter !== 'all' || warrantyFilter !== 'all') ? matchingDevs : c.devices };
       }).filter(Boolean);
 
-      // 2. Filtrowanie po wyszukiwarce tekstowej (obsługa wielu słów / miejscowości naraz)
+      // 2. Filtrowanie po wyszukiwarce tekstowej (obsługa polskich znaków oraz wielu słów / miejscowości naraz)
       if (rawQuery) {
         const buildSearchableBlob = c => {
-          const clientText = `${c.name || ''} ${c.nip || ''} ${c.email || ''} ${c.city || ''} ${c.street || ''} ${c.phone || ''} ${c.postalCode || ''} ${c.notes || ''}`.toLowerCase();
+          const clientText = `${c.name || ''} ${c.nip || ''} ${c.email || ''} ${c.city || ''} ${c.street || ''} ${c.phone || ''} ${(c.phone || '').replace(/\s+/g, '')} ${c.postalCode || ''} ${c.notes || ''}`;
           const devsText = (c.devices || []).map(d => {
             const typeInfo = getDeviceInfo(d.deviceType, d.customTypeLabel);
             const wStatus = d.status.ourUnknownDate
@@ -3495,25 +3403,24 @@ service cloud.firestore {
               : d.status.isSoon
                 ? 'wkrótce kończące się'
                 : 'przegląd ok';
-            return `${d.deviceModel || ''} ${d.serialNumber || ''} ${d.deviceNotes || ''} ${typeInfo.label} ${typeInfo.short} ${wStatus} ${iStatus}`.toLowerCase();
+            return `${d.deviceModel || ''} ${d.serialNumber || ''} ${d.serialNumberOutdoor || ''} ${d.deviceNotes || ''} ${typeInfo.label} ${typeInfo.short} ${wStatus} ${iStatus}`;
           }).join(' ');
-          return { fullText: `${clientText} ${devsText}`, cityText: (c.city || '').toLowerCase().trim() };
+          return normalizeSearchStr(`${clientText} ${devsText}`);
         };
 
-        const exactMatches = list.filter(c => buildSearchableBlob(c).fullText.includes(rawQuery));
         const tokens = rawQuery.split(/[\s,;]+/).map(t => t.trim()).filter(Boolean);
 
         if (tokens.length <= 1) {
-          list = exactMatches;
+          list = list.filter(c => buildSearchableBlob(c).includes(rawQuery));
         } else {
           const andMatches = list.filter(c => {
-            const blob = buildSearchableBlob(c).fullText;
+            const blob = buildSearchableBlob(c);
             return tokens.every(tok => blob.includes(tok));
           });
           list = andMatches.length > 0
             ? andMatches
             : list.filter(c => {
-                const blob = buildSearchableBlob(c).fullText;
+                const blob = buildSearchableBlob(c);
                 return tokens.some(tok => blob.includes(tok));
               });
         }
@@ -6925,55 +6832,89 @@ service cloud.firestore {
       const client = (window.clientsData || []).find(c => c.id === visit.clientId);
 
       document.getElementById('reassign-visit-id').value = visit.id;
-      document.getElementById('reassign-target-worker').value = '';
-      setText('reassign-visit-subtitle', `${client ? client.name : 'Klient'} • 📅 ${formatDatePL(visit.date)} o godz. ${visit.time} (${visit.serviceType || 'Wizyta'})`);
+      document.getElementById('reassign-target-worker').value = visit.workerName || 'Serwisant 1';
+      setText('reassign-visit-subtitle', `Klient: ${client ? client.name : 'Klient'} (${visit.serviceType || 'Wizyta'}) • Obecnie: ${formatDatePL(visit.date)} o ${visit.time} (${visit.workerName || 'Serwisant 1'})`);
+
+      const dateInput = document.getElementById('reassign-date-input');
+      const timeInput = document.getElementById('reassign-time-input');
+      const workerSelect = document.getElementById('reassign-worker-select');
+
+      if (dateInput) dateInput.value = visit.date || toYMD(new Date());
+      if (timeInput) timeInput.value = visit.time || '09:00';
+
+      const workers = [...new Set([...(window.workersData || ['Serwisant 1']), visit.workerName || 'Serwisant 1'])];
+      if (workerSelect) {
+        workerSelect.innerHTML = workers.map(w => `<option value="${w}">${w}</option>`).join('');
+        workerSelect.value = visit.workerName || workers[0];
+      }
 
       document.getElementById('reassign-step-table').classList.remove('hidden');
       document.getElementById('reassign-step-conflict').classList.add('hidden');
 
+      renderReassignWorkersTable();
+      openModal('modal-reassign-worker');
+    }
+
+    function renderReassignWorkersTable() {
+      const visitId = document.getElementById('reassign-visit-id')?.value;
+      const visit = (window.appointmentsData || []).find(a => a.id === visitId);
+      if (!visit) return;
+
+      const targetDate = document.getElementById('reassign-date-input')?.value || visit.date;
+      const targetTime = document.getElementById('reassign-time-input')?.value || visit.time;
+      const selectedWorkerInForm = document.getElementById('reassign-worker-select')?.value || visit.workerName || 'Serwisant 1';
+
+      setText('reassign-table-day-label', `2. Obłożenie ekip w dniu ${formatDatePL(targetDate)} (dla godz. ${targetTime}):`);
+
       const workers = [...new Set([...(window.workersData || ['Serwisant 1']), visit.workerName || 'Serwisant 1'])];
       const tbody = document.getElementById('reassign-workers-tbody');
+      if (!tbody) return;
 
       tbody.innerHTML = workers.map(w => {
-        const isCurrent = (visit.workerName || 'Serwisant 1') === w;
+        const isUnchangedOriginal = (visit.workerName || 'Serwisant 1') === w && visit.date === targetDate && visit.time === targetTime;
+        const isSelectedInDropdown = selectedWorkerInForm === w;
         const dayVisitsForW = (window.appointmentsData || [])
-          .filter(a => a.date === visit.date && (a.workerName || 'Serwisant 1') === w && a.status !== 'canceled')
+          .filter(a => a.date === targetDate && (a.workerName || 'Serwisant 1') === w && a.status !== 'canceled' && a.id !== visit.id)
           .sort((a, b) => (a.time || '00:00').localeCompare(b.time || '00:00'));
 
-        const conflictVisit = dayVisitsForW.find(a => a.id !== visit.id && a.time === visit.time);
-        const busyHours = dayVisitsForW.map(a => `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${a.time === visit.time && a.id !== visit.id ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-300' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300'}">${a.time}</span>`).join(' ');
+        const conflictVisit = dayVisitsForW.find(a => a.time === targetTime);
+        const busyHours = dayVisitsForW.map(a => `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${a.time === targetTime ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-300' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300'}">${a.time}</span>`).join(' ');
 
         return `
-          <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
+          <tr class="${isSelectedInDropdown ? 'bg-sky-50/60 dark:bg-sky-950/30' : ''} hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
             <td class="py-3 px-3 font-extrabold text-zinc-900 dark:text-white">
-              <div class="flex items-center gap-1.5">
+              <div class="flex items-center gap-1.5 flex-wrap">
                 <span>👷 ${w}</span>
-                ${isCurrent ? '<span class="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[9px] font-extrabold uppercase">Obecny</span>' : ''}
+                ${(visit.workerName || 'Serwisant 1') === w && visit.date === targetDate ? '<span class="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[9px] font-extrabold uppercase">Obecny</span>' : ''}
               </div>
             </td>
             <td class="py-3 px-3">
               ${dayVisitsForW.length === 0
-                ? '<span class="text-[11px] text-emerald-600 font-semibold">Wolny cały dzień (0 zleceń)</span>'
+                ? '<span class="text-[11px] text-emerald-600 font-semibold">Wolny cały dzień (0 innych zleceń)</span>'
                 : `<div class="flex flex-wrap gap-1 items-center">${busyHours}</div>`}
-              ${conflictVisit ? `<div class="text-[10px] font-bold text-rose-600 mt-0.5">⚠️ Zajęta godz. ${visit.time}</div>` : ''}
+              ${conflictVisit ? `<div class="text-[10px] font-bold text-rose-600 mt-0.5">⚠️ Zajęta godz. ${targetTime}</div>` : ''}
             </td>
             <td class="py-3 px-3 text-right">
-              ${isCurrent
-                ? '<span class="text-[11px] font-bold text-zinc-400">Przypisany</span>'
+              ${isUnchangedOriginal
+                ? '<span class="text-[11px] font-bold text-zinc-400">Aktualny termin</span>'
                 : `<button type="button" onclick="selectWorkerFromReassignTable('${w.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold shadow-sm transition ${conflictVisit ? 'bg-amber-500 hover:bg-amber-400 text-zinc-950' : 'bg-sky-600 hover:bg-sky-500 text-white'}">
-                    ${conflictVisit ? 'Przepisz (Zmień godz.)' : 'Przepisz tutaj'}
+                    ${conflictVisit ? 'Wybierz (Zmień godz.)' : 'Przenieś tutaj'}
                   </button>`}
             </td>
           </tr>
         `;
       }).join('');
-
-      openModal('modal-reassign-worker');
     }
 
     function backToReassignTable() {
       document.getElementById('reassign-step-conflict').classList.add('hidden');
       document.getElementById('reassign-step-table').classList.remove('hidden');
+      renderReassignWorkersTable();
+    }
+
+    function saveFullReassignmentFromForm() {
+      const targetWorker = document.getElementById('reassign-worker-select')?.value || 'Serwisant 1';
+      selectWorkerFromReassignTable(targetWorker);
     }
 
     function selectWorkerFromReassignTable(newWorkerName) {
@@ -6981,11 +6922,17 @@ service cloud.firestore {
       const visit = (window.appointmentsData || []).find(a => a.id === visitId);
       if (!visit || !newWorkerName) return;
 
+      const targetDate = document.getElementById('reassign-date-input')?.value || visit.date;
+      const targetTime = document.getElementById('reassign-time-input')?.value || visit.time;
+
+      const workerSelect = document.getElementById('reassign-worker-select');
+      if (workerSelect) workerSelect.value = newWorkerName;
+
       const conflictVisit = (window.appointmentsData || []).find(a =>
         a.id !== visitId &&
-        a.date === visit.date &&
+        a.date === targetDate &&
         (a.workerName || 'Serwisant 1') === newWorkerName &&
-        a.time === visit.time &&
+        a.time === targetTime &&
         a.status !== 'canceled'
       );
 
@@ -6994,17 +6941,18 @@ service cloud.firestore {
         document.getElementById('reassign-target-worker').value = newWorkerName;
         setText(
           'reassign-conflict-msg',
-          `Serwisant „${newWorkerName}” ma już w dniu ${formatDatePL(visit.date)} o godz. ${visit.time} wpisane zlecenie (${conflictVisit.serviceType || 'Wizyta'} u klienta: ${conflictClient ? conflictClient.name : 'Klient'}). Wybierz inną godzinę poniżej:`
+          `Serwisant „${newWorkerName}” ma już w dniu ${formatDatePL(targetDate)} o godz. ${targetTime} wpisane zlecenie (${conflictVisit.serviceType || 'Wizyta'} u klienta: ${conflictClient ? conflictClient.name : 'Klient'}). Wybierz inną godzinę lub dzień poniżej:`
         );
 
-        // Podpowiedź kolejnej wolnej pełnej godziny
-        let suggestedHour = Math.min(19, (parseInt((visit.time || '09:00').slice(0, 2), 10) || 9) + 1);
+        let suggestedHour = Math.min(19, (parseInt((targetTime || '09:00').slice(0, 2), 10) || 9) + 1);
         let suggestedTime = `${String(suggestedHour).padStart(2, '0')}:00`;
-        while ((window.appointmentsData || []).some(a => a.id !== visitId && a.date === visit.date && (a.workerName || 'Serwisant 1') === newWorkerName && a.time === suggestedTime && a.status !== 'canceled') && suggestedHour < 21) {
+        while ((window.appointmentsData || []).some(a => a.id !== visitId && a.date === targetDate && (a.workerName || 'Serwisant 1') === newWorkerName && a.time === suggestedTime && a.status !== 'canceled') && suggestedHour < 21) {
           suggestedHour++;
           suggestedTime = `${String(suggestedHour).padStart(2, '0')}:00`;
         }
 
+        const conflictDateInput = document.getElementById('reassign-conflict-date-input');
+        if (conflictDateInput) conflictDateInput.value = targetDate;
         document.getElementById('reassign-new-time-input').value = suggestedTime;
         document.getElementById('reassign-conflict-error').classList.add('hidden');
         document.getElementById('reassign-step-table').classList.add('hidden');
@@ -7013,24 +6961,26 @@ service cloud.firestore {
         return;
       }
 
-      const oldWorker = visit.workerName || 'Serwisant 1';
       visit.workerName = newWorkerName;
+      visit.date = targetDate;
+      visit.time = targetTime;
       persistData();
       closeModal('modal-reassign-worker');
       refreshAllViews();
-      showToast(`Przeniesiono zlecenie z „${oldWorker}” na „${newWorkerName}”! `);
+      showToast(`Zlecenie przeniesione: ${formatDatePL(targetDate)} godz. ${targetTime} • 👷 ${newWorkerName}!`);
     }
 
     function confirmReassignWithNewTime() {
       const visitId = document.getElementById('reassign-visit-id').value;
       const newWorkerName = document.getElementById('reassign-target-worker').value;
+      const newDate = document.getElementById('reassign-conflict-date-input')?.value || document.getElementById('reassign-date-input')?.value;
       const newTime = document.getElementById('reassign-new-time-input').value;
       const visit = (window.appointmentsData || []).find(a => a.id === visitId);
-      if (!visit || !newWorkerName || !newTime) return;
+      if (!visit || !newWorkerName || !newTime || !newDate) return;
 
       const stillConflict = (window.appointmentsData || []).some(a =>
         a.id !== visitId &&
-        a.date === visit.date &&
+        a.date === newDate &&
         (a.workerName || 'Serwisant 1') === newWorkerName &&
         a.time === newTime &&
         a.status !== 'canceled'
@@ -7041,13 +6991,13 @@ service cloud.firestore {
         return;
       }
 
-      const oldWorker = visit.workerName || 'Serwisant 1';
       visit.workerName = newWorkerName;
+      visit.date = newDate;
       visit.time = newTime;
       persistData();
       closeModal('modal-reassign-worker');
       refreshAllViews();
-      showToast(`Przeniesiono zlecenie z „${oldWorker}” na „${newWorkerName}” (nowa godzina: ${newTime})!`);
+      showToast(`Przeniesiono zlecenie na ${formatDatePL(newDate)} o godz. ${newTime} (👷 ${newWorkerName})!`);
     }
 
     function cancelOrRestoreVisit(id) {
