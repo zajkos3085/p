@@ -58,6 +58,22 @@
       touch-action: none;
       cursor: crosshair;
     }
+    /* Style dla edytowalnych pól na podglądzie protokołu A4 */
+    #protocol-printable-area [contenteditable="true"] {
+      outline: none;
+      border-radius: 3px;
+      transition: background-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    #protocol-printable-area [contenteditable="true"]:hover {
+      background-color: rgba(16, 185, 129, 0.08);
+      box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.35);
+      cursor: text;
+    }
+    #protocol-printable-area [contenteditable="true"]:focus {
+      background-color: #ecfdf5;
+      box-shadow: 0 0 0 2px #10b981;
+      color: #0f172a;
+    }
   </style>
 </head>
 <body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 font-sans min-h-screen flex flex-col md:flex-row antialiased overflow-x-hidden">
@@ -353,7 +369,7 @@
                 <div class="flex items-center gap-2">
                   <i data-lucide="calendar-check-2" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
                   <div>
-                    <h2 class="text-sm sm:text-base font-extrabold text-emerald-950 dark:text-emerald-200">Zaplanowane przeglądy (Umówione wyjazdy)</h2>
+                    <h2 class="text-sm sm:text-base font-extrabold text-emerald-900 dark:text-emerald-200">Zaplanowane przeglądy (Umówione wyjazdy)</h2>
                     <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80">Kończące się przeglądy, które mają już przypisaną datę i serwisanta w planerze</p>
                   </div>
                 </div>
@@ -409,7 +425,7 @@
         <div id="planner-day-view" class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           <div class="lg:col-span-7 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 overflow-hidden">
             <div class="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 flex flex-wrap justify-between items-center gap-2 bg-zinc-50 dark:bg-zinc-800/40">
-              <span class="text-xs font-extrabold text-zinc-800 dark:text-zinc-100">Kliknij pinezkę klienta na mapie, aby dodać go do planu dnia</span>
+              <span class="text-xs font-extrabold text-zinc-800 dark:text-zinc-100">Kliknij pinezkę klienta lub miejsca montażu na mapie, aby dodać go do planu dnia</span>
               <div class="flex items-center gap-3 text-[11px] font-semibold text-zinc-500">
                 <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-sky-500 inline-block"></span> W planie</span>
                 <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-600 inline-block"></span> Po terminie</span>
@@ -514,7 +530,7 @@
         <div class="bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-3">
           <div class="relative w-full">
             <i data-lucide="search" class="w-5 h-5 text-emerald-600 dark:text-emerald-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-            <input type="text" id="client-search-input" oninput="renderClients()" onkeyup="renderClients()" placeholder="Szukaj klienta po nazwisku, NIP, adresie, telefonie, modelu urządzenia lub wpisz kilka miast po spacji (np. Poznań Luboń Swarzędz)..." class="w-full pl-11 pr-10 py-3 bg-zinc-50 dark:bg-zinc-800/90 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-medium outline-none focus:border-emerald-500 dark:focus:border-emerald-500 text-zinc-900 dark:text-zinc-100 transition shadow-inner">
+            <input type="text" id="client-search-input" oninput="renderClients()" onkeyup="renderClients()" placeholder="Szukaj klienta po nazwisku, NIP, adresie klienta, adresie montażu, telefonie, modelu urządzenia lub wpisz kilka miast..." class="w-full pl-11 pr-10 py-3 bg-zinc-50 dark:bg-zinc-800/90 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-medium outline-none focus:border-emerald-500 dark:focus:border-emerald-500 text-zinc-900 dark:text-zinc-100 transition shadow-inner">
             <button type="button" onclick="clearClientSearch()" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-1 rounded-lg hover:bg-zinc-200/60 dark:hover:bg-zinc-700 transition" title="Wyczyść wyszukiwanie i filtry">
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
@@ -568,9 +584,9 @@
             <thead>
               <tr class="bg-zinc-900 dark:bg-zinc-800 text-zinc-100 text-[11px] uppercase tracking-wider font-bold">
                 <th class="py-3.5 px-4">Klient</th>
-                <th class="py-3.5 px-4">Adres</th>
+                <th class="py-3.5 px-4">Adres Klienta</th>
                 <th class="py-3.5 px-4">Telefon</th>
-                <th class="py-3.5 px-4">Urządzenia klienta (Terminy i Gwarancje)</th>
+                <th class="py-3.5 px-4">Urządzenia klienta (Terminy, Gwarancje i Adresy montażu)</th>
                 <th class="py-3.5 px-4 text-right">Akcje</th>
               </tr>
             </thead>
@@ -895,15 +911,15 @@
         </div>
         <div class="grid grid-cols-3 gap-3">
           <div>
-            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Kod pocztowy</label>
+            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Kod pocztowy (Klienta)</label>
             <input type="text" id="client-postal" onblur="autoGeocodeClientAddress()" placeholder="60-101" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
           </div>
           <div>
-            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Miejscowość</label>
+            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Miejscowość (Klienta)</label>
             <input type="text" id="client-city" oninput="autoCapitalizeInput(this)" onblur="autoGeocodeClientAddress()" required placeholder="np. Poznań" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm capitalize outline-none">
           </div>
           <div class="col-span-3 sm:col-span-1">
-            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Ulica i nr domu</label>
+            <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Ulica i nr domu (Klienta)</label>
             <input type="text" id="client-street" oninput="autoCapitalizeInput(this)" onblur="autoGeocodeClientAddress()" required placeholder="np. Słoneczna 15" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm capitalize outline-none">
           </div>
         </div>
@@ -950,7 +966,7 @@
           <div class="flex justify-between items-center mb-2 flex-wrap gap-2">
             <div>
               <h4 class="text-xs font-extrabold uppercase text-zinc-500">Urządzenia klienta (opcjonalnie)</h4>
-              <p class="text-[11px] text-zinc-400">Możesz dodać klienta bez urządzenia lub od razu przypisać mu sprzęt</p>
+              <p class="text-[11px] text-zinc-400">Każde urządzenie może mieć przypisany własny adres montażu (osobna pinezka na mapie)</p>
             </div>
             <div class="flex items-center gap-3">
               <button type="button" onclick="clearAllDevicesInModal()" class="text-xs font-bold text-rose-500 hover:underline">Wyczyść (Klient bez urządzenia)</button>
@@ -1034,8 +1050,42 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Miejsce montażu / Notatki do urządzenia</label>
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Miejsce montażu w budynku / Notatki do urządzenia</label>
           <input type="text" id="assigned-dev-notes" placeholder="np. Kotłownia parter, jednostka za garażem..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs outline-none">
+        </div>
+
+        <!-- Opcja: Urządzenie w innej lokalizacji niż adres główny klienta -->
+        <div class="p-3 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-2.5">
+          <label class="flex items-center gap-2 cursor-pointer text-xs font-extrabold text-indigo-950 dark:text-indigo-200">
+            <input type="checkbox" id="assigned-dev-custom-loc" onchange="toggleAssignedCustomAddress(this.checked)" class="rounded text-indigo-600 w-4 h-4">
+            <span>📍 Urządzenie zamontowane pod innym adresem niż główny adres klienta (osobna pinezka na mapie)</span>
+          </label>
+          <div id="assigned-dev-custom-addr-box" class="hidden space-y-2 pt-2 border-t border-indigo-200 dark:border-indigo-800">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div>
+                <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Kod pocztowy montażu</label>
+                <input type="text" id="assigned-dev-postal" onblur="autoGeocodeAssignedDevice()" placeholder="62-020" class="w-full px-2.5 py-1.5 rounded-lg border border-indigo-300 dark:border-indigo-700 bg-white dark:bg-zinc-900 text-xs">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Miejscowość montażu</label>
+                <input type="text" id="assigned-dev-city" oninput="autoCapitalizeInput(this)" onblur="autoGeocodeAssignedDevice()" placeholder="np. Swarzędz" class="w-full px-2.5 py-1.5 rounded-lg border border-indigo-300 dark:border-indigo-700 bg-white dark:bg-zinc-900 text-xs font-bold">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Ulica i nr montażu</label>
+                <input type="text" id="assigned-dev-street" oninput="autoCapitalizeInput(this)" onblur="autoGeocodeAssignedDevice()" placeholder="np. Polna 10" class="w-full px-2.5 py-1.5 rounded-lg border border-indigo-300 dark:border-indigo-700 bg-white dark:bg-zinc-900 text-xs font-bold">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[10px] font-bold text-zinc-400">Lat montażu (auto GPS)</label>
+                <input type="number" step="0.00001" id="assigned-dev-lat" placeholder="Auto GPS" class="w-full px-2 py-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-[11px] font-mono">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-zinc-400">Lng montażu (auto GPS)</label>
+                <input type="number" step="0.00001" id="assigned-dev-lng" placeholder="Auto GPS" class="w-full px-2 py-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-[11px] font-mono">
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1251,7 +1301,7 @@
 
         <div id="visit-existing-device-wrap" class="space-y-1.5">
           <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400">3. Urządzenie u klienta, którego dotyczy wyjazd</label>
-          <input type="text" id="visit-device-filter-input" oninput="renderVisitDeviceDropdown()" placeholder="Filtruj urządzenia klienta (wpisz model lub S/N)..." class="w-full px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none">
+          <input type="text" id="visit-device-filter-input" oninput="renderVisitDeviceDropdown()" placeholder="Filtruj urządzenia klienta (wpisz model, adres lub S/N)..." class="w-full px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none">
           <select id="visit-device-select" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-extrabold outline-none text-zinc-900 dark:text-white"></select>
         </div>
 
@@ -1289,7 +1339,7 @@
             </div>
           </div>
           <div>
-            <label class="block text-[10px] font-bold text-zinc-500 mb-1">Miejsce montażu / Notatki urządzenia (np. gdzie urządzenie się znajduje)</label>
+            <label class="block text-[10px] font-bold text-zinc-500 mb-1">Miejsce montażu w budynku / Notatki urządzenia</label>
             <input type="text" id="visit-new-dev-notes" placeholder="np. Kotłownia w piwnicy, jednostka na ścianie wschodniej..." class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs outline-none">
           </div>
         </div>
@@ -1360,8 +1410,20 @@
             <input type="text" id="close-install-serial-outdoor" oninput="syncCloseInstallSerialsToProtocol()" placeholder="Wpisz S/N jednostki zewnętrznej..." class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-sky-300 dark:border-sky-700 rounded-lg text-xs font-mono">
           </div>
           <div>
-            <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Miejsce montażu / Notatki do urządzenia</label>
+            <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Miejsce montażu w budynku / Notatki do urządzenia</label>
             <input type="text" id="close-install-dev-notes" placeholder="np. Kotłownia parter, agregat na elewacji..." class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs">
+          </div>
+          <!-- Adres montażu w przypadku innej lokalizacji niż adres główny klienta -->
+          <div class="p-2.5 rounded-lg bg-white/80 dark:bg-zinc-900 border border-amber-300 dark:border-amber-700 space-y-2">
+            <label class="flex items-center gap-2 cursor-pointer text-[11px] font-extrabold text-amber-900 dark:text-amber-300">
+              <input type="checkbox" id="close-install-custom-loc" onchange="document.getElementById('close-install-custom-addr-fields')?.classList.toggle('hidden', !this.checked)" class="rounded text-amber-600">
+              <span>📍 Montaż pod innym adresem niż adres główny klienta</span>
+            </label>
+            <div id="close-install-custom-addr-fields" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-1.5 pt-1">
+              <input type="text" id="close-install-postal" placeholder="Kod poczt." class="px-2 py-1 rounded border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs">
+              <input type="text" id="close-install-city" oninput="autoCapitalizeInput(this)" placeholder="Miejscowość" class="px-2 py-1 rounded border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-bold">
+              <input type="text" id="close-install-street" oninput="autoCapitalizeInput(this)" placeholder="Ulica i nr" class="px-2 py-1 rounded border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-bold">
+            </div>
           </div>
         </div>
 
@@ -1492,7 +1554,7 @@
               </div>
             </div>
 
-            <!-- 3. POLA SPECYFICZNE DLA PROTOKOŁU PRZEGLĄDU KOTŁA GAZOWEGO (Z EXELA) -->
+            <!-- 3. POLA SPECYFICZNE DLA PROTOKOŁU PRZEGLĄDU KOTŁA GAZOWEGO -->
             <div id="proto-fields-gas-boiler-inspection" class="hidden space-y-2.5">
               <div class="font-extrabold text-[11px] text-amber-800 dark:text-amber-300 uppercase">Zakres prac — Przegląd Kotła Gazowego:</div>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-white dark:bg-zinc-900 p-2.5 rounded-xl border border-amber-300 dark:border-amber-800">
@@ -1552,7 +1614,7 @@
               </div>
             </div>
 
-            <!-- 4. POLA SPECYFICZNE DLA PROTOKOŁU PRZEGLĄDU POMPY CIEPŁA -->
+            <!-- 4. POLA SPECYFICZNE DLA PROTOKOŁU PRZEGLĄDU POMPY CIEPŁA (BEZ TABELKI CIŚNIENIA C.O.) -->
             <div id="proto-fields-hp-inspection" class="hidden space-y-2.5">
               <div class="font-extrabold text-[11px] text-orange-800 dark:text-orange-300 uppercase">Lista kontrolna — Przegląd Okresowy Pompy Ciepła:</div>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-white dark:bg-zinc-900 p-2.5 rounded-xl border border-orange-300 dark:border-orange-800">
@@ -1564,16 +1626,6 @@
                 <label class="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold"><input type="checkbox" id="proto-hp-chk-6" checked class="rounded text-emerald-600"><span>6. Kontrola połączeń elektrycznych, zabezpieczeń i grzałki</span></label>
                 <label class="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold"><input type="checkbox" id="proto-hp-chk-7" checked class="rounded text-emerald-600"><span>7. Odczyt rejestru błędów, czasu pracy i startów sprężarki</span></label>
                 <label class="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold"><input type="checkbox" id="proto-hp-chk-8" checked class="rounded text-emerald-600"><span>8. Weryfikacja krzywej grzewczej oraz pracy zaworu 3D</span></label>
-              </div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div>
-                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Ciśnienie układu C.O. / Glikol</label>
-                  <input type="text" id="proto-hp-pressure" value="1,5 bar (układ odpowietrzony)" class="w-full px-2.5 py-1.5 rounded-lg border border-orange-300 dark:border-orange-700 bg-white dark:bg-zinc-900 text-xs">
-                </div>
-                <div>
-                  <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Przyrząd pomiarowy / Uprawnienia F-GAZ</label>
-                  <input type="text" id="proto-hp-fgaz" value="Wykrywacz nieszczelności / Certyfikat F-GAZ" class="w-full px-2.5 py-1.5 rounded-lg border border-orange-300 dark:border-orange-700 bg-white dark:bg-zinc-900 text-xs">
-                </div>
               </div>
             </div>
 
@@ -1660,7 +1712,7 @@
                   <button type="button" onclick="clearSignaturePad('sig-canvas-tech')" class="text-[10px] font-bold text-rose-600 hover:underline">Wyczyść</button>
                 </div>
                 <div class="bg-white rounded-xl border-2 border-dashed border-sky-400 overflow-hidden">
-                  <canvas id="sig-canvas-tech" width="280" height="110" class="sig-canvas w-full h-[100px] block bg-white"></canvas>
+                  <canvas id="sig-canvas-tech" width="320" height="120" class="sig-canvas w-full h-[105px] block bg-white"></canvas>
                 </div>
               </div>
               <div class="space-y-1">
@@ -1669,7 +1721,7 @@
                   <button type="button" onclick="clearSignaturePad('sig-canvas-client')" class="text-[10px] font-bold text-rose-600 hover:underline">Wyczyść</button>
                 </div>
                 <div class="bg-white rounded-xl border-2 border-dashed border-emerald-500 overflow-hidden">
-                  <canvas id="sig-canvas-client" width="280" height="110" class="sig-canvas w-full h-[100px] block bg-white"></canvas>
+                  <canvas id="sig-canvas-client" width="320" height="120" class="sig-canvas w-full h-[105px] block bg-white"></canvas>
                 </div>
               </div>
             </div>
@@ -1901,6 +1953,9 @@ service cloud.firestore {
             <span class="text-[10px] font-bold text-zinc-500 whitespace-nowrap">Nadawca (Twoje konto):</span>
             <input type="email" id="sender-gmail-account-input" oninput="saveSenderGmailAccount(this.value)" placeholder="np. biuro@twojadomena.pl" class="bg-transparent text-xs font-bold outline-none text-zinc-900 dark:text-white w-36 sm:w-44">
           </div>
+          <button type="button" onclick="saveEditedProtocolContent()" class="px-3 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition" title="Zapisz ręczne poprawki wprowadzone na arkuszu">
+            <i data-lucide="save" class="w-4 h-4"></i> Zapisz zmiany
+          </button>
           <button type="button" id="btn-download-protocol-pdf" onclick="downloadCurrentProtocolPDF()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition">
             <i data-lucide="download" class="w-4 h-4"></i> Pobierz PDF
           </button>
@@ -1915,8 +1970,11 @@ service cloud.firestore {
           </button>
         </div>
       </div>
+      <div class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/70 flex items-center justify-between gap-2 text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold shrink-0">
+        <span>✏️ <strong>Tryb edycji aktywny:</strong> Kliknij w dowolny tekst, tabelkę, adres, S/N, status lub uwagę na protokole poniżej, aby dowolnie edytować treść przed pobraniem PDF.</span>
+      </div>
       <div class="overflow-y-auto flex-1 bg-zinc-200/70 dark:bg-zinc-950 p-2 sm:p-5 rounded-xl border border-zinc-300 dark:border-zinc-800">
-        <div id="protocol-printable-area" class="bg-white text-zinc-900 mx-auto shadow-lg p-5 sm:p-8 rounded-lg max-w-[794px]"></div>
+        <div id="protocol-printable-area" oninput="autoSaveEditedProtocolHtml()" class="bg-white text-zinc-900 mx-auto shadow-lg p-5 sm:p-8 rounded-lg w-full max-w-[794px]"></div>
       </div>
     </div>
   </div>
@@ -2334,6 +2392,16 @@ service cloud.firestore {
       return { label: finalCustom, short: finalCustom, bg: 'bg-indigo-50 dark:bg-indigo-950/40', border: 'border-indigo-200 dark:border-indigo-900', color: '#4f46e5' };
     }
 
+    // Zwraca sformatowany adres miejsca montażu dla danego urządzenia (jeśli ma własny adres)
+    function formatDeviceInstallAddress(dev) {
+      if (!dev || !dev.hasCustomLocation) return '';
+      const city = (dev.installCity || '').trim();
+      const street = (dev.installStreet || '').trim();
+      const postal = (dev.installPostalCode || '').trim();
+      if (!city && !street) return '';
+      return `${postal ? postal + ' ' : ''}${city}${street ? ', ' + street : ''}`.trim();
+    }
+
     function getEnrichedClients() {
       const now = new Date();
       now.setHours(0, 0, 0, 0);
@@ -2358,10 +2426,13 @@ service cloud.firestore {
           const daysToInspection = Math.ceil((nextInsp - now) / 86400000);
           const canceled = Boolean(dev.remindersCanceled);
 
+          const customAddressFormatted = formatDeviceInstallAddress(dev);
+
           return {
             ...dev,
             noInstallDate,
             ourUnknownDate,
+            customAddressFormatted,
             status: {
               noInstallDate,
               ourUnknownDate,
@@ -2438,8 +2509,8 @@ service cloud.firestore {
     }
 
     function applyCloudPayload(data) {
-      window.clientsData = data.clients || [];
-      window.appointmentsData = data.appointments || [];
+      if (Array.isArray(data.clients)) window.clientsData = data.clients;
+      if (Array.isArray(data.appointments)) window.appointmentsData = data.appointments;
       if (Array.isArray(data.catalog) && data.catalog.length > 0) window.catalogData = data.catalog;
       if (Array.isArray(data.workers) && data.workers.length > 0) window.workersData = data.workers;
       if (Array.isArray(data.protocolTemplates) && data.protocolTemplates.length > 0) window.protocolTemplatesData = data.protocolTemplates;
@@ -2602,7 +2673,12 @@ service cloud.firestore {
         if (isInteractiveTest) showToast('Połączono z chmurą!');
 
         firestoreUnsubscribe = docRef.onSnapshot(liveSnap => {
-          if (liveSnap.exists) applyCloudPayload(liveSnap.data());
+          if (liveSnap.exists) {
+            const snapData = liveSnap.data();
+            if ((snapData.clients || []).length > 0 || (window.clientsData || []).length === 0) {
+              applyCloudPayload(snapData);
+            }
+          }
         }, err => {
           isCloudConnected = false;
           updateCloudBadge('error', 'Błąd synchro');
@@ -2642,16 +2718,34 @@ service cloud.firestore {
     }
 
     function loadLocalData() {
-      window.clientsData = JSON.parse(localStorage.getItem(STORAGE_KEYS.CLIENTS) || '[]');
-      window.appointmentsData = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPOINTMENTS) || '[]');
-      window.catalogData = JSON.parse(localStorage.getItem(STORAGE_KEYS.CATALOG) || '[]');
-      window.workersData = JSON.parse(localStorage.getItem(STORAGE_KEYS.WORKERS) || '[]');
-      window.protocolTemplatesData = JSON.parse(localStorage.getItem(STORAGE_KEYS.TEMPLATES) || '[]');
+      try {
+        const rawClients = JSON.parse(localStorage.getItem(STORAGE_KEYS.CLIENTS) || '[]');
+        window.clientsData = Array.isArray(rawClients) ? rawClients : [];
+      } catch (e) { window.clientsData = []; }
+
+      try {
+        const rawApps = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPOINTMENTS) || '[]');
+        window.appointmentsData = Array.isArray(rawApps) ? rawApps : [];
+      } catch (e) { window.appointmentsData = []; }
+
+      try {
+        const rawCat = JSON.parse(localStorage.getItem(STORAGE_KEYS.CATALOG) || '[]');
+        window.catalogData = Array.isArray(rawCat) ? rawCat : [];
+      } catch (e) { window.catalogData = []; }
+
+      try {
+        const rawWrk = JSON.parse(localStorage.getItem(STORAGE_KEYS.WORKERS) || '[]');
+        window.workersData = Array.isArray(rawWrk) ? rawWrk : [];
+      } catch (e) { window.workersData = []; }
+
+      try {
+        const rawTpl = JSON.parse(localStorage.getItem(STORAGE_KEYS.TEMPLATES) || '[]');
+        window.protocolTemplatesData = Array.isArray(rawTpl) ? rawTpl : [];
+      } catch (e) { window.protocolTemplatesData = []; }
 
       if (!Array.isArray(window.protocolTemplatesData) || window.protocolTemplatesData.length === 0) {
         window.protocolTemplatesData = JSON.parse(JSON.stringify(DEFAULT_PROTOCOL_TEMPLATES));
       } else {
-        // Upewnij się, że nowe wbudowane wzory (np. gas_boiler_install, universal_inspection, universal_install) są obecne
         DEFAULT_PROTOCOL_TEMPLATES.forEach(defTpl => {
           if (!window.protocolTemplatesData.some(t => t.id === defTpl.id)) {
             window.protocolTemplatesData.push(JSON.parse(JSON.stringify(defTpl)));
@@ -2901,6 +2995,7 @@ service cloud.firestore {
                 const isDone = v.status === 'completed';
                 const isCanceled = v.status === 'canceled';
                 const isMontaz = (v.serviceType || '').toLowerCase().includes('monta');
+                const customDevAddr = dev ? formatDeviceInstallAddress(dev) : '';
 
                 return `
                   <div class="p-3 rounded-xl border ${isCanceled ? 'border-rose-200 dark:border-rose-900/50 bg-rose-50/40 dark:bg-rose-950/20' : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900'} flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
@@ -2916,11 +3011,12 @@ service cloud.firestore {
                       </div>
                       ${isMontaz && v.plannedInstallModel && !dev ? `<div class="text-[11px] font-extrabold text-amber-700 dark:text-amber-300 mt-0.5">🏗️ Do zamontowania: ${getDeviceInfo(v.plannedInstallType).short} — ${v.plannedInstallModel}</div>` : ''}
                       ${dev ? `<div class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5">🔧 ${dev.deviceModel} ${dev.serialNumber ? `<span class="font-mono text-zinc-500">(S/N: ${dev.serialNumber}${dev.serialNumberOutdoor ? ' / JZ: ' + dev.serialNumberOutdoor : ''})</span>` : ''}</div>` : ''}
+                      ${customDevAddr ? `<div class="text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300 mt-0.5">📍 Miejsce montażu urządzenia: ${customDevAddr}</div>` : ''}
                       ${v.notes ? `<div class="text-[11px] text-amber-700 dark:text-amber-400 font-medium mt-0.5">📝 Notatka: ${v.notes}</div>` : ''}
                       ${v.completionComment ? `<div class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold mt-0.5">✅ Wykonano: ${v.completionComment}</div>` : ''}
                       ${v.protocolData ? `<div class="mt-1"><button onclick="openProtocolPreviewByVisit('${v.id}')" class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-extrabold inline-flex items-center gap-1 shadow-sm"><i data-lucide="file-text" class="w-3 h-3"></i> Podgląd protokołu / PDF</button></div>` : ''}
                       ${v.cancelReason ? `<div class="text-[11px] text-rose-600 dark:text-rose-400 font-bold mt-0.5">❌ Powód anulowania: ${v.cancelReason}</div>` : ''}
-                      ${client ? `<div class="text-xs text-zinc-600 dark:text-zinc-400 mt-1">📍 ${client.city}, ${client.street} • <a href="tel:${client.phone}" class="text-emerald-600 dark:text-emerald-400 font-bold underline">📞 ${client.phone}</a></div>` : ''}
+                      ${client ? `<div class="text-xs text-zinc-600 dark:text-zinc-400 mt-1">🏠 Adres klienta: ${client.city}, ${client.street} • <a href="tel:${client.phone}" class="text-emerald-600 dark:text-emerald-400 font-bold underline">📞 ${client.phone}</a></div>` : ''}
                     </div>
                     <div class="flex items-center gap-1.5 shrink-0 flex-wrap">
                       ${!isCanceled ? `
@@ -3045,7 +3141,7 @@ service cloud.firestore {
                     ${getWarrantyBadgeHtml(status)}
                   </div>
                   <div class="text-xs ${status.isOverdue ? 'text-rose-600' : 'text-amber-600'} font-bold mt-1">
-                    ${status.isOverdue ? `Po terminie o ${Math.abs(status.daysToInspection)} dni (${status.nextInspectionFormatted})` : `Przegląd za ${status.daysToInspection} dni (${status.nextInspectionFormatted})`} • 📍 ${client.city} • <a href="tel:${client.phone}" class="underline">📞 ${client.phone}</a>
+                    ${status.isOverdue ? `Po terminie o ${Math.abs(status.daysToInspection)} dni (${status.nextInspectionFormatted})` : `Przegląd za ${status.daysToInspection} dni (${status.nextInspectionFormatted})`} • 📍 ${device.customAddressFormatted || `${client.city}, ${client.street}`} • <a href="tel:${client.phone}" class="underline">📞 ${client.phone}</a>
                   </div>
                 </div>
                 <div class="grid grid-cols-2 sm:flex gap-1.5 w-full sm:w-auto">
@@ -3080,7 +3176,7 @@ service cloud.firestore {
                     ${getWarrantyBadgeHtml(status)}
                   </div>
                   <div class="text-xs font-bold text-teal-800 dark:text-teal-300">
-                    🔧 ${device.deviceModel} ${device.serialNumber ? `<span class="font-mono text-zinc-500">(S/N: ${device.serialNumber})</span>` : ''} • 📍 ${client.city}, ${client.street} • <a href="tel:${client.phone}" class="underline text-emerald-700 dark:text-emerald-400">📞 ${client.phone}</a>
+                    🔧 ${device.deviceModel} ${device.serialNumber ? `<span class="font-mono text-zinc-500">(S/N: ${device.serialNumber})</span>` : ''} • 📍 ${device.customAddressFormatted || `${client.city}, ${client.street}`} • <a href="tel:${client.phone}" class="underline text-emerald-700 dark:text-emerald-400">📞 ${client.phone}</a>
                   </div>
                   ${scheduledVisit.notes ? `<div class="text-[11px] text-amber-700 dark:text-amber-400 font-semibold">📝 Notatka do wyjazdu: ${scheduledVisit.notes}</div>` : ''}
                   ${scheduledVisit.protocolData ? `<div class="pt-0.5"><button type="button" onclick="openProtocolPreviewByVisit('${scheduledVisit.id}')" class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-extrabold inline-flex items-center gap-1 shadow-sm"><i data-lucide="file-text" class="w-3 h-3"></i> Podgląd protokołu / PDF</button></div>` : ''}
@@ -3233,7 +3329,7 @@ service cloud.firestore {
     }
 
     /* ==========================================================================
-       6. MAPA I PLANER DNIA / TYGODNIA
+       6. MAPA I PLANER DNIA / TYGODNIA (W TYM OSOBNE PINEZKI DLA ADRESÓW MONTAŻU)
        ========================================================================== */
     function initMap() {
       const container = document.getElementById('map-container');
@@ -3271,54 +3367,102 @@ service cloud.firestore {
       mapMarkersGroup.clearLayers();
       const enriched = getEnrichedClients();
       const bounds = [];
-      const dayVisitsClientIds = new Set((window.appointmentsData || []).filter(a => a.date === selectedDate && a.status !== 'canceled').map(a => a.clientId));
+      const dayVisits = (window.appointmentsData || []).filter(a => a.date === selectedDate && a.status !== 'canceled');
       const mapTypeFilter = document.getElementById('map-device-type-filter')?.value || 'all';
 
       enriched.forEach(c => {
-        if (mapTypeFilter !== 'all') {
-          const hasMatchingDev = (c.devices || []).some(d =>
-            mapTypeFilter === 'custom'
-              ? !['heat_pump', 'gas_boiler', 'ac', 'ventilation'].includes(d.deviceType)
-              : d.deviceType === mapTypeFilter
-          );
-          if (!hasMatchingDev) return;
+        const matchingDevs = (c.devices || []).filter(d => {
+          if (mapTypeFilter === 'all') return true;
+          return mapTypeFilter === 'custom'
+            ? !['heat_pump', 'gas_boiler', 'ac', 'ventilation'].includes(d.deviceType)
+            : d.deviceType === mapTypeFilter;
+        });
+
+        if (mapTypeFilter !== 'all' && matchingDevs.length === 0) return;
+
+        // Urządzenia zamontowane pod głównym adresem klienta vs pod własnym adresem montażu
+        const mainAddrDevs = (mapTypeFilter === 'all' ? (c.devices || []) : matchingDevs).filter(d => !d.hasCustomLocation || (!d.installCity && !d.installStreet));
+        const customLocDevs = (mapTypeFilter === 'all' ? (c.devices || []) : matchingDevs).filter(d => d.hasCustomLocation && (d.installCity || d.installStreet));
+
+        // 1. Pinezka głównego adresu klienta (jeśli ma urządzenia pod tym adresem lub nie ma żadnych urządzeń)
+        if (mainAddrDevs.length > 0 || (c.devices || []).length === 0) {
+          const lat = parseFloat(c.lat), lng = parseFloat(c.lng);
+          if (!isNaN(lat) && !isNaN(lng)) {
+            bounds.push([lat, lng]);
+            const isMainScheduledToday = dayVisits.some(a => a.clientId === c.id && (!a.deviceId || mainAddrDevs.some(md => md.id === a.deviceId)));
+            const mainOverdue = mainAddrDevs.some(d => !d.status.remindersCanceled && d.status.isOverdue);
+            const mainSoon = mainAddrDevs.some(d => !d.status.remindersCanceled && d.status.isSoon);
+            const color = isMainScheduledToday ? '#0284c7' : mainOverdue ? '#e11d48' : mainSoon ? '#d97706' : '#10b981';
+
+            const svg = `
+              <div style="background-color:${color};width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;">
+                <div style="width:9px;height:9px;background:#fff;border-radius:50%;transform:rotate(45deg);"></div>
+              </div>
+            `;
+            const icon = L.divIcon({ className: 'custom-pin', html: svg, iconSize: [34, 34], iconAnchor: [17, 34], popupAnchor: [0, -34] });
+            const marker = L.marker([lat, lng], { icon });
+            const devSummary = mainAddrDevs.map(d => `${getDeviceInfo(d.deviceType, d.customTypeLabel).short}: ${d.deviceModel}`).join('<br>');
+
+            marker.bindPopup(`
+              <div style="min-width:210px;font-family:'Inter',sans-serif;">
+                <div style="font-weight:800;font-size:13px;color:#18181b;">${c.name}</div>
+                ${c.nip ? `<div style="font-size:10px;color:#059669;font-weight:700;">NIP: ${c.nip}</div>` : ''}
+                <div style="font-size:11px;color:#52525b;margin-top:2px;">🏠 Adres klienta: ${c.city}, ${c.street}</div>
+                ${devSummary ? `<div style="font-size:10px;color:#0f766e;font-weight:700;margin-top:3px;">🔧 ${devSummary}</div>` : ''}
+                <div style="margin-top:4px;"><a href="tel:${c.phone}" style="color:#059669;font-weight:700;font-size:12px;text-decoration:underline;">📞 ${c.phone}</a></div>
+                <div style="display:flex;flex-direction:column;gap:5px;margin-top:8px;">
+                  <button onclick="selectClientFromMapForPlanner('${c.id}', '${mainAddrDevs[0]?.id || ''}')" style="width:100%;background:#059669;color:#fff;border:none;padding:6px 10px;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;">
+                    + Dodaj do planu (${formatDatePL(selectedDate)})
+                  </button>
+                  <button onclick="openClientInDatabaseFromMap('${c.id}')" style="width:100%;background:#27272a;color:#fff;border:none;padding:6px 10px;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;">
+                    👤 Otwórz klienta w bazie
+                  </button>
+                </div>
+              </div>
+            `);
+            mapMarkersGroup.addLayer(marker);
+          }
         }
 
-        const lat = parseFloat(c.lat), lng = parseFloat(c.lng);
-        if (isNaN(lat) || isNaN(lng)) return;
-        bounds.push([lat, lng]);
+        // 2. Osobne pinezki dla każdego urządzenia zamontowanego w innej lokalizacji
+        customLocDevs.forEach(dev => {
+          const dLat = parseFloat(dev.installLat ?? c.lat);
+          const dLng = parseFloat(dev.installLng ?? c.lng);
+          if (isNaN(dLat) || isNaN(dLng)) return;
+          bounds.push([dLat, dLng]);
 
-        const isScheduledToday = dayVisitsClientIds.has(c.id);
-        const color = isScheduledToday ? '#0284c7' : c.anyOverdue ? '#e11d48' : c.anySoon ? '#d97706' : '#10b981';
+          const isDevScheduledToday = dayVisits.some(a => a.clientId === c.id && a.deviceId === dev.id);
+          const devColor = isDevScheduledToday ? '#0284c7' : dev.status.isOverdue ? '#e11d48' : dev.status.isSoon ? '#d97706' : '#10b981';
 
-        const svg = `
-          <div style="background-color:${color};width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;">
-            <div style="width:9px;height:9px;background:#fff;border-radius:50%;transform:rotate(45deg);"></div>
-          </div>
-        `;
-        const icon = L.divIcon({ className: 'custom-pin', html: svg, iconSize: [34, 34], iconAnchor: [17, 34], popupAnchor: [0, -34] });
-        const marker = L.marker([lat, lng], { icon });
-
-        const devSummary = (c.devices || []).map(d => `${getDeviceInfo(d.deviceType, d.customTypeLabel).short}: ${d.deviceModel}`).join('<br>');
-
-        marker.bindPopup(`
-          <div style="min-width:205px;font-family:'Inter',sans-serif;">
-            <div style="font-weight:800;font-size:13px;color:#18181b;">${c.name}</div>
-            ${c.nip ? `<div style="font-size:10px;color:#059669;font-weight:700;">NIP: ${c.nip}</div>` : ''}
-            <div style="font-size:11px;color:#52525b;margin-top:2px;">📍 ${c.city}, ${c.street}</div>
-            ${devSummary ? `<div style="font-size:10px;color:#0f766e;font-weight:700;margin-top:3px;">🔧 ${devSummary}</div>` : ''}
-            <div style="margin-top:4px;"><a href="tel:${c.phone}" style="color:#059669;font-weight:700;font-size:12px;text-decoration:underline;">📞 ${c.phone}</a></div>
-            <div style="display:flex;flex-direction:column;gap:5px;margin-top:8px;">
-              <button onclick="selectClientFromMapForPlanner('${c.id}')" style="width:100%;background:#059669;color:#fff;border:none;padding:6px 10px;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;">
-                + Dodaj do planu (${formatDatePL(selectedDate)})
-              </button>
-              <button onclick="openClientInDatabaseFromMap('${c.id}')" style="width:100%;background:#27272a;color:#fff;border:none;padding:6px 10px;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;">
-                👤 Otwórz klienta w bazie
-              </button>
+          const devSvg = `
+            <div style="background-color:${devColor};width:36px;height:36px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #e0e7ff;box-shadow:0 4px 14px rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;">
+              <div style="width:12px;height:12px;background:#ffffff;border-radius:3px;transform:rotate(45deg);"></div>
             </div>
-          </div>
-        `);
-        mapMarkersGroup.addLayer(marker);
+          `;
+          const devIcon = L.divIcon({ className: 'custom-pin-dev', html: devSvg, iconSize: [36, 36], iconAnchor: [18, 36], popupAnchor: [0, -36] });
+          const devMarker = L.marker([dLat, dLng], { icon: devIcon });
+          const installAddrStr = formatDeviceInstallAddress(dev);
+
+          devMarker.bindPopup(`
+            <div style="min-width:220px;font-family:'Inter',sans-serif;">
+              <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#4f46e5;margin-bottom:2px;">📍 Lokalizacja montażu urządzenia</div>
+              <div style="font-weight:800;font-size:13px;color:#18181b;">${c.name}</div>
+              <div style="font-size:11px;font-weight:700;color:#312e81;margin-top:2px;">📍 Montaż: ${installAddrStr}</div>
+              <div style="font-size:10px;color:#71717a;">🏠 Adres klienta: ${c.city}, ${c.street}</div>
+              <div style="font-size:11px;color:#0f766e;font-weight:800;margin-top:4px;">🔧 ${getDeviceInfo(dev.deviceType, dev.customTypeLabel).short}: ${dev.deviceModel}</div>
+              <div style="margin-top:4px;"><a href="tel:${c.phone}" style="color:#059669;font-weight:700;font-size:12px;text-decoration:underline;">📞 ${c.phone}</a></div>
+              <div style="display:flex;flex-direction:column;gap:5px;margin-top:8px;">
+                <button onclick="selectClientFromMapForPlanner('${c.id}', '${dev.id}')" style="width:100%;background:#4f46e5;color:#fff;border:none;padding:6px 10px;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;">
+                  + Dodaj to urządzenie do planu (${formatDatePL(selectedDate)})
+                </button>
+                <button onclick="openClientInDatabaseFromMap('${c.id}')" style="width:100%;background:#27272a;color:#fff;border:none;padding:6px 10px;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;">
+                  👤 Otwórz klienta w bazie
+                </button>
+              </div>
+            </div>
+          `);
+          mapMarkersGroup.addLayer(devMarker);
+        });
       });
 
       if (bounds.length > 0 && mapInstance) mapInstance.fitBounds(bounds, { padding: [45, 45], maxZoom: 12 });
@@ -3336,18 +3480,26 @@ service cloud.firestore {
       showToast(`Wyświetlono w bazie: ${client.name}`);
     }
 
-    function selectClientFromMapForPlanner(clientId) {
+    function selectClientFromMapForPlanner(clientId, preselectDeviceId = '') {
       const client = (window.clientsData || []).find(c => c.id === clientId);
       if (!client) return;
       quickMapSelectedClientId = clientId;
+      const pickedDev = (client.devices || []).find(d => d.id === preselectDeviceId);
+      const customAddr = pickedDev ? formatDeviceInstallAddress(pickedDev) : '';
+
       setText('quick-map-client-name', client.name);
-      setText('quick-map-client-addr', `📍 ${client.city}, ${client.street} • 📞 ${client.phone}`);
+      setText('quick-map-client-addr', customAddr
+        ? `📍 Montaż: ${customAddr} (Klient: ${client.city}, ${client.street}) • 📞 ${client.phone}`
+        : `📍 ${client.city}, ${client.street} • 📞 ${client.phone}`);
 
       const devSel = document.getElementById('quick-map-device');
       if (devSel) {
         const devs = client.devices || [];
         devSel.innerHTML = devs.length > 0
-          ? devs.map(d => `<option value="${d.id}">${getDeviceInfo(d.deviceType, d.customTypeLabel).short}: ${d.deviceModel}</option>`).join('')
+          ? devs.map(d => {
+              const dAddr = formatDeviceInstallAddress(d);
+              return `<option value="${d.id}" ${d.id === preselectDeviceId ? 'selected' : ''}>${getDeviceInfo(d.deviceType, d.customTypeLabel).short}: ${d.deviceModel}${dAddr ? ` [📍 ${dAddr}]` : ''}</option>`;
+            }).join('')
           : `<option value="">Ogólne / Brak urządzenia</option>`;
       }
 
@@ -3466,6 +3618,7 @@ service cloud.firestore {
               ${dayVisits.length === 0 ? '<div class="text-[11px] text-zinc-400 py-4 text-center">Brak wyjazdów</div>' : dayVisits.map(v => {
                 const client = (window.clientsData || []).find(c => c.id === v.clientId);
                 const dev = client?.devices?.find(d => d.id === v.deviceId);
+                const devAddr = dev ? formatDeviceInstallAddress(dev) : '';
                 const isCanceled = v.status === 'canceled';
                 const isDone = v.status === 'completed';
                 return `
@@ -3480,6 +3633,7 @@ service cloud.firestore {
                     <div class="font-bold text-zinc-900 dark:text-white truncate ${(isCanceled || isDone) ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</div>
                     ${isCanceled ? '<div class="text-[10px] font-extrabold text-rose-600 uppercase">Anulowane</div>' : ''}
                     ${dev ? `<div class="text-[10px] text-teal-600 dark:text-teal-400 font-semibold truncate">🔧 ${dev.deviceModel}</div>` : ''}
+                    ${devAddr ? `<div class="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold truncate">📍 ${devAddr}</div>` : ''}
                     ${v.notes ? `<div class="text-[10px] text-amber-600 dark:text-amber-400 font-medium truncate">📝 ${v.notes}</div>` : ''}
                     ${v.protocolData ? `<button type="button" onclick="openProtocolPreviewByVisit('${v.id}')" class="w-full mt-1 px-2 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-extrabold flex items-center justify-center gap-1 shadow-sm"><i data-lucide="file-text" class="w-3 h-3"></i> Protokół PDF</button>` : ''}
                     <button type="button" onclick="openReassignWorkerModal('${v.id}')" class="w-full mt-1 px-2 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 border border-sky-200 dark:border-sky-800 text-[10px] font-extrabold text-sky-700 dark:text-sky-300 flex items-center justify-between transition" title="Przenieś zlecenie (zmień dzień, godzinę lub serwisanta)">
@@ -3510,15 +3664,21 @@ service cloud.firestore {
       const rawAddrs = dayVisits.map(v => {
         const c = (window.clientsData || []).find(cl => cl.id === v.clientId);
         if (!c) return null;
-        const formatted = `${c.street}, ${c.postalCode || ''} ${c.city}, Polska`.replace(/\s+/g, ' ').trim();
-        const normKey = `${(c.city || '').toLowerCase().trim()}|${cleanPolishStreet(c.street || '').toLowerCase()}`;
+        const dev = (c.devices || []).find(d => d.id === v.deviceId);
+        const useCustom = dev && dev.hasCustomLocation && (dev.installCity || dev.installStreet);
+        const city = useCustom ? (dev.installCity || c.city) : c.city;
+        const street = useCustom ? (dev.installStreet || c.street) : c.street;
+        const postal = useCustom ? (dev.installPostalCode || '') : (c.postalCode || '');
+
+        const formatted = `${street}, ${postal} ${city}, Polska`.replace(/\s+/g, ' ').trim();
+        const normKey = `${(city || '').toLowerCase().trim()}|${cleanPolishStreet(street || '').toLowerCase()}`;
         return { formatted, normKey, clientId: c.id };
       }).filter(Boolean);
 
       const deduplicatedAddrs = [];
       rawAddrs.forEach(item => {
         const prev = deduplicatedAddrs[deduplicatedAddrs.length - 1];
-        if (!prev || (prev.clientId !== item.clientId && prev.normKey !== item.normKey)) {
+        if (!prev || prev.normKey !== item.normKey) {
           deduplicatedAddrs.push(item);
         }
       });
@@ -3560,7 +3720,6 @@ service cloud.firestore {
       const warrantyFilter = document.getElementById('client-warranty-filter')?.value || 'all';
       const sortBy = document.getElementById('client-sort-select')?.value || 'default';
 
-      // 1. Odsianie po rodzaju urządzenia oraz po statusie gwarancji
       let list = enriched.map(c => {
         if (deviceTypeFilter === 'none') {
           return (c.devices || []).length === 0 && warrantyFilter === 'all' ? c : null;
@@ -3593,7 +3752,6 @@ service cloud.firestore {
         return { ...c, devices: (deviceTypeFilter !== 'all' || warrantyFilter !== 'all') ? matchingDevs : c.devices };
       }).filter(Boolean);
 
-      // 2. Filtrowanie po wyszukiwarce tekstowej (obsługa polskich znaków oraz wielu słów / miejscowości naraz)
       if (rawQuery) {
         const buildSearchableBlob = c => {
           const clientText = `${c.name || ''} ${c.nip || ''} ${c.email || ''} ${c.city || ''} ${c.street || ''} ${c.phone || ''} ${(c.phone || '').replace(/\s+/g, '')} ${c.postalCode || ''} ${c.notes || ''}`;
@@ -3611,7 +3769,7 @@ service cloud.firestore {
               : d.status.isSoon
                 ? 'wkrótce kończące się'
                 : 'przegląd ok';
-            return `${d.deviceModel || ''} ${d.serialNumber || ''} ${d.serialNumberOutdoor || ''} ${d.deviceNotes || ''} ${typeInfo.label} ${typeInfo.short} ${wStatus} ${iStatus}`;
+            return `${d.deviceModel || ''} ${d.serialNumber || ''} ${d.serialNumberOutdoor || ''} ${d.deviceNotes || ''} ${d.installCity || ''} ${d.installStreet || ''} ${d.installPostalCode || ''} ${typeInfo.label} ${typeInfo.short} ${wStatus} ${iStatus}`;
           }).join(' ');
           return normalizeSearchStr(`${clientText} ${devsText}`);
         };
@@ -3634,7 +3792,6 @@ service cloud.firestore {
         }
       }
 
-      // 3. Sortowanie wyników (po miejscowości, po dacie montażu lub alfabetycznie po kliencie)
       const getClientInstallDateForSort = (client, mode) => {
         const validDates = (client.devices || [])
           .map(d => (!d.noInstallDate && !d.ourUnknownDate && d.installDate) ? d.installDate : '')
@@ -3698,7 +3855,7 @@ service cloud.firestore {
               </div>
               ${c.nip ? `<div class="text-[11px] font-mono font-bold text-emerald-700 dark:text-emerald-400 mt-0.5">NIP: ${c.nip}</div>` : ''}
               ${c.email ? `<div class="text-[11px] font-semibold text-sky-600 dark:text-sky-400 mt-0.5">✉️ ${c.email}</div>` : ''}
-              <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">📍 ${c.city}, ${c.street}</p>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">🏠 Adres klienta: ${c.city}, ${c.street}</p>
             </div>
             <a href="tel:${c.phone}" class="px-3 py-2 bg-emerald-600 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 shadow-sm">
               <i data-lucide="phone" class="w-3.5 h-3.5"></i> ${c.phone}
@@ -3717,7 +3874,8 @@ service cloud.firestore {
                     ${getWarrantyBadgeHtml(dev.status)}
                     <span class="text-[10px] text-zinc-500 font-semibold">Kolejny przegląd: ${dev.status.nextInspectionFormatted}</span>
                   </div>
-                  ${dev.deviceNotes ? `<div class="text-[10px] font-semibold text-teal-800 dark:text-teal-300 pt-0.5">📍 Lokalizacja / Notatka: ${dev.deviceNotes}</div>` : ''}
+                  ${dev.customAddressFormatted ? `<div class="text-[10px] font-extrabold text-indigo-700 dark:text-indigo-300 pt-0.5">📍 Adres montażu: ${dev.customAddressFormatted}</div>` : ''}
+                  ${dev.deviceNotes ? `<div class="text-[10px] font-semibold text-teal-800 dark:text-teal-300 pt-0.5">🏢 Miejsce w budynku: ${dev.deviceNotes}</div>` : ''}
                 </div>
               `;
             }).join('')}
@@ -3746,7 +3904,7 @@ service cloud.firestore {
               ${c.email ? `<span class="text-[11px] font-semibold text-sky-600 dark:text-sky-400 mt-0.5">✉️ ${c.email}</span>` : ''}
             </div>
           </td>
-          <td class="py-3.5 px-4 text-zinc-600 dark:text-zinc-300">${c.city || '—'}${c.street ? `, ${c.street}` : ''}</td>
+          <td class="py-3.5 px-4 text-zinc-600 dark:text-zinc-300">🏠 ${c.city || '—'}${c.street ? `, ${c.street}` : ''}</td>
           <td class="py-3.5 px-4"><a href="tel:${c.phone}" class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold hover:underline whitespace-nowrap">📞 ${c.phone || '—'}</a></td>
           <td class="py-2.5 px-4">
             <div class="flex flex-col gap-2">
@@ -3762,7 +3920,8 @@ service cloud.firestore {
                     <div class="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">
                       📅 Montaż: <span class="font-bold text-zinc-700 dark:text-zinc-300">${dev.ourUnknownDate ? 'Nasze (Brak daty)' : dev.noInstallDate ? 'Brak (Obce)' : formatDatePL(dev.installDate)}</span>
                     </div>
-                    ${dev.deviceNotes ? `<div class="text-[10px] font-semibold text-teal-800 dark:text-teal-300">📍 ${dev.deviceNotes}</div>` : ''}
+                    ${dev.customAddressFormatted ? `<div class="text-[10px] font-extrabold text-indigo-700 dark:text-indigo-300">📍 Adres montażu: ${dev.customAddressFormatted}</div>` : ''}
+                    ${dev.deviceNotes ? `<div class="text-[10px] font-semibold text-teal-800 dark:text-teal-300">🏢 ${dev.deviceNotes}</div>` : ''}
                   </div>
                 `;
               }).join('')}
@@ -3966,6 +4125,7 @@ service cloud.firestore {
         if (c.city) citiesSet.add(c.city.trim().toLowerCase());
         (c.devices || []).forEach(d => {
           totalDevices++;
+          if (d.installCity) citiesSet.add(d.installCity.trim().toLowerCase());
           const typeKey = ['heat_pump', 'gas_boiler', 'ac', 'ventilation'].includes(d.deviceType) ? d.deviceType : 'custom';
           devTypeCounts[typeKey] = (devTypeCounts[typeKey] || 0) + 1;
           if (d.status.ourUnknownDate) ourNoDateCount++;
@@ -3982,7 +4142,7 @@ service cloud.firestore {
                 deviceId: d.id,
                 itemId: h.id,
                 clientName: c.name,
-                clientCity: c.city,
+                clientCity: d.installCity || c.city,
                 deviceModel: d.deviceModel
               });
             }
@@ -4012,7 +4172,7 @@ service cloud.firestore {
           date: v.date,
           actionType: v.serviceType || 'Serwis',
           clientName: client ? client.name : 'Klient',
-          clientCity: client ? client.city : '',
+          clientCity: dev?.installCity || (client ? client.city : ''),
           deviceModel: dev ? dev.deviceModel : (v.serviceType || 'Wizyta serwisowa'),
           technician: v.workerName || 'Serwis ServiTrak',
           notes: v.completionComment || `Wykonano: ${v.serviceType || 'Serwis'}${v.notes ? ' • ' + v.notes : ''}`,
@@ -4276,6 +4436,7 @@ service cloud.firestore {
       const isStandardType = ['heat_pump', 'gas_boiler', 'ac', 'ventilation'].includes(rawType);
       const selectedType = isStandardType ? rawType : 'custom';
       const customTypeVal = data?.customTypeLabel || (!isStandardType ? rawType : '');
+      const hasCustomLoc = Boolean(data?.hasCustomLocation && (data?.installCity || data?.installStreet));
 
       const div = document.createElement('div');
       div.className = 'p-3.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl space-y-2.5 relative';
@@ -4307,8 +4468,28 @@ service cloud.firestore {
           <input type="text" class="dev-serial-outdoor ${selectedType === 'ac' ? '' : 'hidden'} sm:col-span-2 w-full px-2.5 py-1.5 border border-sky-200 dark:border-sky-800 rounded-lg text-xs font-mono outline-none bg-sky-50/40 dark:bg-sky-950/30" placeholder="S/N jednostki zewnętrznej (JZ — Klimatyzacja)..." value="${data?.serialNumberOutdoor || ''}">
         </div>
         <div>
-          <input type="text" class="dev-notes w-full px-2.5 py-1.5 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none bg-white dark:bg-zinc-800" placeholder="Miejsce montażu / Notatka urządzenia (np. Kotłownia parter)..." value="${data?.deviceNotes || ''}">
+          <input type="text" class="dev-notes w-full px-2.5 py-1.5 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none bg-white dark:bg-zinc-800" placeholder="Miejsce montażu w budynku / Notatka urządzenia (np. Kotłownia parter)..." value="${data?.deviceNotes || ''}">
         </div>
+
+        <!-- Opcja: Urządzenie w innej lokalizacji niż adres główny klienta -->
+        <div class="p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 space-y-2">
+          <label class="flex items-center gap-2 cursor-pointer text-[11px] font-extrabold text-indigo-900 dark:text-indigo-200">
+            <input type="checkbox" class="dev-has-custom-loc rounded text-indigo-600" ${hasCustomLoc ? 'checked' : ''} onchange="onModalDevCustomLocToggle(this)">
+            <span>📍 Urządzenie zamontowane pod innym adresem niż adres klienta (osobna pinezka na mapie)</span>
+          </label>
+          <div class="dev-custom-loc-fields ${hasCustomLoc ? '' : 'hidden'} space-y-2 pt-1.5 border-t border-indigo-200 dark:border-indigo-800">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <input type="text" onblur="autoGeocodeDeviceRowInModal(this)" class="dev-install-postal px-2 py-1.5 rounded-lg border border-indigo-300 dark:border-indigo-700 bg-white dark:bg-zinc-900 text-xs" placeholder="Kod poczt. (np. 62-020)" value="${data?.installPostalCode || ''}">
+              <input type="text" oninput="autoCapitalizeInput(this)" onblur="autoGeocodeDeviceRowInModal(this)" class="dev-install-city px-2 py-1.5 rounded-lg border border-indigo-300 dark:border-indigo-700 bg-white dark:bg-zinc-900 text-xs font-bold" placeholder="Miejscowość montażu" value="${data?.installCity || ''}">
+              <input type="text" oninput="autoCapitalizeInput(this)" onblur="autoGeocodeDeviceRowInModal(this)" class="dev-install-street px-2 py-1.5 rounded-lg border border-indigo-300 dark:border-indigo-700 bg-white dark:bg-zinc-900 text-xs font-bold" placeholder="Ulica i nr montażu" value="${data?.installStreet || ''}">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <input type="number" step="0.00001" class="dev-install-lat px-2 py-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-[11px] font-mono" placeholder="Lat montażu (auto GPS)" value="${data?.installLat ?? ''}">
+              <input type="number" step="0.00001" class="dev-install-lng px-2 py-1 rounded bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-[11px] font-mono" placeholder="Lng montażu (auto GPS)" value="${data?.installLng ?? ''}">
+            </div>
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
           <label class="flex items-center gap-2 text-[11px] font-bold text-sky-800 dark:text-sky-300 cursor-pointer p-1.5 rounded-lg bg-sky-50/60 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800">
             <input type="checkbox" class="dev-our-no-date rounded" ${ourUnknownDate ? 'checked' : ''} onchange="onModalDevInstallModeChange(this, 'our_no_date')">
@@ -4329,6 +4510,28 @@ service cloud.firestore {
         </div>
       `;
       container.appendChild(div);
+    }
+
+    function onModalDevCustomLocToggle(chkEl) {
+      const wrapper = chkEl.closest('[data-dev-id]');
+      if (!wrapper) return;
+      wrapper.querySelector('.dev-custom-loc-fields')?.classList.toggle('hidden', !chkEl.checked);
+    }
+
+    async function autoGeocodeDeviceRowInModal(inputEl) {
+      const wrapper = inputEl.closest('[data-dev-id]');
+      if (!wrapper) return;
+      const city = (wrapper.querySelector('.dev-install-city')?.value || '').trim();
+      const street = (wrapper.querySelector('.dev-install-street')?.value || '').trim();
+      const postal = (wrapper.querySelector('.dev-install-postal')?.value || '').trim();
+      if (!city && !street && !postal) return;
+      const coords = await geocodeAddressHelper(city, street, postal);
+      if (coords) {
+        const latInput = wrapper.querySelector('.dev-install-lat');
+        const lngInput = wrapper.querySelector('.dev-install-lng');
+        if (latInput) latInput.value = coords.lat.toFixed(5);
+        if (lngInput) lngInput.value = coords.lng.toFixed(5);
+      }
     }
 
     function confirmRemoveDeviceFieldInModal(btnEl) {
@@ -4469,12 +4672,12 @@ service cloud.firestore {
         await autoGeocodeClientAddress();
       }
 
-      const devEls = document.querySelectorAll('#modal-devices-container > div');
+      const devEls = Array.from(document.querySelectorAll('#modal-devices-container > div'));
       const devices = [];
       const today = toYMD(new Date());
       const existingClient = editingClientId ? (window.clientsData || []).find(x => x.id === editingClientId) : null;
 
-      devEls.forEach(el => {
+      for (const el of devEls) {
         const devId = el.dataset.devId || `dev_${Date.now()}`;
         const prevDev = existingClient?.devices?.find(d => d.id === devId);
         const type = el.querySelector('.dev-type').value;
@@ -4483,7 +4686,23 @@ service cloud.firestore {
         const serialNumber = (el.querySelector('.dev-serial')?.value || '').trim();
         const serialNumberOutdoor = (el.querySelector('.dev-serial-outdoor')?.value || '').trim();
         const deviceNotes = (el.querySelector('.dev-notes')?.value || '').trim();
-        if (!model && !serialNumber && !deviceNotes) return;
+
+        const hasCustomLocation = Boolean(el.querySelector('.dev-has-custom-loc')?.checked);
+        const installPostalCode = hasCustomLocation ? (el.querySelector('.dev-install-postal')?.value || '').trim() : '';
+        const installCity = hasCustomLocation ? capitalizeWords((el.querySelector('.dev-install-city')?.value || '').trim()) : '';
+        const installStreet = hasCustomLocation ? capitalizeWords((el.querySelector('.dev-install-street')?.value || '').trim()) : '';
+        let installLat = hasCustomLocation ? parseFloat(el.querySelector('.dev-install-lat')?.value) : null;
+        let installLng = hasCustomLocation ? parseFloat(el.querySelector('.dev-install-lng')?.value) : null;
+
+        if (hasCustomLocation && (installCity || installStreet) && (isNaN(installLat) || isNaN(installLng))) {
+          const coords = await geocodeAddressHelper(installCity, installStreet, installPostalCode);
+          if (coords) {
+            installLat = coords.lat;
+            installLng = coords.lng;
+          }
+        }
+
+        if (!model && !serialNumber && !deviceNotes && !installCity && !installStreet) continue;
 
         const ourUnknownDate = Boolean(el.querySelector('.dev-our-no-date')?.checked);
         const isExternal = !ourUnknownDate && Boolean(el.querySelector('.dev-no-install')?.checked);
@@ -4500,6 +4719,12 @@ service cloud.firestore {
           serialNumber,
           serialNumberOutdoor,
           deviceNotes,
+          hasCustomLocation: hasCustomLocation && Boolean(installCity || installStreet),
+          installPostalCode,
+          installCity,
+          installStreet,
+          installLat: !isNaN(installLat) ? installLat : null,
+          installLng: !isNaN(installLng) ? installLng : null,
           ourUnknownDate,
           noInstallDate,
           installDate: install,
@@ -4510,7 +4735,7 @@ service cloud.firestore {
           remindersCanceled: prevDev?.remindersCanceled ?? false,
           inspectionHistory: prevDev?.inspectionHistory || []
         });
-      });
+      }
 
       const clientData = {
         id: editingClientId || ('c_' + Date.now()),
@@ -4550,6 +4775,22 @@ service cloud.firestore {
       }
     }
 
+    function toggleAssignedCustomAddress(checked) {
+      document.getElementById('assigned-dev-custom-addr-box')?.classList.toggle('hidden', !checked);
+    }
+
+    async function autoGeocodeAssignedDevice() {
+      const city = (document.getElementById('assigned-dev-city')?.value || '').trim();
+      const street = (document.getElementById('assigned-dev-street')?.value || '').trim();
+      const postal = (document.getElementById('assigned-dev-postal')?.value || '').trim();
+      if (!city && !street && !postal) return;
+      const coords = await geocodeAddressHelper(city, street, postal);
+      if (coords) {
+        if (document.getElementById('assigned-dev-lat')) document.getElementById('assigned-dev-lat').value = coords.lat.toFixed(5);
+        if (document.getElementById('assigned-dev-lng')) document.getElementById('assigned-dev-lng').value = coords.lng.toFixed(5);
+      }
+    }
+
     function openAddDeviceModal(preClientId = '', preCatalogId = '') {
       document.getElementById('search-client-for-dev').value = '';
       document.getElementById('search-catalog-for-dev').value = '';
@@ -4564,6 +4805,17 @@ service cloud.firestore {
       document.getElementById('assigned-dev-serial-out-wrap')?.classList.add('hidden');
       setText('assigned-dev-serial-label', 'Numer seryjny (S/N)');
       document.getElementById('assigned-dev-notes').value = '';
+
+      if (document.getElementById('assigned-dev-custom-loc')) {
+        document.getElementById('assigned-dev-custom-loc').checked = false;
+      }
+      toggleAssignedCustomAddress(false);
+      if (document.getElementById('assigned-dev-postal')) document.getElementById('assigned-dev-postal').value = '';
+      if (document.getElementById('assigned-dev-city')) document.getElementById('assigned-dev-city').value = '';
+      if (document.getElementById('assigned-dev-street')) document.getElementById('assigned-dev-street').value = '';
+      if (document.getElementById('assigned-dev-lat')) document.getElementById('assigned-dev-lat').value = '';
+      if (document.getElementById('assigned-dev-lng')) document.getElementById('assigned-dev-lng').value = '';
+
       document.getElementById('assigned-dev-our-no-date').checked = false;
       document.getElementById('assigned-dev-no-install').checked = false;
       onAssignedInstallModeChange('none', false);
@@ -4696,7 +4948,7 @@ service cloud.firestore {
       document.getElementById('assigned-dev-external-next-box')?.classList.toggle('hidden', !anyNoDate);
     }
 
-    function handleSaveAssignedDevice(e) {
+    async function handleSaveAssignedDevice(e) {
       e.preventDefault();
       const clientId = document.getElementById('select-client-target').value;
       const type = document.getElementById('assigned-dev-type').value || 'heat_pump';
@@ -4705,6 +4957,22 @@ service cloud.firestore {
       const serialNumber = (document.getElementById('assigned-dev-serial')?.value || '').trim();
       const serialNumberOutdoor = (document.getElementById('assigned-dev-serial-outdoor')?.value || '').trim();
       const deviceNotes = (document.getElementById('assigned-dev-notes')?.value || '').trim();
+
+      const hasCustomLocation = Boolean(document.getElementById('assigned-dev-custom-loc')?.checked);
+      const installPostalCode = hasCustomLocation ? (document.getElementById('assigned-dev-postal')?.value || '').trim() : '';
+      const installCity = hasCustomLocation ? capitalizeWords((document.getElementById('assigned-dev-city')?.value || '').trim()) : '';
+      const installStreet = hasCustomLocation ? capitalizeWords((document.getElementById('assigned-dev-street')?.value || '').trim()) : '';
+      let installLat = hasCustomLocation ? parseFloat(document.getElementById('assigned-dev-lat')?.value) : null;
+      let installLng = hasCustomLocation ? parseFloat(document.getElementById('assigned-dev-lng')?.value) : null;
+
+      if (hasCustomLocation && (installCity || installStreet) && (isNaN(installLat) || isNaN(installLng))) {
+        const coords = await geocodeAddressHelper(installCity, installStreet, installPostalCode);
+        if (coords) {
+          installLat = coords.lat;
+          installLng = coords.lng;
+        }
+      }
+
       const ourUnknownDate = Boolean(document.getElementById('assigned-dev-our-no-date')?.checked);
       const isExternal = !ourUnknownDate && Boolean(document.getElementById('assigned-dev-no-install')?.checked);
       const noInstallDate = ourUnknownDate || isExternal;
@@ -4726,6 +4994,12 @@ service cloud.firestore {
         serialNumber,
         serialNumberOutdoor,
         deviceNotes,
+        hasCustomLocation: hasCustomLocation && Boolean(installCity || installStreet),
+        installPostalCode,
+        installCity,
+        installStreet,
+        installLat: !isNaN(installLat) ? installLat : null,
+        installLng: !isNaN(installLng) ? installLng : null,
         ourUnknownDate,
         noInstallDate,
         installDate: install,
@@ -4920,7 +5194,7 @@ service cloud.firestore {
       const client = (window.clientsData || []).find(c => c.id === clientId);
       const allDevs = client?.devices || [];
       const devs = filterQ
-        ? allDevs.filter(d => `${d.deviceModel} ${d.serialNumber || ''} ${getDeviceInfo(d.deviceType, d.customTypeLabel).short}`.toLowerCase().includes(filterQ))
+        ? allDevs.filter(d => `${d.deviceModel} ${d.serialNumber || ''} ${d.installCity || ''} ${d.installStreet || ''} ${getDeviceInfo(d.deviceType, d.customTypeLabel).short}`.toLowerCase().includes(filterQ))
         : allDevs;
 
       if (devs.length === 0) {
@@ -4928,7 +5202,8 @@ service cloud.firestore {
       } else {
         devSel.innerHTML = devs.map((d, idx) => {
           const isSelected = preselectedDeviceId ? d.id === preselectedDeviceId : idx === 0;
-          return `<option value="${d.id}" ${isSelected ? 'selected' : ''}>🔧 ${getDeviceInfo(d.deviceType, d.customTypeLabel).short}: ${d.deviceModel}${d.serialNumber ? ` (S/N: ${d.serialNumber})` : ''}</option>`;
+          const customAddr = formatDeviceInstallAddress(d);
+          return `<option value="${d.id}" ${isSelected ? 'selected' : ''}>🔧 ${getDeviceInfo(d.deviceType, d.customTypeLabel).short}: ${d.deviceModel}${d.serialNumber ? ` (S/N: ${d.serialNumber})` : ''}${customAddr ? ` [📍 ${customAddr}]` : ''}</option>`;
         }).join('') + `<option value="">Wszystkie / Inne urządzenie</option>`;
       }
     }
@@ -5045,6 +5320,7 @@ service cloud.firestore {
                   <h4 class="font-extrabold text-sm text-zinc-900 dark:text-white">${getDeviceInfo(d.deviceType, d.customTypeLabel).short}: ${d.deviceModel} ${(d.serialNumber || d.serialNumberOutdoor) ? `<span class="text-xs font-mono text-zinc-500">[S/N: ${d.serialNumber || '—'}${d.serialNumberOutdoor ? ' | JZ: ' + d.serialNumberOutdoor : ''}]</span>` : ''}</h4>
                   ${getWarrantyBadgeHtml(d.status)}
                 </div>
+                ${d.customAddressFormatted ? `<div class="text-xs font-extrabold text-indigo-700 dark:text-indigo-300">📍 Adres montażu urządzenia: ${d.customAddressFormatted}</div>` : ''}
                 <p class="text-xs text-zinc-500 dark:text-zinc-400">
                   Data montażu: <span class="font-bold text-zinc-800 dark:text-zinc-200">${d.ourUnknownDate ? 'Nasze urządzenie (Brak znanej daty montażu)' : d.noInstallDate ? 'Brak (Obce)' : formatDatePL(d.installDate)}</span> •
                   Ostatni przegląd: <span class="font-bold text-zinc-800 dark:text-zinc-200">${formatDatePL(d.lastInspectionDate)}</span> •
@@ -5052,7 +5328,7 @@ service cloud.firestore {
                 </p>
                 <div class="p-2.5 rounded-xl bg-teal-50/70 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div class="text-xs text-teal-900 dark:text-teal-200">
-                    <span class="font-extrabold">📍 Lokalizacja / Notatki montażowe:</span>
+                    <span class="font-extrabold">🏢 Lokalizacja w budynku / Notatki:</span>
                     <span class="font-medium ml-1">${d.deviceNotes ? d.deviceNotes : '<em class="text-zinc-400">Brak wpisanej lokalizacji urządzenia</em>'}</span>
                   </div>
                   <div class="flex items-center gap-1.5 shrink-0">
@@ -5290,72 +5566,97 @@ service cloud.firestore {
     const signaturePadsState = {};
     let currentPreviewProtocolObj = null;
 
+    function prepareSignatureCanvasBackground(canvas) {
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2.6;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+    }
+
     function initSignaturePad(canvasId) {
       const canvas = document.getElementById(canvasId);
       if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      ctx.strokeStyle = '#0f172a';
-      ctx.lineWidth = 2.2;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
 
-      if (signaturePadsState[canvasId]?.initialized) return;
-      signaturePadsState[canvasId] = { drawing: false, hasInk: false, initialized: true };
+      if (!signaturePadsState[canvasId]?.initialized) {
+        prepareSignatureCanvasBackground(canvas);
+        signaturePadsState[canvasId] = { drawing: false, hasInk: false, initialized: true };
 
-      const getPos = (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / (rect.width || 1);
-        const scaleY = canvas.height / (rect.height || 1);
-        const clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
-        return {
-          x: (clientX - rect.left) * scaleX,
-          y: (clientY - rect.top) * scaleY
+        const getPos = (e) => {
+          const rect = canvas.getBoundingClientRect();
+          const scaleX = canvas.width / (rect.width || 1);
+          const scaleY = canvas.height / (rect.height || 1);
+          const clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+          const clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
+          return {
+            x: (clientX - rect.left) * scaleX,
+            y: (clientY - rect.top) * scaleY
+          };
         };
-      };
 
-      const startDraw = (e) => {
-        if (e.cancelable) e.preventDefault();
-        signaturePadsState[canvasId].drawing = true;
-        signaturePadsState[canvasId].hasInk = true;
-        const pos = getPos(e);
-        ctx.beginPath();
-        ctx.moveTo(pos.x, pos.y);
-      };
+        const startDraw = (e) => {
+          if (e.cancelable) e.preventDefault();
+          const ctx = canvas.getContext('2d');
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 2.6;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          signaturePadsState[canvasId].drawing = true;
+          signaturePadsState[canvasId].hasInk = true;
+          const pos = getPos(e);
+          ctx.beginPath();
+          ctx.moveTo(pos.x, pos.y);
+          ctx.lineTo(pos.x + 0.1, pos.y + 0.1);
+          ctx.stroke();
+        };
 
-      const moveDraw = (e) => {
-        if (!signaturePadsState[canvasId].drawing) return;
-        if (e.cancelable) e.preventDefault();
-        const pos = getPos(e);
-        ctx.lineTo(pos.x, pos.y);
-        ctx.stroke();
-      };
+        const moveDraw = (e) => {
+          if (!signaturePadsState[canvasId].drawing) return;
+          if (e.cancelable) e.preventDefault();
+          const ctx = canvas.getContext('2d');
+          const pos = getPos(e);
+          ctx.lineTo(pos.x, pos.y);
+          ctx.stroke();
+        };
 
-      const endDraw = () => {
-        signaturePadsState[canvasId].drawing = false;
-      };
+        const endDraw = () => {
+          if (signaturePadsState[canvasId]) {
+            signaturePadsState[canvasId].drawing = false;
+          }
+        };
 
-      canvas.addEventListener('mousedown', startDraw);
-      canvas.addEventListener('mousemove', moveDraw);
-      window.addEventListener('mouseup', endDraw);
+        canvas.addEventListener('mousedown', startDraw);
+        canvas.addEventListener('mousemove', moveDraw);
+        window.addEventListener('mouseup', endDraw);
 
-      canvas.addEventListener('touchstart', startDraw, { passive: false });
-      canvas.addEventListener('touchmove', moveDraw, { passive: false });
-      window.addEventListener('touchend', endDraw);
+        canvas.addEventListener('touchstart', startDraw, { passive: false });
+        canvas.addEventListener('touchmove', moveDraw, { passive: false });
+        window.addEventListener('touchend', endDraw);
+      }
     }
 
     function clearSignaturePad(canvasId) {
       const canvas = document.getElementById(canvasId);
       if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      prepareSignatureCanvasBackground(canvas);
       if (signaturePadsState[canvasId]) signaturePadsState[canvasId].hasInk = false;
     }
 
     function getSignatureDataUrl(canvasId) {
       const canvas = document.getElementById(canvasId);
       if (!canvas || !signaturePadsState[canvasId]?.hasInk) return '';
-      return canvas.toDataURL('image/png');
+      // Tworzymy pomocniczy canvas z gwarantowanym białym tłem (aby JPEG/PDF nie robił czarnego lub pustego pola)
+      const exportCanvas = document.createElement('canvas');
+      exportCanvas.width = canvas.width;
+      exportCanvas.height = canvas.height;
+      const eCtx = exportCanvas.getContext('2d');
+      eCtx.fillStyle = '#ffffff';
+      eCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+      eCtx.drawImage(canvas, 0, 0);
+      return exportCanvas.toDataURL('image/png');
     }
 
     function toggleProtocolFormInCloseModal(checked) {
@@ -5542,6 +5843,13 @@ service cloud.firestore {
         if (document.getElementById('close-install-dev-notes')) {
           document.getElementById('close-install-dev-notes').value = visit.plannedInstallDeviceNotes || '';
         }
+        if (document.getElementById('close-install-custom-loc')) {
+          document.getElementById('close-install-custom-loc').checked = false;
+        }
+        document.getElementById('close-install-custom-addr-fields')?.classList.add('hidden');
+        if (document.getElementById('close-install-postal')) document.getElementById('close-install-postal').value = '';
+        if (document.getElementById('close-install-city')) document.getElementById('close-install-city').value = '';
+        if (document.getElementById('close-install-street')) document.getElementById('close-install-street').value = '';
       } else {
         installBox.classList.add('hidden');
         nextInspLabel.classList.remove('hidden');
@@ -5606,13 +5914,17 @@ service cloud.firestore {
       }
 
       setTimeout(() => {
+        initSignaturePad('sig-canvas-tech');
+        initSignaturePad('sig-canvas-client');
         clearSignaturePad('sig-canvas-tech');
         clearSignaturePad('sig-canvas-client');
       }, 90);
 
+      const devCustomAddr = dev ? formatDeviceInstallAddress(dev) : '';
       document.getElementById('close-visit-summary').innerHTML = `
         <div class="font-extrabold text-zinc-900 dark:text-white">${client ? client.name : 'Klient'} • ${visit.serviceType}</div>
         <div class="text-zinc-500">${isMontaz ? `🏗️ Planowany montaż: <strong>${visit.plannedInstallModel || 'Nowe urządzenie'}</strong>` : `🔧 Urządzenie: <strong>${dev ? dev.deviceModel : 'Ogólne'}</strong> ${dev?.serialNumber ? `(S/N: ${dev.serialNumber}${dev?.serialNumberOutdoor ? ' / JZ: ' + dev.serialNumberOutdoor : ''})` : ''}`}</div>
+        ${devCustomAddr ? `<div class="text-indigo-600 dark:text-indigo-400 font-bold">📍 Adres montażu: ${devCustomAddr}</div>` : ''}
         <div class="text-zinc-500">👷 Wykonawca: <strong>${visit.workerName || 'Serwis ServiTrak'}</strong> • Data: <strong>${formatDatePL(visit.date)}</strong></div>
       `;
 
@@ -5620,7 +5932,7 @@ service cloud.firestore {
       setTimeout(() => document.getElementById(isMontaz ? 'close-install-serial' : 'close-visit-comment').focus(), 80);
     }
 
-    function buildProtocolDataFromModal(visit, client, deviceModel, serialNumber, serialNumberOutdoor, deviceNotes, comment, devTypeLabel = '') {
+    function buildProtocolDataFromModal(visit, client, deviceModel, serialNumber, serialNumberOutdoor, deviceNotes, comment, devTypeLabel = '', deviceInstallAddress = '') {
       const attach = document.getElementById('close-visit-attach-protocol')?.checked;
       if (!attach) return null;
 
@@ -5644,6 +5956,7 @@ service cloud.firestore {
         clientNip: client?.nip || '',
         clientEmail: client?.email || '',
         clientAddress: client ? `${client.postalCode ? client.postalCode + ' ' : ''}${client.city || ''}, ${client.street || ''}` : '',
+        installAddress: deviceInstallAddress || '',
         clientPhone: client?.phone || '',
         deviceTypeLabel: devTypeLabel || 'Urządzenie HVAC',
         deviceModel: deviceModel || 'Urządzenie HVAC',
@@ -5746,8 +6059,6 @@ service cloud.firestore {
         ];
         return {
           ...base,
-          hpPressure: document.getElementById('proto-hp-pressure')?.value || '1,5 bar',
-          fgazTool: document.getElementById('proto-hp-fgaz')?.value || 'Wykrywacz nieszczelności / Certyfikat F-GAZ',
           checklist: hpLabels.map((label, idx) => ({
             label,
             done: Boolean(document.getElementById(`proto-hp-chk-${idx + 1}`)?.checked)
@@ -5805,7 +6116,7 @@ service cloud.firestore {
       };
     }
 
-    function handleConfirmCloseVisit(e) {
+    async function handleConfirmCloseVisit(e) {
       e.preventDefault();
       const visitId = document.getElementById('close-visit-id').value;
       const comment = (document.getElementById('close-visit-comment').value || '').trim();
@@ -5835,8 +6146,32 @@ service cloud.firestore {
         const newSerialOutdoor = ((document.getElementById('proto-inst-sn-out')?.value || document.getElementById('close-install-serial-outdoor')?.value) || '').trim();
         const newDevNotes = (document.getElementById('close-install-dev-notes')?.value || '').trim() || visit.plannedInstallDeviceNotes || '';
 
+        const hasCustomLoc = Boolean(document.getElementById('close-install-custom-loc')?.checked);
+        const installPostalCode = hasCustomLoc ? (document.getElementById('close-install-postal')?.value || '').trim() : '';
+        const installCity = hasCustomLoc ? capitalizeWords((document.getElementById('close-install-city')?.value || '').trim()) : '';
+        const installStreet = hasCustomLoc ? capitalizeWords((document.getElementById('close-install-street')?.value || '').trim()) : '';
+        let installLat = null, installLng = null;
+
+        if (hasCustomLoc && (installCity || installStreet)) {
+          const coords = await geocodeAddressHelper(installCity, installStreet, installPostalCode);
+          if (coords) {
+            installLat = coords.lat;
+            installLng = coords.lng;
+          }
+        }
+
+        const newDevObj = {
+          hasCustomLocation: hasCustomLoc && Boolean(installCity || installStreet),
+          installPostalCode,
+          installCity,
+          installStreet,
+          installLat,
+          installLng
+        };
+        const formattedCustomInstallAddr = formatDeviceInstallAddress(newDevObj);
+
         const devTypeInfo = getDeviceInfo(newType, newCustomType);
-        savedProtocol = buildProtocolDataFromModal(visit, client, newModel, newSerial, newSerialOutdoor, newDevNotes, comment, devTypeInfo.short);
+        savedProtocol = buildProtocolDataFromModal(visit, client, newModel, newSerial, newSerialOutdoor, newDevNotes, comment, devTypeInfo.short, formattedCustomInstallAddr);
 
         const createdDevId = `dev_${Date.now()}`;
         const histId = `h_install_${Date.now()}`;
@@ -5851,6 +6186,7 @@ service cloud.firestore {
           serialNumber: newSerial,
           serialNumberOutdoor: newSerialOutdoor,
           deviceNotes: newDevNotes,
+          ...newDevObj,
           ourUnknownDate: false,
           noInstallDate: false,
           installDate,
@@ -5906,6 +6242,7 @@ service cloud.firestore {
         const updatedSerialIn = protoSnIn || targetDevObj.serialNumber || '';
         const updatedSerialOut = protoSnOut || targetDevObj.serialNumberOutdoor || '';
         const devTypeInfo = getDeviceInfo(targetDevObj.deviceType, targetDevObj.customTypeLabel);
+        const formattedCustomInstallAddr = formatDeviceInstallAddress(targetDevObj);
 
         savedProtocol = buildProtocolDataFromModal(
           visit,
@@ -5915,7 +6252,8 @@ service cloud.firestore {
           updatedSerialOut,
           targetDevObj.deviceNotes,
           comment,
-          devTypeInfo.short
+          devTypeInfo.short,
+          formattedCustomInstallAddr
         );
 
         const histId = `h_visit_${Date.now()}`;
@@ -6047,9 +6385,35 @@ service cloud.firestore {
       }
       const container = document.getElementById('protocol-printable-area');
       if (container) {
-        container.innerHTML = renderProtocolSheetHtml(proto);
+        container.innerHTML = proto.customEditedHtml || renderProtocolSheetHtml(proto);
+        makeAllProtocolFieldsEditable(container);
       }
       openModal('modal-protocol-preview');
+    }
+
+    // Sprawia, że każde okienko, komórka tabeli i pole tekstowe na protokole jest edytowalne po kliknięciu
+    function makeAllProtocolFieldsEditable(rootEl) {
+      if (!rootEl) return;
+      const targets = rootEl.querySelectorAll('td, th, div, span, strong');
+      targets.forEach(el => {
+        if (el.querySelector('img, table, tr, td, th')) return;
+        if ((el.textContent || '').trim().length > 0 || el.tagName === 'TD') {
+          el.setAttribute('contenteditable', 'true');
+          el.setAttribute('spellcheck', 'false');
+        }
+      });
+    }
+
+    function autoSaveEditedProtocolHtml() {
+      const container = document.getElementById('protocol-printable-area');
+      if (!container || !currentPreviewProtocolObj) return;
+      currentPreviewProtocolObj.customEditedHtml = container.innerHTML;
+    }
+
+    function saveEditedProtocolContent() {
+      autoSaveEditedProtocolHtml();
+      persistData();
+      showToast('Zapisano ręczne zmiany w treści protokołu!');
     }
 
     let cachedInstalLogoDataUrl = null;
@@ -6060,6 +6424,9 @@ service cloud.firestore {
           canvas.width = 520;
           canvas.height = 115;
           const ctx = canvas.getContext('2d');
+
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
 
           ctx.font = '900 92px Inter, Arial, sans-serif';
           ctx.textBaseline = 'alphabetic';
@@ -6131,8 +6498,9 @@ service cloud.firestore {
     }
 
     function renderProtocolHeaderAndPartiesHtml(proto, docTitle, accentColor = '#0284c7') {
+      const hasSecondAddress = Boolean(proto.installAddress && proto.installAddress.trim() && proto.installAddress.trim().toLowerCase() !== (proto.clientAddress || '').trim().toLowerCase());
       return `
-        <div style="border-bottom:3px solid ${accentColor};padding-bottom:12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+        <div style="border-bottom:3px solid ${accentColor};padding-bottom:12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;background:#ffffff;color:#0f172a;">
           <div>
             ${getInstalLogoImgHtml()}
             <div style="font-size:11px;color:#475569;margin-top:4px;font-weight:700;">Systemy Klimatyzacji, Pomp Ciepła i Kotłów Gazowych • Certyfikat F-GAZ: ${proto.fgazCert || 'FGAZ-P/27/0109/22'}</div>
@@ -6144,21 +6512,23 @@ service cloud.firestore {
           </div>
         </div>
 
-        <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:11px;">
+        <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:11px;color:#0f172a;">
           <tr>
-            <td style="width:50%;border:1px solid #cbd5e1;padding:8px;vertical-align:top;background:#f8fafc;">
+            <td style="width:50%;border:1px solid #cbd5e1;padding:8px;vertical-align:top;background:#f8fafc;color:#0f172a;">
               <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:3px;">1. Dane Zleceniodawcy / Klienta</div>
               <div style="font-weight:800;font-size:12px;color:#0f172a;">${proto.clientName || '—'}</div>
               ${proto.clientNip ? `<div style="font-weight:700;color:#059669;">NIP: ${proto.clientNip}</div>` : ''}
-              <div>Adres: <strong>${proto.clientAddress || '—'}</strong></div>
-              <div>Telefon: <strong>${proto.clientPhone || '—'}</strong>${proto.clientEmail ? ` • E-mail: <strong>${proto.clientEmail}</strong>` : ''}</div>
+              <div>Adres Zleceniodawcy: <strong>${proto.clientAddress || '—'}</strong></div>
+              ${hasSecondAddress ? `<div style="margin-top:2px;color:#312e81;">Adres montażu urządzenia: <strong>${proto.installAddress}</strong></div>` : ''}
+              <div style="margin-top:2px;">Telefon: <strong>${proto.clientPhone || '—'}</strong>${proto.clientEmail ? ` • E-mail: <strong>${proto.clientEmail}</strong>` : ''}</div>
             </td>
-            <td style="width:50%;border:1px solid #cbd5e1;padding:8px;vertical-align:top;background:#f8fafc;">
+            <td style="width:50%;border:1px solid #cbd5e1;padding:8px;vertical-align:top;background:#f8fafc;color:#0f172a;">
               <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:3px;">2. Wykonawca i identyfikacja urządzenia</div>
               <div style="font-weight:800;font-size:12px;color:#0f172a;">INSTAL</div>
               <div>Serwisant / Instalator: <strong>${proto.technician || '—'}</strong></div>
               <div>Urządzenie: <strong>${proto.deviceModel || '—'}</strong></div>
               <div>Nr seryjny (S/N): <strong style="font-family:monospace;">${proto.serialIndoor || 'Brak danych'}${proto.serialOutdoor ? ` / JZ: ${proto.serialOutdoor}` : ''}</strong></div>
+              ${hasSecondAddress ? `<div style="margin-top:2px;color:#312e81;">Miejsce instalacji: <strong>${proto.installAddress}</strong></div>` : ''}
             </td>
           </tr>
         </table>
@@ -6168,17 +6538,17 @@ service cloud.firestore {
     function renderProtocolSignaturesFooterHtml(proto, sigTechImg, sigClientImg) {
       return `
         ${renderZgonoscStatementTableHtml()}
-        <table style="width:100%;border-collapse:collapse;margin-top:8px;">
+        <table style="width:100%;border-collapse:collapse;margin-top:8px;color:#0f172a;">
           <tr>
             <td style="width:48%;text-align:center;vertical-align:bottom;">
-              <div style="border:1px dashed #94a3b8;border-radius:8px;padding:6px;background:#fff;min-height:92px;display:flex;align-items:center;justify-content:center;">
+              <div style="border:1px dashed #94a3b8;border-radius:8px;padding:6px;background:#ffffff;min-height:92px;display:flex;align-items:center;justify-content:center;">
                 ${sigTechImg}
               </div>
               <div style="font-size:10px;font-weight:800;color:#475569;margin-top:4px;text-transform:uppercase;">Podpis Serwisanta (${proto.technician || 'INSTAL'})</div>
             </td>
             <td style="width:4%;"></td>
             <td style="width:48%;text-align:center;vertical-align:bottom;">
-              <div style="border:1px dashed #94a3b8;border-radius:8px;padding:6px;background:#fff;min-height:92px;display:flex;align-items:center;justify-content:center;">
+              <div style="border:1px dashed #94a3b8;border-radius:8px;padding:6px;background:#ffffff;min-height:92px;display:flex;align-items:center;justify-content:center;">
                 ${sigClientImg}
               </div>
               <div style="font-size:10px;font-weight:800;color:#475569;margin-top:4px;text-transform:uppercase;">Podpis Zleceniodawcy / Klienta (${proto.clientName || ''})</div>
@@ -6190,19 +6560,19 @@ service cloud.firestore {
 
     function renderProtocolSheetHtml(proto) {
       const sigTechImg = proto.sigTechDataUrl
-        ? `<img src="${proto.sigTechDataUrl}" style="max-height:75px;margin:0 auto;display:block;" alt="Podpis serwisanta">`
-        : `<div style="height:65px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px;">(Brak podpisu cyfrowego)</div>`;
+        ? `<img src="${proto.sigTechDataUrl}" style="max-height:78px;max-width:100%;margin:0 auto;display:block;background:#ffffff;" alt="Podpis serwisanta">`
+        : `<div contenteditable="true" style="height:65px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px;">(Brak podpisu cyfrowego)</div>`;
 
       const sigClientImg = proto.sigClientDataUrl
-        ? `<img src="${proto.sigClientDataUrl}" style="max-height:75px;margin:0 auto;display:block;" alt="Podpis klienta">`
-        : `<div style="height:65px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px;">(Brak podpisu cyfrowego)</div>`;
+        ? `<img src="${proto.sigClientDataUrl}" style="max-height:78px;max-width:100%;margin:0 auto;display:block;background:#ffffff;" alt="Podpis klienta">`
+        : `<div contenteditable="true" style="height:65px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px;">(Brak podpisu cyfrowego)</div>`;
 
       if (proto.type === 'ac_install') {
         return `
-          <div style="font-family:'Inter',Arial,sans-serif;color:#18181b;line-height:1.45;">
+          <div style="font-family:'Inter',Arial,sans-serif;color:#18181b;background:#ffffff;line-height:1.45;">
             ${renderProtocolHeaderAndPartiesHtml(proto, 'KARTA MONTAŻU KLIMATYZACJI', '#0284c7')}
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:6px;">3. Specyfikacja zamontowanego układu klimatyzacji i parametry instalacji</div>
-            <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:11px;">
+            <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:11px;color:#0f172a;">
               <tbody>
                 <tr>
                   <td style="border:1px solid #cbd5e1;padding:6px 8px;font-weight:700;background:#f1f5f9;width:38%;">Model urządzenia (Zestaw)</td>
@@ -6240,7 +6610,7 @@ service cloud.firestore {
             </table>
 
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:4px;">4. Uwagi montażowe i zalecenia eksploatacyjne</div>
-            <div style="border:1px solid #cbd5e1;padding:8px;background:#f8fafc;margin-bottom:12px;font-size:11px;min-height:38px;">
+            <div style="border:1px solid #cbd5e1;padding:8px;background:#f8fafc;margin-bottom:12px;font-size:11px;min-height:38px;color:#0f172a;">
               ${proto.comments || 'Urządzenie zamontowane i uruchomione prawidłowo. Przeszkolono użytkownika w zakresie podstawowej obsługi pilota i warunków gwarancji.'}
             </div>
             ${renderProtocolSignaturesFooterHtml(proto, sigTechImg, sigClientImg)}
@@ -6263,10 +6633,10 @@ service cloud.firestore {
         `).join('');
 
         return `
-          <div style="font-family:'Inter',Arial,sans-serif;color:#18181b;line-height:1.4;">
+          <div style="font-family:'Inter',Arial,sans-serif;color:#18181b;background:#ffffff;line-height:1.4;">
             ${renderProtocolHeaderAndPartiesHtml(proto, title, color)}
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:5px;">3. Wykaz wykonanych czynności przeglądowych i kontrolnych</div>
-            <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10.5px;">
+            <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10.5px;color:#0f172a;">
               <thead>
                 <tr style="background:#f1f5f9;">
                   <th style="border:1px solid #cbd5e1;padding:5px 8px;text-align:center;">Lp.</th>
@@ -6277,9 +6647,9 @@ service cloud.firestore {
               <tbody>${rowsHtml}</tbody>
             </table>
 
-            <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10.5px;">
-              <tbody>
-                ${isBoiler ? `
+            ${isBoiler ? `
+              <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10.5px;color:#0f172a;">
+                <tbody>
                   <tr>
                     <td style="border:1px solid #cbd5e1;padding:5px 8px;font-weight:700;background:#f8fafc;width:35%;">Analiza spalin (CO2 / O2 / CO)</td>
                     <td style="border:1px solid #cbd5e1;padding:5px 8px;font-weight:800;color:#059669;">${proto.flueAnalysis || 'W normie'}</td>
@@ -6288,22 +6658,17 @@ service cloud.firestore {
                     <td style="border:1px solid #cbd5e1;padding:5px 8px;font-weight:700;background:#f8fafc;">Ciśnienie robocze C.O. / Szczelność gazu</td>
                     <td style="border:1px solid #cbd5e1;padding:5px 8px;">${proto.coPressure || '1,5 bar'} • ${proto.gasTightness || 'Instalacja gazowa szczelna'}</td>
                   </tr>
-                ` : `
-                  <tr>
-                    <td style="border:1px solid #cbd5e1;padding:5px 8px;font-weight:700;background:#f8fafc;width:35%;">Ciśnienie układu C.O. / Kontrola szczelności</td>
-                    <td style="border:1px solid #cbd5e1;padding:5px 8px;">${proto.hpPressure || '1,5 bar'} • ${proto.fgazTool || 'Certyfikat F-GAZ'}</td>
-                  </tr>
-                `}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            ` : ''}
 
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:3px;">4. Zużyte materiały / części eksploatacyjne</div>
-            <div style="border:1px solid #cbd5e1;padding:6px 8px;background:#f8fafc;margin-bottom:8px;font-size:10.5px;min-height:24px;">
+            <div style="border:1px solid #cbd5e1;padding:6px 8px;background:#f8fafc;margin-bottom:8px;font-size:10.5px;min-height:24px;color:#0f172a;">
               ${proto.usedMaterials || 'Brak dodatkowych części.'}
             </div>
 
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:3px;">5. Uwagi serwisowe i zalecenia</div>
-            <div style="border:1px solid #cbd5e1;padding:6px 8px;background:#f8fafc;margin-bottom:10px;font-size:10.5px;min-height:30px;">
+            <div style="border:1px solid #cbd5e1;padding:6px 8px;background:#f8fafc;margin-bottom:10px;font-size:10.5px;min-height:30px;color:#0f172a;">
               ${proto.comments || 'Przegląd wykonany zgodnie z dokumentacją techniczną producenta. Urządzenie sprawne, dopuszczone do dalszej eksploatacji.'}
             </div>
             ${renderProtocolSignaturesFooterHtml(proto, sigTechImg, sigClientImg)}
@@ -6321,10 +6686,10 @@ service cloud.firestore {
         `).join('');
 
         return `
-          <div style="font-family:'Inter',Arial,sans-serif;color:#18181b;line-height:1.42;">
+          <div style="font-family:'Inter',Arial,sans-serif;color:#18181b;background:#ffffff;line-height:1.42;">
             ${renderProtocolHeaderAndPartiesHtml(proto, proto.customTitle || 'PROTOKÓŁ MONTAŻU I ODBIORU KOTŁA GAZOWEGO', '#d97706')}
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:6px;">3. Parametry techniczne zamontowanego kotła gazowego i instalacji</div>
-            <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10.5px;">
+            <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10.5px;color:#0f172a;">
               <tbody>
                 <tr>
                   <td style="border:1px solid #cbd5e1;padding:5px 8px;font-weight:700;background:#f1f5f9;width:38%;">Zamontowany model kotła gazowego</td>
@@ -6359,13 +6724,13 @@ service cloud.firestore {
 
             ${gbChecklistRows ? `
               <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:4px;">4. Zakres czynności odbiorowych</div>
-              <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10px;">
+              <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10px;color:#0f172a;">
                 <tbody>${gbChecklistRows}</tbody>
               </table>
             ` : ''}
 
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:4px;">5. Uwagi powykonawcze i poświadczenie przeszkolenia</div>
-            <div style="border:1px solid #cbd5e1;padding:7px 8px;background:#f8fafc;margin-bottom:10px;font-size:10.5px;min-height:32px;">
+            <div style="border:1px solid #cbd5e1;padding:7px 8px;background:#f8fafc;margin-bottom:10px;font-size:10.5px;min-height:32px;color:#0f172a;">
               ${proto.comments || 'Kocioł gazowy zamontowany, odpowietrzony i uruchomiony zgodnie z wytycznymi producenta. Przeszkolono użytkownika z zasad bezpiecznej eksploatacji.'}
             </div>
             ${renderProtocolSignaturesFooterHtml(proto, sigTechImg, sigClientImg)}
@@ -6375,10 +6740,10 @@ service cloud.firestore {
 
       if (proto.type === 'hp_install') {
         return `
-          <div style="font-family:'Inter',Arial,sans-serif;color:#18181b;line-height:1.45;">
+          <div style="font-family:'Inter',Arial,sans-serif;color:#18181b;background:#ffffff;line-height:1.45;">
             ${renderProtocolHeaderAndPartiesHtml(proto, 'PROTOKÓŁ ODBIORU I MONTAŻU POMPY CIEPŁA', '#ea580c')}
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:6px;">3. Parametry zamontowanej instalacji pompy ciepła</div>
-            <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:11px;">
+            <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:11px;color:#0f172a;">
               <tbody>
                 <tr>
                   <td style="border:1px solid #cbd5e1;padding:6px 8px;font-weight:700;background:#f1f5f9;width:38%;">Model pompy ciepła</td>
@@ -6408,7 +6773,7 @@ service cloud.firestore {
             </table>
 
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:4px;">4. Uwagi powykonawcze i zalecenia</div>
-            <div style="border:1px solid #cbd5e1;padding:8px;background:#f8fafc;margin-bottom:12px;font-size:11px;min-height:38px;">
+            <div style="border:1px solid #cbd5e1;padding:8px;background:#f8fafc;margin-bottom:12px;font-size:11px;min-height:38px;color:#0f172a;">
               ${proto.comments || 'Instalacja pompy ciepła wykonana zgodnie z wytycznymi producenta, odpowietrzona i uruchomiona.'}
             </div>
             ${renderProtocolSignaturesFooterHtml(proto, sigTechImg, sigClientImg)}
@@ -6426,7 +6791,7 @@ service cloud.firestore {
 
         const srvChecklistHtml = (proto.checklist || []).length > 0 ? `
           <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:4px;">4. Dodatkowe czynności kontrolne podczas serwisu</div>
-          <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10px;">
+          <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10px;color:#0f172a;">
             <tbody>
               ${(proto.checklist || []).map((item, i) => `
                 <tr>
@@ -6440,10 +6805,10 @@ service cloud.firestore {
         ` : '';
 
         return `
-          <div style="font-family:'Inter',Arial,sans-serif;color:#18181b;line-height:1.45;">
+          <div style="font-family:'Inter',Arial,sans-serif;color:#18181b;background:#ffffff;line-height:1.45;">
             ${renderProtocolHeaderAndPartiesHtml(proto, proto.customTitle || 'PROTOKÓŁ SERWISOWY / NAPRAWY URZĄDZENIA', '#e11d48')}
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:6px;">3. Objawy zgłoszeniowe, diagnoza oraz przebieg prac serwisowych</div>
-            <table style="width:100%;border-collapse:collapse;margin-bottom:12px;font-size:11px;">
+            <table style="width:100%;border-collapse:collapse;margin-bottom:12px;font-size:11px;color:#0f172a;">
               <tbody>
                 <tr>
                   <td style="border:1px solid #cbd5e1;padding:6px 8px;font-weight:700;background:#f1f5f9;width:36%;">Rodzaj i model urządzenia</td>
@@ -6476,7 +6841,7 @@ service cloud.firestore {
             ${srvChecklistHtml}
 
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:4px;">5. Dodatkowe uwagi powykonawcze i zalecenia</div>
-            <div style="border:1px solid #cbd5e1;padding:8px;background:#f8fafc;margin-bottom:12px;font-size:11px;min-height:36px;">
+            <div style="border:1px solid #cbd5e1;padding:8px;background:#f8fafc;margin-bottom:12px;font-size:11px;min-height:36px;color:#0f172a;">
               ${proto.comments || 'Wykonano czynności serwisowe i przetestowano poprawność działania urządzenia.'}
             </div>
             ${renderProtocolSignaturesFooterHtml(proto, sigTechImg, sigClientImg)}
@@ -6514,10 +6879,10 @@ service cloud.firestore {
             `;
 
         return `
-          <div style="font-family:'Inter',Arial,sans-serif;color:#18181b;line-height:1.42;">
+          <div style="font-family:'Inter',Arial,sans-serif;color:#18181b;background:#ffffff;line-height:1.42;">
             ${renderProtocolHeaderAndPartiesHtml(proto, proto.customTitle || 'PROTOKÓŁ MONTAŻU I ODBIORU URZĄDZENIA', '#4f46e5')}
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:5px;">3. Dane zamontowanego urządzenia i parametry odbioru</div>
-            <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10.5px;">
+            <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10.5px;color:#0f172a;">
               <tbody>
                 <tr>
                   <td style="border:1px solid #cbd5e1;padding:5px 8px;font-weight:700;background:#f1f5f9;width:38%;">Rodzaj i model zamontowanego urządzenia</td>
@@ -6533,13 +6898,13 @@ service cloud.firestore {
 
             ${instRows ? `
               <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:4px;">4. Lista kontrolna montażu i odbioru</div>
-              <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10px;">
+              <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10px;color:#0f172a;">
                 <tbody>${instRows}</tbody>
               </table>
             ` : ''}
 
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:4px;">5. Uwagi montażowe i zalecenia eksploatacyjne</div>
-            <div style="border:1px solid #cbd5e1;padding:7px 8px;background:#f8fafc;margin-bottom:10px;font-size:10.5px;min-height:34px;">
+            <div style="border:1px solid #cbd5e1;padding:7px 8px;background:#f8fafc;margin-bottom:10px;font-size:10.5px;min-height:34px;color:#0f172a;">
               ${proto.comments || 'Urządzenie zamontowane, uruchomione i przekazane do eksploatacji.'}
             </div>
             ${renderProtocolSignaturesFooterHtml(proto, sigTechImg, sigClientImg)}
@@ -6558,10 +6923,10 @@ service cloud.firestore {
       `).join('');
 
       return `
-        <div style="font-family:'Inter',Arial,sans-serif;color:#18181b;line-height:1.42;">
+        <div style="font-family:'Inter',Arial,sans-serif;color:#18181b;background:#ffffff;line-height:1.42;">
           ${renderProtocolHeaderAndPartiesHtml(proto, proto.customTitle || 'PROTOKÓŁ PRZEGLĄDU KLIMATYZATORA', '#059669')}
           <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:5px;">3. Zakres wykonanych czynności przeglądowych i konserwacyjnych</div>
-          <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10.5px;">
+          <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10.5px;color:#0f172a;">
             <thead>
               <tr style="background:#f1f5f9;">
                 <th style="border:1px solid #cbd5e1;padding:5px 8px;text-align:center;">Lp.</th>
@@ -6575,12 +6940,12 @@ service cloud.firestore {
           </table>
 
           <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:4px;">4. Zużyte materiały / części eksploatacyjne</div>
-          <div style="border:1px solid #cbd5e1;padding:7px 8px;background:#f8fafc;margin-bottom:10px;font-size:11px;min-height:28px;">
+          <div style="border:1px solid #cbd5e1;padding:7px 8px;background:#f8fafc;margin-bottom:10px;font-size:11px;min-height:28px;color:#0f172a;">
             ${proto.usedMaterials || 'Środki czyszczące i dezynfekujące zgodnie z technologią serwisową.'}
           </div>
 
           <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:4px;">5. Uwagi serwisowe i zalecenia</div>
-          <div style="border:1px solid #cbd5e1;padding:7px 8px;background:#f8fafc;margin-bottom:10px;font-size:11px;min-height:36px;">
+          <div style="border:1px solid #cbd5e1;padding:7px 8px;background:#f8fafc;margin-bottom:10px;font-size:11px;min-height:36px;color:#0f172a;">
             ${proto.comments || 'Przegląd okresowy wykonany prawidłowo — układ szczelny i sprawny.'}
           </div>
           ${renderProtocolSignaturesFooterHtml(proto, sigTechImg, sigClientImg)}
@@ -6605,6 +6970,9 @@ service cloud.firestore {
       let pdfStage = null;
 
       try {
+        autoSaveEditedProtocolHtml();
+        persistData();
+
         const p = currentPreviewProtocolObj || {};
         const safeClient = (p.clientName || 'Klient').replace(/[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ_-]/g, '_');
         const prefixMap = {
@@ -6623,30 +6991,49 @@ service cloud.firestore {
 
         window.scrollTo(0, 0);
 
+        // Tworzymy arkusz dopasowany w proporcji 1:1 do pełnej szerokości A4 (794px przy windowWidth: 794),
+        // umieszczony w punkcie (0,0) bez nakładek flex centrujących, które obcinały połowę strony
         pdfStage = document.createElement('div');
-        pdfStage.style.cssText = 'position:fixed;top:0;left:0;width:794px;background:#ffffff;color:#18181b;padding:24px 32px;box-sizing:border-box;z-index:99999;pointer-events:none;';
-        pdfStage.innerHTML = renderProtocolSheetHtml(p);
+        pdfStage.style.cssText = 'position:absolute;top:0;left:0;width:794px;background:#ffffff;color:#0f172a;padding:24px 30px;box-sizing:border-box;margin:0;z-index:2147483647;';
+        pdfStage.innerHTML = sourceEl.innerHTML || renderProtocolSheetHtml(p);
+
+        // Usuwamy obramowania edycji na czas generowania PDF
+        pdfStage.querySelectorAll('[contenteditable]').forEach(el => {
+          el.removeAttribute('contenteditable');
+          el.style.boxShadow = 'none';
+          el.style.backgroundColor = '';
+        });
+
         document.body.appendChild(pdfStage);
 
         const imgs = Array.from(pdfStage.querySelectorAll('img'));
         await Promise.all(imgs.map(img => img.complete ? Promise.resolve() : new Promise(res => { img.onload = res; img.onerror = res; })));
-        await new Promise(r => setTimeout(r, 120));
+        await new Promise(r => setTimeout(r, 150));
+
+        const stageHeight = Math.max(pdfStage.scrollHeight, pdfStage.offsetHeight, 950);
 
         const opt = {
-          margin: [6, 6, 6, 6],
+          margin: [0, 0, 0, 0],
           filename: fileName,
           image: { type: 'jpeg', quality: 0.98 },
           html2canvas: {
             scale: 2,
             useCORS: true,
+            allowTaint: true,
             backgroundColor: '#ffffff',
+            logging: false,
+            x: 0,
+            y: 0,
             scrollY: 0,
-            scrollX: 0
+            scrollX: 0,
+            width: 794,
+            height: stageHeight,
+            windowWidth: 794
           },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
         await html2pdf().set(opt).from(pdfStage).save();
-        showToast('Pobrano protokół w formacie PDF!');
+        showToast('Pobrano protokół na pełną stronę A4 w PDF!');
       } catch (err) {
         printCurrentProtocol();
       } finally {
@@ -6679,7 +7066,7 @@ service cloud.firestore {
           <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
           <style>
             @page { size: A4; margin: 10mm; }
-            body { margin: 0; padding: 0; background: #fff; font-family: 'Inter', Arial, sans-serif; }
+            body { margin: 0; padding: 0; background: #fff; color: #0f172a; font-family: 'Inter', Arial, sans-serif; }
           </style>
         </head>
         <body>
@@ -6961,6 +7348,7 @@ service cloud.firestore {
         clientNip: '777-000-11-22',
         clientEmail: 'klient@przyklad.pl',
         clientAddress: '60-101 Poznań, ul. Słoneczna 15',
+        installAddress: '62-020 Swarzędz, ul. Polna 10',
         clientPhone: '+48 600 100 200',
         deviceTypeLabel: tpl.customGroupName || getDeviceInfo(tpl.deviceGroup).short,
         deviceModel: 'Model Przykładowy 9kW',
@@ -7004,6 +7392,7 @@ service cloud.firestore {
         technician: 'Serwisant INSTAL',
         clientName: 'Jan Kowalski (Podgląd)',
         clientAddress: 'Poznań, ul. Przykładowa 1',
+        installAddress: 'Swarzędz, ul. Polna 10',
         clientPhone: '+48 600 000 000',
         deviceTypeLabel: customGroupName || getDeviceInfo(deviceGroup).short,
         deviceModel: 'Urządzenie Testowe',
@@ -7356,7 +7745,8 @@ service cloud.firestore {
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
-          showToast('Pobrano pełny plik Backup (.JSON) z historią i protokołami!');
+          setTimeout(() => URL.revokeObjectURL(url), 2000);
+          showToast('Pobrano pełny plik Backup (.JSON) — baza danych pozostaje nienaruszona!');
         }
       );
     }
@@ -7407,18 +7797,20 @@ service cloud.firestore {
     }
 
     function exportClientsCSV(onlyFiltered = true) {
-      const targetClients = onlyFiltered ? getFilteredEnrichedClients() : getEnrichedClients();
-      const headers = ['Imię i Nazwisko', 'NIP', 'Telefon', 'Email', 'Kod pocztowy', 'Miasto', 'Ulica', 'Lat', 'Lng', 'Typ urządzenia', 'Model', 'Data montażu', 'Gwarancja (msc)', 'Status Gwarancji', 'Ostatni przegląd', 'Następny przegląd', 'Notatki'];
+      // Tworzymy głęboką kopię danych tylko do odczytu, aby eksport w żaden sposób nie modyfikował ani nie czyścił window.clientsData
+      const snapshotClients = JSON.parse(JSON.stringify(onlyFiltered ? getFilteredEnrichedClients() : getEnrichedClients()));
+      const headers = ['Imię i Nazwisko', 'NIP', 'Telefon', 'Email', 'Kod pocztowy', 'Miasto', 'Ulica', 'Lat', 'Lng', 'Typ urządzenia', 'Model', 'Adres montażu urządzenia', 'Data montażu', 'Gwarancja (msc)', 'Status Gwarancji', 'Ostatni przegląd', 'Następny przegląd', 'Notatki'];
       const escape = val => `"${String(val ?? '').replace(/"/g, '""')}"`;
       const rows = [];
 
-      targetClients.forEach(c => {
+      snapshotClients.forEach(c => {
         if (!c.devices || c.devices.length === 0) {
-          rows.push([c.name, c.nip || '', c.phone, c.email || '', c.postalCode, c.city, c.street, c.lat, c.lng, '', '', '', '', 'Brak urządzenia', '', '', c.notes].map(escape).join(';'));
+          rows.push([c.name, c.nip || '', c.phone, c.email || '', c.postalCode, c.city, c.street, c.lat, c.lng, '', '', '', '', '', 'Brak urządzenia', '', '', c.notes].map(escape).join(';'));
         } else {
           c.devices.forEach(d => {
             const wStatus = d.status.ourUnknownDate ? 'Nasze (Brak daty)' : d.status.noInstallDate ? 'Obce' : d.status.isUnderWarranty ? `Na gwarancji do ${d.status.warrantyEndFormatted}` : `Po gwarancji (${d.status.warrantyEndFormatted})`;
-            rows.push([c.name, c.nip || '', c.phone, c.email || '', c.postalCode, c.city, c.street, c.lat, c.lng, getDeviceInfo(d.deviceType, d.customTypeLabel).short, d.deviceModel, d.installDate, d.warrantyMonths, wStatus, d.lastInspectionDate, d.nextInspectionDate, c.notes].map(escape).join(';'));
+            const devCustomAddr = formatDeviceInstallAddress(d);
+            rows.push([c.name, c.nip || '', c.phone, c.email || '', c.postalCode, c.city, c.street, c.lat, c.lng, getDeviceInfo(d.deviceType, d.customTypeLabel).short, d.deviceModel, devCustomAddr, d.installDate, d.warrantyMonths, wStatus, d.lastInspectionDate, d.nextInspectionDate, c.notes].map(escape).join(';'));
           });
         }
       });
@@ -7432,7 +7824,9 @@ service cloud.firestore {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      showToast(`Wyeksportowano ${targetClients.length} klientów do pliku CSV!`);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      saveStateToLocalStorage();
+      showToast(`Wyeksportowano ${snapshotClients.length} klientów do pliku CSV (baza klientów pozostaje w systemie)!`);
     }
 
     function parseCsvRow(line, sep) {
@@ -7471,14 +7865,14 @@ service cloud.firestore {
         else if (low.includes('tel') || low.includes('phone') || low.includes('kom')) map.phone = idx;
         else if (low.includes('kod') || low.includes('poczt') || low.includes('postal')) map.postal = idx;
         else if (low.includes('miast') || low.includes('miejscow') || low.includes('poczta') || low === 'city') map.city = idx;
-        else if (low.includes('ulic') || low.includes('adres') || low.includes('nr') || low === 'street') {
+        else if ((low.includes('ulic') || low.includes('adres') || low.includes('nr') || low === 'street') && !low.includes('monta')) {
           if (map.street === undefined) map.street = idx;
         }
         else if (low === 'lat' || low.includes('szeroko')) map.lat = idx;
         else if (low === 'lng' || low === 'lon' || low.includes('długo')) map.lng = idx;
         else if (low.includes('typ') || low.includes('rodzaj')) map.typeStr = idx;
         else if (low.includes('model') || low.includes('urządz') || low.includes('sprzęt') || low.includes('pompa') || low.includes('kocioł') || low.includes('kociol') || low.includes('piec') || low.includes('klima')) map.model = idx;
-        else if (low.includes('monta') || low.includes('instal') || low.includes('uruchom')) map.install = idx;
+        else if (low.includes('monta') && !low.includes('adres')) map.install = idx;
         else if (low.includes('gwarancj') && !low.includes('status')) map.warranty = idx;
         else if (low.includes('status')) map.warrantyStatus = idx;
         else if (low.includes('ostatni')) map.lastInsp = idx;
@@ -7488,7 +7882,6 @@ service cloud.firestore {
       return map;
     }
 
-    // Rozpoznaje i rozdziela połączony adres (np. "62-020 Swarzędz, ul. Polna 5" lub "Swarzędz Polna 5")
     function extractCityPostalStreet(rawCity, rawStreet, rawPostal) {
       let city = (rawCity || '').trim();
       let street = (rawStreet || '').trim();
@@ -7502,7 +7895,6 @@ service cloud.firestore {
         street = street.replace(postal, '').trim();
       }
 
-      // Jeśli miejscowość jest pusta, a wszystko wpisano w kolumnie Ulica/Adres (np. "Swarzędz, ul. Polna 12" albo "ul. Polna 12, Swarzędz")
       if (!city && street) {
         if (street.includes(',')) {
           const parts = street.split(',').map(s => s.trim()).filter(Boolean);
@@ -7521,13 +7913,11 @@ service cloud.firestore {
             }
           }
         } else if (!/\d/.test(street)) {
-          // Jeśli w polu ulicy jest sama nazwa miejscowości bez numeru domu (np. "Kórnik")
           city = street;
           street = '';
         }
       }
 
-      // Odwrotnie: jeśli w polu Miasto wpisano "Swarzędz ul. Polna 5"
       if (city && !street && /\d/.test(city)) {
         const ulSplit = city.split(/\b(?:ul\.|ulica|al\.|os\.)\b/i);
         if (ulSplit.length === 2) {
@@ -7552,7 +7942,6 @@ service cloud.firestore {
       const file = inputEl.files?.[0];
       if (!file) return;
 
-      // Naprawa polskich znaków: Odczyt pliku jako bufor binarny z automatycznym wykrywaniem UTF-8 lub Windows-1250
       file.arrayBuffer().then(buffer => {
         inputEl.value = '';
         let text = '';
@@ -7677,7 +8066,6 @@ service cloud.firestore {
 
             const parsedLat = parseFloat(String(rawLat || '').replace(',', '.'));
             const parsedLng = parseFloat(String(rawLng || '').replace(',', '.'));
-            // Uznajemy współrzędne za poprawne tylko jeśli mieszczą się w granicach Polski i nie są domyślnym środkiem Poznania (52.4064, 16.9252)
             const isValidPolandCoord = !isNaN(parsedLat) && !isNaN(parsedLng) &&
               parsedLat >= 48.9 && parsedLat <= 55.0 &&
               parsedLng >= 14.0 && parsedLng <= 24.5 &&
@@ -7716,7 +8104,6 @@ service cloud.firestore {
       });
     }
 
-    // Szybki lokalny słownik najczęstszych miejscowości (natychmiastowe kordy + wsparcie offline/anty-limitowe)
     const POLISH_PLACES_FALLBACK = {
       'poznań': [52.4064, 16.9252], 'swarzędz': [52.4125, 17.0772], 'luboń': [52.3468, 16.8794],
       'komorniki': [52.3338, 16.8114], 'plewiska': [52.3653, 16.8087], 'tarnowo podgórne': [52.4646, 16.6669],
@@ -7750,7 +8137,6 @@ service cloud.firestore {
 
       if (!cleanCity && !streetClean && !cleanPostal) return null;
 
-      // 1. Najpierw próbujemy Photon Komoot API (bardzo szybkie API OpenStreetMap bez restrykcyjnych limitów 1 zap/s, świetne przy imporcie CSV)
       const queries = [];
       if (streetClean && cleanCity) {
         queries.push(`${streetClean}, ${cleanPostal ? cleanPostal + ' ' : ''}${cleanCity}, Polska`);
@@ -7785,7 +8171,6 @@ service cloud.firestore {
         } catch (e) {}
       }
 
-      // 2. Druga próba: Nominatim OpenStreetMap
       for (let qIdx = 0; qIdx < queries.length; qIdx++) {
         const q = queries[qIdx];
         try {
@@ -7808,7 +8193,6 @@ service cloud.firestore {
         } catch (e) {}
       }
 
-      // 3. Trzecia próba: Wbudowany słownik miejscowości (gwarancja, że znane miasta i gminy nigdy nie trafią w jedno miejsce w Poznaniu)
       const cityKey = cleanCity.toLowerCase().trim();
       if (cityKey && POLISH_PLACES_FALLBACK[cityKey]) {
         const [baseLat, baseLng] = POLISH_PLACES_FALLBACK[cityKey];
@@ -7819,77 +8203,6 @@ service cloud.firestore {
       }
 
       return null;
-    }
-
-    // Masowa naprawa pinezek GPS dla klientów, którzy są już w bazie (szczególnie tych z domyślnymi kordami Poznania)
-    async function regeocodeAllClients() {
-      const allClients = window.clientsData || [];
-      if (allClients.length === 0) {
-        showToast('Baza klientów jest pusta.');
-        return;
-      }
-
-      // Wybieramy klientów, którzy mają domyślne kordy Poznania (52.4064, 16.9252) mimo innego adresu, lub wszystkich bez dokładnych kordów
-      const toFix = allClients.filter(c => {
-        const isDefaultPoznan = Math.abs((c.lat || 52.4064) - 52.4064) < 0.001 && Math.abs((c.lng || 16.9252) - 16.9252) < 0.001;
-        const hasAddress = Boolean((c.city && c.city.trim()) || (c.street && c.street.trim()) || (c.postalCode && c.postalCode.trim()));
-        return isDefaultPoznan && hasAddress;
-      });
-
-      const targetList = toFix.length > 0 ? toFix : allClients;
-      const btn = document.getElementById('btn-fix-gps');
-      const origHtml = btn ? btn.innerHTML : '';
-
-      let fixedCount = 0;
-      const cache = new Map();
-
-      for (let i = 0; i < targetList.length; i++) {
-        const c = targetList[i];
-        if (btn) {
-          btn.disabled = true;
-          btn.innerHTML = `<span>📍 Namierzanie (${i + 1}/${targetList.length})...</span>`;
-        }
-
-        const parsed = extractCityPostalStreet(c.city, c.street, c.postalCode);
-        if (parsed.city && (!c.city || c.city === 'Poznań') && parsed.city !== 'Poznań') {
-          c.city = parsed.city;
-        }
-        if (parsed.street && !c.street) c.street = parsed.street;
-        if (parsed.postal && !c.postalCode) c.postalCode = parsed.postal;
-
-        const cacheKey = `${(c.city || '').toLowerCase().trim()}|${cleanPolishStreet(c.street || '').toLowerCase()}|${(c.postalCode || '').trim()}`;
-        let coords = null;
-
-        if (cache.has(cacheKey)) {
-          const cached = cache.get(cacheKey);
-          if (cached) {
-            coords = {
-              lat: parseFloat((cached.lat + (Math.random() - 0.5) * 0.0012).toFixed(5)),
-              lng: parseFloat((cached.lng + (Math.random() - 0.5) * 0.0012).toFixed(5))
-            };
-          }
-        } else {
-          coords = await geocodeAddressHelper(c.city, c.street, c.postalCode);
-          cache.set(cacheKey, coords);
-          await new Promise(r => setTimeout(r, 80));
-        }
-
-        if (coords) {
-          c.lat = coords.lat;
-          c.lng = coords.lng;
-          fixedCount++;
-        }
-      }
-
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = origHtml;
-        lucide.createIcons();
-      }
-
-      persistData();
-      refreshAllViews();
-      showToast(`Zaktualizowano pinezki GPS dla ${fixedCount} z ${targetList.length} klientów!`);
     }
 
     function openCsvPreviewModal() {
@@ -7982,7 +8295,6 @@ service cloud.firestore {
         if (cancelBtn) cancelBtn.disabled = true;
         progressBox?.classList.remove('hidden');
 
-        // Cache dla takich samych adresów / miejscowości, aby przyspieszyć import
         const geocodeCache = new Map();
 
         for (let i = 0; i < itemsToGeocode.length; i++) {
@@ -8072,19 +8384,39 @@ service cloud.firestore {
           street: 'ul. Słoneczna 15',
           lat: 52.3942,
           lng: 16.8824,
-          notes: 'Pompa ciepła',
-          devices: [{
-            id: 'd1',
-            deviceType: 'heat_pump',
-            deviceModel: 'Panasonic Aquarea T-CAP 9kW',
-            installDate: '2024-10-15',
-            warrantyMonths: 60,
-            lastInspectionDate: '2025-10-15',
-            nextInspectionDate: shift(10),
-            inspectionIntervalMonths: 12,
-            remindersCanceled: false,
-            inspectionHistory: [{ id: 'h1', date: '2025-10-15', technician: 'Serwisant 1', notes: 'Pierwszy przegląd roczny.' }]
-          }]
+          notes: 'Pompa ciepła + Klimatyzacja w drugim budynku',
+          devices: [
+            {
+              id: 'd1',
+              deviceType: 'heat_pump',
+              deviceModel: 'Panasonic Aquarea T-CAP 9kW',
+              installDate: '2024-10-15',
+              warrantyMonths: 60,
+              lastInspectionDate: '2025-10-15',
+              nextInspectionDate: shift(10),
+              inspectionIntervalMonths: 12,
+              remindersCanceled: false,
+              inspectionHistory: [{ id: 'h1', date: '2025-10-15', technician: 'Serwisant 1', notes: 'Pierwszy przegląd roczny.' }]
+            },
+            {
+              id: 'd1_b',
+              deviceType: 'ac',
+              deviceModel: 'Gree Amber Prestige 3.5kW',
+              hasCustomLocation: true,
+              installPostalCode: '62-020',
+              installCity: 'Swarzędz',
+              installStreet: 'ul. Polna 10',
+              installLat: 52.4125,
+              installLng: 17.0772,
+              installDate: '2025-01-10',
+              warrantyMonths: 60,
+              lastInspectionDate: '2025-01-10',
+              nextInspectionDate: shift(20),
+              inspectionIntervalMonths: 12,
+              remindersCanceled: false,
+              inspectionHistory: []
+            }
+          ]
         },
         {
           id: 'c_2',
@@ -8112,7 +8444,7 @@ service cloud.firestore {
       ];
 
       window.appointmentsData = [
-        { id: 'v_1', clientId: 'c_1', workerName: 'Serwisant 1', date: toYMD(new Date()), time: '09:00', serviceType: 'Przegląd', notes: 'Sprawdzić ciśnienie', status: 'planned' }
+        { id: 'v_1', clientId: 'c_1', deviceId: 'd1', workerName: 'Serwisant 1', date: toYMD(new Date()), time: '09:00', serviceType: 'Przegląd', notes: 'Sprawdzić ciśnienie', status: 'planned' }
       ];
       persistData();
       refreshAllViews();
