@@ -322,6 +322,31 @@
               <div id="calendar-grid" class="grid grid-cols-7 gap-1.5"></div>
             </div>
 
+            <!-- PODGLĄD WYBRANEGO DNIA Z KALENDARZA (BEZPOŚREDNIO POD KALENDARZEM) -->
+            <div id="calendar-day-preview-card" class="hidden bg-white dark:bg-zinc-900 rounded-2xl border-2 border-sky-500/80 dark:border-sky-500/70 shadow-lg overflow-hidden transition-all">
+              <div class="px-4 sm:px-5 py-3.5 bg-sky-600 text-white flex justify-between items-center gap-2 flex-wrap">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="calendar-days" class="w-4 h-4 text-sky-200 shrink-0"></i>
+                  <div>
+                    <h2 id="cal-preview-title" class="text-xs sm:text-sm font-extrabold leading-tight">Podgląd dnia: —</h2>
+                    <p class="text-[10px] text-sky-100/90 font-medium">Podgląd zleceń wybranego dnia z kalendarza</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <button type="button" onclick="openScheduleForPreviewDate()" class="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white text-[11px] font-extrabold flex items-center gap-1 transition" title="Dodaj zlecenie na ten dzień">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> + Wizyta
+                  </button>
+                  <button type="button" onclick="openPlannerFromPreview()" class="px-2.5 py-1 rounded-lg bg-white text-sky-900 hover:bg-sky-50 text-[11px] font-extrabold flex items-center gap-1 shadow-sm transition" title="Otwórz ten dzień na pełnej mapie i w planerze">
+                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-sky-600"></i> Mapa
+                  </button>
+                  <button type="button" onclick="closeCalendarDayPreview()" class="p-1 rounded-lg bg-sky-700/60 hover:bg-rose-500 text-white transition" title="Zamknij podgląd dnia">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                  </button>
+                </div>
+              </div>
+              <div id="cal-preview-body" class="p-4 space-y-3 max-h-[460px] overflow-y-auto"></div>
+            </div>
+
             <!-- ZAPLANOWANE PRZEGLĄDY -->
             <div id="scheduled-urgent-card" class="bg-white dark:bg-zinc-900 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm overflow-hidden">
               <div class="px-5 py-4 border-b border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/70 dark:bg-emerald-950/30 flex justify-between items-center flex-wrap gap-2">
@@ -2042,6 +2067,7 @@ service cloud.firestore {
     let selectedDate = toYMD(new Date());
     let selectedWorkerFilter = '';
     let calMonthDate = new Date();
+    let calendarPreviewDate = null;
     let showAllUrgent = false;
     let urgentDaysThreshold = Number(localStorage.getItem(STORAGE_KEYS.URGENT_DAYS)) || 30;
     let isDarkMode = false;
@@ -2944,7 +2970,7 @@ service cloud.firestore {
                   <button onclick="openCloseVisitModal('${scheduledVisit.id}')" class="w-full px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm text-center">
                     Zamknij zlecenie
                   </button>
-                  <button onclick="selectDateFromCalendar('${scheduledVisit.date}')" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 text-center">
+                  <button onclick="openDateInPlanner('${scheduledVisit.date}')" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 text-center">
                     Pokaż w planerze
                   </button>
                   <div class="grid grid-cols-2 gap-1">
@@ -2996,23 +3022,27 @@ service cloud.firestore {
         const unclosedVisits = dayVisits.filter(a => a.status !== 'completed');
         const hasUnclosed = unclosedVisits.length > 0;
         const isToday = ymd === todayStr;
+        const isPreviewed = ymd === calendarPreviewDate;
 
-        const cellClass = hasUnclosed
-          ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-500 dark:border-rose-600 text-rose-900 dark:text-rose-200 ring-1 ring-rose-500/30 font-extrabold'
-          : isToday
-            ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 font-bold'
-            : 'bg-white dark:bg-zinc-800/60 border-zinc-200 dark:border-zinc-800 hover:border-emerald-400';
+        const cellClass = isPreviewed
+          ? 'bg-sky-50 dark:bg-sky-950/70 border-2 border-sky-500 text-sky-900 dark:text-sky-200 ring-2 ring-sky-500/30 font-extrabold'
+          : hasUnclosed
+            ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-500 dark:border-rose-600 text-rose-900 dark:text-rose-200 ring-1 ring-rose-500/30 font-extrabold'
+            : isToday
+              ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 font-bold'
+              : 'bg-white dark:bg-zinc-800/60 border-zinc-200 dark:border-zinc-800 hover:border-emerald-400';
 
         const badgeColor = hasUnclosed ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white';
 
         html += `
-          <button onclick="selectDateFromCalendar('${ymd}')" title="${hasUnclosed ? `Niezamknięte zlecenia: ${unclosedVisits.length}` : dayVisits.length > 0 ? 'Wszystkie zlecenia zamknięte' : ''}" class="h-14 rounded-xl p-1.5 flex flex-col justify-between items-center border text-left transition ${cellClass}">
+          <button onclick="selectDateFromCalendar('${ymd}')" title="${hasUnclosed ? `Niezamknięte zlecenia: ${unclosedVisits.length}` : dayVisits.length > 0 ? 'Wszystkie zlecenia zamknięte' : 'Kliknij, aby zobaczyć podgląd dnia'}" class="h-14 rounded-xl p-1.5 flex flex-col justify-between items-center border text-left transition ${cellClass}">
             <span class="text-xs font-bold ${hasUnclosed ? 'text-rose-700 dark:text-rose-300' : 'text-zinc-800 dark:text-zinc-200'}">${d}</span>
             ${dayVisits.length > 0 ? `<span class="px-1.5 rounded-full text-[10px] ${badgeColor} font-extrabold">${dayVisits.length}</span>` : ''}
           </button>
         `;
       }
       document.getElementById('calendar-grid').innerHTML = html;
+      renderCalendarDayPreview();
     }
 
     function changeMonth(dir) {
@@ -3022,7 +3052,65 @@ service cloud.firestore {
 
     function selectDateFromCalendar(ymd) {
       selectedDate = ymd;
+      calendarPreviewDate = ymd;
+      renderCalendar();
+      setTimeout(() => {
+        document.getElementById('calendar-day-preview-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 60);
+    }
+
+    function closeCalendarDayPreview() {
+      calendarPreviewDate = null;
+      document.getElementById('calendar-day-preview-card')?.classList.add('hidden');
+      renderCalendar();
+    }
+
+    function openDateInPlanner(ymd) {
+      if (ymd) selectedDate = ymd;
       switchTab('map_planner');
+    }
+
+    function openPlannerFromPreview() {
+      if (calendarPreviewDate) selectedDate = calendarPreviewDate;
+      switchTab('map_planner');
+    }
+
+    function openScheduleForPreviewDate() {
+      if (calendarPreviewDate) selectedDate = calendarPreviewDate;
+      openScheduleModal();
+    }
+
+    function renderCalendarDayPreview() {
+      const card = document.getElementById('calendar-day-preview-card');
+      const body = document.getElementById('cal-preview-body');
+      if (!card || !body) return;
+
+      if (!calendarPreviewDate) {
+        card.classList.add('hidden');
+        return;
+      }
+
+      card.classList.remove('hidden');
+      const enriched = getEnrichedClients();
+      const dayVisits = (window.appointmentsData || [])
+        .filter(a => a.date === calendarPreviewDate)
+        .sort((a, b) => (a.time || '00:00').localeCompare(b.time || '00:00'));
+
+      setText('cal-preview-title', `Podgląd dnia: ${formatDatePL(calendarPreviewDate)} (${dayVisits.length} wizyt)`);
+
+      if (dayVisits.length === 0) {
+        body.innerHTML = `
+          <div class="py-6 text-center space-y-2.5">
+            <p class="text-xs text-zinc-500 dark:text-zinc-400">Brak zaplanowanych wyjazdów w dniu <strong>${formatDatePL(calendarPreviewDate)}</strong>.</p>
+            <button type="button" onclick="openScheduleForPreviewDate()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm transition inline-flex items-center gap-1.5">
+              <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i> Zaplanuj wizytę na ten dzień
+            </button>
+          </div>
+        `;
+      } else {
+        body.innerHTML = buildWorkerVisitsSectionHtml(calendarPreviewDate, dayVisits, enriched, false);
+      }
+      lucide.createIcons();
     }
 
     /* ==========================================================================
