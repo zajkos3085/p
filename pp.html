@@ -74,6 +74,10 @@
       box-shadow: 0 0 0 2px #10b981;
       color: #0f172a;
     }
+    /* Ukrywanie przycisków pomocniczych (np. usuwania sekcji) podczas generowania PDF i druku */
+    @media print {
+      .no-print-pdf { display: none !important; }
+    }
   </style>
 </head>
 <body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 font-sans min-h-screen flex flex-col md:flex-row antialiased overflow-x-hidden">
@@ -223,6 +227,56 @@
           </button>
         </div>
 
+        <!-- KALENDARZ NA SAMYM GÓRZE PULPITU -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
+          <div class="lg:col-span-12 space-y-5">
+            <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
+              <div class="flex justify-between items-center mb-4">
+                <div>
+                  <h2 id="cal-month-label" class="text-base font-extrabold text-zinc-900 dark:text-white">Kalendarz</h2>
+                  <p class="text-[10px] text-zinc-500 dark:text-zinc-400 flex items-center gap-2 mt-0.5">
+                    <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-600 inline-block"></span> Niezamknięte zlecenia</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-600 inline-block"></span> Zamknięte</span>
+                  </p>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <button onclick="changeMonth(-1)" class="p-1.5 border border-zinc-300 dark:border-zinc-700 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                  <button onclick="changeMonth(1)" class="p-1.5 border border-zinc-300 dark:border-zinc-700 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                </div>
+              </div>
+              <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-zinc-400 pb-2">
+                <div>Pon</div><div>Wt</div><div>Śr</div><div>Czw</div><div>Pt</div><div>Sob</div><div>Ndz</div>
+              </div>
+              <div id="calendar-grid" class="grid grid-cols-7 gap-1.5"></div>
+            </div>
+
+            <!-- PODGLĄD WYBRANEGO DNIA Z KALENDARZA -->
+            <div id="calendar-day-preview-card" class="hidden bg-white dark:bg-zinc-900 rounded-2xl border-2 border-sky-500/80 dark:border-sky-500/70 shadow-lg overflow-hidden transition-all">
+              <div class="px-4 sm:px-5 py-3.5 bg-sky-600 text-white flex justify-between items-center gap-2 flex-wrap">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="calendar-days" class="w-4 h-4 text-sky-200 shrink-0"></i>
+                  <div>
+                    <h2 id="cal-preview-title" class="text-xs sm:text-sm font-extrabold leading-tight">Podgląd dnia: —</h2>
+                    <p class="text-[10px] text-sky-100/90 font-medium">Podgląd zleceń wybranego dnia z kalendarza</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <button type="button" onclick="openScheduleForPreviewDate()" class="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white text-[11px] font-extrabold flex items-center gap-1 transition" title="Dodaj zlecenie na ten dzień">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> + Wizyta
+                  </button>
+                  <button type="button" onclick="openPlannerFromPreview()" class="px-2.5 py-1 rounded-lg bg-white text-sky-900 hover:bg-sky-50 text-[11px] font-extrabold flex items-center gap-1 shadow-sm transition" title="Otwórz ten dzień na pełnej mapie i w planerze">
+                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-sky-600"></i> Mapa
+                  </button>
+                  <button type="button" onclick="closeCalendarDayPreview()" class="p-1 rounded-lg bg-sky-700/60 hover:bg-rose-500 text-white transition" title="Zamknij podgląd dnia">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                  </button>
+                </div>
+              </div>
+              <div id="cal-preview-body" class="p-4 space-y-3 max-h-[460px] overflow-y-auto"></div>
+            </div>
+          </div>
+        </div>
+
         <!-- 6 KAFELKÓW STATYSTYK NA PULPICIE -->
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3.5">
           <div onclick="switchTab('map_planner')" class="bg-white dark:bg-zinc-900 p-3.5 sm:p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm cursor-pointer hover:border-emerald-500 transition">
@@ -317,59 +371,13 @@
           </div>
 
           <div class="lg:col-span-5 space-y-6">
-            <!-- CALENDAR -->
-            <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
-              <div class="flex justify-between items-center mb-4">
-                <div>
-                  <h2 id="cal-month-label" class="text-base font-extrabold text-zinc-900 dark:text-white">Kalendarz</h2>
-                  <p class="text-[10px] text-zinc-500 dark:text-zinc-400 flex items-center gap-2 mt-0.5">
-                    <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-600 inline-block"></span> Niezamknięte zlecenia</span>
-                    <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-600 inline-block"></span> Zamknięte</span>
-                  </p>
-                </div>
-                <div class="flex items-center gap-1.5">
-                  <button onclick="changeMonth(-1)" class="p-1.5 border border-zinc-300 dark:border-zinc-700 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-                  <button onclick="changeMonth(1)" class="p-1.5 border border-zinc-300 dark:border-zinc-700 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
-                </div>
-              </div>
-              <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-zinc-400 pb-2">
-                <div>Pon</div><div>Wt</div><div>Śr</div><div>Czw</div><div>Pt</div><div>Sob</div><div>Ndz</div>
-              </div>
-              <div id="calendar-grid" class="grid grid-cols-7 gap-1.5"></div>
-            </div>
-
-            <!-- PODGLĄD WYBRANEGO DNIA Z KALENDARZA (BEZPOŚREDNIO POD KALENDARZEM) -->
-            <div id="calendar-day-preview-card" class="hidden bg-white dark:bg-zinc-900 rounded-2xl border-2 border-sky-500/80 dark:border-sky-500/70 shadow-lg overflow-hidden transition-all">
-              <div class="px-4 sm:px-5 py-3.5 bg-sky-600 text-white flex justify-between items-center gap-2 flex-wrap">
-                <div class="flex items-center gap-2">
-                  <i data-lucide="calendar-days" class="w-4 h-4 text-sky-200 shrink-0"></i>
-                  <div>
-                    <h2 id="cal-preview-title" class="text-xs sm:text-sm font-extrabold leading-tight">Podgląd dnia: —</h2>
-                    <p class="text-[10px] text-sky-100/90 font-medium">Podgląd zleceń wybranego dnia z kalendarza</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-1.5">
-                  <button type="button" onclick="openScheduleForPreviewDate()" class="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white text-[11px] font-extrabold flex items-center gap-1 transition" title="Dodaj zlecenie na ten dzień">
-                    <i data-lucide="plus" class="w-3.5 h-3.5"></i> + Wizyta
-                  </button>
-                  <button type="button" onclick="openPlannerFromPreview()" class="px-2.5 py-1 rounded-lg bg-white text-sky-900 hover:bg-sky-50 text-[11px] font-extrabold flex items-center gap-1 shadow-sm transition" title="Otwórz ten dzień na pełnej mapie i w planerze">
-                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-sky-600"></i> Mapa
-                  </button>
-                  <button type="button" onclick="closeCalendarDayPreview()" class="p-1 rounded-lg bg-sky-700/60 hover:bg-rose-500 text-white transition" title="Zamknij podgląd dnia">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                  </button>
-                </div>
-              </div>
-              <div id="cal-preview-body" class="p-4 space-y-3 max-h-[460px] overflow-y-auto"></div>
-            </div>
-
             <!-- ZAPLANOWANE PRZEGLĄDY -->
             <div id="scheduled-urgent-card" class="bg-white dark:bg-zinc-900 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm overflow-hidden">
               <div class="px-5 py-4 border-b border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/70 dark:bg-emerald-950/30 flex justify-between items-center flex-wrap gap-2">
                 <div class="flex items-center gap-2">
                   <i data-lucide="calendar-check-2" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
                   <div>
-                    <h2 class="text-sm sm:text-base font-extrabold text-emerald-900 dark:text-emerald-200">Zaplanowane przeglądy (Umówione wyjazdy)</h2>
+                    <h2 class="text-sm sm:text-base font-extrabold text-emerald-950 dark:text-emerald-200">Zaplanowane przeglądy (Umówione wyjazdy)</h2>
                     <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80">Kończące się przeglądy, które mają już przypisaną datę i serwisanta w planerze</p>
                   </div>
                 </div>
@@ -484,6 +492,9 @@
                       <option value="Przegląd">🛠️ Przegląd</option>
                       <option value="Serwis">⚡ Serwis / Awaria</option>
                       <option value="Montaż">🏗️ Montaż (Nowe urz.)</option>
+                      <option value="Usługa hydrauliczna">🚰 Usługa hydrauliczna</option>
+                      <option value="Instalacja wod-kan">💧 Instalacja wod-kan</option>
+                      <option value="Instalacja freonowa">❄️ Instalacja freonowa</option>
                       <option value="custom">✏️ Wpisz ręcznie...</option>
                     </select>
                   </div>
@@ -1285,6 +1296,9 @@
               <option value="Przegląd">🛠️ Przegląd</option>
               <option value="Serwis">⚡ Serwis / Awaria</option>
               <option value="Montaż">🏗️ Montaż (Nowe urz.)</option>
+              <option value="Usługa hydrauliczna">🚰 Usługa hydrauliczna</option>
+              <option value="Instalacja wod-kan">💧 Instalacja wod-kan</option>
+              <option value="Instalacja freonowa">❄️ Instalacja freonowa</option>
               <option value="custom">✏️ Wpisz ręcznie...</option>
             </select>
           </div>
@@ -1296,11 +1310,11 @@
 
         <div id="visit-type-custom-wrap" class="hidden">
           <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Własny opis usługi</label>
-          <input type="text" id="visit-type-custom" placeholder="np. Wymiana zaworu zwrotnego" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
+          <input type="text" id="visit-type-custom" placeholder="np. Usługa hydrauliczna / Instalacja wod-kan / Instalacja freonowa" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none">
         </div>
 
         <div id="visit-existing-device-wrap" class="space-y-1.5">
-          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400">3. Urządzenie u klienta, którego dotyczy wyjazd</label>
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400">3. Urządzenie lub usługa u klienta</label>
           <input type="text" id="visit-device-filter-input" oninput="renderVisitDeviceDropdown()" placeholder="Filtruj urządzenia klienta (wpisz model, adres lub S/N)..." class="w-full px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs outline-none">
           <select id="visit-device-select" class="w-full px-3 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-extrabold outline-none text-zinc-900 dark:text-white"></select>
         </div>
@@ -1704,6 +1718,20 @@
               <div id="proto-srv-extra-fields-wrap" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1"></div>
             </div>
 
+            <!-- 7. DODATKOWE WŁASNE SEKCJE DO PROTOKOŁU (OPCJA DODANIA DOWOLNEJ SEKCJI) -->
+            <div class="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-emerald-300 dark:border-emerald-800 space-y-2.5">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
+                <div>
+                  <span class="text-[11px] font-extrabold uppercase text-emerald-800 dark:text-emerald-300">➕ Dodatkowe własne sekcje na protokole</span>
+                  <p class="text-[10px] text-zinc-500">Możesz dodać dowolną liczbę własnych sekcji (np. dodatkowe pomiary, zalecenia, wycenę lub tabelę)</p>
+                </div>
+                <button type="button" onclick="addCustomSectionInCloseModal()" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[11px] font-extrabold flex items-center gap-1 shadow-sm transition">
+                  <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> + Dodaj sekcję
+                </button>
+              </div>
+              <div id="proto-custom-sections-modal-list" class="space-y-2"></div>
+            </div>
+
             <!-- PODPISY DOTYKOWE (PALCEM NA EKRANIE TELEFONU LUB MYSZKĄ) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <div class="space-y-1">
@@ -1970,8 +1998,19 @@ service cloud.firestore {
           </button>
         </div>
       </div>
-      <div class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/70 flex items-center justify-between gap-2 text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold shrink-0">
-        <span>✏️ <strong>Tryb edycji aktywny:</strong> Kliknij w dowolny tekst, tabelkę, adres, S/N, status lub uwagę na protokole poniżej, aby dowolnie edytować treść przed pobraniem PDF.</span>
+      <div class="px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/70 flex flex-wrap items-center justify-between gap-2 text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold shrink-0">
+        <span>✏️ <strong>Tryb edycji aktywny:</strong> Kliknij w dowolny tekst lub komórkę na protokole poniżej, aby edytować, lub wstaw nową sekcję przyciskami po prawej:</span>
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button type="button" onclick="insertNewSectionIntoProtocolPreview('text')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[11px] font-extrabold flex items-center gap-1 shadow-sm transition">
+            <i data-lucide="plus" class="w-3 h-3"></i> + Dodaj sekcję tekstową
+          </button>
+          <button type="button" onclick="insertNewSectionIntoProtocolPreview('table')" class="px-2.5 py-1 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-[11px] font-extrabold flex items-center gap-1 shadow-sm transition">
+            <i data-lucide="table" class="w-3 h-3"></i> + Dodaj tabelę parametrów
+          </button>
+          <button type="button" onclick="insertNewSectionIntoProtocolPreview('checklist')" class="px-2.5 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-[11px] font-extrabold flex items-center gap-1 shadow-sm transition">
+            <i data-lucide="check-square" class="w-3 h-3"></i> + Dodaj wiersz kontrolny
+          </button>
+        </div>
       </div>
       <div class="overflow-y-auto flex-1 bg-zinc-200/70 dark:bg-zinc-950 p-2 sm:p-5 rounded-xl border border-zinc-300 dark:border-zinc-800">
         <div id="protocol-printable-area" oninput="autoSaveEditedProtocolHtml()" class="bg-white text-zinc-900 mx-auto shadow-lg p-5 sm:p-8 rounded-lg w-full max-w-[794px]"></div>
@@ -3862,7 +3901,7 @@ service cloud.firestore {
             </a>
           </div>
           <div class="space-y-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-            ${c.devices.length === 0 ? `<div class="text-xs text-zinc-400 italic py-1">Brak przypisanych urządzeń</div>` : c.devices.map(dev => {
+            ${c.devices.length === 0 ? `<div class="text-xs text-zinc-400 italic py-1">Brak przypisanych urządzeń (Klient usługowy / instalacyjny)</div>` : c.devices.map(dev => {
               const info = getDeviceInfo(dev.deviceType, dev.customTypeLabel);
               return `
                 <div onclick="openInspectionModal('${c.id}', '${dev.id}')" class="p-2.5 rounded-xl border text-xs cursor-pointer space-y-1.5 ${info.bg} ${info.border}">
@@ -3908,7 +3947,7 @@ service cloud.firestore {
           <td class="py-3.5 px-4"><a href="tel:${c.phone}" class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold hover:underline whitespace-nowrap">📞 ${c.phone || '—'}</a></td>
           <td class="py-2.5 px-4">
             <div class="flex flex-col gap-2">
-              ${c.devices.length === 0 ? `<span class="text-xs text-zinc-400 italic">Brak przypisanych urządzeń</span>` : c.devices.map(dev => {
+              ${c.devices.length === 0 ? `<span class="text-xs text-zinc-400 italic">Brak przypisanych urządzeń (Klient usługowy / instalacyjny)</span>` : c.devices.map(dev => {
                 const info = getDeviceInfo(dev.deviceType, dev.customTypeLabel);
                 return `
                   <div onclick="openInspectionModal('${c.id}', '${dev.id}')" class="inline-flex flex-col gap-1 px-3 py-1.5 rounded-xl border text-xs cursor-pointer w-fit ${info.bg} ${info.border}">
@@ -5007,16 +5046,17 @@ service cloud.firestore {
         lastInspectionDate: install || today,
         nextInspectionDate: nextInspDate,
         inspectionIntervalMonths: interval,
-        remindersCanceled: false,
-        inspectionHistory: []
-      }];
-      persistData();
-      closeModal('modal-add-device');
-      refreshAllViews();
-      showToast('Przypisano urządzenie do klienta!');
-    }
+      const devSel = document.getElementById('quick-map-device');
+      if (devSel) {
+        const devs = client.devices || [];
+        devSel.innerHTML = (devs.length > 0
+          ? devs.map(d => {
+              const dAddr = formatDeviceInstallAddress(d);
+              return `<option value="${d.id}" ${d.id === preselectDeviceId ? 'selected' : ''}>${getDeviceInfo(d.deviceType, d.customTypeLabel).short}: ${d.deviceModel}${dAddr ? ` [📍 ${dAddr}]` : ''}</option>`;
+            }).join('')
+          : '') + `<option value="" ${devs.length === 0 ? 'selected' : ''}>🚰 Usługa ogólna / Bez urządzenia (np. hydraulika, wod-kan, freon)</option>`;
+      }
 
-    function openScheduleModal(preselectedClientId = '', preselectedDeviceId = '') {
       populateWorkerSelects();
       document.getElementById('visit-client-dd').classList.add('hidden');
       if (document.getElementById('visit-device-filter-input')) document.getElementById('visit-device-filter-input').value = '';
@@ -5197,15 +5237,15 @@ service cloud.firestore {
         ? allDevs.filter(d => `${d.deviceModel} ${d.serialNumber || ''} ${d.installCity || ''} ${d.installStreet || ''} ${getDeviceInfo(d.deviceType, d.customTypeLabel).short}`.toLowerCase().includes(filterQ))
         : allDevs;
 
-      if (devs.length === 0) {
-        devSel.innerHTML = `<option value="">Ogólne (Brak przypisanego urządzenia)</option>`;
-      } else {
-        devSel.innerHTML = devs.map((d, idx) => {
-          const isSelected = preselectedDeviceId ? d.id === preselectedDeviceId : idx === 0;
-          const customAddr = formatDeviceInstallAddress(d);
-          return `<option value="${d.id}" ${isSelected ? 'selected' : ''}>🔧 ${getDeviceInfo(d.deviceType, d.customTypeLabel).short}: ${d.deviceModel}${d.serialNumber ? ` (S/N: ${d.serialNumber})` : ''}${customAddr ? ` [📍 ${customAddr}]` : ''}</option>`;
-        }).join('') + `<option value="">Wszystkie / Inne urządzenie</option>`;
+      let html = `<option value="">🚰 Usługa ogólna / Bez urządzenia (np. Usługa hydrauliczna, Wod-kan, Freon)</option>`;
+      if (devs.length > 0) {
+        html = devs.map((d, idx) => {
+          const isSelected = preselectedDeviceId ? d.id === preselectedDeviceId : (idx === 0 && !preselectedDeviceId);
+          const dAddr = formatDeviceInstallAddress(d);
+          return `<option value="${d.id}" ${isSelected ? 'selected' : ''}>🔧 ${getDeviceInfo(d.deviceType, d.customTypeLabel).short}: ${d.deviceModel}${d.serialNumber ? ` (S/N: ${d.serialNumber})` : ''}${dAddr ? ` [📍 ${dAddr}]` : ''}</option>`;
+        }).join('') + `<option value="">🚰 Usługa ogólna / Bez urządzenia (np. Usługa hydrauliczna, Wod-kan, Freon)</option>`;
       }
+      devSel.innerHTML = html;
     }
 
     function handleSaveVisit(e) {
@@ -5269,7 +5309,7 @@ service cloud.firestore {
       const singleDevice = targetDevices.length === 1 && highlightDeviceId ? targetDevices[0] : null;
       setText('modal-insp-title', singleDevice
         ? `Szczegóły i historia urządzenia: ${singleDevice.deviceModel} (${c.name})`
-        : `Historia działań i przeglądów: ${c.name}`);
+        : `Historia działań, usług i przeglądów: ${c.name}`);
 
       const switchAllBanner = (highlightDeviceId && c.devices.length > 1) ? `
         <div class="flex items-center justify-between px-3.5 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs">
@@ -5278,10 +5318,50 @@ service cloud.firestore {
         </div>
       ` : '';
 
-      document.getElementById('modal-insp-body').innerHTML = switchAllBanner + targetDevices.map(d => {
+      // Zlecenia i usługi ogólne (bez przypisanego urządzenia, np. usługa hydrauliczna, instalacja wod-kan, instalacja freonowa)
+      const standaloneVisits = !highlightDeviceId
+        ? (window.appointmentsData || []).filter(v => v.clientId === c.id && (!v.deviceId || !(c.devices || []).some(d => d.id === v.deviceId)) && v.status === 'completed')
+        : [];
+
+      const standaloneSectionHtml = (standaloneVisits.length > 0 || targetDevices.length === 0) ? `
+        <div class="p-4 bg-sky-50/60 dark:bg-sky-950/20 border border-sky-300 dark:border-sky-800 rounded-2xl space-y-3">
+          <div class="flex justify-between items-center flex-wrap gap-2">
+            <div>
+              <h4 class="font-extrabold text-sm text-sky-950 dark:text-sky-200">🚰 Usługi ogólne i instalacyjne (bez przypisanego urządzenia)</h4>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400">Wykaz wykonanych usług hydraulicznych, wod-kan, freonowych i innych zleceń u klienta</p>
+            </div>
+            <button onclick="closeModal('modal-inspections'); createOrderFromClient('${c.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm">+ Nowe zlecenie / Usługa</button>
+          </div>
+          <div class="text-xs space-y-2 pt-2 border-t border-sky-200 dark:border-sky-800">
+            ${standaloneVisits.length === 0
+              ? '<p class="text-zinc-400">Brak zarejestrowanych usług ogólnych u tego klienta.</p>'
+              : standaloneVisits.sort((a, b) => (b.date || '').localeCompare(a.date || '')).map(v => `
+                <div class="bg-white dark:bg-zinc-900 p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 space-y-1">
+                  <div class="flex justify-between items-center flex-wrap gap-1">
+                    <span class="font-extrabold">📅 ${formatDatePL(v.date)} • 👷 ${v.workerName || 'Serwis ServiTrak'}</span>
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300">${v.serviceType || 'Usługa'}</span>
+                      ${v.protocolData ? `
+                        <button onclick="openProtocolPreviewModal('visit', '${c.id}', '', '${v.id}')" class="px-2 py-0.5 rounded bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-extrabold inline-flex items-center gap-1 shadow-sm">
+                          <i data-lucide="file-text" class="w-2.5 h-2.5"></i> Protokół PDF
+                        </button>
+                      ` : ''}
+                      <button onclick="openEditHistoryNoteModal('visit', '${c.id}', '', '${v.id}')" class="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-700 dark:text-zinc-300 text-[10px] font-bold inline-flex items-center gap-1">
+                        <i data-lucide="lock" class="w-2.5 h-2.5 text-emerald-600"></i> Edytuj / Usuń
+                      </button>
+                    </div>
+                  </div>
+                  <div class="text-zinc-600 dark:text-zinc-300">${v.completionComment || v.notes || 'Wykonano usługę'}</div>
+                </div>
+              `).join('')}
+          </div>
+        </div>
+      ` : '';
+
+      document.getElementById('modal-insp-body').innerHTML = switchAllBanner + standaloneSectionHtml + targetDevices.map(d => {
         const deviceVisits = (window.appointmentsData || []).filter(v =>
           v.clientId === c.id &&
-          (!v.deviceId || v.deviceId === d.id) &&
+          v.deviceId === d.id &&
           v.status === 'completed'
         );
 
@@ -5813,18 +5893,18 @@ service cloud.firestore {
       const visit = (window.appointmentsData || []).find(a => a.id === visitId);
       if (!visit) return;
       const client = (window.clientsData || []).find(c => c.id === visit.clientId);
-      const dev = client?.devices?.find(d => d.id === visit.deviceId) || (client?.devices?.length === 1 ? client.devices[0] : null);
+      const dev = visit.deviceId ? client?.devices?.find(d => d.id === visit.deviceId) : null;
       const srvLow = (visit.serviceType || '').toLowerCase();
       const isMontaz = srvLow.includes('monta');
-      const isServiceRepair = srvLow.includes('serwis') || srvLow.includes('awaria') || srvLow.includes('napraw');
+      const isServiceRepair = srvLow.includes('serwis') || srvLow.includes('awaria') || srvLow.includes('napraw') || !dev;
 
-      const devType = isMontaz ? (visit.plannedInstallType || 'heat_pump') : (dev?.deviceType || 'ac');
+      const devType = isMontaz ? (visit.plannedInstallType || 'heat_pump') : (dev?.deviceType || 'custom');
       const isAc = devType === 'ac';
 
       document.getElementById('close-visit-id').value = visit.id;
       document.getElementById('close-visit-comment').value = isMontaz
         ? `Zamontowano i uruchomiono urządzenie: ${visit.plannedInstallModel || 'HVAC'}.${visit.notes ? ' (' + visit.notes + ')' : ''}`
-        : (visit.notes ? `Wykonano: ${visit.serviceType}. (${visit.notes})` : `Wykonano: ${visit.serviceType} — urządzenie sprawne.`);
+        : (visit.notes ? `Wykonano: ${visit.serviceType}. (${visit.notes})` : `Wykonano: ${visit.serviceType} — prace zakończone pomyślnie.`);
 
       const installBox = document.getElementById('close-visit-install-box');
       const nextInspLabel = document.getElementById('close-visit-next-insp-label');
@@ -5852,8 +5932,8 @@ service cloud.firestore {
         if (document.getElementById('close-install-street')) document.getElementById('close-install-street').value = '';
       } else {
         installBox.classList.add('hidden');
-        nextInspLabel.classList.remove('hidden');
-        const isInsp = srvLow.includes('przegl');
+        nextInspLabel.classList.toggle('hidden', !dev);
+        const isInsp = srvLow.includes('przegl') && Boolean(dev);
         document.getElementById('close-visit-update-next-insp').checked = isInsp;
       }
 
@@ -5912,6 +5992,9 @@ service cloud.firestore {
       if (document.getElementById('proto-srv-work-course')) {
         document.getElementById('proto-srv-work-course').value = visit.notes ? `Weryfikacja zgłoszenia (${visit.notes}), diagnostyka układu i usunięcie usterki.` : '';
       }
+      if (document.getElementById('proto-custom-sections-modal-list')) {
+        document.getElementById('proto-custom-sections-modal-list').innerHTML = '';
+      }
 
       setTimeout(() => {
         initSignaturePad('sig-canvas-tech');
@@ -5923,7 +6006,7 @@ service cloud.firestore {
       const devCustomAddr = dev ? formatDeviceInstallAddress(dev) : '';
       document.getElementById('close-visit-summary').innerHTML = `
         <div class="font-extrabold text-zinc-900 dark:text-white">${client ? client.name : 'Klient'} • ${visit.serviceType}</div>
-        <div class="text-zinc-500">${isMontaz ? `🏗️ Planowany montaż: <strong>${visit.plannedInstallModel || 'Nowe urządzenie'}</strong>` : `🔧 Urządzenie: <strong>${dev ? dev.deviceModel : 'Ogólne'}</strong> ${dev?.serialNumber ? `(S/N: ${dev.serialNumber}${dev?.serialNumberOutdoor ? ' / JZ: ' + dev.serialNumberOutdoor : ''})` : ''}`}</div>
+        <div class="text-zinc-500">${isMontaz ? `🏗️ Planowany montaż: <strong>${visit.plannedInstallModel || 'Nowe urządzenie'}</strong>` : dev ? `🔧 Urządzenie: <strong>${dev.deviceModel}</strong> ${dev.serialNumber ? `(S/N: ${dev.serialNumber}${dev.serialNumberOutdoor ? ' / JZ: ' + dev.serialNumberOutdoor : ''})` : ''}` : `🚰 Rodzaj usługi: <strong>${visit.serviceType || 'Usługa ogólna / Instalacyjna'}</strong> (Klient bez przypisanego urządzenia)`}</div>
         ${devCustomAddr ? `<div class="text-indigo-600 dark:text-indigo-400 font-bold">📍 Adres montażu: ${devCustomAddr}</div>` : ''}
         <div class="text-zinc-500">👷 Wykonawca: <strong>${visit.workerName || 'Serwis ServiTrak'}</strong> • Data: <strong>${formatDatePL(visit.date)}</strong></div>
       `;
@@ -5943,6 +6026,19 @@ service cloud.firestore {
         const def = DEFAULT_PROTOCOL_TEMPLATES.find(d => d.id === protoKind);
         return JSON.stringify(def?.checklist || []) !== JSON.stringify(tpl.checklist || []);
       })();
+
+      // Odczyt dodatkowych własnych sekcji dodanych w oknie zamykania zlecenia
+      const customSections = Array.from(document.querySelectorAll('#proto-custom-sections-modal-list .custom-proto-sec-item')).map(el => {
+        const secTitle = (el.querySelector('.custom-sec-title')?.value || '').trim();
+        const secType = el.querySelector('.custom-sec-type')?.value || 'text';
+        const secContent = (el.querySelector('.custom-sec-content')?.value || '').trim();
+        if (!secTitle && !secContent) return null;
+        return {
+          title: secTitle || 'Dodatkowe informacje',
+          sectionType: secType,
+          content: secContent
+        };
+      }).filter(Boolean);
 
       const base = {
         protocolId: `PROT/${(visit.date || toYMD(new Date())).replace(/-/g, '')}/${Math.floor(100 + Math.random() * 900)}`,
@@ -5964,6 +6060,7 @@ service cloud.firestore {
         serialOutdoor: (document.getElementById('proto-inst-sn-out')?.value || serialNumberOutdoor || '').trim(),
         usedMaterials: (document.getElementById('proto-insp-materials')?.value || '').trim(),
         comments: comment || '',
+        customSections,
         sigTechDataUrl: getSignatureDataUrl('sig-canvas-tech'),
         sigClientDataUrl: getSignatureDataUrl('sig-canvas-client')
       };
@@ -6211,80 +6308,74 @@ service cloud.firestore {
       } else if (client) {
         const protoSnIn = (document.getElementById('proto-inst-sn-in')?.value || '').trim();
         const protoSnOut = (document.getElementById('proto-inst-sn-out')?.value || '').trim();
+        const targetDevObj = visit.deviceId ? (client.devices || []).find(d => d.id === visit.deviceId) : null;
 
-        if (!Array.isArray(client.devices) || client.devices.length === 0) {
-          const autoDevId = `dev_${Date.now()}`;
-          client.devices = [{
-            id: autoDevId,
-            deviceType: 'ac',
-            deviceModel: 'Klimatyzator Split',
-            serialNumber: protoSnIn,
-            serialNumberOutdoor: protoSnOut,
-            deviceNotes: '',
-            ourUnknownDate: true,
-            noInstallDate: true,
-            installDate: '',
-            warrantyMonths: 0,
-            lastInspectionDate: installDate,
-            nextInspectionDate: addMonths(installDate, 12),
-            inspectionIntervalMonths: 12,
-            remindersCanceled: false,
-            inspectionHistory: []
-          }];
-          visit.deviceId = autoDevId;
+        if (targetDevObj) {
+          const targetDevId = targetDevObj.id;
+          targetHistoryDeviceId = targetDevId;
+
+          const updatedSerialIn = protoSnIn || targetDevObj.serialNumber || '';
+          const updatedSerialOut = protoSnOut || targetDevObj.serialNumberOutdoor || '';
+          const devTypeInfo = getDeviceInfo(targetDevObj.deviceType, targetDevObj.customTypeLabel);
+          const formattedCustomInstallAddr = formatDeviceInstallAddress(targetDevObj);
+
+          savedProtocol = buildProtocolDataFromModal(
+            visit,
+            client,
+            targetDevObj.deviceModel,
+            updatedSerialIn,
+            updatedSerialOut,
+            targetDevObj.deviceNotes,
+            comment,
+            devTypeInfo.short,
+            formattedCustomInstallAddr
+          );
+
+          const histId = `h_visit_${Date.now()}`;
+          targetHistoryItemId = histId;
+          visit.protocolData = savedProtocol;
+
+          client.devices = client.devices.map(d => {
+            if (d.id !== targetDevId) return d;
+            const interval = Number(d.inspectionIntervalMonths || 12);
+            const nextDate = shouldUpdateNextInsp ? addMonths(installDate, interval) : d.nextInspectionDate;
+            const history = d.inspectionHistory || [];
+            return {
+              ...d,
+              serialNumber: updatedSerialIn,
+              serialNumberOutdoor: updatedSerialOut,
+              lastInspectionDate: shouldUpdateNextInsp ? installDate : d.lastInspectionDate,
+              nextInspectionDate: nextDate,
+              remindersCanceled: shouldUpdateNextInsp ? false : d.remindersCanceled,
+              inspectionHistory: [
+                {
+                  id: histId,
+                  date: installDate,
+                  actionType: visit.serviceType || 'Serwis',
+                  technician: visit.workerName || 'Serwis ServiTrak',
+                  notes: comment,
+                  protocolData: savedProtocol
+                },
+                ...history
+              ]
+            };
+          });
+        } else {
+          // Zlecenie / usługa ogólna dla klienta bez urządzenia (np. usługa hydrauliczna, instalacja wod-kan, instalacja freonowa)
+          savedProtocol = buildProtocolDataFromModal(
+            visit,
+            client,
+            visit.serviceType || 'Usługa instalacyjna / serwisowa',
+            protoSnIn,
+            protoSnOut,
+            visit.notes || '',
+            comment,
+            visit.serviceType || 'Usługa',
+            ''
+          );
+          visit.protocolData = savedProtocol;
+          visit.savedToDeviceHistory = false;
         }
-
-        const targetDevId = visit.deviceId || client.devices[0].id;
-        visit.deviceId = targetDevId;
-        targetHistoryDeviceId = targetDevId;
-        const targetDevObj = client.devices.find(d => d.id === targetDevId) || client.devices[0];
-
-        const updatedSerialIn = protoSnIn || targetDevObj.serialNumber || '';
-        const updatedSerialOut = protoSnOut || targetDevObj.serialNumberOutdoor || '';
-        const devTypeInfo = getDeviceInfo(targetDevObj.deviceType, targetDevObj.customTypeLabel);
-        const formattedCustomInstallAddr = formatDeviceInstallAddress(targetDevObj);
-
-        savedProtocol = buildProtocolDataFromModal(
-          visit,
-          client,
-          targetDevObj.deviceModel,
-          updatedSerialIn,
-          updatedSerialOut,
-          targetDevObj.deviceNotes,
-          comment,
-          devTypeInfo.short,
-          formattedCustomInstallAddr
-        );
-
-        const histId = `h_visit_${Date.now()}`;
-        targetHistoryItemId = histId;
-        visit.protocolData = savedProtocol;
-
-        client.devices = client.devices.map(d => {
-          if (d.id !== targetDevId) return d;
-          const interval = Number(d.inspectionIntervalMonths || 12);
-          const nextDate = shouldUpdateNextInsp ? addMonths(installDate, interval) : d.nextInspectionDate;
-          const history = d.inspectionHistory || [];
-          return {
-            ...d,
-            serialNumber: updatedSerialIn,
-            serialNumberOutdoor: updatedSerialOut,
-            lastInspectionDate: shouldUpdateNextInsp ? installDate : d.lastInspectionDate,
-            nextInspectionDate: nextDate,
-            remindersCanceled: shouldUpdateNextInsp ? false : d.remindersCanceled,
-            inspectionHistory: [
-              {
-                id: histId,
-                date: installDate,
-                actionType: visit.serviceType || 'Serwis',
-                technician: visit.workerName || 'Serwis ServiTrak',
-                notes: comment,
-                protocolData: savedProtocol
-              },
-              ...history
-            ]
-          };
-        });
       }
 
       persistData();
@@ -6294,10 +6385,14 @@ service cloud.firestore {
       if (savedProtocol) {
         showToast('Zlecenie zamknięte i wygenerowano cyfrowy protokół!');
         setTimeout(() => {
-          openProtocolPreviewModal('device', client?.id || '', targetHistoryDeviceId, targetHistoryItemId);
+          if (targetHistoryDeviceId && targetHistoryItemId) {
+            openProtocolPreviewModal('device', client?.id || '', targetHistoryDeviceId, targetHistoryItemId);
+          } else {
+            openProtocolPreviewModal('visit', client?.id || '', '', visit.id);
+          }
         }, 180);
       } else {
-        showToast(isMontaz ? 'Montaż zamknięty — nowe urządzenie przypisano do klienta!' : 'Zlecenie zamknięte i dopisane do historii urządzenia!');
+        showToast(isMontaz ? 'Montaż zamknięty — nowe urządzenie przypisano do klienta!' : 'Zlecenie zamknięte i zapisane w historii!');
       }
     }
 
@@ -6396,12 +6491,190 @@ service cloud.firestore {
       if (!rootEl) return;
       const targets = rootEl.querySelectorAll('td, th, div, span, strong');
       targets.forEach(el => {
-        if (el.querySelector('img, table, tr, td, th')) return;
+        if (el.classList.contains('no-print-pdf') || el.closest('.no-print-pdf')) return;
+        if (el.querySelector('img, table, tr, td, th, button')) return;
         if ((el.textContent || '').trim().length > 0 || el.tagName === 'TD') {
           el.setAttribute('contenteditable', 'true');
           el.setAttribute('spellcheck', 'false');
         }
       });
+    }
+
+    // Dodawanie własnej sekcji w oknie zamykania zlecenia (przed wystawieniem protokołu)
+    function addCustomSectionInCloseModal() {
+      const list = document.getElementById('proto-custom-sections-modal-list');
+      if (!list) return;
+      const idx = list.children.length + 1;
+      const wrapper = document.createElement('div');
+      wrapper.className = 'custom-proto-sec-item p-2.5 rounded-xl bg-emerald-50/60 dark:bg-zinc-800 border border-emerald-200 dark:border-emerald-800 space-y-2';
+      wrapper.innerHTML = `
+        <div class="flex items-center justify-between gap-2">
+          <input type="text" class="custom-sec-title flex-1 px-2.5 py-1 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-zinc-900 text-xs font-extrabold" placeholder="Nagłówek nowej sekcji (np. ${idx}. Dodatkowe pomiary / Zalecenia)" value="Dodatkowa sekcja ${idx}">
+          <select class="custom-sec-type px-2 py-1 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-zinc-900 text-[11px] font-bold" onchange="onCustomSecModalTypeChange(this)">
+            <option value="text">📝 Blok tekstowy</option>
+            <option value="table">📊 Tabela (Parametr | Wartość)</option>
+          </select>
+          <button type="button" onclick="this.closest('.custom-proto-sec-item').remove()" class="text-rose-600 hover:bg-rose-100 p-1 rounded-lg text-xs font-bold" title="Usuń tę sekcję">✕</button>
+        </div>
+        <textarea rows="2" class="custom-sec-content w-full px-2.5 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-zinc-900 text-xs" placeholder="Wpisz treść sekcji..."></textarea>
+      `;
+      list.appendChild(wrapper);
+      wrapper.querySelector('.custom-sec-content')?.focus();
+    }
+
+    function onCustomSecModalTypeChange(selEl) {
+      const item = selEl.closest('.custom-proto-sec-item');
+      const ta = item?.querySelector('.custom-sec-content');
+      if (!ta) return;
+      if (selEl.value === 'table') {
+        ta.placeholder = 'Wpisz wiersze tabeli (każdy w nowej linii w formacie: Nazwa parametru | Wartość), np.:\nCiśnienie statyczne | 1,8 bar\nTemperatura zasilania | 42 °C';
+        if (!ta.value.trim()) {
+          ta.value = 'Parametr 1 | Wartość 1\nParametr 2 | Wartość 2';
+        }
+      } else {
+        ta.placeholder = 'Wpisz treść sekcji...';
+      }
+    }
+
+    function renderCustomSectionsBlockHtml(proto) {
+      const sections = proto?.customSections || [];
+      if (!Array.isArray(sections) || sections.length === 0) {
+        return `<div class="protocol-custom-sections-anchor"></div>`;
+      }
+      const html = sections.map(sec => {
+        if (sec.sectionType === 'table') {
+          const rows = (sec.content || '')
+            .split(/\r?\n/)
+            .map(l => l.trim())
+            .filter(Boolean)
+            .map(line => {
+              const parts = line.split('|');
+              const left = (parts[0] || '').trim() || 'Parametr';
+              const right = (parts.slice(1).join('|') || '').trim() || '—';
+              return `
+                <tr>
+                  <td contenteditable="true" style="border:1px solid #cbd5e1;padding:5px 8px;font-weight:700;background:#f1f5f9;width:38%;color:#0f172a;">${left}</td>
+                  <td contenteditable="true" style="border:1px solid #cbd5e1;padding:5px 8px;font-weight:700;color:#0f172a;">${right}</td>
+                </tr>
+              `;
+            }).join('');
+          return `
+            <div class="protocol-custom-section" style="margin-bottom:10px;position:relative;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <div contenteditable="true" style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;">${sec.title || 'DODATKOWA TABELA PARAMETRÓW'}</div>
+                <button type="button" onclick="removeCustomProtocolSectionEl(this)" class="no-print-pdf" style="font-size:10px;color:#e11d48;font-weight:800;background:#ffe4e6;border:1px solid #fecdd3;padding:1px 6px;border-radius:4px;cursor:pointer;">Usuń sekcję ✕</button>
+              </div>
+              <table style="width:100%;border-collapse:collapse;font-size:10.5px;color:#0f172a;">
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+          `;
+        }
+        return `
+          <div class="protocol-custom-section" style="margin-bottom:10px;position:relative;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <div contenteditable="true" style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;">${sec.title || 'DODATKOWA SEKCJA'}</div>
+              <button type="button" onclick="removeCustomProtocolSectionEl(this)" class="no-print-pdf" style="font-size:10px;color:#e11d48;font-weight:800;background:#ffe4e6;border:1px solid #fecdd3;padding:1px 6px;border-radius:4px;cursor:pointer;">Usuń sekcję ✕</button>
+            </div>
+            <div contenteditable="true" style="border:1px solid #cbd5e1;padding:7px 8px;background:#f8fafc;font-size:11px;min-height:30px;color:#0f172a;white-space:pre-wrap;">${sec.content || 'Kliknij tutaj, aby wpisać treść...'}</div>
+          </div>
+        `;
+      }).join('');
+      return `<div class="protocol-custom-sections-anchor">${html}</div>`;
+    }
+
+    function removeCustomProtocolSectionEl(btnEl) {
+      const secEl = btnEl.closest('.protocol-custom-section');
+      if (secEl) {
+        secEl.remove();
+        autoSaveEditedProtocolHtml();
+        persistData();
+        showToast('Usunięto sekcję z protokołu.');
+      }
+    }
+
+    function addRowToCustomProtocolTable(btnEl) {
+      const secEl = btnEl.closest('.protocol-custom-section');
+      const tbody = secEl?.querySelector('tbody');
+      if (!tbody) return;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td contenteditable="true" spellcheck="false" style="border:1px solid #cbd5e1;padding:5px 8px;font-weight:700;background:#f1f5f9;width:38%;color:#0f172a;">Nowy parametr</td>
+        <td contenteditable="true" spellcheck="false" style="border:1px solid #cbd5e1;padding:5px 8px;font-weight:700;color:#0f172a;">Wartość / Opis</td>
+      `;
+      tbody.appendChild(tr);
+      autoSaveEditedProtocolHtml();
+    }
+
+    // Wstawia nową edytowalną sekcję bezpośrednio na podglądzie A4 (przed oświadczeniem Zgodności i podpisami)
+    function insertNewSectionIntoProtocolPreview(mode = 'text') {
+      const root = document.getElementById('protocol-printable-area');
+      if (!root) return;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'protocol-custom-section';
+      wrapper.style.cssText = 'margin-bottom:10px;position:relative;';
+
+      if (mode === 'table') {
+        wrapper.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:6px;">
+            <div contenteditable="true" spellcheck="false" style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;">DODATKOWA TABELA PARAMETRÓW / POMIARÓW (KLIKNIJ, ABY ZMIENIĆ TYTUŁ)</div>
+            <div class="no-print-pdf" style="display:flex;gap:4px;">
+              <button type="button" onclick="addRowToCustomProtocolTable(this)" style="font-size:10px;color:#047857;font-weight:800;background:#d1fae5;border:1px solid #6ee7b7;padding:1px 6px;border-radius:4px;cursor:pointer;">+ Wiersz</button>
+              <button type="button" onclick="removeCustomProtocolSectionEl(this)" style="font-size:10px;color:#e11d48;font-weight:800;background:#ffe4e6;border:1px solid #fecdd3;padding:1px 6px;border-radius:4px;cursor:pointer;">Usuń sekcję ✕</button>
+            </div>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:10.5px;color:#0f172a;">
+            <tbody>
+              <tr>
+                <td contenteditable="true" spellcheck="false" style="border:1px solid #cbd5e1;padding:5px 8px;font-weight:700;background:#f1f5f9;width:38%;color:#0f172a;">Nazwa parametru / części</td>
+                <td contenteditable="true" spellcheck="false" style="border:1px solid #cbd5e1;padding:5px 8px;font-weight:700;color:#0f172a;">Wartość / Wynik pomiaru</td>
+              </tr>
+              <tr>
+                <td contenteditable="true" spellcheck="false" style="border:1px solid #cbd5e1;padding:5px 8px;font-weight:700;background:#f1f5f9;width:38%;color:#0f172a;">Dodatkowe ustalenia</td>
+                <td contenteditable="true" spellcheck="false" style="border:1px solid #cbd5e1;padding:5px 8px;font-weight:700;color:#0f172a;">Zgodnie z ustaleniami z Inwestorem</td>
+              </tr>
+            </tbody>
+          </table>
+        `;
+      } else if (mode === 'checklist') {
+        wrapper.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:6px;">
+            <div contenteditable="true" spellcheck="false" style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;">DODATKOWE CZYNNOŚCI KONTROLNE</div>
+            <button type="button" onclick="removeCustomProtocolSectionEl(this)" class="no-print-pdf" style="font-size:10px;color:#e11d48;font-weight:800;background:#ffe4e6;border:1px solid #fecdd3;padding:1px 6px;border-radius:4px;cursor:pointer;">Usuń sekcję ✕</button>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:10.5px;color:#0f172a;">
+            <tbody>
+              <tr>
+                <td contenteditable="true" spellcheck="false" style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:700;width:36px;">+</td>
+                <td contenteditable="true" spellcheck="false" style="border:1px solid #cbd5e1;padding:4px 8px;">Wpisz dodatkową czynność kontrolną...</td>
+                <td contenteditable="true" spellcheck="false" style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:#059669;">✓ WYKONANO</td>
+              </tr>
+            </tbody>
+          </table>
+        `;
+      } else {
+        wrapper.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <div contenteditable="true" spellcheck="false" style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;">DODATKOWA SEKCJA / ZALECENIA (KLIKNIJ, ABY ZMIENIĆ NAGŁÓWEK)</div>
+            <button type="button" onclick="removeCustomProtocolSectionEl(this)" class="no-print-pdf" style="font-size:10px;color:#e11d48;font-weight:800;background:#ffe4e6;border:1px solid #fecdd3;padding:1px 6px;border-radius:4px;cursor:pointer;">Usuń sekcję ✕</button>
+          </div>
+          <div contenteditable="true" spellcheck="false" style="border:1px solid #cbd5e1;padding:7px 8px;background:#f8fafc;font-size:11px;min-height:34px;color:#0f172a;">Kliknij tutaj, aby wpisać treść nowej sekcji...</div>
+        `;
+      }
+
+      const anchor = root.querySelector('.protocol-custom-sections-anchor');
+      if (anchor) {
+        anchor.appendChild(wrapper);
+      } else {
+        const innerRoot = root.firstElementChild || root;
+        innerRoot.appendChild(wrapper);
+      }
+
+      autoSaveEditedProtocolHtml();
+      persistData();
+      wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      showToast('Dodano nową sekcję do protokołu — możesz od razu edytować jej treść!');
     }
 
     function autoSaveEditedProtocolHtml() {
@@ -6537,6 +6810,7 @@ service cloud.firestore {
 
     function renderProtocolSignaturesFooterHtml(proto, sigTechImg, sigClientImg) {
       return `
+        ${renderCustomSectionsBlockHtml(proto)}
         ${renderZgonoscStatementTableHtml()}
         <table style="width:100%;border-collapse:collapse;margin-top:8px;color:#0f172a;">
           <tr>
@@ -6996,8 +7270,8 @@ service cloud.firestore {
         pdfStage = document.createElement('div');
         pdfStage.style.cssText = 'position:absolute;top:0;left:0;width:794px;background:#ffffff;color:#0f172a;padding:24px 30px;box-sizing:border-box;margin:0;z-index:2147483647;';
         pdfStage.innerHTML = sourceEl.innerHTML || renderProtocolSheetHtml(p);
-
-        // Usuwamy obramowania edycji na czas generowania PDF
+        // Usuwamy obramowania edycji oraz przyciski pomocnicze na czas generowania PDF
+        pdfStage.querySelectorAll('.no-print-pdf').forEach(el => el.remove());
         pdfStage.querySelectorAll('[contenteditable]').forEach(el => {
           el.removeAttribute('contenteditable');
           el.style.boxShadow = 'none';
