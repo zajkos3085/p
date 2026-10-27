@@ -2813,7 +2813,7 @@ service cloud.firestore {
     function closeModal(id) {
       if (id === 'modal-protocol-preview') {
         try {
-          if (currentPreviewProtocolObj?.isTemplatePreview) {
+          if (currentPreviewProtocolObj) {
             if (typeof autoSaveEditedProtocolHtml === 'function') autoSaveEditedProtocolHtml();
             if (typeof persistData === 'function') persistData();
           }
@@ -2871,7 +2871,13 @@ service cloud.firestore {
       const cb = pendingConfirmCallback;
       pendingConfirmCallback = null;
       closeModal('modal-confirm-action');
-      if (typeof cb === 'function') cb();
+      if (typeof cb === 'function') {
+        try {
+          cb();
+        } catch (e) {
+          console.error('Błąd wykonania akcji potwierdzonej:', e);
+        }
+      }
     }
 
     function applyTheme(dark) {
@@ -3101,10 +3107,11 @@ service cloud.firestore {
 
       if (needsCloudPush && isCloudConnected && firestoreDb) {
         try {
-          firestoreDb.collection('pp_state').doc('templates').set({
-            protocolTemplates: window.protocolTemplatesData,
+          const tplPushPayload = sanitizeForFirestore({
+            protocolTemplates: window.protocolTemplatesData || [],
             updatedAt: new Date().toISOString()
-          }).catch(err => console.warn('Błąd synchronizacji wzorów:', err));
+          });
+          firestoreDb.collection('pp_state').doc('templates').set(tplPushPayload).catch(err => console.warn('Błąd synchronizacji wzorów:', err));
         } catch (e) {}
       }
     }
@@ -3146,21 +3153,40 @@ service cloud.firestore {
       refreshAllViews();
     }
 
+    function sanitizeForFirestore(val) {
+      if (val === undefined) return null;
+      if (val === null || typeof val !== 'object') return val;
+      try {
+        return JSON.parse(JSON.stringify(val, (key, value) => {
+          if (value === undefined) return null;
+          return value;
+        }));
+      } catch (e) {
+        return val;
+      }
+    }
+
     function persistData() {
       saveStateToLocalStorage();
       if (isCloudConnected && firestoreDb) {
-        const payload = getCloudPayload();
-        firestoreDb.collection('pp_state').doc('main').set(payload).catch(err => {
-          updateCloudBadge('error', 'Błąd zapisu');
-          setDiagnosticStatus('error', 'Zapis odrzucony', explainFirestoreError(err, ''));
-        });
+        try {
+          const payload = sanitizeForFirestore(getCloudPayload());
+          firestoreDb.collection('pp_state').doc('main').set(payload).catch(err => {
+            console.warn('Błąd zapisu Firestore pp_state/main:', err);
+            updateCloudBadge('error', 'Błąd zapisu');
+            setDiagnosticStatus('error', 'Zapis odrzucony', explainFirestoreError(err, ''));
+          });
+        } catch (err) {
+          console.error('Błąd przygotowania danych Firestore (main):', err);
+        }
 
         // Dedykowany, bezpośredni zapis wzorów protokołów w osobnym dokumencie bazy Firestore
         try {
-          firestoreDb.collection('pp_state').doc('templates').set({
+          const tplPayload = sanitizeForFirestore({
             protocolTemplates: window.protocolTemplatesData || [],
             updatedAt: new Date().toISOString()
-          }).catch(err => {
+          });
+          firestoreDb.collection('pp_state').doc('templates').set(tplPayload).catch(err => {
             console.warn('Błąd zapisu wzorów w pp_state/templates:', err);
           });
         } catch (e) {}
@@ -3366,11 +3392,11 @@ service cloud.firestore {
     async function forcePushToCloud() {
       if (!firestoreDb) { openFirebaseModal(); return; }
       try {
-        await firestoreDb.collection('pp_state').doc('main').set(getCloudPayload());
-        await firestoreDb.collection('pp_state').doc('templates').set({
+        await firestoreDb.collection('pp_state').doc('main').set(sanitizeForFirestore(getCloudPayload()));
+        await firestoreDb.collection('pp_state').doc('templates').set(sanitizeForFirestore({
           protocolTemplates: window.protocolTemplatesData || [],
           updatedAt: new Date().toISOString()
-        });
+        }));
         showToast('Wysłano dane i szablony do chmury!');
       } catch (err) {
         openFirebaseModal();
@@ -7005,16 +7031,60 @@ service cloud.firestore {
       if (document.getElementById('proto-inst-sn-out')) document.getElementById('proto-inst-sn-out').value = snOut;
     }
 
+    function mergeTemplateCustomSections(baseHtml, customHtml) {
+      if (!customHtml || typeof customHtml !== 'string' || !customHtml.includes('protocol-custom-section')) {
+        return baseHtml;
+      }
+      try {
+        const parser = new DOMParser();
+        const baseDoc = parser.parseFromString(baseHtml, 'text/html');
+        const customDoc = parser.parseFromString(customHtml, 'text/html');
+        const customSections = customDoc.querySelectorAll('.protocol-custom-section');
+        if (customSections.length === 0) return baseHtml;
+
+        let insertBeforeEl = baseDoc.querySelector('.protocol-footer-signatures-wrap') ||
+                             baseDoc.querySelector('.protocol-statement-zgodnosc-table');
+
+        if (!insertBeforeEl) {
+          const allDivs = baseDoc.querySelectorAll('table, div');
+          for (let i = allDivs.length - 1; i >= 0; i--) {
+            const txt = (allDivs[i].innerText || '').toLowerCase();
+            if (txt.includes('podpis serwisanta') || txt.includes('podpis zleceniodawcy') || txt.includes('inwestor oświadcza')) {
+              insertBeforeEl = allDivs[i].closest('.protocol-footer-signatures-wrap') || allDivs[i];
+              break;
+            }
+          }
+        }
+
+        customSections.forEach(sec => {
+          const imported = baseDoc.importNode(sec, true);
+          if (insertBeforeEl && insertBeforeEl.parentNode) {
+            insertBeforeEl.parentNode.insertBefore(imported, insertBeforeEl);
+          } else {
+            baseDoc.body.appendChild(imported);
+          }
+        });
+
+        return baseDoc.body.innerHTML;
+      } catch (e) {
+        console.error('Błąd scalania sekcji szablonu:', e);
+        return baseHtml;
+      }
+    }
+
     function handleVisitActionButton(visitId) {
       const visit = (window.appointmentsData || []).find(a => a.id === visitId);
       if (!visit) return;
       if (visit.status === 'completed') {
         askConfirmation('Cofnięcie zamknięcia zlecenia', 'Czy chcesz przywrócić to zlecenie z powrotem do realizacji (status „W planie”) i wycofać wpis z historii urządzenia?', () => {
           visit.status = 'planned';
-          delete visit.completionComment;
+          const oldCompletionComment = visit.completionComment || '';
+          visit.completionComment = '';
+          visit.savedToDeviceHistory = false;
           const visitProtoId = visit.protocolData?.protocolId;
           const visitDate = visit.date;
           const targetDevId = visit.deviceId;
+          visit.protocolData = null;
 
           // Wycofaj wpis w historii urządzenia klienta
           if (visit.clientId) {
@@ -7026,14 +7096,14 @@ service cloud.firestore {
               if (isMontaz && targetDevId && client.devices.some(d => d.id === targetDevId)) {
                 // Jeśli był to montaż — usuwamy zamontowane podczas tego zlecenia urządzenie
                 client.devices = client.devices.filter(d => d.id !== targetDevId);
-                delete visit.deviceId;
+                visit.deviceId = null;
               } else {
                 client.devices.forEach(dev => {
                   if (targetDevId && dev.id !== targetDevId) return;
                   if (Array.isArray(dev.inspectionHistory)) {
                     dev.inspectionHistory = dev.inspectionHistory.filter(h => {
                       if (visitProtoId && h.protocolData?.protocolId === visitProtoId) return false;
-                      if (h.date === visitDate && (h.technician === visit.workerName || h.notes === visit.completionComment)) return false;
+                      if (h.date === visitDate && (h.technician === visit.workerName || (oldCompletionComment && h.notes === oldCompletionComment))) return false;
                       return true;
                     });
                     // Przelicz poprzednią datę przeglądu na podstawie pozostałej historii lub daty montażu
@@ -7254,89 +7324,12 @@ service cloud.firestore {
       const sigTechUrl = getSignatureDataUrl('sig-canvas-tech');
       const sigClientUrl = getSignatureDataUrl('sig-canvas-client');
 
-      // Jeśli wzór protokołu posiada zedytowany arkusz A4 z tabelami pomiarów lub sekcjami (tpl.customEditedHtml):
-      let mergedCustomHtml = null;
-      if (tpl && tpl.customEditedHtml) {
-        try {
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(tpl.customEditedHtml, 'text/html');
-
-          // 1. Zaktualizuj wartości w tabelach pomiarów z wpisanych pól w modalu zamknięcia
-          document.querySelectorAll('.proto-custom-table-input').forEach(inp => {
-            const sIdx = Number(inp.getAttribute('data-sec-idx'));
-            const rIdx = Number(inp.getAttribute('data-row-idx'));
-            const val = inp.value.trim();
-            const customSections = doc.querySelectorAll('.protocol-custom-section');
-            if (customSections[sIdx]) {
-              const rows = customSections[sIdx].querySelectorAll('tbody tr');
-              if (rows[rIdx]) {
-                const cells = rows[rIdx].querySelectorAll('td');
-                if (cells.length >= 2) {
-                  cells[1].textContent = val;
-                }
-              }
-            }
-          });
-
-          // 2. Podmień nagłówek i tabelę stron na rzeczywiste dane zlecenia
-          const docTitle = (document.getElementById('tpl-title')?.value || tpl.title || 'PROTOKÓŁ CYFROWY').trim();
-          const accentColor = tpl.actionCategory === 'install' ? '#0284c7' : (tpl.actionCategory === 'service' ? '#e11d48' : '#059669');
-          const tempBaseForHeader = {
-            protocolId: protoIdGenerated,
-            date: visit.date || toYMD(new Date()),
-            companyName: getSavedCompanyName(),
-            fgazCert: getSavedFgazCert(),
-            technician: visit.workerName || 'Serwis INSTAL',
-            clientName: client?.name || visit.clientName || 'Klient',
-            clientNip: client?.nip || visit.clientNip || '',
-            clientEmail: client?.email || visit.clientEmail || '',
-            clientAddress: clientAddrFormatted,
-            installAddress: deviceInstallAddress || visit.installAddress || '',
-            clientPhone: client?.phone || visit.clientPhone || '',
-            deviceTypeLabel: devTypeLabel || visit.deviceTypeLabel || 'Urządzenie HVAC',
-            deviceModel: deviceModel || visit.deviceModel || visit.plannedInstallModel || 'Urządzenie HVAC',
-            serialIndoor: (document.getElementById('proto-inst-sn-in')?.value || serialNumber || '').trim(),
-            serialOutdoor: (document.getElementById('proto-inst-sn-out')?.value || serialNumberOutdoor || '').trim(),
-          };
-
-          const newHeaderHtml = renderProtocolHeaderAndPartiesHtml(tempBaseForHeader, docTitle, accentColor);
-          const firstHeaderDiv = doc.querySelector('div[style*="border-bottom:3px solid"]');
-          const partiesTable = doc.querySelector('table[style*="border-collapse:collapse"]');
-          if (firstHeaderDiv && partiesTable && partiesTable.previousElementSibling === firstHeaderDiv) {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = newHeaderHtml.trim();
-            firstHeaderDiv.parentNode.insertBefore(tempDiv, firstHeaderDiv);
-            firstHeaderDiv.remove();
-            partiesTable.remove();
-          }
-
-          // 3. Podmień stopkę z podpisami i oświadczeniem zgodności
-          const footerSigWrap = doc.querySelector('.protocol-footer-signatures-wrap');
-          if (footerSigWrap) {
-            const sigTechImg = sigTechUrl
-              ? `<img src="${sigTechUrl}" style="max-height:78px;max-width:100%;margin:0 auto;display:block;background:#ffffff;" alt="Podpis serwisanta">`
-              : `<div style="height:65px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px;">(Brak podpisu cyfrowego)</div>`;
-            const sigClientImg = sigClientUrl
-              ? `<img src="${sigClientUrl}" style="max-height:78px;max-width:100%;margin:0 auto;display:block;background:#ffffff;" alt="Podpis klienta">`
-              : `<div style="height:65px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px;">(Brak podpisu cyfrowego)</div>`;
-            const newFooterHtml = renderProtocolSignaturesFooterHtml(tempBaseForHeader, sigTechImg, sigClientImg);
-            const tempFooter = document.createElement('div');
-            tempFooter.innerHTML = newFooterHtml.trim();
-            footerSigWrap.parentNode.replaceChild(tempFooter.firstElementChild, footerSigWrap);
-          }
-
-          mergedCustomHtml = doc.body.innerHTML;
-        } catch (e) {
-          console.error('Błąd scalania szablonu protokołu:', e);
-        }
-      }
-
       const base = {
         protocolId: protoIdGenerated,
         type: protoKind,
         templateId: tpl?.id || protoKind,
         customTitle: tpl?.title || '',
-        customEditedHtml: mergedCustomHtml,
+        customEditedHtml: null,
         date: visit.date || toYMD(new Date()),
         companyName: getSavedCompanyName(),
         fgazCert: getSavedFgazCert(),
@@ -7357,8 +7350,10 @@ service cloud.firestore {
         sigClientDataUrl: sigClientUrl
       };
 
+      let protoObj = null;
+
       if (protoKind === 'ac_install' && !hasCustomEditedChecklist) {
-        return {
+        protoObj = {
           ...base,
           refrigerant: document.getElementById('proto-inst-refrigerant')?.value || 'R32',
           installLength: document.getElementById('proto-inst-length')?.value || 'do 3 mb',
@@ -7369,9 +7364,7 @@ service cloud.firestore {
           testResult: document.getElementById('proto-inst-tests')?.value || 'Pozytywna / Urządzenie sprawne',
           checklist: (tpl?.checklist || []).map(label => ({ label, done: true }))
         };
-      }
-
-      if (protoKind === 'ac_inspection' && !hasCustomEditedChecklist) {
+      } else if (protoKind === 'ac_inspection' && !hasCustomEditedChecklist) {
         const checklistLabels = [
           'Czyszczenie filtrów jednostki wewnętrznej',
           'Czyszczenie i dezynfekcja parownika jednostki wewnętrznej',
@@ -7387,15 +7380,13 @@ service cloud.firestore {
           label,
           done: Boolean(document.getElementById(`proto-chk-${idx + 1}`)?.checked)
         }));
-        return {
+        protoObj = {
           ...base,
           locationIndoor: deviceNotes || 'Zgodnie z miejscem instalacji',
           fgazTool: document.getElementById('proto-insp-fgaz')?.value || 'Wykrywacz nieszczelności / Certyfikat F-GAZ',
           checklist
         };
-      }
-
-      if (protoKind === 'gas_boiler_inspection' && !hasCustomEditedChecklist) {
+      } else if (protoKind === 'gas_boiler_inspection' && !hasCustomEditedChecklist) {
         const gbLabels = [
           'Czyszczenie wymiennika ciepła',
           'Czyszczenie palnika oraz elektrod (zapłonowej / jonizacyjnej)',
@@ -7408,7 +7399,7 @@ service cloud.firestore {
           'Pomiar obecności tlenku węgla (CO) w pomieszczeniu',
           'Analiza spalin i regulacja parametrów spalania'
         ];
-        return {
+        protoObj = {
           ...base,
           flueAnalysis: document.getElementById('proto-gb-flue')?.value || 'W normie',
           coPressure: document.getElementById('proto-gb-pressure')?.value || '1,5 bar',
@@ -7418,14 +7409,12 @@ service cloud.firestore {
             done: Boolean(document.getElementById(`proto-gb-chk-${idx + 1}`)?.checked)
           }))
         };
-      }
-
-      if (protoKind === 'gas_boiler_install' && !hasCustomEditedChecklist) {
+      } else if (protoKind === 'gas_boiler_install' && !hasCustomEditedChecklist) {
         const gbInstChecklist = (tpl?.checklist || DEFAULT_PROTOCOL_TEMPLATES.find(d => d.id === 'gas_boiler_install')?.checklist || []).map(label => ({
           label,
           done: true
         }));
-        return {
+        protoObj = {
           ...base,
           gbGasType: document.getElementById('proto-gb-inst-gas')?.value || 'GZ-50 (E) / 230V',
           gbFlueSystem: document.getElementById('proto-gb-inst-flue-sys')?.value || 'Koncentryczny 60/100',
@@ -7434,9 +7423,7 @@ service cloud.firestore {
           gbCombustionTest: document.getElementById('proto-gb-inst-comb')?.value || 'Wykonano analizę spalin — parametry w normie',
           checklist: gbInstChecklist
         };
-      }
-
-      if (protoKind === 'hp_inspection' && !hasCustomEditedChecklist) {
+      } else if (protoKind === 'hp_inspection' && !hasCustomEditedChecklist) {
         const hpLabels = [
           'Czyszczenie filtra magnetycznego / odmulacza i siatkowego',
           'Czyszczenie i kontrola parownika jednostki zewnętrznej',
@@ -7447,17 +7434,15 @@ service cloud.firestore {
           'Odczyt rejestru błędów, czasu pracy i startów sprężarki',
           'Weryfikacja krzywej grzewczej oraz pracy zaworu 3D'
         ];
-        return {
+        protoObj = {
           ...base,
           checklist: hpLabels.map((label, idx) => ({
             label,
             done: Boolean(document.getElementById(`proto-hp-chk-${idx + 1}`)?.checked)
           }))
         };
-      }
-
-      if (protoKind === 'hp_install' && !hasCustomEditedChecklist) {
-        return {
+      } else if (protoKind === 'hp_install' && !hasCustomEditedChecklist) {
+        protoObj = {
           ...base,
           hpSystemType: document.getElementById('proto-hp-inst-type')?.value || 'Powietrze-Woda',
           refrigerant: document.getElementById('proto-hp-inst-refrig')?.value || 'R32 / R290',
@@ -7466,9 +7451,7 @@ service cloud.firestore {
           testResult: document.getElementById('proto-hp-inst-test')?.value || 'Pozytywne / Inwestor przeszkolony z obsługi',
           checklist: (tpl?.checklist || []).map(label => ({ label, done: true }))
         };
-      }
-
-      if (protoKind === 'universal_service' || tpl?.actionCategory === 'service') {
+      } else if (protoKind === 'universal_service' || tpl?.actionCategory === 'service') {
         const extraFieldsList = (tpl?.serviceFields || []).map((f, idx) => ({
           label: f.label,
           value: (document.getElementById(`proto-srv-extra-${idx}`)?.value || f.defaultValue || '—').trim()
@@ -7477,7 +7460,7 @@ service cloud.firestore {
           label,
           done: Boolean(document.getElementById(`proto-dyn-chk-${idx}`)?.checked ?? true)
         }));
-        return {
+        protoObj = {
           ...base,
           actionCategory: 'service',
           faultDescription: document.getElementById('proto-srv-fault')?.value || visit.notes || 'Zgłoszenie serwisowe',
@@ -7487,24 +7470,56 @@ service cloud.firestore {
           customServiceFields: extraFieldsList,
           checklist: dynChecklist
         };
+      } else {
+        const dynLabels = tpl?.checklist || [];
+        const customInstallRows = (tpl?.installParams || []).map((p, idx) => ({
+          label: p.label,
+          value: (document.getElementById(`proto-dyn-param-${idx}`)?.value || p.defaultValue || '—').trim()
+        }));
+        protoObj = {
+          ...base,
+          actionCategory: tpl?.actionCategory || 'inspection',
+          univInstallLocation: document.getElementById('proto-univ-inst-loc')?.value || deviceNotes || 'Zgodnie z DTR',
+          univInstallTest: document.getElementById('proto-univ-inst-test')?.value || 'Pozytywny — urządzenie sprawne',
+          customInstallRows,
+          checklist: dynLabels.map((label, idx) => ({
+            label,
+            done: Boolean(document.getElementById(`proto-dyn-chk-${idx}`)?.checked ?? true)
+          }))
+        };
       }
 
-      const dynLabels = tpl?.checklist || [];
-      const customInstallRows = (tpl?.installParams || []).map((p, idx) => ({
-        label: p.label,
-        value: (document.getElementById(`proto-dyn-param-${idx}`)?.value || p.defaultValue || '—').trim()
-      }));
-      return {
-        ...base,
-        actionCategory: tpl?.actionCategory || 'inspection',
-        univInstallLocation: document.getElementById('proto-univ-inst-loc')?.value || deviceNotes || 'Zgodnie z DTR',
-        univInstallTest: document.getElementById('proto-univ-inst-test')?.value || 'Pozytywny — urządzenie sprawne',
-        customInstallRows,
-        checklist: dynLabels.map((label, idx) => ({
-          label,
-          done: Boolean(document.getElementById(`proto-dyn-chk-${idx}`)?.checked ?? true)
-        }))
-      };
+      // Jeśli szablon posiada zedytowany arkusz A4 z tabelami pomiarów lub własnymi sekcjami
+      if (tpl && tpl.customEditedHtml && tpl.customEditedHtml.includes('protocol-custom-section')) {
+        try {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(tpl.customEditedHtml, 'text/html');
+
+          // Zaktualizuj wartości w tabelach pomiarów z wpisanych pól w modalu zamknięcia
+          document.querySelectorAll('.proto-custom-table-input').forEach(inp => {
+            const sIdx = Number(inp.getAttribute('data-sec-idx'));
+            const rIdx = Number(inp.getAttribute('data-row-idx'));
+            const val = inp.value.trim();
+            const customSections = doc.querySelectorAll('.protocol-custom-section');
+            if (customSections[sIdx]) {
+              const rows = customSections[sIdx].querySelectorAll('tbody tr');
+              if (rows[rIdx]) {
+                const cells = rows[rIdx].querySelectorAll('td');
+                if (cells.length >= 2) {
+                  cells[1].textContent = val;
+                }
+              }
+            }
+          });
+
+          const baseVisitHtml = renderProtocolSheetHtml(protoObj);
+          protoObj.customEditedHtml = mergeTemplateCustomSections(baseVisitHtml, doc.body.innerHTML);
+        } catch (e) {
+          console.error('Błąd scalania sekcji szablonu do protokołu zlecenia:', e);
+        }
+      }
+
+      return protoObj;
     }
 
     async function handleConfirmCloseVisit(e) {
@@ -7960,12 +7975,12 @@ service cloud.firestore {
         clearTimeout(liveAutoSaveTimeout);
         liveAutoSaveTimeout = setTimeout(() => {
           autoSaveEditedProtocolHtml();
-        }, 400);
+        }, 300);
       };
-      container.onblur = function() {
+      container.addEventListener('focusout', function() {
         if (!currentPreviewProtocolObj) return;
         autoSaveEditedProtocolHtml();
-      };
+      });
     }
 
     window.addEventListener('beforeunload', () => {
@@ -9668,6 +9683,42 @@ service cloud.firestore {
         window.protocolTemplatesData = (window.protocolTemplatesData || []).map(t => {
           if (t.id !== editId) return t;
           found = true;
+          let updatedCustomHtml = t.customEditedHtml || null;
+          if (updatedCustomHtml && updatedCustomHtml.includes('protocol-custom-section')) {
+            const sampleProto = {
+              protocolId: 'WZÓR/PODGLĄD/2026',
+              templateId: editId,
+              isTemplatePreview: true,
+              type: editId,
+              customTitle: title,
+              actionCategory,
+              date: toYMD(new Date()),
+              companyName: getSavedCompanyName(),
+              fgazCert: getSavedFgazCert(),
+              technician: 'Jan Serwisant (INSTAL)',
+              clientName: 'Przykładowy Klient (Podgląd Wzoru)',
+              clientNip: '777-000-11-22',
+              clientEmail: 'klient@przyklad.pl',
+              clientAddress: '60-101 Poznań, ul. Słoneczna 15',
+              installAddress: '62-020 Swarzędz, ul. Polna 10',
+              clientPhone: '+48 600 100 200',
+              deviceTypeLabel: customGroupName || getDeviceInfo(deviceGroup).short,
+              deviceModel: 'Model Przykładowy 9kW',
+              serialIndoor: 'SN-2026-000123',
+              serialOutdoor: (deviceGroup === 'ac' || deviceGroup === 'heat_pump') ? 'SN-JZ-2026-000456' : '',
+              faultDescription: 'Przykładowe objawy ze zgłoszenia klienta',
+              diagnosis: 'Przykładowa diagnoza serwisowa',
+              workCourse: 'Weryfikacja parametrów pracy, czyszczenie podzespołów, wymiana elementu eksploatacyjnego, test szczelności i uruchomienie.',
+              postServiceStatus: 'Urządzenie sprawne, przetestowane i przekazane do eksploatacji',
+              usedMaterials: 'Brak dodatkowych części.',
+              comments: 'Podgląd wydruku wzoru protokołu A4.',
+              customInstallRows: (installParams || []).map(p => ({ label: p.label, value: p.defaultValue || 'Wykonano / Zgodnie z DTR' })),
+              customServiceFields: (serviceFields || []).map(f => ({ label: f.label, value: f.defaultValue || 'W normie' })),
+              checklist: (checklist || []).map(label => ({ label, done: true }))
+            };
+            const freshBase = renderProtocolSheetHtml(sampleProto);
+            updatedCustomHtml = mergeTemplateCustomSections(freshBase, updatedCustomHtml);
+          }
           return {
             ...t,
             title,
@@ -9677,7 +9728,7 @@ service cloud.firestore {
             checklist,
             installParams,
             serviceFields,
-            customEditedHtml: t.customEditedHtml,
+            customEditedHtml: updatedCustomHtml,
             updatedAt: now,
             isCustomized: true
           };
@@ -9756,7 +9807,7 @@ service cloud.firestore {
         type: tpl.id,
         customTitle: tpl.title,
         actionCategory: tpl.actionCategory,
-        customEditedHtml: tpl.customEditedHtml || null,
+        customEditedHtml: null,
         date: toYMD(new Date()),
         companyName: getSavedCompanyName(),
         fgazCert: getSavedFgazCert(),
@@ -9781,6 +9832,13 @@ service cloud.firestore {
         customServiceFields: (tpl.serviceFields || []).map(f => ({ label: f.label, value: f.defaultValue || 'W normie' })),
         checklist: (tpl.checklist || []).map(label => ({ label, done: true }))
       };
+
+      const freshBaseHtml = renderProtocolSheetHtml(sampleProto);
+      const mergedHtml = (tpl.customEditedHtml && tpl.customEditedHtml.includes('protocol-custom-section'))
+        ? mergeTemplateCustomSections(freshBaseHtml, tpl.customEditedHtml)
+        : (tpl.customEditedHtml || freshBaseHtml);
+      tpl.customEditedHtml = mergedHtml;
+      sampleProto.customEditedHtml = mergedHtml;
       showProtocolObjectInModal(sampleProto);
     }
 
@@ -9832,6 +9890,41 @@ service cloud.firestore {
           existing.serviceFields = serviceFields;
           existing.updatedAt = now;
           existing.isCustomized = true;
+          if (existing.customEditedHtml && existing.customEditedHtml.includes('protocol-custom-section')) {
+            const sampleProto = {
+              protocolId: 'WZÓR/PODGLĄD/2026',
+              templateId: editId,
+              isTemplatePreview: true,
+              type: editId,
+              customTitle: title,
+              actionCategory,
+              date: toYMD(new Date()),
+              companyName: getSavedCompanyName(),
+              fgazCert: getSavedFgazCert(),
+              technician: 'Jan Serwisant (INSTAL)',
+              clientName: 'Przykładowy Klient (Podgląd Wzoru)',
+              clientNip: '777-000-11-22',
+              clientEmail: 'klient@przyklad.pl',
+              clientAddress: '60-101 Poznań, ul. Słoneczna 15',
+              installAddress: '62-020 Swarzędz, ul. Polna 10',
+              clientPhone: '+48 600 100 200',
+              deviceTypeLabel: customGroupName || getDeviceInfo(deviceGroup).short,
+              deviceModel: 'Model Przykładowy 9kW',
+              serialIndoor: 'SN-2026-000123',
+              serialOutdoor: (deviceGroup === 'ac' || deviceGroup === 'heat_pump') ? 'SN-JZ-2026-000456' : '',
+              faultDescription: 'Przykładowe objawy ze zgłoszenia klienta',
+              diagnosis: 'Przykładowa diagnoza serwisowa',
+              workCourse: 'Weryfikacja parametrów pracy, czyszczenie podzespołów, wymiana elementu eksploatacyjnego, test szczelności i uruchomienie.',
+              postServiceStatus: 'Urządzenie sprawne, przetestowane i przekazane do eksploatacji',
+              usedMaterials: 'Brak dodatkowych części.',
+              comments: 'Podgląd wydruku wzoru protokołu A4.',
+              customInstallRows: installParams.map(p => ({ label: p.label, value: p.defaultValue || 'Wykonano / Zgodnie z DTR' })),
+              customServiceFields: serviceFields.map(f => ({ label: f.label, value: f.defaultValue || 'W normie' })),
+              checklist: checklist.map(label => ({ label, done: true }))
+            };
+            const freshBase = renderProtocolSheetHtml(sampleProto);
+            existing.customEditedHtml = mergeTemplateCustomSections(freshBase, existing.customEditedHtml);
+          }
         } else {
           window.protocolTemplatesData.push({
             id: editId,
