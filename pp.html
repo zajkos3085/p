@@ -165,8 +165,8 @@
 
       <!-- WŁASNE ZAIMPORTOWANE LOGO FIRMY POD LOGO SERVITRAK (widoczne tylko, gdy wgrane/zaimportowane) -->
       <div id="sidebar-custom-logo-wrap" class="hidden pt-1.5 md:pt-2 border-t border-zinc-100 dark:border-zinc-800/80">
-        <div onclick="switchTab('settings')" class="cursor-pointer group/logo px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/60 hover:border-emerald-500 dark:hover:border-emerald-500 flex items-center justify-center transition shadow-xs" title="Twoje logo firmy (kliknij, aby zarządzać w Ustawieniach)">
-          <img id="sidebar-custom-logo-img" src="" alt="Logo firmy" class="max-h-8 md:max-h-10 max-w-full w-auto h-auto object-contain transition group-hover/logo:scale-102">
+        <div class="px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/60 flex items-center justify-center shadow-xs">
+          <img id="sidebar-custom-logo-img" src="" alt="Logo firmy" class="max-h-8 md:max-h-10 max-w-full w-auto h-auto object-contain select-none pointer-events-none">
         </div>
       </div>
 
@@ -458,10 +458,6 @@
               <input type="date" id="planner-date-input" onchange="onPlannerDateChange(this.value)" class="bg-transparent px-2 py-0.5 text-xs font-extrabold outline-none text-zinc-900 dark:text-white text-center">
               <button onclick="shiftDate(1)" class="p-1.5 rounded-lg hover:bg-white dark:hover:bg-zinc-700 transition" title="Następny dzień"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
             </div>
-
-            <button onclick="openWorkersModal()" class="col-span-2 sm:col-span-1 px-3 py-2 sm:py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-emerald-600 hover:text-white border border-zinc-200 dark:border-zinc-700 text-xs font-extrabold flex items-center justify-center gap-1.5 transition" title="Zarządzaj serwisantami i ekipami">
-              <i data-lucide="hard-hat" class="w-4 h-4 text-emerald-600 shrink-0"></i> <span>Zarządzaj ekipami</span>
-            </button>
 
             <select id="map-device-type-filter" onchange="renderMapMarkers()" class="col-span-2 sm:col-span-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 sm:py-1.5 text-xs font-extrabold outline-none text-zinc-800 dark:text-zinc-100">
               <option value="all">🗺️ Sprzęt: Wszystkie urządzenia</option>
@@ -1071,6 +1067,28 @@
           </form>
         </div>
 
+        <!-- SEKCJA: ZARZĄDZANIE EKIPAMI I SERWISANTAMI -->
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3 flex-wrap gap-2">
+            <div class="flex items-center gap-2.5">
+              <i data-lucide="hard-hat" class="w-5 h-5 text-emerald-600"></i>
+              <h3 class="text-sm sm:text-base font-extrabold text-zinc-900 dark:text-white">Ekipy i Serwisanci</h3>
+            </div>
+            <span class="text-xs text-zinc-400 font-medium">Zarządzanie pracownikami przypisywanymi do zleceń</span>
+          </div>
+
+          <form onsubmit="handleAddWorker(event)" class="flex flex-col sm:flex-row gap-2.5">
+            <input type="text" id="settings-new-worker-name" placeholder="Imię lub nazwa ekipy (np. Tomek, Ekipa 2)" class="flex-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs sm:text-sm font-bold outline-none focus:border-emerald-500 text-zinc-900 dark:text-white">
+            <button type="submit" class="py-2.5 px-5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-sm transition shrink-0">
+              <i data-lucide="plus" class="w-4 h-4"></i> Dodaj ekipę
+            </button>
+          </form>
+
+          <div id="settings-workers-list-container" class="space-y-1 max-h-64 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/80">
+            <!-- Dynamicznie wstawiana lista pracowników -->
+          </div>
+        </div>
+
         <!-- SEKCJA 3: KOPIA ZAPASOWA I BEZPIECZEŃSTWO -->
         <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-sm space-y-3.5">
           <div class="flex items-center gap-2.5 border-b border-zinc-100 dark:border-zinc-800 pb-3">
@@ -1633,6 +1651,53 @@
       <form onsubmit="handleConfirmCloseVisit(event)" class="space-y-3.5">
         <input type="hidden" id="close-visit-id">
         <div id="close-visit-summary" class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-700 text-xs space-y-1"></div>
+
+        <!-- SEKCJA UZUPEŁNIENIA DANYCH KLIENTA SPOZA BAZY I ZAPISU DO BAZY -->
+        <div id="close-visit-adhoc-add-to-db-box" class="hidden p-3.5 rounded-xl bg-indigo-50/90 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 space-y-2.5">
+          <label class="flex items-center gap-2 cursor-pointer text-xs font-extrabold text-indigo-900 dark:text-indigo-200">
+            <input type="checkbox" id="close-visit-save-client-to-db" checked onchange="document.getElementById('close-visit-adhoc-fields')?.classList.toggle('hidden', !this.checked)" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+            <span>💾 Zapisz klienta na stałe do bazy klientów</span>
+          </label>
+          <div id="close-visit-adhoc-fields" class="space-y-2 pt-1 border-t border-indigo-200/80 dark:border-indigo-800/80 text-xs">
+            <div class="text-[11px] text-zinc-500 dark:text-zinc-400">
+              Uzupełnij lub popraw dane klienta przed dodaniem do głównej bazy:
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Imię i Nazwisko / Firma *</label>
+                <input type="text" id="close-adhoc-client-name" placeholder="np. Jan Kowalski" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs font-bold outline-none">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Telefon</label>
+                <input type="text" id="close-adhoc-client-phone" placeholder="+48 " class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs outline-none">
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div>
+                <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Miejscowość</label>
+                <input type="text" id="close-adhoc-client-city" placeholder="np. Kraków" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs outline-none">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Ulica i numer</label>
+                <input type="text" id="close-adhoc-client-street" placeholder="np. Floriańska 10" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs outline-none">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">Kod pocztowy</label>
+                <input type="text" id="close-adhoc-client-postal" placeholder="np. 31-021" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs outline-none">
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">NIP (opcjonalnie)</label>
+                <input type="text" id="close-adhoc-client-nip" placeholder="np. 777-000-11-22" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs font-mono outline-none">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-zinc-500 mb-0.5">E-mail (do wysyłki protokołów PDF)</label>
+                <input type="email" id="close-adhoc-client-email" placeholder="np. klient@domena.pl" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs outline-none">
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div id="close-visit-install-box" class="hidden p-3.5 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 space-y-2.5">
           <div class="text-xs font-extrabold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
@@ -2211,13 +2276,13 @@ service cloud.firestore {
             <span class="text-[10px] font-bold text-zinc-500 whitespace-nowrap">Nadawca (Twoje konto):</span>
             <input type="email" id="sender-gmail-account-input" oninput="saveSenderGmailAccount(this.value)" placeholder="np. biuro@twojadomena.pl" class="bg-transparent text-xs font-bold outline-none text-zinc-900 dark:text-white w-36 sm:w-44">
           </div>
-          <button type="button" onclick="saveEditedProtocolContent()" class="px-3 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition" title="Zapisz ręczne poprawki wprowadzone na arkuszu">
+          <button type="button" id="btn-save-protocol-content" onclick="saveEditedProtocolContent()" class="px-3 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition" title="Zapisz ręczne poprawki wprowadzone na arkuszu wzoru">
             <i data-lucide="save" class="w-4 h-4"></i> Zapisz zmiany
           </button>
-          <button type="button" onclick="resetEditedProtocolToTemplate()" class="px-2.5 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold transition flex items-center gap-1" title="Cofnij ręczne poprawki i przywróć szablon pierwotny">
+          <button type="button" id="btn-reset-protocol-content" onclick="resetEditedProtocolToTemplate()" class="px-2.5 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold transition flex items-center gap-1" title="Cofnij ręczne poprawki i przywróć szablon pierwotny">
             <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Przywróć
           </button>
-          <div class="relative inline-block text-left">
+          <div id="wrap-add-protocol-section" class="relative inline-block text-left">
             <button type="button" onclick="toggleCustomDropdown('dd-add-protocol-section')" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition" title="Wstaw nową sekcję: czeklistę, tabelę pomiarów lub pole tekstowe">
               <i data-lucide="plus-circle" class="w-4 h-4"></i> + Dodaj sekcję <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
             </button>
@@ -2267,8 +2332,8 @@ service cloud.firestore {
           </button>
         </div>
       </div>
-      <div class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/70 flex items-center justify-between gap-2 text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold shrink-0">
-        <span>✏️ <strong>Tryb edycji aktywny:</strong> Kliknij w dowolny tekst, tabelkę, adres, S/N, status lub uwagę na protokole poniżej, aby dowolnie edytować treść przed pobraniem PDF. Zmiany zapisują się automatycznie oraz przyciskiem „Zapisz zmiany”.</span>
+      <div id="protocol-preview-mode-banner" class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/70 flex items-center justify-between gap-2 text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold shrink-0">
+        <span id="protocol-preview-mode-banner-text">✏️ <strong>Tryb edycji aktywny:</strong> Kliknij w dowolny tekst, tabelkę, adres, S/N, status lub uwagę na protokole poniżej, aby dowolnie edytować treść przed pobraniem PDF. Zmiany zapisują się automatycznie oraz przyciskiem „Zapisz zmiany”.</span>
       </div>
       <div class="overflow-y-auto flex-1 bg-zinc-200/70 dark:bg-zinc-950 p-2 sm:p-5 rounded-xl border border-zinc-300 dark:border-zinc-800">
         <div id="protocol-printable-area" oninput="autoSaveEditedProtocolHtml()" onblur="autoSaveEditedProtocolHtml()" class="bg-white text-zinc-900 mx-auto shadow-lg p-5 sm:p-8 rounded-lg w-full max-w-[794px]"></div>
@@ -2664,8 +2729,10 @@ service cloud.firestore {
     function closeModal(id) {
       if (id === 'modal-protocol-preview') {
         try {
-          if (typeof autoSaveEditedProtocolHtml === 'function') autoSaveEditedProtocolHtml();
-          if (typeof persistData === 'function') persistData();
+          if (currentPreviewProtocolObj?.isTemplatePreview) {
+            if (typeof autoSaveEditedProtocolHtml === 'function') autoSaveEditedProtocolHtml();
+            if (typeof persistData === 'function') persistData();
+          }
         } catch (e) { console.error('Błąd auto-zapisu protokołu przy zamykaniu:', e); }
       }
       const el = document.getElementById(id);
@@ -3292,44 +3359,68 @@ service cloud.firestore {
     }
 
     function openWorkersModal() {
-      renderWorkersListInModal();
+      renderWorkersList();
       openModal('modal-workers');
     }
 
-    function renderWorkersListInModal() {
-      const container = document.getElementById('workers-list-container');
-      if (!container) return;
-      container.innerHTML = (window.workersData || []).map((w, idx) => `
-        <div class="py-2.5 flex justify-between items-center text-sm">
-          <span class="font-bold">👷 ${w}</span>
-          ${window.workersData.length > 1 ? `<button onclick="confirmRemoveWorker(${idx})" class="text-xs font-bold text-rose-600 hover:underline">Usuń</button>` : ''}
+    function renderWorkersList() {
+      const containerSettings = document.getElementById('settings-workers-list-container');
+      const containerModal = document.getElementById('workers-list-container');
+      const workers = window.workersData || [];
+
+      const html = workers.map((w, idx) => `
+        <div class="py-2.5 px-1 flex justify-between items-center text-xs sm:text-sm">
+          <div class="flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-sm font-bold shrink-0">👷</span>
+            <span class="font-extrabold text-zinc-800 dark:text-zinc-100">${escapeHtml(w)}</span>
+          </div>
+          ${workers.length > 1 ? `
+            <button type="button" onclick="confirmRemoveWorker(${idx})" class="text-xs font-bold text-rose-600 hover:text-rose-700 dark:hover:text-rose-400 hover:underline px-2 py-1 rounded transition">
+              Usuń
+            </button>
+          ` : `
+            <span class="text-[10px] text-zinc-400 italic">Domyślny pracownik</span>
+          `}
         </div>
       `).join('');
+
+      if (containerSettings) containerSettings.innerHTML = html;
+      if (containerModal) containerModal.innerHTML = html;
+      lucide.createIcons();
+    }
+
+    function renderWorkersListInModal() {
+      renderWorkersList();
     }
 
     function handleAddWorker(e) {
-      e.preventDefault();
-      const input = document.getElementById('new-worker-name');
-      const name = (input.value || '').trim();
+      if (e) e.preventDefault();
+      const input = document.getElementById('settings-new-worker-name') || document.getElementById('new-worker-name');
+      const name = (input?.value || '').trim();
       if (!name) return;
       if (!window.workersData.includes(name)) {
         window.workersData.push(name);
         persistData();
         populateWorkerSelects();
-        renderWorkersListInModal();
+        renderWorkersList();
         showToast(`Dodano ekipę: ${name}`);
+      } else {
+        showToast('Ekipa o takiej nazwie już istnieje!');
       }
-      input.value = '';
+      const sInput = document.getElementById('settings-new-worker-name');
+      const mInput = document.getElementById('new-worker-name');
+      if (sInput) sInput.value = '';
+      if (mInput) mInput.value = '';
     }
 
     function confirmRemoveWorker(idx) {
       askConfirmation('Usuwanie ekipy', 'Czy na pewno chcesz usunąć tę ekipę/pracownika?', () => {
-        window.workersData.splice(idx, 1);
+        const removed = window.workersData.splice(idx, 1);
         persistData();
         populateWorkerSelects();
-        renderWorkersListInModal();
+        renderWorkersList();
         renderPlanner();
-        showToast('Usunięto ekipę.');
+        showToast(`Usunięto ekipę: ${removed[0] || ''}`);
       });
     }
 
@@ -5785,17 +5876,19 @@ service cloud.firestore {
       let adhocLng = null;
 
       if (isAdHoc) {
-        adhocClientName = (document.getElementById('visit-adhoc-name')?.value || '').trim();
-        if (!adhocClientName) {
-          showToast('Wpisz nazwisko lub nazwę firmy klienta!');
-          document.getElementById('visit-adhoc-name')?.focus();
-          return;
-        }
         adhocClientPhone = (document.getElementById('visit-adhoc-phone')?.value || '').trim();
         adhocClientCity = capitalizeWords((document.getElementById('visit-adhoc-city')?.value || '').trim());
         adhocClientStreet = capitalizeWords((document.getElementById('visit-adhoc-street')?.value || '').trim());
         adhocClientPostal = (document.getElementById('visit-adhoc-postal')?.value || '').trim();
         adhocDevice = (document.getElementById('visit-adhoc-device')?.value || '').trim();
+
+        adhocClientName = (document.getElementById('visit-adhoc-name')?.value || '').trim();
+        if (!adhocClientName) {
+          if (adhocClientPhone) adhocClientName = `Klient (tel. ${adhocClientPhone})`;
+          else if (adhocClientCity || adhocClientStreet) adhocClientName = `Klient (${[adhocClientCity, adhocClientStreet].filter(Boolean).join(', ')})`;
+          else if (adhocDevice) adhocClientName = `Klient (${adhocDevice})`;
+          else adhocClientName = 'Klient spoza bazy';
+        }
         clientId = 'adhoc_' + Date.now();
 
         if (adhocClientCity || adhocClientStreet) {
@@ -6537,6 +6630,35 @@ service cloud.firestore {
         <div class="text-zinc-500">👷 Wykonawca: <strong>${visit.workerName || 'Serwis ServiTrak'}</strong> • Data: <strong>${formatDatePL(visit.date)}</strong></div>
       `;
 
+      const isAdHocVisit = Boolean(visit.isAdHoc || !client);
+      const adhocDbBox = document.getElementById('close-visit-adhoc-add-to-db-box');
+      const saveClientChk = document.getElementById('close-visit-save-client-to-db');
+      if (adhocDbBox) {
+        if (isAdHocVisit) {
+          adhocDbBox.classList.remove('hidden');
+          if (saveClientChk) saveClientChk.checked = true;
+          document.getElementById('close-visit-adhoc-fields')?.classList.remove('hidden');
+
+          const nameInput = document.getElementById('close-adhoc-client-name');
+          const phoneInput = document.getElementById('close-adhoc-client-phone');
+          const cityInput = document.getElementById('close-adhoc-client-city');
+          const streetInput = document.getElementById('close-adhoc-client-street');
+          const postalInput = document.getElementById('close-adhoc-client-postal');
+          const nipInput = document.getElementById('close-adhoc-client-nip');
+          const emailInput = document.getElementById('close-adhoc-client-email');
+
+          if (nameInput) nameInput.value = (visit.clientName || '').replace(/^Klient(\s*\(.*?\))?$/i, '').trim();
+          if (phoneInput) phoneInput.value = visit.clientPhone || '+48 ';
+          if (cityInput) cityInput.value = visit.clientCity || '';
+          if (streetInput) streetInput.value = visit.clientStreet || '';
+          if (postalInput) postalInput.value = visit.clientPostalCode || '';
+          if (nipInput) nipInput.value = visit.clientNip || '';
+          if (emailInput) emailInput.value = visit.clientEmail || '';
+        } else {
+          adhocDbBox.classList.add('hidden');
+        }
+      }
+
       openModal('modal-close-visit');
       setTimeout(() => document.getElementById(isMontaz ? 'close-install-serial' : 'close-visit-comment').focus(), 80);
     }
@@ -6737,8 +6859,65 @@ service cloud.firestore {
       if (!visit) return;
 
       const isMontaz = (visit.serviceType || '').toLowerCase().includes('monta');
-      const client = (window.clientsData || []).find(c => c.id === visit.clientId);
+      let client = (window.clientsData || []).find(c => c.id === visit.clientId);
       const installDate = visit.date || toYMD(new Date());
+
+      let addedClientToDb = false;
+      const saveToDbChecked = Boolean(document.getElementById('close-visit-save-client-to-db')?.checked);
+
+      // Jeśli klient jest spoza bazy i zaznaczono opcję zapisu do bazy — tworzymy kartotekę klienta
+      if ((!client || visit.isAdHoc) && saveToDbChecked) {
+        const cName = (document.getElementById('close-adhoc-client-name')?.value || '').trim() || visit.clientName || 'Nowy Klient';
+        let cPhone = (document.getElementById('close-adhoc-client-phone')?.value || '').trim();
+        if (isPhoneEmpty(cPhone)) cPhone = '+48 ';
+        else cPhone = ensurePhonePrefix(cPhone);
+
+        const cCity = capitalizeWords((document.getElementById('close-adhoc-client-city')?.value || '').trim());
+        const cStreet = capitalizeWords((document.getElementById('close-adhoc-client-street')?.value || '').trim());
+        const cPostal = (document.getElementById('close-adhoc-client-postal')?.value || '').trim();
+        const cNip = (document.getElementById('close-adhoc-client-nip')?.value || '').trim();
+        const cEmail = (document.getElementById('close-adhoc-client-email')?.value || '').trim();
+
+        let cLat = visit.lat;
+        let cLng = visit.lng;
+        if ((!cLat || !cLng) && (cCity || cStreet)) {
+          const geo = await geocodeAddressHelper(cCity, cStreet, cPostal);
+          if (geo) {
+            cLat = geo.lat;
+            cLng = geo.lng;
+          }
+        }
+
+        const newClientId = `c_${Date.now()}`;
+        client = {
+          id: newClientId,
+          name: cName,
+          phone: cPhone,
+          email: cEmail,
+          nip: cNip,
+          city: cCity,
+          street: cStreet,
+          postalCode: cPostal,
+          lat: cLat,
+          lng: cLng,
+          devices: [],
+          createdAt: new Date().toISOString()
+        };
+        window.clientsData.push(client);
+        addedClientToDb = true;
+
+        visit.clientId = newClientId;
+        visit.isAdHoc = false;
+        visit.clientName = cName;
+        visit.clientPhone = cPhone;
+        visit.clientCity = cCity;
+        visit.clientStreet = cStreet;
+        visit.clientPostalCode = cPostal;
+        visit.clientEmail = cEmail;
+        visit.clientNip = cNip;
+        visit.lat = cLat;
+        visit.lng = cLng;
+      }
 
       let savedProtocol = null;
       let targetHistoryDeviceId = visit.deviceId || '';
@@ -6927,7 +7106,7 @@ service cloud.firestore {
       refreshAllViews();
 
       if (savedProtocol) {
-        showToast('Zlecenie zamknięte i wygenerowano cyfrowy protokół!');
+        showToast(addedClientToDb ? 'Zlecenie zamknięte, wystawiono protokół i dodano klienta do bazy!' : 'Zlecenie zamknięte i wygenerowano cyfrowy protokół!');
         setTimeout(() => {
           if (client && targetHistoryItemId) {
             openProtocolPreviewModal('device', client.id, targetHistoryDeviceId, targetHistoryItemId);
@@ -6936,7 +7115,9 @@ service cloud.firestore {
           }
         }, 180);
       } else {
-        showToast(isMontaz ? 'Montaż zamknięty — nowe urządzenie przypisano do klienta!' : 'Zlecenie zamknięte!');
+        showToast(addedClientToDb
+          ? 'Zlecenie zamknięte i pomyślnie dodano klienta do bazy!'
+          : (isMontaz ? 'Montaż zamknięty — nowe urządzenie przypisano do klienta!' : 'Zlecenie zamknięte!'));
       }
     }
 
@@ -7030,6 +7211,39 @@ service cloud.firestore {
 
     function showProtocolObjectInModal(proto) {
       currentPreviewProtocolObj = proto;
+      const isTemplate = Boolean(proto && proto.isTemplatePreview);
+
+      const btnSave = document.getElementById('btn-save-protocol-content');
+      const btnReset = document.getElementById('btn-reset-protocol-content');
+      const wrapAddSec = document.getElementById('wrap-add-protocol-section');
+      const banner = document.getElementById('protocol-preview-mode-banner');
+      const bannerText = document.getElementById('protocol-preview-mode-banner-text');
+
+      if (isTemplate) {
+        if (btnSave) btnSave.classList.remove('hidden');
+        if (btnReset) btnReset.classList.remove('hidden');
+        if (wrapAddSec) wrapAddSec.classList.remove('hidden');
+        if (banner) {
+          banner.className = 'px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/70 flex items-center justify-between gap-2 text-[11px] text-indigo-800 dark:text-indigo-300 font-semibold shrink-0';
+          banner.classList.remove('hidden');
+        }
+        if (bannerText) {
+          bannerText.innerHTML = '✏️ <strong>Edycja wzoru / szablonu protokołu:</strong> Kliknij w dowolny tekst lub dodaj sekcje z menu powyżej. Wprowadzone zmiany zapisują się w szablonie protokołu.';
+        }
+      } else {
+        // Wystawiony protokół — tryb tylko do odczytu (brak możliwości edycji)!
+        if (btnSave) btnSave.classList.add('hidden');
+        if (btnReset) btnReset.classList.add('hidden');
+        if (wrapAddSec) wrapAddSec.classList.add('hidden');
+        if (banner) {
+          banner.className = 'px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-between gap-2 text-[11px] text-zinc-600 dark:text-zinc-400 font-medium shrink-0';
+          banner.classList.remove('hidden');
+        }
+        if (bannerText) {
+          bannerText.innerHTML = '🔒 <strong>Wystawiony protokół cyfrowy (tylko do odczytu):</strong> Dokument archiwalny. Edycja zawartości i układu jest dozwolona wyłącznie w Szablonach protokołów.';
+        }
+      }
+
       const titlesMap = {
         ac_install: 'Karta Montażu Klimatyzacji',
         ac_inspection: 'Protokół Przeglądu Klimatyzatora',
@@ -7056,7 +7270,12 @@ service cloud.firestore {
       const container = document.getElementById('protocol-printable-area');
       if (container) {
         container.innerHTML = proto.customEditedHtml || renderProtocolSheetHtml(proto);
-        makeAllProtocolFieldsEditable(container);
+        if (isTemplate) {
+          makeAllProtocolFieldsEditable(container);
+        } else {
+          container.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+          container.removeAttribute('contenteditable');
+        }
       }
       openModal('modal-protocol-preview');
     }
@@ -7125,19 +7344,24 @@ service cloud.firestore {
     function autoSaveEditedProtocolHtml() {
       const container = document.getElementById('protocol-printable-area');
       if (!container || !currentPreviewProtocolObj) return;
+      if (!currentPreviewProtocolObj.isTemplatePreview) return; // Wystawione protokoły są zablokowane przed edycją
       syncProtocolAcrossAllState(currentPreviewProtocolObj, container.innerHTML);
       persistData();
     }
 
     function saveEditedProtocolContent() {
+      if (!currentPreviewProtocolObj || !currentPreviewProtocolObj.isTemplatePreview) {
+        showToast('Wystawiony protokół jest dokumentem archiwalnym i nie podlega edycji.');
+        return;
+      }
       autoSaveEditedProtocolHtml();
       persistData();
-      showToast('Zapisano ręczne zmiany w treści protokołu!');
+      showToast('Zapisano ręczne zmiany we wzorze protokołu!');
     }
 
     function resetEditedProtocolToTemplate() {
-      if (!currentPreviewProtocolObj) return;
-      askConfirmation('Przywrócenie szablonu', 'Czy na pewno chcesz cofnąć wszystkie ręczne zmiany wprowadzone na arkuszu protokołu i przywrócić pierwotny szablon?', () => {
+      if (!currentPreviewProtocolObj || !currentPreviewProtocolObj.isTemplatePreview) return;
+      askConfirmation('Przywrócenie szablonu', 'Czy na pewno chcesz cofnąć wszystkie ręczne zmiany wprowadzone na arkuszu wzoru i przywrócić pierwotny szablon?', () => {
         delete currentPreviewProtocolObj.customEditedHtml;
         const protoId = currentPreviewProtocolObj.protocolId;
         const tplId = currentPreviewProtocolObj.templateId || currentPreviewProtocolObj.type;
@@ -7147,20 +7371,6 @@ service cloud.firestore {
             delete foundTpl.customEditedHtml;
           }
         }
-        (window.appointmentsData || []).forEach(a => {
-          if (a.protocolData && (a.protocolData === currentPreviewProtocolObj || (protoId && a.protocolData.protocolId === protoId))) {
-            delete a.protocolData.customEditedHtml;
-          }
-        });
-        (window.clientsData || []).forEach(c => {
-          (c.devices || []).forEach(d => {
-            (d.inspectionHistory || []).forEach(h => {
-              if (h.protocolData && (h.protocolData === currentPreviewProtocolObj || (protoId && h.protocolData.protocolId === protoId))) {
-                delete h.protocolData.customEditedHtml;
-              }
-            });
-          });
-        });
         persistData();
         const container = document.getElementById('protocol-printable-area');
         if (container) {
@@ -7172,6 +7382,10 @@ service cloud.firestore {
     }
 
     function addProtocolCustomSection(kind) {
+      if (!currentPreviewProtocolObj || !currentPreviewProtocolObj.isTemplatePreview) {
+        showToast('Dodawanie sekcji jest dozwolone wyłącznie podczas edycji szablonów w Bazie Urządzeń.');
+        return;
+      }
       const container = document.getElementById('protocol-printable-area');
       if (!container) return;
 
@@ -7392,6 +7606,7 @@ service cloud.firestore {
     }
 
     function toggleInspectionStatusCell(td) {
+      if (!currentPreviewProtocolObj?.isTemplatePreview) return;
       const txt = (td.innerText || '').trim();
       if (txt.includes('TAK') || txt.includes('Wykonano')) {
         td.innerText = 'NIE DOTYCZY';
@@ -7549,6 +7764,7 @@ service cloud.firestore {
     }
 
     function toggleProtocolCheckmark(td) {
+      if (!currentPreviewProtocolObj?.isTemplatePreview) return;
       const isChecked = td.innerText.trim() === '☑';
       td.innerText = isChecked ? '☐' : '☑';
       td.style.color = isChecked ? '#94a3b8' : '#0284c7';
@@ -7664,6 +7880,7 @@ service cloud.firestore {
           btnReset.classList.add('opacity-50');
         }
       }
+      renderWorkersList();
       lucide.createIcons();
     }
 
@@ -8792,6 +9009,7 @@ service cloud.firestore {
       const sampleProto = {
         protocolId: 'WZÓR/PODGLĄD/2026',
         templateId: tpl.id,
+        isTemplatePreview: true,
         type: tpl.id,
         customTitle: tpl.title,
         actionCategory: tpl.actionCategory,
@@ -8841,6 +9059,7 @@ service cloud.firestore {
       showProtocolObjectInModal({
         protocolId: 'WZÓR/EDYTOR',
         templateId: editId || null,
+        isTemplatePreview: true,
         type: editId || (actionCategory === 'service' ? 'universal_service' : actionCategory === 'install' ? 'universal_install' : 'universal_inspection'),
         customTitle: title,
         actionCategory,
