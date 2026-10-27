@@ -296,6 +296,14 @@
             <div id="stat-today" class="text-xl sm:text-2xl font-extrabold text-zinc-900 dark:text-white mt-1">0 wizyt</div>
           </div>
 
+          <div onclick="document.getElementById('scheduled-urgent-card')?.scrollIntoView({behavior:'smooth'})" class="bg-white dark:bg-zinc-900 p-3.5 sm:p-4 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm cursor-pointer hover:border-emerald-500 transition">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] sm:text-xs font-bold uppercase text-emerald-600 dark:text-emerald-400">Zapl. przeglądy</span>
+              <i data-lucide="calendar-clock" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
+            </div>
+            <div id="stat-scheduled-urgent" class="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">0 urz.</div>
+          </div>
+
           <div onclick="document.getElementById('urgent-unscheduled-card')?.scrollIntoView({behavior:'smooth'})" class="bg-white dark:bg-zinc-900 p-3.5 sm:p-4 rounded-2xl border border-rose-200 dark:border-rose-900/60 shadow-sm cursor-pointer hover:border-rose-500 transition">
             <div class="flex items-center justify-between">
               <span class="text-[10px] sm:text-xs font-bold uppercase text-rose-500">Po terminie</span>
@@ -310,14 +318,6 @@
               <i data-lucide="clock" class="w-4 h-4 text-amber-500"></i>
             </div>
             <div id="stat-soon" class="text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">0 urz.</div>
-          </div>
-
-          <div onclick="document.getElementById('scheduled-urgent-card')?.scrollIntoView({behavior:'smooth'})" class="bg-white dark:bg-zinc-900 p-3.5 sm:p-4 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm cursor-pointer hover:border-emerald-500 transition">
-            <div class="flex items-center justify-between">
-              <span class="text-[10px] sm:text-xs font-bold uppercase text-emerald-600 dark:text-emerald-400">Zapl. przeglądy</span>
-              <i data-lucide="calendar-clock" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
-            </div>
-            <div id="stat-scheduled-urgent" class="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">0 urz.</div>
           </div>
 
           <div onclick="filterClientsByWarranty('expired_warranty')" class="bg-white dark:bg-zinc-900 p-3.5 sm:p-4 rounded-2xl border border-purple-200 dark:border-purple-900/60 shadow-sm cursor-pointer hover:border-purple-500 transition">
@@ -385,6 +385,34 @@
               <div id="cal-preview-body" class="p-4 space-y-3 max-h-[460px] overflow-y-auto"></div>
             </div>
 
+            <!-- ZAPLANOWANE PRZEGLĄDY -->
+            <div id="scheduled-urgent-card" class="bg-white dark:bg-zinc-900 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm overflow-hidden">
+              <div class="px-5 py-4 border-b border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/70 dark:bg-emerald-950/30 flex justify-between items-center flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="calendar-check-2" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
+                  <div>
+                    <h2 class="text-sm sm:text-base font-extrabold text-emerald-900 dark:text-emerald-200">Zaplanowane przeglądy (Umówione wyjazdy)</h2>
+                    <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80">Kończące się przeglądy, które mają już przypisaną datę i serwisanta w planerze</p>
+                  </div>
+                </div>
+                <span id="scheduled-urgent-count-badge" class="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-xs font-extrabold">0</span>
+              </div>
+              <div id="scheduled-urgent-list" class="divide-y divide-emerald-100 dark:divide-emerald-900/40"></div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-7 space-y-5 sm:space-y-6">
+            <!-- TODAY'S PLAN -->
+            <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+              <div class="px-4 sm:px-5 py-3.5 sm:py-4 bg-zinc-900 dark:bg-zinc-800 text-white flex justify-between items-center flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="navigation" class="w-4 h-4 text-emerald-400"></i>
+                  <h2 id="today-panel-title" class="text-sm sm:text-base font-extrabold">Plan pracy na dzisiaj</h2>
+                </div>
+              </div>
+              <div id="today-visits-list" class="p-4 space-y-4"></div>
+            </div>
+
             <!-- DO ZAPLANOWANIA: URGENT INSPECTIONS -->
             <div id="urgent-unscheduled-card" class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
               <div class="px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-amber-50/60 dark:bg-amber-950/20 flex justify-between items-center flex-wrap gap-2">
@@ -411,34 +439,6 @@
                 </div>
               </div>
               <div id="urgent-list" class="divide-y divide-zinc-100 dark:divide-zinc-800"></div>
-            </div>
-          </div>
-
-          <div class="lg:col-span-7 space-y-5 sm:space-y-6">
-            <!-- TODAY'S PLAN -->
-            <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
-              <div class="px-4 sm:px-5 py-3.5 sm:py-4 bg-zinc-900 dark:bg-zinc-800 text-white flex justify-between items-center flex-wrap gap-2">
-                <div class="flex items-center gap-2">
-                  <i data-lucide="navigation" class="w-4 h-4 text-emerald-400"></i>
-                  <h2 id="today-panel-title" class="text-sm sm:text-base font-extrabold">Plan pracy na dzisiaj</h2>
-                </div>
-              </div>
-              <div id="today-visits-list" class="p-4 space-y-4"></div>
-            </div>
-
-            <!-- ZAPLANOWANE PRZEGLĄDY -->
-            <div id="scheduled-urgent-card" class="bg-white dark:bg-zinc-900 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm overflow-hidden">
-              <div class="px-5 py-4 border-b border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/70 dark:bg-emerald-950/30 flex justify-between items-center flex-wrap gap-2">
-                <div class="flex items-center gap-2">
-                  <i data-lucide="calendar-check-2" class="w-4 h-4 text-emerald-600 dark:text-emerald-400"></i>
-                  <div>
-                    <h2 class="text-sm sm:text-base font-extrabold text-emerald-900 dark:text-emerald-200">Zaplanowane przeglądy (Umówione wyjazdy)</h2>
-                    <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400/80">Kończące się przeglądy, które mają już przypisaną datę i serwisanta w planerze</p>
-                  </div>
-                </div>
-                <span id="scheduled-urgent-count-badge" class="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-xs font-extrabold">0</span>
-              </div>
-              <div id="scheduled-urgent-list" class="divide-y divide-emerald-100 dark:divide-emerald-900/40"></div>
             </div>
           </div>
         </div>
@@ -2510,6 +2510,7 @@ service cloud.firestore {
 
     let firestoreDb = null;
     let firestoreUnsubscribe = null;
+    let firestoreTplUnsubscribe = null;
     let isCloudConnected = false;
 
     window.clientsData = [];
@@ -2526,6 +2527,8 @@ service cloud.firestore {
         customGroupName: '',
         actionCategory: 'inspection',
         isBuiltIn: true,
+        isCustomized: false,
+        updatedAt: 0,
         checklist: [
           'Czyszczenie filtrów jednostki wewnętrznej',
           'Czyszczenie i dezynfekcja parownika jednostki wewnętrznej',
@@ -2545,6 +2548,8 @@ service cloud.firestore {
         customGroupName: '',
         actionCategory: 'install',
         isBuiltIn: true,
+        isCustomized: false,
+        updatedAt: 0,
         checklist: [
           'Montaż jednostki wewnętrznej i zewnętrznej',
           'Wykonanie instalacji freonowej i odprowadzenia skroplin',
@@ -2558,6 +2563,8 @@ service cloud.firestore {
         customGroupName: '',
         actionCategory: 'inspection',
         isBuiltIn: true,
+        isCustomized: false,
+        updatedAt: 0,
         checklist: [
           'Czyszczenie wymiennika ciepła',
           'Czyszczenie palnika oraz elektrod (zapłonowej / jonizacyjnej)',
@@ -2578,6 +2585,8 @@ service cloud.firestore {
         customGroupName: '',
         actionCategory: 'install',
         isBuiltIn: true,
+        isCustomized: false,
+        updatedAt: 0,
         checklist: [
           'Montaż kotła gazowego i podłączenie do instalacji C.O. oraz C.W.U.',
           'Podłączenie do instalacji gazowej i wykonanie próby szczelności gazu',
@@ -2593,6 +2602,8 @@ service cloud.firestore {
         customGroupName: '',
         actionCategory: 'inspection',
         isBuiltIn: true,
+        isCustomized: false,
+        updatedAt: 0,
         checklist: [
           'Czyszczenie filtra magnetycznego / odmulacza i siatkowego',
           'Czyszczenie i kontrola parownika jednostki zewnętrznej',
@@ -2611,6 +2622,8 @@ service cloud.firestore {
         customGroupName: '',
         actionCategory: 'install',
         isBuiltIn: true,
+        isCustomized: false,
+        updatedAt: 0,
         checklist: [
           'Montaż jednostki zewnętrznej i wewnętrznej (hydroboksu)',
           'Wykonanie połączeń hydraulicznych, montaż filtra magnetycznego',
@@ -2624,6 +2637,8 @@ service cloud.firestore {
         customGroupName: 'Pozostałe urządzenia / Własne',
         actionCategory: 'inspection',
         isBuiltIn: true,
+        isCustomized: false,
+        updatedAt: 0,
         checklist: [
           'Wizualna kontrola stanu technicznego urządzenia i podzespołów',
           'Czyszczenie filtrów, wymienników oraz elementów roboczych',
@@ -2640,6 +2655,8 @@ service cloud.firestore {
         customGroupName: 'Pozostałe urządzenia / Własne',
         actionCategory: 'install',
         isBuiltIn: true,
+        isCustomized: false,
+        updatedAt: 0,
         checklist: [
           'Montaż mechaniczny urządzenia w miejscu docelowym zgodnie z DTR',
           'Podłączenie do instalacji technologicznej oraz zasilania elektrycznego',
@@ -2655,6 +2672,8 @@ service cloud.firestore {
         customGroupName: '',
         actionCategory: 'service',
         isBuiltIn: true,
+        isCustomized: false,
+        updatedAt: 0,
         checklist: []
       }
     ];
@@ -3002,34 +3021,81 @@ service cloud.firestore {
         tplMap.set(t.id, JSON.parse(JSON.stringify(t)));
       });
 
-      // 2. Nakładamy aktualne wzory z pamięci podręcznej (aby nie stracić nowo dodanych wzorów lokalnych)
+      // 2. Nakładamy aktualne wzory z pamięci lokalnej
       (window.protocolTemplatesData || []).forEach(t => {
         if (t && t.id) {
-          tplMap.set(t.id, t);
+          tplMap.set(t.id, JSON.parse(JSON.stringify(t)));
         }
       });
 
-      // 3. Nakładamy wzory przychodzące z bazy (chmury)
-      incoming.forEach(t => {
-        if (t && t.id) {
-          const existing = tplMap.get(t.id);
-          if (existing) {
-            tplMap.set(t.id, {
+      let needsCloudPush = false;
+
+      // 3. Rozpatrujemy wzory przychodzące z bazy (incoming) z poszanowaniem dat edycji (updatedAt)
+      incoming.forEach(inc => {
+        if (!inc || !inc.id) return;
+        const existing = tplMap.get(inc.id);
+        if (!existing) {
+          tplMap.set(inc.id, JSON.parse(JSON.stringify(inc)));
+        } else {
+          const locTime = Number(existing.updatedAt || 0);
+          const incTime = Number(inc.updatedAt || 0);
+
+          if (incTime > locTime) {
+            // Wersja z bazy jest nowsza niż lokalna -> przyjmujemy wersję z bazy
+            tplMap.set(inc.id, {
               ...existing,
-              ...t,
-              checklist: (Array.isArray(t.checklist) && t.checklist.length > 0) ? t.checklist : existing.checklist,
-              installParams: (Array.isArray(t.installParams) && t.installParams.length > 0) ? t.installParams : existing.installParams,
-              serviceFields: (Array.isArray(t.serviceFields) && t.serviceFields.length > 0) ? t.serviceFields : existing.serviceFields,
-              customEditedHtml: t.customEditedHtml || existing.customEditedHtml
+              ...inc,
+              checklist: (Array.isArray(inc.checklist) && inc.checklist.length > 0) ? inc.checklist : existing.checklist,
+              installParams: (Array.isArray(inc.installParams) && inc.installParams.length > 0) ? inc.installParams : existing.installParams,
+              serviceFields: (Array.isArray(inc.serviceFields) && inc.serviceFields.length > 0) ? inc.serviceFields : existing.serviceFields,
+              customEditedHtml: inc.customEditedHtml || existing.customEditedHtml,
+              updatedAt: incTime,
+              isCustomized: inc.isCustomized !== undefined ? inc.isCustomized : existing.isCustomized
             });
+          } else if (locTime > incTime) {
+            // Wersja lokalna jest nowsza niż w bazie -> zachowujemy lokalną i wyślemy do bazy
+            needsCloudPush = true;
           } else {
-            tplMap.set(t.id, t);
+            // Czasy równe (lub oba 0) -> sprawdzamy czy lokalna jest zedytowana przez użytkownika
+            const isLocCustom = Boolean(existing.isCustomized || !existing.isBuiltIn || existing.customEditedHtml);
+            const isIncCustom = Boolean(inc.isCustomized || !inc.isBuiltIn || inc.customEditedHtml);
+
+            if (isLocCustom && !isIncCustom) {
+              needsCloudPush = true;
+            } else if (!isLocCustom && isIncCustom) {
+              tplMap.set(inc.id, JSON.parse(JSON.stringify(inc)));
+            } else {
+              tplMap.set(inc.id, {
+                ...inc,
+                ...existing,
+                checklist: (Array.isArray(existing.checklist) && existing.checklist.length > 0) ? existing.checklist : inc.checklist,
+                installParams: (Array.isArray(existing.installParams) && existing.installParams.length > 0) ? existing.installParams : inc.installParams,
+                serviceFields: (Array.isArray(existing.serviceFields) && existing.serviceFields.length > 0) ? existing.serviceFields : inc.serviceFields,
+                customEditedHtml: existing.customEditedHtml || inc.customEditedHtml
+              });
+            }
           }
+        }
+      });
+
+      // Sprawdzamy czy w lokalnej pamięci są wzory użytkownika, których brakuje w przychodzących z bazy
+      (window.protocolTemplatesData || []).forEach(loc => {
+        if (loc && loc.id && !incoming.some(inc => inc.id === loc.id)) {
+          needsCloudPush = true;
         }
       });
 
       window.protocolTemplatesData = Array.from(tplMap.values());
       localStorage.setItem(STORAGE_KEYS.TEMPLATES, JSON.stringify(window.protocolTemplatesData));
+
+      if (needsCloudPush && isCloudConnected && firestoreDb) {
+        try {
+          firestoreDb.collection('pp_state').doc('templates').set({
+            protocolTemplates: window.protocolTemplatesData,
+            updatedAt: new Date().toISOString()
+          }).catch(err => console.warn('Błąd synchronizacji wzorów:', err));
+        } catch (e) {}
+      }
     }
 
     function applyCloudPayload(data) {
@@ -3191,6 +3257,7 @@ service cloud.firestore {
 
     function disconnectFirebase() {
       if (firestoreUnsubscribe) { firestoreUnsubscribe(); firestoreUnsubscribe = null; }
+      if (firestoreTplUnsubscribe) { firestoreTplUnsubscribe(); firestoreTplUnsubscribe = null; }
       localStorage.removeItem(STORAGE_KEYS.FIREBASE_CFG);
       isCloudConnected = false;
       firestoreDb = null;
@@ -3211,6 +3278,7 @@ service cloud.firestore {
       if (!window.firebase) return;
       try {
         if (firestoreUnsubscribe) { firestoreUnsubscribe(); firestoreUnsubscribe = null; }
+        if (firestoreTplUnsubscribe) { firestoreTplUnsubscribe(); firestoreTplUnsubscribe = null; }
         const appName = 'pp_app_' + (configObj.projectId || 'default').replace(/[^a-zA-Z0-9_]/g, '_');
         let fbApp = firebase.apps.find(a => a.name === appName) || firebase.initializeApp(configObj, appName);
 
@@ -3250,12 +3318,13 @@ service cloud.firestore {
             });
           }
 
-          tplDocRef.onSnapshot(liveTplSnap => {
+          firestoreTplUnsubscribe = tplDocRef.onSnapshot(liveTplSnap => {
             if (liveTplSnap.exists) {
               const liveData = liveTplSnap.data();
               if (Array.isArray(liveData.protocolTemplates) && liveData.protocolTemplates.length > 0) {
                 mergeProtocolTemplates(liveData.protocolTemplates);
                 if (currentTab === 'devices_db') renderProtocolTemplatesManager();
+                populateProtocolTemplatesSelect();
               }
             }
           }, () => {});
@@ -3382,6 +3451,7 @@ service cloud.firestore {
       if (urgentSel) urgentSel.value = String(urgentDaysThreshold);
 
       populateWorkerSelects();
+      populateProtocolTemplatesSelect();
       initStatsTimeFilters();
       renderDashboard();
       updateSidebarCompanyLogo();
@@ -3398,6 +3468,7 @@ service cloud.firestore {
        ========================================================================== */
     function refreshAllViews() {
       populateWorkerSelects();
+      populateProtocolTemplatesSelect();
       renderDashboard();
       updateSidebarCompanyLogo();
       if (currentTab === 'map_planner') {
@@ -3462,7 +3533,10 @@ service cloud.firestore {
           ? 'px-4 py-2 rounded-xl text-xs font-extrabold bg-emerald-600 text-white shadow-sm transition flex items-center gap-1.5'
           : 'px-4 py-2 rounded-xl text-xs font-extrabold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 transition flex items-center gap-1.5';
       }
-      if (!isCat) renderProtocolTemplatesManager();
+      if (!isCat) {
+        renderProtocolTemplatesManager();
+        populateProtocolTemplatesSelect();
+      }
       lucide.createIcons();
     }
 
@@ -7075,7 +7149,7 @@ service cloud.firestore {
         type: protoKind,
         templateId: tpl?.id || protoKind,
         customTitle: tpl?.title || '',
-        customEditedHtml: tpl?.customEditedHtml || null,
+        customEditedHtml: null,
         date: visit.date || toYMD(new Date()),
         companyName: getSavedCompanyName(),
         fgazCert: getSavedFgazCert(),
@@ -7734,6 +7808,8 @@ service cloud.firestore {
         const foundTpl = window.protocolTemplatesData.find(t => t.id === tplId);
         if (foundTpl) {
           foundTpl.customEditedHtml = editedHtml;
+          foundTpl.updatedAt = Date.now();
+          foundTpl.isCustomized = true;
           persistData();
         }
       }
@@ -7789,6 +7865,7 @@ service cloud.firestore {
           const foundTpl = window.protocolTemplatesData.find(t => t.id === tplId);
           if (foundTpl) {
             delete foundTpl.customEditedHtml;
+            foundTpl.updatedAt = Date.now();
           }
         }
         persistData();
@@ -9360,26 +9437,38 @@ service cloud.firestore {
         document.getElementById('tpl-service-fields').value = formatParamObjectsToLines(tpl.serviceFields || []);
       }
       onTemplateEditorCategoryChange(cat);
+      document.getElementById('tpl-form-header')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       showToast(`Wczytano wzór „${tpl.title}” do edytora po lewej stronie.`);
     }
 
     function handleSaveProtocolTemplate(e) {
       e.preventDefault();
-      const editId = document.getElementById('tpl-edit-id').value;
-      const title = (document.getElementById('tpl-title').value || '').trim();
-      const deviceGroup = document.getElementById('tpl-device-group').value || 'custom';
-      const customGroupName = deviceGroup === 'custom' ? (document.getElementById('tpl-custom-group-name').value || '').trim() : '';
-      const actionCategory = document.getElementById('tpl-action-category').value || 'inspection';
-      const rawItems = document.getElementById('tpl-checklist-items').value || '';
+      const editId = (document.getElementById('tpl-edit-id')?.value || '').trim();
+      const title = (document.getElementById('tpl-title')?.value || '').trim();
+      const deviceGroup = document.getElementById('tpl-device-group')?.value || 'custom';
+      const customGroupName = deviceGroup === 'custom' ? (document.getElementById('tpl-custom-group-name')?.value || '').trim() : '';
+      const actionCategory = document.getElementById('tpl-action-category')?.value || 'inspection';
+      const rawItems = document.getElementById('tpl-checklist-items')?.value || '';
       const checklist = rawItems.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
       const installParams = actionCategory === 'install' ? parseLinesToParamObjects(document.getElementById('tpl-install-params')?.value || '') : [];
       const serviceFields = actionCategory === 'service' ? parseLinesToParamObjects(document.getElementById('tpl-service-fields')?.value || '') : [];
 
-      if (!title) return;
+      if (!title) {
+        showToast('Wprowadź nazwę wzoru protokołu!');
+        return;
+      }
+
+      const now = Date.now();
 
       if (editId) {
-        window.protocolTemplatesData = (window.protocolTemplatesData || []).map(t =>
-          t.id === editId ? {
+        let found = false;
+        window.protocolTemplatesData = (window.protocolTemplatesData || []).map(t => {
+          if (t.id !== editId) return t;
+          found = true;
+          const checklistChanged = JSON.stringify(t.checklist || []) !== JSON.stringify(checklist);
+          const titleChanged = (t.title || '') !== title;
+          const customEditedHtml = (checklistChanged || titleChanged) ? null : t.customEditedHtml;
+          return {
             ...t,
             title,
             deviceGroup,
@@ -9388,10 +9477,26 @@ service cloud.firestore {
             checklist,
             installParams,
             serviceFields,
-            customEditedHtml: t.customEditedHtml
-          } : t
-        );
-        showToast('Zaktualizowano wzór protokołu!');
+            customEditedHtml,
+            updatedAt: now,
+            isCustomized: true
+          };
+        });
+        if (!found) {
+          window.protocolTemplatesData.push({
+            id: editId,
+            title,
+            deviceGroup,
+            customGroupName,
+            actionCategory,
+            checklist,
+            installParams,
+            serviceFields,
+            updatedAt: now,
+            isCustomized: true
+          });
+        }
+        showToast('💾 Zaktualizowano i trwale zapisano wzór protokołu!');
       } else {
         const newId = 'tpl_' + Date.now();
         window.protocolTemplatesData.push({
@@ -9403,13 +9508,16 @@ service cloud.firestore {
           isBuiltIn: false,
           checklist,
           installParams,
-          serviceFields
+          serviceFields,
+          updatedAt: now,
+          isCustomized: true
         });
-        showToast('Dodano nowy wzór protokołu!');
+        showToast('💾 Dodano i trwale zapisano nowy wzór protokołu!');
       }
 
       persistData();
       renderProtocolTemplatesManager();
+      populateProtocolTemplatesSelect();
       resetProtocolTemplateForm();
     }
 
@@ -9418,15 +9526,22 @@ service cloud.firestore {
         window.protocolTemplatesData = (window.protocolTemplatesData || []).filter(t => t.id !== tplId);
         persistData();
         renderProtocolTemplatesManager();
+        populateProtocolTemplatesSelect();
         showToast('Usunięto wzór protokołu.');
       });
     }
 
     function restoreDefaultProtocolTemplates() {
-      askConfirmation('Przywracanie domyślnych wzorów', 'Czy chcesz przywróć domyślne listy kontrolne dla standardowych protokołów?', () => {
-        window.protocolTemplatesData = JSON.parse(JSON.stringify(DEFAULT_PROTOCOL_TEMPLATES));
+      askConfirmation('Przywracanie domyślnych wzorów', 'Czy chcesz przywrócić domyślne listy kontrolne dla standardowych protokołów?', () => {
+        const now = Date.now();
+        window.protocolTemplatesData = JSON.parse(JSON.stringify(DEFAULT_PROTOCOL_TEMPLATES)).map(t => ({
+          ...t,
+          updatedAt: now,
+          isCustomized: false
+        }));
         persistData();
         renderProtocolTemplatesManager();
+        populateProtocolTemplatesSelect();
         showToast('Przywrócono domyślne wzory protokołów.');
       });
     }
@@ -9470,12 +9585,12 @@ service cloud.firestore {
     }
 
     function previewTemplateFromEditor() {
-      let editId = document.getElementById('tpl-edit-id')?.value || '';
-      const title = (document.getElementById('tpl-title').value || '').trim() || 'WZÓR PROTOKOŁU';
-      const deviceGroup = document.getElementById('tpl-device-group').value || 'custom';
-      const customGroupName = deviceGroup === 'custom' ? (document.getElementById('tpl-custom-group-name').value || '').trim() : '';
-      const actionCategory = document.getElementById('tpl-action-category').value || 'inspection';
-      const rawItems = document.getElementById('tpl-checklist-items').value || '';
+      let editId = (document.getElementById('tpl-edit-id')?.value || '').trim();
+      const title = (document.getElementById('tpl-title')?.value || '').trim() || 'WZÓR PROTOKOŁU';
+      const deviceGroup = document.getElementById('tpl-device-group')?.value || 'custom';
+      const customGroupName = deviceGroup === 'custom' ? (document.getElementById('tpl-custom-group-name')?.value || '').trim() : '';
+      const actionCategory = document.getElementById('tpl-action-category')?.value || 'inspection';
+      const rawItems = document.getElementById('tpl-checklist-items')?.value || '';
       const checklist = rawItems.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
       const installParams = actionCategory === 'install'
         ? parseLinesToParamObjects(document.getElementById('tpl-install-params')?.value || '')
@@ -9483,6 +9598,7 @@ service cloud.firestore {
       const serviceFields = actionCategory === 'service'
         ? parseLinesToParamObjects(document.getElementById('tpl-service-fields')?.value || '')
         : [];
+      const now = Date.now();
 
       if (!editId) {
         editId = 'tpl_' + Date.now();
@@ -9496,11 +9612,18 @@ service cloud.firestore {
           isBuiltIn: false,
           checklist,
           installParams,
-          serviceFields
+          serviceFields,
+          updatedAt: now,
+          isCustomized: true
         });
       } else {
         const existing = (window.protocolTemplatesData || []).find(t => t.id === editId);
         if (existing) {
+          const checklistChanged = JSON.stringify(existing.checklist || []) !== JSON.stringify(checklist);
+          const titleChanged = (existing.title || '') !== title;
+          if (checklistChanged || titleChanged) {
+            existing.customEditedHtml = null;
+          }
           existing.title = title;
           existing.deviceGroup = deviceGroup;
           existing.customGroupName = customGroupName;
@@ -9508,11 +9631,27 @@ service cloud.firestore {
           existing.checklist = checklist;
           existing.installParams = installParams;
           existing.serviceFields = serviceFields;
+          existing.updatedAt = now;
+          existing.isCustomized = true;
+        } else {
+          window.protocolTemplatesData.push({
+            id: editId,
+            title,
+            deviceGroup,
+            customGroupName,
+            actionCategory,
+            checklist,
+            installParams,
+            serviceFields,
+            updatedAt: now,
+            isCustomized: true
+          });
         }
       }
 
       persistData();
       renderProtocolTemplatesManager();
+      populateProtocolTemplatesSelect();
       previewSavedProtocolTemplate(editId);
     }
 
@@ -10007,7 +10146,9 @@ service cloud.firestore {
                   localStorage.setItem(STORAGE_KEYS.WORKER_SIGNATURES, JSON.stringify(mergedSigs));
                 } catch (e) {}
               }
-              if (Array.isArray(parsed.protocolTemplates) && parsed.protocolTemplates.length > 0) window.protocolTemplatesData = parsed.protocolTemplates;
+              if (Array.isArray(parsed.protocolTemplates) && parsed.protocolTemplates.length > 0) {
+                mergeProtocolTemplates(parsed.protocolTemplates);
+              }
               if (parsed.companyLogo) {
                 try { localStorage.setItem(STORAGE_KEYS.COMPANY_LOGO, parsed.companyLogo); } catch (e) {}
               }
