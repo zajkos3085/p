@@ -2027,6 +2027,17 @@
               <div id="proto-srv-extra-fields-wrap" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1"></div>
             </div>
 
+            <!-- 7. WŁASNE TABELE POMIARÓW I SEKCJE ZE WZORU PROTOKOŁU -->
+            <div id="proto-custom-template-sections-wrap" class="hidden space-y-2.5 p-3 rounded-xl bg-teal-50/90 dark:bg-teal-950/40 border border-teal-300 dark:border-teal-700">
+              <div class="flex items-center justify-between">
+                <div class="font-extrabold text-[11px] text-teal-900 dark:text-teal-200 uppercase flex items-center gap-1.5">
+                  <span>📊</span> <span>Własna tabela pomiarów / parametry z szablonu:</span>
+                </div>
+                <span class="text-[10px] text-teal-700 dark:text-teal-300 font-bold">Wpisz na protokół</span>
+              </div>
+              <div id="proto-custom-template-sections-box" class="space-y-2"></div>
+            </div>
+
             <!-- PODPISY DOTYKOWE (PALCEM NA EKRANIE TELEFONU LUB MYSZKĄ) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <div class="space-y-1.5">
@@ -4035,7 +4046,7 @@ service cloud.firestore {
                   ${scheduledVisit.protocolData ? `<div class="pt-0.5"><button type="button" onclick="openProtocolPreviewByVisit('${scheduledVisit.id}')" class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-extrabold inline-flex items-center gap-1 shadow-sm"><i data-lucide="file-text" class="w-3 h-3"></i> Podgląd protokołu / PDF</button></div>` : ''}
                 </div>
                 <div class="flex flex-col gap-1.5 shrink-0 w-full sm:w-40">
-                  <button onclick="openCloseVisitModal('${scheduledVisit.id}')" class="w-full px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm text-center">
+                  <button onclick="handleVisitActionButton('${scheduledVisit.id}')" class="w-full px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm text-center">
                     Zamknij zlecenie
                   </button>
                   <button onclick="openDateInPlanner('${scheduledVisit.date}')" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 text-center">
@@ -6928,6 +6939,59 @@ service cloud.firestore {
       document.getElementById('proto-sn-out-wrap')?.classList.toggle('hidden', !hasTwoUnits);
       setText('proto-sn-in-label', hasTwoUnits ? 'Nr seryjny jedn. wewnętrznej (JW)' : 'Numer fabryczny / seryjny urządzenia (S/N)');
 
+      // Sprawdź czy wybrany szablon posiada własne tabele lub sekcje z edytora arkusza A4
+      const customSectionsWrap = document.getElementById('proto-custom-template-sections-wrap');
+      const customSectionsBox = document.getElementById('proto-custom-template-sections-box');
+      if (customSectionsWrap && customSectionsBox) {
+        customSectionsBox.innerHTML = '';
+        let hasCustomSections = false;
+
+        if (tpl && tpl.customEditedHtml && tpl.customEditedHtml.includes('protocol-custom-section')) {
+          try {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(tpl.customEditedHtml, 'text/html');
+            const sections = doc.querySelectorAll('.protocol-custom-section');
+
+            sections.forEach((sec, sIdx) => {
+              const secTitleEl = sec.querySelector('[contenteditable]');
+              const secTitle = (secTitleEl?.innerText || 'Własna tabela parametrów / pomiarów').trim();
+              const table = sec.querySelector('table');
+
+              if (table) {
+                const tbodyRows = table.querySelectorAll('tbody tr');
+                if (tbodyRows.length > 0) {
+                  hasCustomSections = true;
+                  const secBlock = document.createElement('div');
+                  secBlock.className = 'space-y-1.5 pt-2 border-t border-teal-200 dark:border-teal-800 first:border-0 first:pt-0';
+                  secBlock.innerHTML = `
+                    <div class="font-extrabold text-[10px] uppercase text-teal-900 dark:text-teal-200">${escapeHtml(secTitle)}:</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="proto-custom-grid-${sIdx}"></div>
+                  `;
+                  const grid = secBlock.querySelector(`#proto-custom-grid-${sIdx}`);
+                  tbodyRows.forEach((row, rIdx) => {
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length >= 2) {
+                      const labelText = (cells[0].innerText || `Parametr ${rIdx + 1}`).trim();
+                      const defaultVal = (cells[1].innerText || '').trim();
+                      const itemEl = document.createElement('div');
+                      itemEl.innerHTML = `
+                        <label class="block text-[10px] font-bold text-zinc-600 dark:text-zinc-300 mb-0.5">${escapeHtml(labelText)}</label>
+                        <input type="text" class="proto-custom-table-input w-full px-2.5 py-1.5 rounded-lg border border-teal-300 dark:border-teal-700 bg-white dark:bg-zinc-900 text-xs font-semibold" data-sec-idx="${sIdx}" data-row-idx="${rIdx}" value="${escapeHtml(defaultVal)}">
+                      `;
+                      grid.appendChild(itemEl);
+                    }
+                  });
+                  customSectionsBox.appendChild(secBlock);
+                }
+              }
+            });
+          } catch (e) {
+            console.error('Błąd parsowania sekcji szablonu:', e);
+          }
+        }
+        customSectionsWrap.classList.toggle('hidden', !hasCustomSections);
+      }
+
       const showMaterials = !kind.endsWith('_install') && tpl?.actionCategory !== 'install' && document.getElementById('close-visit-attach-protocol')?.checked;
       document.getElementById('close-visit-materials-wrap')?.classList.toggle('hidden', !showMaterials);
 
@@ -6945,8 +7009,49 @@ service cloud.firestore {
       const visit = (window.appointmentsData || []).find(a => a.id === visitId);
       if (!visit) return;
       if (visit.status === 'completed') {
-        askConfirmation('Cofnięcie zamknięcia zlecenia', 'Czy chcesz przywrócić to zlecenie z powrotem do statusu „W planie”?', () => {
+        askConfirmation('Cofnięcie zamknięcia zlecenia', 'Czy chcesz przywrócić to zlecenie z powrotem do realizacji (status „W planie”) i wycofać wpis z historii urządzenia?', () => {
           visit.status = 'planned';
+          delete visit.completionComment;
+          const visitProtoId = visit.protocolData?.protocolId;
+          const visitDate = visit.date;
+          const targetDevId = visit.deviceId;
+
+          // Wycofaj wpis w historii urządzenia klienta
+          if (visit.clientId) {
+            const client = (window.clientsData || []).find(c => c.id === visit.clientId);
+            if (client && Array.isArray(client.devices)) {
+              const srvLow = (visit.serviceType || '').toLowerCase();
+              const isMontaz = srvLow.includes('monta');
+
+              if (isMontaz && targetDevId && client.devices.some(d => d.id === targetDevId)) {
+                // Jeśli był to montaż — usuwamy zamontowane podczas tego zlecenia urządzenie
+                client.devices = client.devices.filter(d => d.id !== targetDevId);
+                delete visit.deviceId;
+              } else {
+                client.devices.forEach(dev => {
+                  if (targetDevId && dev.id !== targetDevId) return;
+                  if (Array.isArray(dev.inspectionHistory)) {
+                    dev.inspectionHistory = dev.inspectionHistory.filter(h => {
+                      if (visitProtoId && h.protocolData?.protocolId === visitProtoId) return false;
+                      if (h.date === visitDate && (h.technician === visit.workerName || h.notes === visit.completionComment)) return false;
+                      return true;
+                    });
+                    // Przelicz poprzednią datę przeglądu na podstawie pozostałej historii lub daty montażu
+                    if (dev.inspectionHistory.length > 0) {
+                      dev.lastInspectionDate = dev.inspectionHistory[0].date;
+                      const interval = Number(dev.inspectionIntervalMonths || 12);
+                      dev.nextInspectionDate = addMonths(dev.lastInspectionDate, interval);
+                    } else if (dev.installDate) {
+                      dev.lastInspectionDate = dev.installDate;
+                      const interval = Number(dev.inspectionIntervalMonths || 12);
+                      dev.nextInspectionDate = addMonths(dev.installDate, interval);
+                    }
+                  }
+                });
+              }
+            }
+          }
+
           persistData();
           refreshAllViews();
           showToast('Przywrócono zlecenie do realizacji.');
@@ -7144,12 +7249,94 @@ service cloud.firestore {
         return JSON.stringify(def?.checklist || []) !== JSON.stringify(tpl.checklist || []);
       })();
 
+      const protoIdGenerated = `PROT/${(visit.date || toYMD(new Date())).replace(/-/g, '')}/${Math.floor(100 + Math.random() * 900)}`;
+      const clientAddrFormatted = client ? `${client.postalCode ? client.postalCode + ' ' : ''}${client.city || ''}, ${client.street || ''}` : (visit.clientAddress || `${visit.clientPostalCode ? visit.clientPostalCode + ' ' : ''}${visit.clientCity || ''}${visit.clientStreet ? ', ' + visit.clientStreet : ''}`.trim() || '—');
+      const sigTechUrl = getSignatureDataUrl('sig-canvas-tech');
+      const sigClientUrl = getSignatureDataUrl('sig-canvas-client');
+
+      // Jeśli wzór protokołu posiada zedytowany arkusz A4 z tabelami pomiarów lub sekcjami (tpl.customEditedHtml):
+      let mergedCustomHtml = null;
+      if (tpl && tpl.customEditedHtml) {
+        try {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(tpl.customEditedHtml, 'text/html');
+
+          // 1. Zaktualizuj wartości w tabelach pomiarów z wpisanych pól w modalu zamknięcia
+          document.querySelectorAll('.proto-custom-table-input').forEach(inp => {
+            const sIdx = Number(inp.getAttribute('data-sec-idx'));
+            const rIdx = Number(inp.getAttribute('data-row-idx'));
+            const val = inp.value.trim();
+            const customSections = doc.querySelectorAll('.protocol-custom-section');
+            if (customSections[sIdx]) {
+              const rows = customSections[sIdx].querySelectorAll('tbody tr');
+              if (rows[rIdx]) {
+                const cells = rows[rIdx].querySelectorAll('td');
+                if (cells.length >= 2) {
+                  cells[1].textContent = val;
+                }
+              }
+            }
+          });
+
+          // 2. Podmień nagłówek i tabelę stron na rzeczywiste dane zlecenia
+          const docTitle = (document.getElementById('tpl-title')?.value || tpl.title || 'PROTOKÓŁ CYFROWY').trim();
+          const accentColor = tpl.actionCategory === 'install' ? '#0284c7' : (tpl.actionCategory === 'service' ? '#e11d48' : '#059669');
+          const tempBaseForHeader = {
+            protocolId: protoIdGenerated,
+            date: visit.date || toYMD(new Date()),
+            companyName: getSavedCompanyName(),
+            fgazCert: getSavedFgazCert(),
+            technician: visit.workerName || 'Serwis INSTAL',
+            clientName: client?.name || visit.clientName || 'Klient',
+            clientNip: client?.nip || visit.clientNip || '',
+            clientEmail: client?.email || visit.clientEmail || '',
+            clientAddress: clientAddrFormatted,
+            installAddress: deviceInstallAddress || visit.installAddress || '',
+            clientPhone: client?.phone || visit.clientPhone || '',
+            deviceTypeLabel: devTypeLabel || visit.deviceTypeLabel || 'Urządzenie HVAC',
+            deviceModel: deviceModel || visit.deviceModel || visit.plannedInstallModel || 'Urządzenie HVAC',
+            serialIndoor: (document.getElementById('proto-inst-sn-in')?.value || serialNumber || '').trim(),
+            serialOutdoor: (document.getElementById('proto-inst-sn-out')?.value || serialNumberOutdoor || '').trim(),
+          };
+
+          const newHeaderHtml = renderProtocolHeaderAndPartiesHtml(tempBaseForHeader, docTitle, accentColor);
+          const firstHeaderDiv = doc.querySelector('div[style*="border-bottom:3px solid"]');
+          const partiesTable = doc.querySelector('table[style*="border-collapse:collapse"]');
+          if (firstHeaderDiv && partiesTable && partiesTable.previousElementSibling === firstHeaderDiv) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = newHeaderHtml.trim();
+            firstHeaderDiv.parentNode.insertBefore(tempDiv, firstHeaderDiv);
+            firstHeaderDiv.remove();
+            partiesTable.remove();
+          }
+
+          // 3. Podmień stopkę z podpisami i oświadczeniem zgodności
+          const footerSigWrap = doc.querySelector('.protocol-footer-signatures-wrap');
+          if (footerSigWrap) {
+            const sigTechImg = sigTechUrl
+              ? `<img src="${sigTechUrl}" style="max-height:78px;max-width:100%;margin:0 auto;display:block;background:#ffffff;" alt="Podpis serwisanta">`
+              : `<div style="height:65px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px;">(Brak podpisu cyfrowego)</div>`;
+            const sigClientImg = sigClientUrl
+              ? `<img src="${sigClientUrl}" style="max-height:78px;max-width:100%;margin:0 auto;display:block;background:#ffffff;" alt="Podpis klienta">`
+              : `<div style="height:65px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px;">(Brak podpisu cyfrowego)</div>`;
+            const newFooterHtml = renderProtocolSignaturesFooterHtml(tempBaseForHeader, sigTechImg, sigClientImg);
+            const tempFooter = document.createElement('div');
+            tempFooter.innerHTML = newFooterHtml.trim();
+            footerSigWrap.parentNode.replaceChild(tempFooter.firstElementChild, footerSigWrap);
+          }
+
+          mergedCustomHtml = doc.body.innerHTML;
+        } catch (e) {
+          console.error('Błąd scalania szablonu protokołu:', e);
+        }
+      }
+
       const base = {
-        protocolId: `PROT/${(visit.date || toYMD(new Date())).replace(/-/g, '')}/${Math.floor(100 + Math.random() * 900)}`,
+        protocolId: protoIdGenerated,
         type: protoKind,
         templateId: tpl?.id || protoKind,
         customTitle: tpl?.title || '',
-        customEditedHtml: null,
+        customEditedHtml: mergedCustomHtml,
         date: visit.date || toYMD(new Date()),
         companyName: getSavedCompanyName(),
         fgazCert: getSavedFgazCert(),
@@ -7157,7 +7344,7 @@ service cloud.firestore {
         clientName: client?.name || visit.clientName || 'Klient',
         clientNip: client?.nip || visit.clientNip || '',
         clientEmail: client?.email || visit.clientEmail || '',
-        clientAddress: client ? `${client.postalCode ? client.postalCode + ' ' : ''}${client.city || ''}, ${client.street || ''}` : (visit.clientAddress || `${visit.clientPostalCode ? visit.clientPostalCode + ' ' : ''}${visit.clientCity || ''}${visit.clientStreet ? ', ' + visit.clientStreet : ''}`.trim() || '—'),
+        clientAddress: clientAddrFormatted,
         installAddress: deviceInstallAddress || visit.installAddress || '',
         clientPhone: client?.phone || visit.clientPhone || '',
         deviceTypeLabel: devTypeLabel || visit.deviceTypeLabel || 'Urządzenie HVAC',
@@ -7166,8 +7353,8 @@ service cloud.firestore {
         serialOutdoor: (document.getElementById('proto-inst-sn-out')?.value || serialNumberOutdoor || '').trim(),
         usedMaterials: (document.getElementById('proto-insp-materials')?.value || '').trim(),
         comments: comment || '',
-        sigTechDataUrl: getSignatureDataUrl('sig-canvas-tech'),
-        sigClientDataUrl: getSignatureDataUrl('sig-canvas-client')
+        sigTechDataUrl: sigTechUrl,
+        sigClientDataUrl: sigClientUrl
       };
 
       if (protoKind === 'ac_install' && !hasCustomEditedChecklist) {
@@ -7321,13 +7508,25 @@ service cloud.firestore {
     }
 
     async function handleConfirmCloseVisit(e) {
-      e.preventDefault();
-      const visitId = document.getElementById('close-visit-id').value;
-      const comment = (document.getElementById('close-visit-comment').value || '').trim();
-      const shouldUpdateNextInsp = document.getElementById('close-visit-update-next-insp').checked;
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+      const submitBtn = document.querySelector('#modal-close-visit button[type="submit"]');
+      const origBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Zamykanie zlecenia...';
+        lucide.createIcons();
+      }
 
-      const visit = (window.appointmentsData || []).find(a => a.id === visitId);
-      if (!visit) return;
+      try {
+        const visitId = document.getElementById('close-visit-id').value;
+        const comment = (document.getElementById('close-visit-comment').value || '').trim();
+        const shouldUpdateNextInsp = Boolean(document.getElementById('close-visit-update-next-insp')?.checked);
+
+        const visit = (window.appointmentsData || []).find(a => a.id === visitId);
+        if (!visit) {
+          showToast('Nie znaleziono zlecenia do zamknięcia.');
+          return;
+        }
 
       const isMontaz = (visit.serviceType || '').toLowerCase().includes('monta');
       let client = (window.clientsData || []).find(c => c.id === visit.clientId);
@@ -7572,23 +7771,29 @@ service cloud.firestore {
         visit.protocolData = savedProtocol;
       }
 
-      persistData();
-      closeModal('modal-close-visit');
-      refreshAllViews();
+        persistData();
+        closeModal('modal-close-visit');
+        refreshAllViews();
 
-      if (savedProtocol) {
-        showToast(addedClientToDb ? 'Zlecenie zamknięte, wystawiono protokół i dodano klienta do bazy!' : 'Zlecenie zamknięte i wygenerowano cyfrowy protokół!');
-        setTimeout(() => {
-          if (client && targetHistoryItemId) {
-            openProtocolPreviewModal('device', client.id, targetHistoryDeviceId, targetHistoryItemId);
-          } else {
+        if (savedProtocol) {
+          showToast(addedClientToDb ? 'Zlecenie zamknięte, wystawiono protokół i dodano klienta do bazy!' : 'Zlecenie zamknięte i wygenerowano cyfrowy protokół!');
+          setTimeout(() => {
             showProtocolObjectInModal(savedProtocol);
-          }
-        }, 180);
-      } else {
-        showToast(addedClientToDb
-          ? 'Zlecenie zamknięte i pomyślnie dodano klienta do bazy!'
-          : (isMontaz ? 'Montaż zamknięty — nowe urządzenie przypisano do klienta!' : 'Zlecenie zamknięte!'));
+          }, 150);
+        } else {
+          showToast(addedClientToDb
+            ? 'Zlecenie zamknięte i pomyślnie dodano klienta do bazy!'
+            : (isMontaz ? 'Montaż zamknięty — nowe urządzenie przypisano do klienta!' : 'Zlecenie zamknięte!'));
+        }
+      } catch (err) {
+        console.error('Błąd podczas zamykania zlecenia:', err);
+        showToast('Wystąpił błąd podczas zamykania zlecenia: ' + (err.message || ''));
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origBtnHtml || '<i data-lucide="check" class="w-4 h-4"></i> Zatwierdź i zamknij zlecenie';
+          lucide.createIcons();
+        }
       }
     }
 
@@ -7690,8 +7895,9 @@ service cloud.firestore {
       const banner = document.getElementById('protocol-preview-mode-banner');
       const bannerText = document.getElementById('protocol-preview-mode-banner-text');
 
+      if (btnSave) btnSave.classList.remove('hidden');
+
       if (isTemplate) {
-        if (btnSave) btnSave.classList.remove('hidden');
         if (btnReset) btnReset.classList.remove('hidden');
         if (wrapAddSec) wrapAddSec.classList.remove('hidden');
         if (banner) {
@@ -7702,16 +7908,15 @@ service cloud.firestore {
           bannerText.innerHTML = '✏️ <strong>Edycja wzoru / szablonu protokołu:</strong> Kliknij w dowolny tekst lub dodaj sekcje z menu powyżej. Wprowadzone zmiany zapisują się w szablonie protokołu.';
         }
       } else {
-        // Wystawiony protokół — tryb tylko do odczytu (brak możliwości edycji)!
-        if (btnSave) btnSave.classList.add('hidden');
+        // Wystawiony protokół wizyty — umożliwiamy edycję komórek pomiarów i uwag bezpośrednio na arkuszu!
         if (btnReset) btnReset.classList.add('hidden');
         if (wrapAddSec) wrapAddSec.classList.add('hidden');
         if (banner) {
-          banner.className = 'px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-between gap-2 text-[11px] text-zinc-600 dark:text-zinc-400 font-medium shrink-0';
+          banner.className = 'px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/70 flex items-center justify-between gap-2 text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold shrink-0';
           banner.classList.remove('hidden');
         }
         if (bannerText) {
-          bannerText.innerHTML = '🔒 <strong>Wystawiony protokół cyfrowy (tylko do odczytu):</strong> Dokument archiwalny. Edycja zawartości i układu jest dozwolona wyłącznie w Szablonach protokołów.';
+          bannerText.innerHTML = '📝 <strong>Protokół wygenerowany do zlecenia:</strong> Możesz edytować i uzupełnić pomiary lub uwagi bezpośrednio na arkuszu. Po naniesieniu zmian kliknij „Zapisz zmiany”.';
         }
       }
 
@@ -7741,35 +7946,30 @@ service cloud.firestore {
       const container = document.getElementById('protocol-printable-area');
       if (container) {
         container.innerHTML = proto.customEditedHtml || renderProtocolSheetHtml(proto);
-        if (isTemplate) {
-          makeAllProtocolFieldsEditable(container);
-          setupLiveAutoSaveForTemplate(container);
-        } else {
-          container.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
-          container.removeAttribute('contenteditable');
-        }
+        makeAllProtocolFieldsEditable(container);
+        setupLiveAutoSaveForProtocol(container);
       }
       openModal('modal-protocol-preview');
     }
 
     let liveAutoSaveTimeout = null;
-    function setupLiveAutoSaveForTemplate(container) {
+    function setupLiveAutoSaveForProtocol(container) {
       if (!container) return;
       container.oninput = function() {
-        if (!currentPreviewProtocolObj?.isTemplatePreview) return;
+        if (!currentPreviewProtocolObj) return;
         clearTimeout(liveAutoSaveTimeout);
         liveAutoSaveTimeout = setTimeout(() => {
           autoSaveEditedProtocolHtml();
         }, 400);
       };
       container.onblur = function() {
-        if (!currentPreviewProtocolObj?.isTemplatePreview) return;
+        if (!currentPreviewProtocolObj) return;
         autoSaveEditedProtocolHtml();
       };
     }
 
     window.addEventListener('beforeunload', () => {
-      if (currentPreviewProtocolObj?.isTemplatePreview) {
+      if (currentPreviewProtocolObj) {
         autoSaveEditedProtocolHtml();
       }
     });
@@ -7803,8 +8003,8 @@ service cloud.firestore {
       const protoId = proto.protocolId;
       const tplId = proto.templateId || proto.type;
 
-      // 1. Zapis we wzorach protokołów (window.protocolTemplatesData)
-      if (tplId && Array.isArray(window.protocolTemplatesData)) {
+      // 1. Zapis we wzorach protokołów (window.protocolTemplatesData) TYLKO JEŚLI TO JEST EDYCJA WZORU
+      if (proto.isTemplatePreview && tplId && Array.isArray(window.protocolTemplatesData)) {
         const foundTpl = window.protocolTemplatesData.find(t => t.id === tplId);
         if (foundTpl) {
           foundTpl.customEditedHtml = editedHtml;
@@ -7840,19 +8040,22 @@ service cloud.firestore {
     function autoSaveEditedProtocolHtml() {
       const container = document.getElementById('protocol-printable-area');
       if (!container || !currentPreviewProtocolObj) return;
-      if (!currentPreviewProtocolObj.isTemplatePreview) return; // Wystawione protokoły są zablokowane przed edycją
       syncProtocolAcrossAllState(currentPreviewProtocolObj, container.innerHTML);
       persistData();
     }
 
     function saveEditedProtocolContent() {
-      if (!currentPreviewProtocolObj || !currentPreviewProtocolObj.isTemplatePreview) {
-        showToast('Wystawiony protokół jest dokumentem archiwalnym i nie podlega edycji.');
-        return;
-      }
-      autoSaveEditedProtocolHtml();
+      if (!currentPreviewProtocolObj) return;
+      const container = document.getElementById('protocol-printable-area');
+      if (!container) return;
+      const isTemplate = Boolean(currentPreviewProtocolObj.isTemplatePreview);
+      syncProtocolAcrossAllState(currentPreviewProtocolObj, container.innerHTML);
       persistData();
-      showToast('Zapisano ręczne zmiany we wzorze protokołu!');
+      if (isTemplate) {
+        showToast('Zapisano ręczne zmiany we wzorze protokołu!');
+      } else {
+        showToast('Zapisano wprowadzone pomiary i zmiany w protokole tego zlecenia!');
+      }
     }
 
     function resetEditedProtocolToTemplate() {
@@ -9465,9 +9668,6 @@ service cloud.firestore {
         window.protocolTemplatesData = (window.protocolTemplatesData || []).map(t => {
           if (t.id !== editId) return t;
           found = true;
-          const checklistChanged = JSON.stringify(t.checklist || []) !== JSON.stringify(checklist);
-          const titleChanged = (t.title || '') !== title;
-          const customEditedHtml = (checklistChanged || titleChanged) ? null : t.customEditedHtml;
           return {
             ...t,
             title,
@@ -9477,7 +9677,7 @@ service cloud.firestore {
             checklist,
             installParams,
             serviceFields,
-            customEditedHtml,
+            customEditedHtml: t.customEditedHtml,
             updatedAt: now,
             isCustomized: true
           };
@@ -9586,7 +9786,11 @@ service cloud.firestore {
 
     function previewTemplateFromEditor() {
       let editId = (document.getElementById('tpl-edit-id')?.value || '').trim();
-      const title = (document.getElementById('tpl-title')?.value || '').trim() || 'WZÓR PROTOKOŁU';
+      let title = (document.getElementById('tpl-title')?.value || '').trim();
+      if (!title) {
+        title = 'Nowy Wzór Protokołu';
+        if (document.getElementById('tpl-title')) document.getElementById('tpl-title').value = title;
+      }
       const deviceGroup = document.getElementById('tpl-device-group')?.value || 'custom';
       const customGroupName = deviceGroup === 'custom' ? (document.getElementById('tpl-custom-group-name')?.value || '').trim() : '';
       const actionCategory = document.getElementById('tpl-action-category')?.value || 'inspection';
@@ -9619,11 +9823,6 @@ service cloud.firestore {
       } else {
         const existing = (window.protocolTemplatesData || []).find(t => t.id === editId);
         if (existing) {
-          const checklistChanged = JSON.stringify(existing.checklist || []) !== JSON.stringify(checklist);
-          const titleChanged = (existing.title || '') !== title;
-          if (checklistChanged || titleChanged) {
-            existing.customEditedHtml = null;
-          }
           existing.title = title;
           existing.deviceGroup = deviceGroup;
           existing.customGroupName = customGroupName;
