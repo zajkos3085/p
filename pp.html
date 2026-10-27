@@ -1655,10 +1655,10 @@
         <!-- SEKCJA UZUPEŁNIENIA DANYCH KLIENTA SPOZA BAZY I ZAPISU DO BAZY -->
         <div id="close-visit-adhoc-add-to-db-box" class="hidden p-3.5 rounded-xl bg-indigo-50/90 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 space-y-2.5">
           <label class="flex items-center gap-2 cursor-pointer text-xs font-extrabold text-indigo-900 dark:text-indigo-200">
-            <input type="checkbox" id="close-visit-save-client-to-db" checked onchange="document.getElementById('close-visit-adhoc-fields')?.classList.toggle('hidden', !this.checked)" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+            <input type="checkbox" id="close-visit-save-client-to-db" onchange="document.getElementById('close-visit-adhoc-fields')?.classList.toggle('hidden', !this.checked)" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
             <span>💾 Zapisz klienta na stałe do bazy klientów</span>
           </label>
-          <div id="close-visit-adhoc-fields" class="space-y-2 pt-1 border-t border-indigo-200/80 dark:border-indigo-800/80 text-xs">
+          <div id="close-visit-adhoc-fields" class="hidden space-y-2 pt-1 border-t border-indigo-200/80 dark:border-indigo-800/80 text-xs">
             <div class="text-[11px] text-zinc-500 dark:text-zinc-400">
               Uzupełnij lub popraw dane klienta przed dodaniem do głównej bazy:
             </div>
@@ -2029,21 +2029,30 @@
 
             <!-- PODPISY DOTYKOWE (PALCEM NA EKRANIE TELEFONU LUB MYSZKĄ) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <div class="space-y-1">
-                <div class="flex justify-between items-center">
-                  <span class="text-[10px] font-extrabold uppercase text-zinc-600 dark:text-zinc-300">✍️ Podpis Serwisanta (palcem)</span>
-                  <button type="button" onclick="clearSignaturePad('sig-canvas-tech')" class="text-[10px] font-bold text-rose-600 hover:underline">Wyczyść</button>
+              <div class="space-y-1.5">
+                <div class="flex justify-between items-center flex-wrap gap-1">
+                  <span class="text-[10px] font-extrabold uppercase text-zinc-600 dark:text-zinc-300">✍️ Podpis Serwisanta</span>
+                  <div class="flex items-center gap-1.5">
+                    <button type="button" id="btn-load-worker-sig" onclick="loadAssignedWorkerSignature()" class="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-emerald-300 dark:border-emerald-700 px-2 py-0.5 rounded-md flex items-center gap-1 transition shadow-sm" title="Wczytaj przypisany podpis dla tego zlecenia">
+                      <i data-lucide="download" class="w-3 h-3"></i> Wczytaj podpis
+                    </button>
+                    <button type="button" onclick="clearSignaturePad('sig-canvas-tech')" class="text-[10px] font-bold text-rose-600 hover:underline px-1">Wyczyść</button>
+                  </div>
                 </div>
-                <div class="bg-white rounded-xl border-2 border-dashed border-sky-400 overflow-hidden">
+                <div class="bg-white rounded-xl border-2 border-dashed border-sky-400 overflow-hidden shadow-inner">
                   <canvas id="sig-canvas-tech" width="320" height="120" class="sig-canvas w-full h-[105px] block bg-white"></canvas>
                 </div>
+                <div id="sig-tech-loaded-badge" class="hidden text-[10px] font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1 bg-emerald-50/70 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                  <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-600 shrink-0"></i>
+                  <span>Wczytano podpis serwisanta: <strong id="sig-tech-loaded-worker-name">Serwisant</strong></span>
+                </div>
               </div>
-              <div class="space-y-1">
+              <div class="space-y-1.5">
                 <div class="flex justify-between items-center">
                   <span class="text-[10px] font-extrabold uppercase text-emerald-700 dark:text-emerald-400">✍️ Podpis Klienta (palcem)</span>
                   <button type="button" onclick="clearSignaturePad('sig-canvas-client')" class="text-[10px] font-bold text-rose-600 hover:underline">Wyczyść</button>
                 </div>
-                <div class="bg-white rounded-xl border-2 border-dashed border-emerald-500 overflow-hidden">
+                <div class="bg-white rounded-xl border-2 border-dashed border-emerald-500 overflow-hidden shadow-inner">
                   <canvas id="sig-canvas-client" width="320" height="120" class="sig-canvas w-full h-[105px] block bg-white"></canvas>
                 </div>
               </div>
@@ -2096,7 +2105,7 @@
 
   <!-- MODAL: WORKERS MANAGEMENT -->
   <div id="modal-workers" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-md w-full shadow-2xl p-5 space-y-4 border border-zinc-200 dark:border-zinc-800">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-lg w-full shadow-2xl p-5 space-y-4 border border-zinc-200 dark:border-zinc-800">
       <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
         <h3 class="text-base font-extrabold">Ekipy i serwisanci</h3>
         <button type="button" onclick="closeModal('modal-workers')"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -2106,6 +2115,49 @@
         <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold">+ Dodaj</button>
       </form>
       <div id="workers-list-container" class="space-y-2 max-h-60 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: WORKER SIGNATURE (PRZYPISANIE PODPISU SERWISANTA) -->
+  <div id="modal-worker-signature" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-md w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800">
+      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="pen-tool" class="w-5 h-5 text-emerald-600"></i>
+          <div>
+            <h3 class="text-base font-extrabold text-zinc-900 dark:text-white">Podpis serwisanta</h3>
+            <p id="worker-sig-modal-worker-name" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Pracownik</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('modal-worker-signature')"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <input type="hidden" id="worker-sig-current-worker-name" value="">
+
+      <div class="space-y-1.5">
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-bold text-zinc-600 dark:text-zinc-300">Złóż podpis (palcem lub myszką):</span>
+          <button type="button" onclick="clearSignaturePad('worker-sig-canvas')" class="text-xs font-bold text-rose-600 hover:underline">Wyczyść</button>
+        </div>
+        <div class="bg-white rounded-xl border-2 border-dashed border-emerald-500 overflow-hidden shadow-inner">
+          <canvas id="worker-sig-canvas" width="360" height="135" class="sig-canvas w-full h-[130px] block bg-white"></canvas>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between text-xs pt-1">
+        <span class="text-zinc-500 dark:text-zinc-400">Lub wgraj plik (PNG/JPG):</span>
+        <input type="file" id="worker-sig-file-input" accept="image/png,image/jpeg,image/webp" onchange="handleWorkerSignatureFileUpload(event)" class="hidden">
+        <button type="button" onclick="document.getElementById('worker-sig-file-input').click()" class="px-2.5 py-1 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold hover:bg-zinc-100 dark:hover:bg-zinc-700 transition flex items-center gap-1">
+          <i data-lucide="upload" class="w-3.5 h-3.5 text-sky-600"></i> Wczytaj z pliku
+        </button>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+        <button type="button" onclick="closeModal('modal-worker-signature')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">Anuluj</button>
+        <button type="button" onclick="handleSaveWorkerSignatureFromModal()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm transition flex items-center gap-1.5">
+          <i data-lucide="check" class="w-4 h-4"></i> Zapisz podpis
+        </button>
+      </div>
     </div>
   </div>
 
@@ -2429,12 +2481,14 @@ service cloud.firestore {
        ========================================================================== */
     const HARDCODED_FIREBASE_CONFIG = null;
     const ADMIN_PIN = '456852';
+    const DEFAULT_COMPANY_LOGO_DATA_URL = '';
 
     const STORAGE_KEYS = {
       CLIENTS: 'pp_hvac_clients_v4',
       APPOINTMENTS: 'pp_hvac_appointments_v4',
       CATALOG: 'pp_hvac_catalog_v4',
       WORKERS: 'pp_hvac_workers_v4',
+      WORKER_SIGNATURES: 'pp_hvac_worker_signatures_v1',
       TEMPLATES: 'pp_hvac_protocol_templates_v1',
       SENDER_EMAIL: 'pp_sender_gmail_account',
       DARK_MODE: 'pp_dark_mode',
@@ -2929,9 +2983,53 @@ service cloud.firestore {
         appointments: window.appointmentsData || [],
         catalog: window.catalogData || [],
         workers: window.workersData || [],
+        workerSignatures: getWorkerSignaturesMap(),
         protocolTemplates: window.protocolTemplatesData || [],
+        companyLogo: getSavedCompanyLogo(),
+        companyName: getSavedCompanyName(),
+        companySubtitle: getSavedCompanySubtitle(),
+        companyFgaz: getSavedFgazCert(),
         updatedAt: new Date().toISOString()
       };
+    }
+
+    function mergeProtocolTemplates(incoming) {
+      if (!Array.isArray(incoming) || incoming.length === 0) return;
+      const tplMap = new Map();
+
+      // 1. Zaczynamy od wzorów wbudowanych
+      DEFAULT_PROTOCOL_TEMPLATES.forEach(t => {
+        tplMap.set(t.id, JSON.parse(JSON.stringify(t)));
+      });
+
+      // 2. Nakładamy aktualne wzory z pamięci podręcznej (aby nie stracić nowo dodanych wzorów lokalnych)
+      (window.protocolTemplatesData || []).forEach(t => {
+        if (t && t.id) {
+          tplMap.set(t.id, t);
+        }
+      });
+
+      // 3. Nakładamy wzory przychodzące z bazy (chmury)
+      incoming.forEach(t => {
+        if (t && t.id) {
+          const existing = tplMap.get(t.id);
+          if (existing) {
+            tplMap.set(t.id, {
+              ...existing,
+              ...t,
+              checklist: (Array.isArray(t.checklist) && t.checklist.length > 0) ? t.checklist : existing.checklist,
+              installParams: (Array.isArray(t.installParams) && t.installParams.length > 0) ? t.installParams : existing.installParams,
+              serviceFields: (Array.isArray(t.serviceFields) && t.serviceFields.length > 0) ? t.serviceFields : existing.serviceFields,
+              customEditedHtml: t.customEditedHtml || existing.customEditedHtml
+            });
+          } else {
+            tplMap.set(t.id, t);
+          }
+        }
+      });
+
+      window.protocolTemplatesData = Array.from(tplMap.values());
+      localStorage.setItem(STORAGE_KEYS.TEMPLATES, JSON.stringify(window.protocolTemplatesData));
     }
 
     function applyCloudPayload(data) {
@@ -2939,7 +3037,34 @@ service cloud.firestore {
       if (Array.isArray(data.appointments)) window.appointmentsData = data.appointments;
       if (Array.isArray(data.catalog) && data.catalog.length > 0) window.catalogData = data.catalog;
       if (Array.isArray(data.workers) && data.workers.length > 0) window.workersData = data.workers;
-      if (Array.isArray(data.protocolTemplates) && data.protocolTemplates.length > 0) window.protocolTemplatesData = data.protocolTemplates;
+      if (data.workerSignatures && typeof data.workerSignatures === 'object') {
+        try {
+          const currentSigs = getWorkerSignaturesMap();
+          localStorage.setItem(STORAGE_KEYS.WORKER_SIGNATURES, JSON.stringify({ ...currentSigs, ...data.workerSignatures }));
+        } catch (e) {}
+      }
+      if (Array.isArray(data.protocolTemplates) && data.protocolTemplates.length > 0) {
+        mergeProtocolTemplates(data.protocolTemplates);
+      }
+      if (typeof data.companyLogo === 'string') {
+        try {
+          if (data.companyLogo) {
+            localStorage.setItem(STORAGE_KEYS.COMPANY_LOGO, data.companyLogo);
+          } else {
+            localStorage.removeItem(STORAGE_KEYS.COMPANY_LOGO);
+          }
+          updateSidebarCompanyLogo();
+        } catch (e) {}
+      }
+      if (typeof data.companyName === 'string') {
+        try { localStorage.setItem(STORAGE_KEYS.COMPANY_NAME, data.companyName); } catch (e) {}
+      }
+      if (typeof data.companySubtitle === 'string') {
+        try { localStorage.setItem(STORAGE_KEYS.COMPANY_SUBTITLE, data.companySubtitle); } catch (e) {}
+      }
+      if (typeof data.companyFgaz === 'string') {
+        try { localStorage.setItem(STORAGE_KEYS.COMPANY_FGAZ, data.companyFgaz); } catch (e) {}
+      }
       saveStateToLocalStorage();
       refreshAllViews();
     }
@@ -2947,10 +3072,21 @@ service cloud.firestore {
     function persistData() {
       saveStateToLocalStorage();
       if (isCloudConnected && firestoreDb) {
-        firestoreDb.collection('pp_state').doc('main').set(getCloudPayload()).catch(err => {
+        const payload = getCloudPayload();
+        firestoreDb.collection('pp_state').doc('main').set(payload).catch(err => {
           updateCloudBadge('error', 'Błąd zapisu');
           setDiagnosticStatus('error', 'Zapis odrzucony', explainFirestoreError(err, ''));
         });
+
+        // Dedykowany, bezpośredni zapis wzorów protokołów w osobnym dokumencie bazy Firestore
+        try {
+          firestoreDb.collection('pp_state').doc('templates').set({
+            protocolTemplates: window.protocolTemplatesData || [],
+            updatedAt: new Date().toISOString()
+          }).catch(err => {
+            console.warn('Błąd zapisu wzorów w pp_state/templates:', err);
+          });
+        } catch (e) {}
       }
     }
 
@@ -3098,6 +3234,35 @@ service cloud.firestore {
         setDiagnosticStatus('ok', 'Połączono!', `Pomyślnie połączono z <strong>${configObj.projectId}</strong>. Klienci w chmurze: <strong>${(window.clientsData || []).length}</strong>.`);
         if (isInteractiveTest) showToast('Połączono z chmurą!');
 
+        // Niezależny odczyt i nasłuch dedykowanego dokumentu wzorów protokołów z bazy
+        try {
+          const tplDocRef = firestoreDb.collection('pp_state').doc('templates');
+          const tplSnap = await tplDocRef.get({ source: 'server' });
+          if (tplSnap.exists) {
+            const tplData = tplSnap.data();
+            if (Array.isArray(tplData.protocolTemplates) && tplData.protocolTemplates.length > 0) {
+              mergeProtocolTemplates(tplData.protocolTemplates);
+            }
+          } else {
+            await tplDocRef.set({
+              protocolTemplates: window.protocolTemplatesData || [],
+              updatedAt: new Date().toISOString()
+            });
+          }
+
+          tplDocRef.onSnapshot(liveTplSnap => {
+            if (liveTplSnap.exists) {
+              const liveData = liveTplSnap.data();
+              if (Array.isArray(liveData.protocolTemplates) && liveData.protocolTemplates.length > 0) {
+                mergeProtocolTemplates(liveData.protocolTemplates);
+                if (currentTab === 'devices_db') renderProtocolTemplatesManager();
+              }
+            }
+          }, () => {});
+        } catch (tplErr) {
+          console.warn('Uwaga przy pobieraniu szablonów z chmury:', tplErr);
+        }
+
         firestoreUnsubscribe = docRef.onSnapshot(liveSnap => {
           if (liveSnap.exists) {
             const snapData = liveSnap.data();
@@ -3122,7 +3287,11 @@ service cloud.firestore {
       if (!firestoreDb) { openFirebaseModal(); return; }
       try {
         await firestoreDb.collection('pp_state').doc('main').set(getCloudPayload());
-        showToast('Wysłano dane do chmury!');
+        await firestoreDb.collection('pp_state').doc('templates').set({
+          protocolTemplates: window.protocolTemplatesData || [],
+          updatedAt: new Date().toISOString()
+        });
+        showToast('Wysłano dane i szablony do chmury!');
       } catch (err) {
         openFirebaseModal();
         setDiagnosticStatus('error', 'Błąd wysyłania', explainFirestoreError(err, ''));
@@ -3135,8 +3304,14 @@ service cloud.firestore {
         const snap = await firestoreDb.collection('pp_state').doc('main').get({ source: 'server' });
         if (snap.exists) {
           applyCloudPayload(snap.data());
-          showToast('Pobrano dane z chmury!');
         }
+        try {
+          const tplSnap = await firestoreDb.collection('pp_state').doc('templates').get({ source: 'server' });
+          if (tplSnap.exists && Array.isArray(tplSnap.data()?.protocolTemplates)) {
+            mergeProtocolTemplates(tplSnap.data().protocolTemplates);
+          }
+        } catch (e) {}
+        showToast('Pobrano dane i szablony z chmury!');
       } catch (err) {
         openFirebaseModal();
         setDiagnosticStatus('error', 'Błąd pobierania', explainFirestoreError(err, ''));
@@ -3358,6 +3533,123 @@ service cloud.firestore {
       }
     }
 
+    /* ==========================================================================
+       PODPISY SERWISANTÓW (PRZYPISANIE W USTAWIENIACH I WCZYTYWANIE W PROTOKOŁACH)
+       ========================================================================== */
+    function getWorkerSignaturesMap() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEYS.WORKER_SIGNATURES);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return (parsed && typeof parsed === 'object') ? parsed : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function getWorkerSignature(workerName) {
+      if (!workerName) return '';
+      const map = getWorkerSignaturesMap();
+      return map[String(workerName).trim()] || '';
+    }
+
+    function saveWorkerSignature(workerName, dataUrl) {
+      if (!workerName) return false;
+      try {
+        const map = getWorkerSignaturesMap();
+        const key = String(workerName).trim();
+        if (dataUrl) {
+          map[key] = dataUrl;
+        } else {
+          delete map[key];
+        }
+        localStorage.setItem(STORAGE_KEYS.WORKER_SIGNATURES, JSON.stringify(map));
+        return true;
+      } catch (e) {
+        console.error('Błąd zapisu podpisu serwisanta:', e);
+        return false;
+      }
+    }
+
+    let currentWorkerSigTarget = '';
+
+    function openWorkerSignatureModal(workerIndexOrName) {
+      let workerName = '';
+      if (typeof workerIndexOrName === 'number') {
+        workerName = (window.workersData || [])[workerIndexOrName] || '';
+      } else {
+        workerName = String(workerIndexOrName || '').trim();
+      }
+      if (!workerName) return;
+
+      currentWorkerSigTarget = workerName;
+      const targetInput = document.getElementById('worker-sig-current-worker-name');
+      if (targetInput) targetInput.value = workerName;
+      const labelEl = document.getElementById('worker-sig-modal-worker-name');
+      if (labelEl) labelEl.textContent = `Serwisant: ${workerName}`;
+
+      openModal('modal-worker-signature');
+
+      setTimeout(() => {
+        initSignaturePad('worker-sig-canvas');
+        clearSignaturePad('worker-sig-canvas');
+        const existingSig = getWorkerSignature(workerName);
+        if (existingSig) {
+          loadSignatureDataUrlToPad('worker-sig-canvas', existingSig);
+        }
+      }, 70);
+    }
+
+    function handleSaveWorkerSignatureFromModal() {
+      const workerName = currentWorkerSigTarget || document.getElementById('worker-sig-current-worker-name')?.value;
+      if (!workerName) {
+        showToast('Nie wybrano serwisanta!');
+        return;
+      }
+      const sigDataUrl = getSignatureDataUrl('worker-sig-canvas');
+      if (!sigDataUrl) {
+        showToast('Podpis jest pusty! Złóż podpis lub wczytaj plik graficzny.');
+        return;
+      }
+      saveWorkerSignature(workerName, sigDataUrl);
+      persistData();
+      closeModal('modal-worker-signature');
+      renderWorkersList();
+      showToast(`Zapisano podpis dla serwisanta: ${workerName}`);
+    }
+
+    function handleWorkerSignatureFileUpload(event) {
+      const file = event.target?.files?.[0];
+      if (!file) return;
+      event.target.value = '';
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const dataUrl = e.target?.result;
+        if (dataUrl) {
+          initSignaturePad('worker-sig-canvas');
+          loadSignatureDataUrlToPad('worker-sig-canvas', dataUrl, (ok) => {
+            if (ok) {
+              showToast('Wczytano plik podpisu. Kliknij „Zapisz podpis”, aby zapisać.');
+            } else {
+              showToast('Nie udało się wczytać pliku podpisu.');
+            }
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function deleteWorkerSignatureByIdx(idx) {
+      const worker = (window.workersData || [])[idx];
+      if (!worker) return;
+      askConfirmation('Usuwanie podpisu', `Czy na pewno chcesz usunąć zapisany podpis dla "${worker}"?`, () => {
+        saveWorkerSignature(worker, '');
+        persistData();
+        renderWorkersList();
+        showToast(`Usunięto przypisany podpis dla: ${worker}`);
+      });
+    }
+
     function openWorkersModal() {
       renderWorkersList();
       openModal('modal-workers');
@@ -3368,21 +3660,43 @@ service cloud.firestore {
       const containerModal = document.getElementById('workers-list-container');
       const workers = window.workersData || [];
 
-      const html = workers.map((w, idx) => `
-        <div class="py-2.5 px-1 flex justify-between items-center text-xs sm:text-sm">
-          <div class="flex items-center gap-2">
+      const html = workers.map((w, idx) => {
+        const hasSig = Boolean(getWorkerSignature(w));
+        return `
+        <div class="py-2.5 px-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs sm:text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800/40 rounded-xl transition">
+          <div class="flex items-center gap-2 flex-wrap">
             <span class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-sm font-bold shrink-0">👷</span>
             <span class="font-extrabold text-zinc-800 dark:text-zinc-100">${escapeHtml(w)}</span>
+            ${hasSig ? `
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
+                <i data-lucide="check" class="w-3 h-3"></i> Podpis zapisany
+              </span>
+            ` : `
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                Brak podpisu
+              </span>
+            `}
           </div>
-          ${workers.length > 1 ? `
-            <button type="button" onclick="confirmRemoveWorker(${idx})" class="text-xs font-bold text-rose-600 hover:text-rose-700 dark:hover:text-rose-400 hover:underline px-2 py-1 rounded transition">
-              Usuń
+          <div class="flex items-center gap-1.5 self-end sm:self-auto shrink-0 flex-wrap">
+            <button type="button" onclick="openWorkerSignatureModal(${idx})" class="px-2.5 py-1 text-xs font-bold rounded-lg border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition flex items-center gap-1 shadow-sm">
+              <i data-lucide="pen-tool" class="w-3 h-3"></i> ${hasSig ? 'Zmień podpis' : 'Przypisz podpis'}
             </button>
-          ` : `
-            <span class="text-[10px] text-zinc-400 italic">Domyślny pracownik</span>
-          `}
+            ${hasSig ? `
+              <button type="button" onclick="deleteWorkerSignatureByIdx(${idx})" title="Usuń podpis serwisanta" class="p-1.5 rounded-lg text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            ` : ''}
+            ${workers.length > 1 ? `
+              <button type="button" onclick="confirmRemoveWorker(${idx})" class="text-xs font-bold text-rose-600 hover:text-rose-700 dark:hover:text-rose-400 hover:underline px-2 py-1 rounded transition">
+                Usuń ekipę
+              </button>
+            ` : `
+              <span class="text-[10px] text-zinc-400 italic px-1">Domyślny</span>
+            `}
+          </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
 
       if (containerSettings) containerSettings.innerHTML = html;
       if (containerModal) containerModal.innerHTML = html;
@@ -3416,6 +3730,9 @@ service cloud.firestore {
     function confirmRemoveWorker(idx) {
       askConfirmation('Usuwanie ekipy', 'Czy na pewno chcesz usunąć tę ekipę/pracownika?', () => {
         const removed = window.workersData.splice(idx, 1);
+        if (removed && removed[0]) {
+          saveWorkerSignature(removed[0], '');
+        }
         persistData();
         populateWorkerSelects();
         renderWorkersList();
@@ -6343,6 +6660,62 @@ service cloud.firestore {
       if (!canvas) return;
       prepareSignatureCanvasBackground(canvas);
       if (signaturePadsState[canvasId]) signaturePadsState[canvasId].hasInk = false;
+      if (canvasId === 'sig-canvas-tech') {
+        const badge = document.getElementById('sig-tech-loaded-badge');
+        if (badge) badge.classList.add('hidden');
+      }
+    }
+
+    function loadSignatureDataUrlToPad(canvasId, dataUrl, callback) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas || !dataUrl) {
+        if (typeof callback === 'function') callback(false);
+        return;
+      }
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.onload = function() {
+        prepareSignatureCanvasBackground(canvas);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        if (!signaturePadsState[canvasId]) {
+          signaturePadsState[canvasId] = { drawing: false, hasInk: true, initialized: true };
+        } else {
+          signaturePadsState[canvasId].hasInk = true;
+        }
+        if (typeof callback === 'function') callback(true);
+      };
+      img.onerror = function() {
+        if (typeof callback === 'function') callback(false);
+      };
+      img.src = dataUrl;
+    }
+
+    let currentCloseVisitWorkerName = '';
+
+    function loadAssignedWorkerSignature() {
+      const worker = currentCloseVisitWorkerName || (window.workersData && window.workersData[0]) || '';
+      if (!worker) {
+        showToast('Brak przypisanego serwisanta do tego zlecenia.');
+        return;
+      }
+      const sig = getWorkerSignature(worker);
+      if (!sig) {
+        showToast(`Serwisant "${worker}" nie ma jeszcze zapisanego podpisu w Ustawieniach.`);
+        return;
+      }
+      initSignaturePad('sig-canvas-tech');
+      loadSignatureDataUrlToPad('sig-canvas-tech', sig, (ok) => {
+        if (ok) {
+          const badge = document.getElementById('sig-tech-loaded-badge');
+          const badgeName = document.getElementById('sig-tech-loaded-worker-name');
+          if (badge) badge.classList.remove('hidden');
+          if (badgeName) badgeName.textContent = worker;
+          lucide.createIcons();
+          showToast(`Wczytano podpis serwisanta: ${worker}`);
+        } else {
+          showToast('Błąd podczas wczytywania podpisu serwisanta.');
+        }
+      });
     }
 
     function getSignatureDataUrl(canvasId) {
@@ -6613,11 +6986,33 @@ service cloud.firestore {
         document.getElementById('proto-srv-work-course').value = visit.notes ? `Weryfikacja zgłoszenia (${visit.notes}), diagnostyka układu i usunięcie usterki.` : '';
       }
 
+      currentCloseVisitWorkerName = visit.workerName || (window.workersData && window.workersData[0]) || '';
+      const btnLoadSig = document.getElementById('btn-load-worker-sig');
+      if (btnLoadSig) {
+        btnLoadSig.innerHTML = `<i data-lucide="download" class="w-3 h-3"></i> Wczytaj podpis (${escapeHtml(currentCloseVisitWorkerName || 'serwisanta')})`;
+      }
+
       setTimeout(() => {
         initSignaturePad('sig-canvas-tech');
         initSignaturePad('sig-canvas-client');
         clearSignaturePad('sig-canvas-tech');
         clearSignaturePad('sig-canvas-client');
+
+        const savedWorkerSig = getWorkerSignature(currentCloseVisitWorkerName);
+        if (savedWorkerSig) {
+          loadSignatureDataUrlToPad('sig-canvas-tech', savedWorkerSig, (ok) => {
+            if (ok) {
+              const badge = document.getElementById('sig-tech-loaded-badge');
+              const badgeName = document.getElementById('sig-tech-loaded-worker-name');
+              if (badge) badge.classList.remove('hidden');
+              if (badgeName) badgeName.textContent = currentCloseVisitWorkerName;
+              lucide.createIcons();
+            }
+          });
+        } else {
+          document.getElementById('sig-tech-loaded-badge')?.classList.add('hidden');
+        }
+        lucide.createIcons();
       }, 90);
 
       const devCustomAddr = dev ? formatDeviceInstallAddress(dev) : (visit.clientCity ? `${visit.clientCity}${visit.clientStreet ? ', ' + visit.clientStreet : ''}` : '');
@@ -6636,8 +7031,8 @@ service cloud.firestore {
       if (adhocDbBox) {
         if (isAdHocVisit) {
           adhocDbBox.classList.remove('hidden');
-          if (saveClientChk) saveClientChk.checked = true;
-          document.getElementById('close-visit-adhoc-fields')?.classList.remove('hidden');
+          if (saveClientChk) saveClientChk.checked = false;
+          document.getElementById('close-visit-adhoc-fields')?.classList.add('hidden');
 
           const nameInput = document.getElementById('close-adhoc-client-name');
           const phoneInput = document.getElementById('close-adhoc-client-phone');
@@ -6678,7 +7073,9 @@ service cloud.firestore {
       const base = {
         protocolId: `PROT/${(visit.date || toYMD(new Date())).replace(/-/g, '')}/${Math.floor(100 + Math.random() * 900)}`,
         type: protoKind,
+        templateId: tpl?.id || protoKind,
         customTitle: tpl?.title || '',
+        customEditedHtml: tpl?.customEditedHtml || null,
         date: visit.date || toYMD(new Date()),
         companyName: getSavedCompanyName(),
         fgazCert: getSavedFgazCert(),
@@ -7272,6 +7669,7 @@ service cloud.firestore {
         container.innerHTML = proto.customEditedHtml || renderProtocolSheetHtml(proto);
         if (isTemplate) {
           makeAllProtocolFieldsEditable(container);
+          setupLiveAutoSaveForTemplate(container);
         } else {
           container.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
           container.removeAttribute('contenteditable');
@@ -7279,6 +7677,28 @@ service cloud.firestore {
       }
       openModal('modal-protocol-preview');
     }
+
+    let liveAutoSaveTimeout = null;
+    function setupLiveAutoSaveForTemplate(container) {
+      if (!container) return;
+      container.oninput = function() {
+        if (!currentPreviewProtocolObj?.isTemplatePreview) return;
+        clearTimeout(liveAutoSaveTimeout);
+        liveAutoSaveTimeout = setTimeout(() => {
+          autoSaveEditedProtocolHtml();
+        }, 400);
+      };
+      container.onblur = function() {
+        if (!currentPreviewProtocolObj?.isTemplatePreview) return;
+        autoSaveEditedProtocolHtml();
+      };
+    }
+
+    window.addEventListener('beforeunload', () => {
+      if (currentPreviewProtocolObj?.isTemplatePreview) {
+        autoSaveEditedProtocolHtml();
+      }
+    });
 
     // Sprawia, że każde pole tekstowe, komórka i uwaga na protokole jest edytowalna po kliknięciu
     function makeAllProtocolFieldsEditable(rootEl) {
@@ -7783,9 +8203,11 @@ service cloud.firestore {
 
     function getSavedCompanyLogo() {
       try {
-        return localStorage.getItem(STORAGE_KEYS.COMPANY_LOGO) || '';
+        const saved = localStorage.getItem(STORAGE_KEYS.COMPANY_LOGO);
+        if (saved) return saved;
+        return (typeof DEFAULT_COMPANY_LOGO_DATA_URL === 'string' && DEFAULT_COMPANY_LOGO_DATA_URL) ? DEFAULT_COMPANY_LOGO_DATA_URL : '';
       } catch (e) {
-        return '';
+        return (typeof DEFAULT_COMPANY_LOGO_DATA_URL === 'string' && DEFAULT_COMPANY_LOGO_DATA_URL) ? DEFAULT_COMPANY_LOGO_DATA_URL : '';
       }
     }
 
@@ -7902,6 +8324,7 @@ service cloud.firestore {
         if (file.type.includes('svg')) {
           try {
             localStorage.setItem(STORAGE_KEYS.COMPANY_LOGO, rawResult);
+            persistData();
             updateSidebarCompanyLogo();
             renderSettings();
             showToast('Logo SVG zostało pomyślnie zapisane! Zastąpiło napis INSTAL na protokołach.');
@@ -7936,6 +8359,7 @@ service cloud.firestore {
 
             const optimizedDataUrl = canvas.toDataURL('image/png', 0.92);
             localStorage.setItem(STORAGE_KEYS.COMPANY_LOGO, optimizedDataUrl);
+            persistData();
             updateSidebarCompanyLogo();
             renderSettings();
             showToast('Logo firmy zostało pomyślnie wgrane! Jest widoczne na wszystkich protokołach.');
@@ -7943,6 +8367,7 @@ service cloud.firestore {
             console.error(err);
             try {
               localStorage.setItem(STORAGE_KEYS.COMPANY_LOGO, rawResult);
+              persistData();
               updateSidebarCompanyLogo();
               renderSettings();
               showToast('Logo firmy zostało zapisane.');
@@ -7967,6 +8392,7 @@ service cloud.firestore {
       if (confirm('Czy na pewno chcesz usunąć wgrane logo i przywrócić domyślny napis INSTAL?')) {
         try {
           localStorage.removeItem(STORAGE_KEYS.COMPANY_LOGO);
+          persistData();
           updateSidebarCompanyLogo();
           renderSettings();
           showToast('Przywrócono domyślne logo INSTAL.');
@@ -7985,6 +8411,7 @@ service cloud.firestore {
       localStorage.setItem(STORAGE_KEYS.COMPANY_NAME, name);
       localStorage.setItem(STORAGE_KEYS.COMPANY_FGAZ, fgaz);
       localStorage.setItem(STORAGE_KEYS.COMPANY_SUBTITLE, sub);
+      persistData();
 
       renderSettings();
       showToast('Dane firmy zostały pomyślnie zaktualizowane!');
@@ -8961,13 +9388,14 @@ service cloud.firestore {
             checklist,
             installParams,
             serviceFields,
-            customEditedHtml: undefined
+            customEditedHtml: t.customEditedHtml
           } : t
         );
         showToast('Zaktualizowano wzór protokołu!');
       } else {
+        const newId = 'tpl_' + Date.now();
         window.protocolTemplatesData.push({
-          id: 'tpl_' + Date.now(),
+          id: newId,
           title,
           deviceGroup,
           customGroupName,
@@ -9042,46 +9470,50 @@ service cloud.firestore {
     }
 
     function previewTemplateFromEditor() {
-      const editId = document.getElementById('tpl-edit-id')?.value || '';
-      const title = (document.getElementById('tpl-title').value || 'WZÓR PROTOKOŁU').trim();
+      let editId = document.getElementById('tpl-edit-id')?.value || '';
+      const title = (document.getElementById('tpl-title').value || '').trim() || 'WZÓR PROTOKOŁU';
       const deviceGroup = document.getElementById('tpl-device-group').value || 'custom';
       const customGroupName = deviceGroup === 'custom' ? (document.getElementById('tpl-custom-group-name').value || '').trim() : '';
       const actionCategory = document.getElementById('tpl-action-category').value || 'inspection';
       const rawItems = document.getElementById('tpl-checklist-items').value || '';
-      const checklist = rawItems.split(/\r?\n/).map(s => s.trim()).filter(Boolean).map(label => ({ label, done: true }));
-      const customInstallRows = actionCategory === 'install'
-        ? parseLinesToParamObjects(document.getElementById('tpl-install-params')?.value || '').map(p => ({ label: p.label, value: p.defaultValue || 'Wykonano' }))
+      const checklist = rawItems.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      const installParams = actionCategory === 'install'
+        ? parseLinesToParamObjects(document.getElementById('tpl-install-params')?.value || '')
         : [];
-      const customServiceFields = actionCategory === 'service'
-        ? parseLinesToParamObjects(document.getElementById('tpl-service-fields')?.value || '').map(f => ({ label: f.label, value: f.defaultValue || 'W normie' }))
+      const serviceFields = actionCategory === 'service'
+        ? parseLinesToParamObjects(document.getElementById('tpl-service-fields')?.value || '')
         : [];
 
-      showProtocolObjectInModal({
-        protocolId: 'WZÓR/EDYTOR',
-        templateId: editId || null,
-        isTemplatePreview: true,
-        type: editId || (actionCategory === 'service' ? 'universal_service' : actionCategory === 'install' ? 'universal_install' : 'universal_inspection'),
-        customTitle: title,
-        actionCategory,
-        date: toYMD(new Date()),
-        companyName: getSavedCompanyName(),
-        fgazCert: getSavedFgazCert(),
-        technician: 'Serwisant INSTAL',
-        clientName: 'Jan Kowalski (Podgląd)',
-        clientAddress: 'Poznań, ul. Przykładowa 1',
-        installAddress: 'Swarzędz, ul. Polna 10',
-        clientPhone: '+48 600 000 000',
-        deviceTypeLabel: customGroupName || getDeviceInfo(deviceGroup).short,
-        deviceModel: 'Urządzenie Testowe',
-        serialIndoor: 'SN-TEST-001',
-        faultDescription: 'Objawy przepisane z notatek zgłoszenia',
-        diagnosis: 'Diagnoza usterki',
-        workCourse: 'Szczegółowy przebieg prac serwisowych',
-        customInstallRows,
-        customServiceFields,
-        checklist,
-        comments: 'Podgląd roboczego wzoru protokołu z edytora.'
-      });
+      if (!editId) {
+        editId = 'tpl_' + Date.now();
+        document.getElementById('tpl-edit-id').value = editId;
+        window.protocolTemplatesData.push({
+          id: editId,
+          title,
+          deviceGroup,
+          customGroupName,
+          actionCategory,
+          isBuiltIn: false,
+          checklist,
+          installParams,
+          serviceFields
+        });
+      } else {
+        const existing = (window.protocolTemplatesData || []).find(t => t.id === editId);
+        if (existing) {
+          existing.title = title;
+          existing.deviceGroup = deviceGroup;
+          existing.customGroupName = customGroupName;
+          existing.actionCategory = actionCategory;
+          existing.checklist = checklist;
+          existing.installParams = installParams;
+          existing.serviceFields = serviceFields;
+        }
+      }
+
+      persistData();
+      renderProtocolTemplatesManager();
+      previewSavedProtocolTemplate(editId);
     }
 
     /* ==========================================================================
@@ -9370,6 +9802,7 @@ service cloud.firestore {
             appointments: window.appointmentsData || [],
             catalog: window.catalogData || [],
             workers: window.workersData || [],
+            workerSignatures: getWorkerSignaturesMap(),
             protocolTemplates: window.protocolTemplatesData || [],
             companyLogo: getSavedCompanyLogo(),
             companyName: getSavedCompanyName(),
@@ -9567,6 +10000,13 @@ service cloud.firestore {
 
               if (Array.isArray(parsed.catalog) && parsed.catalog.length > 0) window.catalogData = parsed.catalog;
               if (Array.isArray(parsed.workers) && parsed.workers.length > 0) window.workersData = parsed.workers;
+              if (parsed.workerSignatures && typeof parsed.workerSignatures === 'object') {
+                try {
+                  const currentSigs = getWorkerSignaturesMap();
+                  const mergedSigs = { ...currentSigs, ...parsed.workerSignatures };
+                  localStorage.setItem(STORAGE_KEYS.WORKER_SIGNATURES, JSON.stringify(mergedSigs));
+                } catch (e) {}
+              }
               if (Array.isArray(parsed.protocolTemplates) && parsed.protocolTemplates.length > 0) window.protocolTemplatesData = parsed.protocolTemplates;
               if (parsed.companyLogo) {
                 try { localStorage.setItem(STORAGE_KEYS.COMPANY_LOGO, parsed.companyLogo); } catch (e) {}
