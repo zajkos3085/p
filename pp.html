@@ -41,13 +41,61 @@
     body { transition: background-color 0.2s ease, color 0.2s ease; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    html.dark select, html.dark select option {
+    /* Reset i zaokrąglanie list rozwijanych <select> (zapobieganie prostokątnym krawędziom przy :hover w Windows/Chromium) */
+    select {
+      -webkit-appearance: none !important;
+      -moz-appearance: none !important;
+      appearance: none !important;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+      background-position: right 0.65rem center !important;
+      background-repeat: no-repeat !important;
+      background-size: 1.15em 1.15em !important;
+      padding-right: 2.25rem !important;
+      cursor: pointer !important;
+      border-radius: 0.75rem !important;
+    }
+    select:hover, select:focus, select:active {
+      outline: none !important;
+    }
+    select.rounded-lg, select.rounded-lg:hover, select.rounded-lg:focus, select.rounded-lg:active {
+      border-radius: 0.5rem !important;
+    }
+    select.rounded-xl, select.rounded-xl:hover, select.rounded-xl:focus, select.rounded-xl:active {
+      border-radius: 0.75rem !important;
+    }
+    select.rounded-2xl, select.rounded-2xl:hover, select.rounded-2xl:focus, select.rounded-2xl:active {
+      border-radius: 1rem !important;
+    }
+    select.rounded-full, select.rounded-full:hover, select.rounded-full:focus, select.rounded-full:active {
+      border-radius: 9999px !important;
+    }
+    select:not([class*="rounded-"]), select:not([class*="rounded-"]):hover, select:not([class*="rounded-"]):focus, select:not([class*="rounded-"]):active {
+      border-radius: 0.75rem !important;
+    }
+    select.bg-transparent, select.bg-transparent:hover, select.bg-transparent:focus {
+      background-image: none !important;
+      padding-right: 0 !important;
+    }
+    select::-ms-expand {
+      display: none !important;
+    }
+    html.dark select:not(.bg-transparent) {
       background-color: #27272a;
       color: #f4f4f5;
+    }
+    html.dark select {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+    }
+    html.dark select.bg-transparent {
+      background-image: none !important;
     }
     select option {
       background-color: #ffffff;
       color: #18181b;
+    }
+    html.dark select option {
+      background-color: #27272a;
+      color: #f4f4f5;
     }
     @media (max-width: 767px) {
       #map-container {
@@ -79,9 +127,9 @@
 <body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 font-sans min-h-screen flex flex-col md:flex-row antialiased overflow-x-hidden">
 
   <!-- NOTIFICATION TOAST -->
-  <div id="toast" class="fixed bottom-20 md:bottom-6 right-4 md:right-6 left-4 md:left-auto z-50 hidden items-center justify-center md:justify-start gap-3 px-4 py-3 rounded-2xl shadow-2xl border bg-zinc-900 text-white dark:bg-zinc-800 border-zinc-700 transition-all text-sm font-semibold">
-    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0"></span>
-    <span id="toast-msg">Komunikat</span>
+  <div id="toast" class="fixed top-5 right-4 left-4 sm:left-auto sm:right-6 sm:top-6 z-[99999] hidden items-center justify-start gap-3 px-4 py-3 rounded-2xl shadow-2xl border text-white transition-all text-sm font-bold" style="background:#18181b !important; color:#ffffff !important; border:1px solid #3f3f46 !important; box-shadow:0 14px 40px rgba(0,0,0,0.55) !important; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; filter:none !important; pointer-events:auto; max-width:min(440px, calc(100vw - 32px));">
+    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0 ring-4 ring-emerald-400/25"></span>
+    <span id="toast-msg" class="leading-snug font-bold">Komunikat</span>
   </div>
 
   <!-- LEFT SIDEBAR (Desktop) / COMPACT TOP BAR + FIXED BOTTOM NAV (Mobile) -->
@@ -115,47 +163,62 @@
         </div>
       </div>
 
+      <!-- WŁASNE ZAIMPORTOWANE LOGO FIRMY POD LOGO SERVITRAK (widoczne tylko, gdy wgrane/zaimportowane) -->
+      <div id="sidebar-custom-logo-wrap" class="hidden pt-1.5 md:pt-2 border-t border-zinc-100 dark:border-zinc-800/80">
+        <div onclick="switchTab('settings')" class="cursor-pointer group/logo px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/60 hover:border-emerald-500 dark:hover:border-emerald-500 flex items-center justify-center transition shadow-xs" title="Twoje logo firmy (kliknij, aby zarządzać w Ustawieniach)">
+          <img id="sidebar-custom-logo-img" src="" alt="Logo firmy" class="max-h-8 md:max-h-10 max-w-full w-auto h-auto object-contain transition group-hover/logo:scale-102">
+        </div>
+      </div>
+
       <!-- Nawigacja -->
-      <nav class="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-zinc-200 dark:border-zinc-800 grid grid-cols-5 gap-1 px-1.5 py-1.5 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] md:static md:bg-transparent md:dark:bg-transparent md:border-none md:shadow-none md:p-0 md:flex md:flex-col md:gap-1.5" id="nav-tabs">
-        <button onclick="switchTab('dashboard')" id="nav-btn-dashboard" class="nav-btn relative flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 md:gap-2.5 px-1 md:px-3.5 py-2 md:py-2.5 rounded-xl text-[10px] md:text-sm font-bold transition bg-emerald-600 text-white shadow-sm">
+      <nav class="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-zinc-200 dark:border-zinc-800 grid grid-cols-6 gap-0.5 px-1 py-1.5 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] md:static md:bg-transparent md:dark:bg-transparent md:border-none md:shadow-none md:p-0 md:flex md:flex-col md:gap-1.5" id="nav-tabs">
+        <button onclick="switchTab('dashboard')" id="nav-btn-dashboard" class="nav-btn relative flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 md:gap-2.5 px-0.5 md:px-3.5 py-1.5 md:py-2.5 rounded-xl text-[9.5px] md:text-sm font-bold transition bg-emerald-600 text-white shadow-sm">
           <div class="flex flex-col md:flex-row items-center gap-1 md:gap-2.5">
-            <i data-lucide="layout-dashboard" class="w-5 h-5 md:w-4 md:h-4 shrink-0"></i>
+            <i data-lucide="layout-dashboard" class="w-4 h-4 md:w-4 md:h-4 shrink-0"></i>
             <span class="truncate">Pulpit</span>
           </div>
-          <span id="badge-urgent" class="absolute top-1 right-2 md:static bg-rose-500 text-white text-[9px] md:text-[10px] font-extrabold px-1.5 py-0.2 rounded-full hidden">0</span>
+          <span id="badge-urgent" class="absolute top-1 right-1.5 md:static bg-rose-500 text-white text-[9px] md:text-[10px] font-extrabold px-1.5 py-0.2 rounded-full hidden">0</span>
         </button>
 
-        <button onclick="switchTab('map_planner')" id="nav-btn-map_planner" class="nav-btn relative flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 md:gap-2.5 px-1 md:px-3.5 py-2 md:py-2.5 rounded-xl text-[10px] md:text-sm font-semibold transition text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+        <button onclick="switchTab('map_planner')" id="nav-btn-map_planner" class="nav-btn relative flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 md:gap-2.5 px-0.5 md:px-3.5 py-1.5 md:py-2.5 rounded-xl text-[9.5px] md:text-sm font-semibold transition text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800">
           <div class="flex flex-col md:flex-row items-center gap-1 md:gap-2.5">
-            <i data-lucide="map-pin" class="w-5 h-5 md:w-4 md:h-4 shrink-0"></i>
+            <i data-lucide="map-pin" class="w-4 h-4 md:w-4 md:h-4 shrink-0"></i>
             <span class="truncate md:hidden">Mapa</span>
             <span class="hidden md:inline whitespace-nowrap">Mapa i Planer</span>
           </div>
-          <span id="badge-today" class="absolute top-1 right-2 md:static bg-amber-500 text-white text-[9px] md:text-[10px] font-extrabold px-1.5 py-0.2 rounded-full hidden">0</span>
+          <span id="badge-today" class="absolute top-1 right-1.5 md:static bg-amber-500 text-white text-[9px] md:text-[10px] font-extrabold px-1.5 py-0.2 rounded-full hidden">0</span>
         </button>
 
-        <button onclick="switchTab('clients')" id="nav-btn-clients" class="nav-btn relative flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 md:gap-2.5 px-1 md:px-3.5 py-2 md:py-2.5 rounded-xl text-[10px] md:text-sm font-semibold transition text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+        <button onclick="switchTab('clients')" id="nav-btn-clients" class="nav-btn relative flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 md:gap-2.5 px-0.5 md:px-3.5 py-1.5 md:py-2.5 rounded-xl text-[9.5px] md:text-sm font-semibold transition text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800">
           <div class="flex flex-col md:flex-row items-center gap-1 md:gap-2.5">
-            <i data-lucide="users" class="w-5 h-5 md:w-4 md:h-4 shrink-0"></i>
+            <i data-lucide="users" class="w-4 h-4 md:w-4 md:h-4 shrink-0"></i>
             <span class="truncate">Klienci</span>
           </div>
           <span id="badge-clients" class="hidden md:inline text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">0</span>
         </button>
 
-        <button onclick="switchTab('devices_db')" id="nav-btn-devices_db" class="nav-btn relative flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 md:gap-2.5 px-1 md:px-3.5 py-2 md:py-2.5 rounded-xl text-[10px] md:text-sm font-semibold transition text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+        <button onclick="switchTab('devices_db')" id="nav-btn-devices_db" class="nav-btn relative flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 md:gap-2.5 px-0.5 md:px-3.5 py-1.5 md:py-2.5 rounded-xl text-[9.5px] md:text-sm font-semibold transition text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800">
           <div class="flex flex-col md:flex-row items-center gap-1 md:gap-2.5">
-            <i data-lucide="wrench" class="w-5 h-5 md:w-4 md:h-4 shrink-0"></i>
+            <i data-lucide="wrench" class="w-4 h-4 md:w-4 md:h-4 shrink-0"></i>
             <span class="truncate md:hidden">Urz. i Prot.</span>
             <span class="hidden md:inline whitespace-nowrap">Urządzenia i Protokoły</span>
           </div>
           <span id="badge-catalog" class="hidden md:inline text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">0</span>
         </button>
 
-        <button onclick="switchTab('history')" id="nav-btn-history" class="nav-btn relative flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 md:gap-2.5 px-1 md:px-3.5 py-2 md:py-2.5 rounded-xl text-[10px] md:text-sm font-semibold transition text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+        <button onclick="switchTab('history')" id="nav-btn-history" class="nav-btn relative flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 md:gap-2.5 px-0.5 md:px-3.5 py-1.5 md:py-2.5 rounded-xl text-[9.5px] md:text-sm font-semibold transition text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800">
           <div class="flex flex-col md:flex-row items-center gap-1 md:gap-2.5">
-            <i data-lucide="bar-chart-3" class="w-5 h-5 md:w-4 md:h-4 shrink-0"></i>
+            <i data-lucide="bar-chart-3" class="w-4 h-4 md:w-4 md:h-4 shrink-0"></i>
             <span class="truncate md:hidden">Statystyki</span>
             <span class="hidden md:inline whitespace-nowrap">Historia i Statystyki</span>
+          </div>
+        </button>
+
+        <button onclick="switchTab('settings')" id="nav-btn-settings" class="nav-btn relative flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 md:gap-2.5 px-0.5 md:px-3.5 py-1.5 md:py-2.5 rounded-xl text-[9.5px] md:text-sm font-semibold transition text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+          <div class="flex flex-col md:flex-row items-center gap-1 md:gap-2.5">
+            <i data-lucide="settings" class="w-4 h-4 md:w-4 md:h-4 shrink-0"></i>
+            <span class="truncate md:hidden">Ustawienia</span>
+            <span class="hidden md:inline whitespace-nowrap">Ustawienia</span>
           </div>
         </button>
       </nav>
@@ -275,47 +338,6 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
-          <div class="lg:col-span-7 space-y-5 sm:space-y-6">
-            <!-- TODAY'S PLAN -->
-            <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
-              <div class="px-4 sm:px-5 py-3.5 sm:py-4 bg-zinc-900 dark:bg-zinc-800 text-white flex justify-between items-center flex-wrap gap-2">
-                <div class="flex items-center gap-2">
-                  <i data-lucide="navigation" class="w-4 h-4 text-emerald-400"></i>
-                  <h2 id="today-panel-title" class="text-sm sm:text-base font-extrabold">Plan pracy na dzisiaj</h2>
-                </div>
-              </div>
-              <div id="today-visits-list" class="p-4 space-y-4"></div>
-            </div>
-
-            <!-- DO ZAPLANOWANIA: URGENT INSPECTIONS -->
-            <div id="urgent-unscheduled-card" class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
-              <div class="px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-amber-50/60 dark:bg-amber-950/20 flex justify-between items-center flex-wrap gap-2">
-                <div class="flex items-center gap-2">
-                  <i data-lucide="bell-ring" class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0"></i>
-                  <div>
-                    <h2 class="text-sm sm:text-base font-bold text-zinc-900 dark:text-white">Kończące się przeglądy — DO UMÓWIENIA</h2>
-                    <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Po zaplanowaniu wyjazdu przegląd automatycznie przeniesie się do kafelka pod kalendarzem</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-2 flex-wrap">
-                  <div class="flex items-center gap-1.5 bg-white dark:bg-zinc-800 px-2.5 py-1 rounded-xl border border-amber-300 dark:border-amber-700 text-xs font-bold">
-                    <span class="text-zinc-500 dark:text-zinc-400">W ciągu:</span>
-                    <select id="urgent-days-select" onchange="onUrgentDaysChange(this.value)" class="bg-transparent font-extrabold text-amber-700 dark:text-amber-400 outline-none cursor-pointer">
-                      <option value="7">7 dni</option>
-                      <option value="14">14 dni</option>
-                      <option value="30" selected>30 dni</option>
-                      <option value="60">60 dni</option>
-                      <option value="90">90 dni</option>
-                      <option value="180">180 dni</option>
-                    </select>
-                  </div>
-                  <button id="toggle-urgent-btn" onclick="toggleUrgentList()" class="px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold hidden text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 transition">Rozwiń pełną listę</button>
-                </div>
-              </div>
-              <div id="urgent-list" class="divide-y divide-zinc-100 dark:divide-zinc-800"></div>
-            </div>
-          </div>
-
           <div class="lg:col-span-5 space-y-6">
             <!-- CALENDAR -->
             <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
@@ -363,6 +385,47 @@
               <div id="cal-preview-body" class="p-4 space-y-3 max-h-[460px] overflow-y-auto"></div>
             </div>
 
+            <!-- DO ZAPLANOWANIA: URGENT INSPECTIONS -->
+            <div id="urgent-unscheduled-card" class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+              <div class="px-5 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-amber-50/60 dark:bg-amber-950/20 flex justify-between items-center flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="bell-ring" class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0"></i>
+                  <div>
+                    <h2 class="text-sm sm:text-base font-bold text-zinc-900 dark:text-white">Kończące się przeglądy — DO UMÓWIENIA</h2>
+                    <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Po zaplanowaniu wyjazdu przegląd automatycznie przeniesie się do sekcji Zaplanowane przeglądy</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <div class="flex items-center gap-1.5 bg-white dark:bg-zinc-800 px-2.5 py-1 rounded-xl border border-amber-300 dark:border-amber-700 text-xs font-bold">
+                    <span class="text-zinc-500 dark:text-zinc-400">W ciągu:</span>
+                    <select id="urgent-days-select" onchange="onUrgentDaysChange(this.value)" class="bg-transparent font-extrabold text-amber-700 dark:text-amber-400 outline-none cursor-pointer">
+                      <option value="7">7 dni</option>
+                      <option value="14">14 dni</option>
+                      <option value="30" selected>30 dni</option>
+                      <option value="60">60 dni</option>
+                      <option value="90">90 dni</option>
+                      <option value="180">180 dni</option>
+                    </select>
+                  </div>
+                  <button id="toggle-urgent-btn" onclick="toggleUrgentList()" class="px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold hidden text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 transition">Rozwiń pełną listę</button>
+                </div>
+              </div>
+              <div id="urgent-list" class="divide-y divide-zinc-100 dark:divide-zinc-800"></div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-7 space-y-5 sm:space-y-6">
+            <!-- TODAY'S PLAN -->
+            <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+              <div class="px-4 sm:px-5 py-3.5 sm:py-4 bg-zinc-900 dark:bg-zinc-800 text-white flex justify-between items-center flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="navigation" class="w-4 h-4 text-emerald-400"></i>
+                  <h2 id="today-panel-title" class="text-sm sm:text-base font-extrabold">Plan pracy na dzisiaj</h2>
+                </div>
+              </div>
+              <div id="today-visits-list" class="p-4 space-y-4"></div>
+            </div>
+
             <!-- ZAPLANOWANE PRZEGLĄDY -->
             <div id="scheduled-urgent-card" class="bg-white dark:bg-zinc-900 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm overflow-hidden">
               <div class="px-5 py-4 border-b border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/70 dark:bg-emerald-950/30 flex justify-between items-center flex-wrap gap-2">
@@ -401,12 +464,18 @@
             </button>
 
             <select id="map-device-type-filter" onchange="renderMapMarkers()" class="col-span-2 sm:col-span-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 sm:py-1.5 text-xs font-extrabold outline-none text-zinc-800 dark:text-zinc-100">
-              <option value="all">🗺️ Mapa: Wszystkie urządzenia</option>
+              <option value="all">🗺️ Sprzęt: Wszystkie urządzenia</option>
               <option value="ac">❄️ Tylko Klimatyzacja</option>
               <option value="heat_pump">🔥 Tylko Pompy ciepła</option>
               <option value="gas_boiler">🔥 Tylko Kotły gazowe</option>
               <option value="ventilation">💨 Tylko Wentylacja</option>
               <option value="custom">🔧 Inne / Własny typ</option>
+            </select>
+
+            <select id="map-visits-filter" onchange="renderMapMarkers()" class="col-span-2 sm:col-span-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 sm:py-1.5 text-xs font-extrabold outline-none text-zinc-800 dark:text-zinc-100">
+              <option value="all">📍 Wszyscy klienci (Cała baza)</option>
+              <option value="planned_day">📅 Tylko zaplanowane wyjazdy (wybrany dzień)</option>
+              <option value="planned_all">🚗 Wszystkie zaplanowane wyjazdy (ogółem)</option>
             </select>
           </div>
 
@@ -879,6 +948,147 @@
         </div>
       </div>
 
+      <!-- TAB: USTAWIENIA I LOGO -->
+      <div id="tab-settings" class="tab-content hidden space-y-6">
+        
+        <!-- NAGŁÓWEK TABU -->
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                <i data-lucide="settings" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <h2 class="text-lg sm:text-xl font-extrabold text-zinc-900 dark:text-white">Ustawienia Systemu i Logo Firmy</h2>
+                <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">Dostosuj grafikę logo oraz dane firmy drukowane na protokołach serwisowych i montażowych</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="openSettingsProtocolPreview()" class="px-3.5 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition">
+                <i data-lucide="file-text" class="w-4 h-4"></i> Zobacz wzór protokołu
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SEKCJA 1: LOGO FIRMY NA PROTOKOŁACH -->
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-sm space-y-5">
+          <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
+            <div class="flex items-center gap-2.5">
+              <i data-lucide="image" class="w-5 h-5 text-indigo-600"></i>
+              <h3 class="text-sm sm:text-base font-extrabold text-zinc-900 dark:text-white">Grafika z Logo Firmy na Protokołach</h3>
+            </div>
+            <span id="settings-logo-status-badge" class="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">Domyślne logo INSTAL</span>
+          </div>
+
+          <p class="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+            Wgrana grafika zastąpi fabryczny napis <strong>INSTAL</strong> w lewym górnym rogu wszystkich generowanych protokołów (montaż, przegląd, serwis) oraz na wydrukach i w plikach PDF.
+          </p>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+            
+            <!-- PODGLĄD LOGO NA PROTOKOLE -->
+            <div class="space-y-2">
+              <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400">Podgląd nagłówka protokołu z Twoim logo:</label>
+              <div class="p-4 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white shadow-inner flex flex-col justify-center min-h-[125px]">
+                <div class="flex items-center justify-between border-b-2 border-sky-600 pb-3 gap-2">
+                  <div id="settings-logo-preview-container" class="flex items-center">
+                    <!-- Dynamicznie wstawiane logo lub domyślny canvas -->
+                  </div>
+                  <div class="text-right text-[11px] text-zinc-700 shrink-0">
+                    <div class="font-black uppercase text-zinc-900">Protokół Przeglądu</div>
+                    <div class="font-bold text-sky-600">Nr: WZÓR/2026/01</div>
+                    <div class="text-[10px] text-zinc-500">Data: Dzisiaj</div>
+                  </div>
+                </div>
+                <div id="settings-preview-subline" class="text-[10px] text-zinc-500 font-semibold pt-2">
+                  Systemy Klimatyzacji, Pomp Ciepła i Kotłów Gazowych • Certyfikat F-GAZ: FGAZ-P/27/0109/22
+                </div>
+              </div>
+              <div class="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 pt-0.5">
+                <i data-lucide="info" class="w-3.5 h-3.5 shrink-0 text-indigo-500"></i>
+                <span>Zalecany format: PNG z przezroczystym tłem lub SVG. Układ poziomy, maks. wysokość w nagłówku: 52px.</span>
+              </div>
+            </div>
+
+            <!-- PRZYCISKI AKCJI LOGO -->
+            <div class="space-y-3.5 bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
+              <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300">Zarządzaj grafiką logo</label>
+              
+              <input type="file" id="settings-logo-file-input" accept="image/png,image/jpeg,image/webp,image/svg+xml" onchange="handleSettingsLogoUpload(event)" class="hidden">
+              
+              <div class="flex flex-col sm:flex-row gap-2.5">
+                <button type="button" onclick="document.getElementById('settings-logo-file-input').click()" class="flex-1 py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 shadow-sm transition">
+                  <i data-lucide="upload" class="w-4 h-4"></i> Wgraj nowe logo firmy
+                </button>
+                <button type="button" id="btn-reset-logo" onclick="resetSettingsCompanyLogo()" class="py-2.5 px-4 bg-zinc-200 dark:bg-zinc-700 hover:bg-rose-100 dark:hover:bg-rose-950/60 hover:text-rose-600 dark:hover:text-rose-400 text-zinc-700 dark:text-zinc-300 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition" title="Usuń własne logo i przywróć fabryczny napis INSTAL">
+                  <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Przywróć INSTAL
+                </button>
+              </div>
+
+              <div id="settings-logo-details" class="text-xs text-zinc-500 dark:text-zinc-400 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-zinc-200 dark:border-zinc-700/60 flex items-center justify-between">
+                <span>Stan: Domyślny napis INSTAL</span>
+                <span class="text-[10px] font-mono text-zinc-400">canvas dataUrl</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- SEKCJA 2: DANE FIRMY I CERTYFIKATY NA PROTOKOLE -->
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-sm space-y-4">
+          <div class="flex items-center gap-2.5 border-b border-zinc-100 dark:border-zinc-800 pb-3">
+            <i data-lucide="building" class="w-5 h-5 text-emerald-600"></i>
+            <h3 class="text-sm sm:text-base font-extrabold text-zinc-900 dark:text-white">Dane Firmy na Protokołach</h3>
+          </div>
+
+          <form onsubmit="handleSaveCompanySettings(event)" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+              <div>
+                <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Nazwa firmy (tekstowa)</label>
+                <input type="text" id="settings-company-name" placeholder="np. INSTAL" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs sm:text-sm font-bold outline-none focus:border-emerald-500">
+                <span class="text-[10px] text-zinc-400">Wpis w sekcji wykonawcy, podpisie i klauzuli zgodności</span>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Certyfikat F-GAZ</label>
+                <input type="text" id="settings-company-fgaz" placeholder="np. FGAZ-P/27/0109/22" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs sm:text-sm font-mono font-bold outline-none focus:border-emerald-500">
+                <span class="text-[10px] text-zinc-400">Drukowany pod logo w nagłówku protokołu</span>
+              </div>
+
+              <div class="sm:col-span-2 md:col-span-1">
+                <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Podtytuł / Specjalizacja</label>
+                <input type="text" id="settings-company-subtitle" placeholder="Systemy Klimatyzacji, Pomp Ciepła i Kotłów Gazowych" class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs sm:text-sm outline-none focus:border-emerald-500">
+                <span class="text-[10px] text-zinc-400">Linia tekstu pod logo firmy</span>
+              </div>
+            </div>
+
+            <div class="flex justify-end pt-2">
+              <button type="submit" class="py-2.5 px-5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition">
+                <i data-lucide="save" class="w-4 h-4"></i> Zapisz dane firmy
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- SEKCJA 3: KOPIA ZAPASOWA I BEZPIECZEŃSTWO -->
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-sm space-y-3.5">
+          <div class="flex items-center gap-2.5 border-b border-zinc-100 dark:border-zinc-800 pb-3">
+            <i data-lucide="hard-drive" class="w-5 h-5 text-sky-600"></i>
+            <h3 class="text-sm sm:text-base font-extrabold text-zinc-900 dark:text-white">Kopia Zapasowa (Backup) Bazy i Ustawień</h3>
+          </div>
+          <p class="text-xs text-zinc-600 dark:text-zinc-400">
+            Plik kopii zapasowej (.JSON) zawiera wszystkich klientów, historię przeglądów, zlecenia, szablony protokołów oraz Twoje logo firmy i konfigurację.
+          </p>
+          <div class="flex flex-wrap gap-2.5 pt-1">
+            <button type="button" onclick="openBackupModal()" class="py-2 px-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800 text-xs font-extrabold text-emerald-800 dark:text-emerald-300 flex items-center gap-2 transition">
+              <i data-lucide="hard-drive-download" class="w-4 h-4 text-emerald-600"></i> Otwórz Centrum Backupu (JSON)
+            </button>
+          </div>
+        </div>
+
+      </div>
+
     </main>
   </div>
 
@@ -1002,7 +1212,7 @@
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
           </div>
-          <div id="assigned-client-dd" class="hidden mt-1.5 p-1.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl shadow-xl">
+          <div id="assigned-client-dd" class="hidden mt-1.5 p-1.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl shadow-xl overflow-hidden">
             <div id="assigned-client-dd-list" class="max-h-44 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-700/60 text-xs"></div>
           </div>
         </div>
@@ -1029,7 +1239,7 @@
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
           </div>
-          <div id="assigned-catalog-dd" class="hidden mt-1.5 p-1.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl shadow-xl">
+          <div id="assigned-catalog-dd" class="hidden mt-1.5 p-1.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl shadow-xl overflow-hidden">
             <div id="assigned-catalog-dd-list" class="max-h-40 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-700/60 text-xs"></div>
           </div>
         </div>
@@ -1263,9 +1473,21 @@
         <button onclick="closeModal('modal-schedule')"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
       <form onsubmit="handleSaveVisit(event)" class="space-y-3.5">
-        <div class="relative">
-          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">1. Wyszukaj klienta (wpisz nazwisko, ulicę, miasto lub telefon)</label>
-          <input type="hidden" id="visit-client-select" required>
+        <!-- Wybór trybu klienta: z bazy lub spoza bazy -->
+        <input type="hidden" id="visit-client-mode" value="existing">
+        <div class="flex items-center p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 text-xs font-extrabold gap-1">
+          <button type="button" id="tab-btn-client-existing" onclick="setVisitClientMode('existing')" class="flex-1 py-1.5 px-2 rounded-lg bg-white dark:bg-zinc-900 text-emerald-700 dark:text-emerald-400 shadow-sm transition flex items-center justify-center gap-1.5 font-extrabold">
+            <i data-lucide="database" class="w-3.5 h-3.5"></i> Klient z bazy
+          </button>
+          <button type="button" id="tab-btn-client-adhoc" onclick="setVisitClientMode('adhoc')" class="flex-1 py-1.5 px-2 rounded-lg text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 transition flex items-center justify-center gap-1.5 font-bold">
+            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> Klient spoza bazy
+          </button>
+        </div>
+
+        <!-- 1A: Klient z bazy -->
+        <div id="visit-client-existing-section" class="relative">
+          <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">1. Wyszukaj klienta w bazie</label>
+          <input type="hidden" id="visit-client-select">
           <div class="relative">
             <i data-lucide="search" class="w-4 h-4 text-emerald-600 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
             <input type="text" id="visit-client-search" onfocus="openCustomDropdown('visit-client-dd'); renderVisitClientDropdown();" oninput="openCustomDropdown('visit-client-dd'); renderVisitClientDropdown();" placeholder="Zacznij pisać, aby wyszukać klienta..." autocomplete="off" class="w-full pl-10 pr-9 py-2.5 bg-emerald-50/70 dark:bg-emerald-950/40 border-2 border-emerald-500/70 dark:border-emerald-600 rounded-xl text-xs sm:text-sm font-extrabold outline-none text-zinc-900 dark:text-white">
@@ -1273,8 +1495,44 @@
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
           </div>
-          <div id="visit-client-dd" class="hidden mt-1.5 p-1.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl shadow-xl">
+          <div id="visit-client-dd" class="hidden mt-1.5 p-1.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl shadow-xl overflow-hidden">
             <div id="visit-client-dd-list" class="max-h-44 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-700/60 text-xs"></div>
+          </div>
+        </div>
+
+        <!-- 1B: Klient spoza bazy (zlecenie bez wprowadzania do kartoteki klientów) -->
+        <div id="visit-client-adhoc-section" class="hidden p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800 space-y-2.5">
+          <div class="flex items-center justify-between text-xs font-extrabold text-amber-900 dark:text-amber-200">
+            <span class="flex items-center gap-1.5"><i data-lucide="user-x" class="w-4 h-4 text-amber-600"></i> Dane klienta (zlecenie poza bazą):</span>
+            <span class="text-[10px] bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300 px-1.5 py-0.5 rounded font-extrabold">Jednorazowy</span>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-zinc-500 dark:text-zinc-400 mb-0.5">Imię i Nazwisko / Nazwa firmy *</label>
+            <input type="text" id="visit-adhoc-name" placeholder="np. Jan Kowalski lub Firma ABC" class="w-full px-3 py-2 bg-white dark:bg-zinc-900 border border-amber-400 dark:border-amber-700 rounded-xl text-xs font-extrabold outline-none">
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] font-bold text-zinc-500 dark:text-zinc-400 mb-0.5">Telefon</label>
+              <input type="tel" id="visit-adhoc-phone" placeholder="np. 500 123 456" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs outline-none">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-zinc-500 dark:text-zinc-400 mb-0.5">Miejscowość</label>
+              <input type="text" id="visit-adhoc-city" placeholder="np. Kraków" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs outline-none">
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <div class="col-span-2">
+              <label class="block text-[10px] font-bold text-zinc-500 dark:text-zinc-400 mb-0.5">Ulica i numer</label>
+              <input type="text" id="visit-adhoc-street" placeholder="np. ul. Floriańska 12/3" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs outline-none">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-zinc-500 dark:text-zinc-400 mb-0.5">Kod poczt.</label>
+              <input type="text" id="visit-adhoc-postal" placeholder="np. 31-021" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs outline-none">
+            </div>
+          </div>
+          <div id="visit-adhoc-device-wrap">
+            <label class="block text-[10px] font-bold text-zinc-500 dark:text-zinc-400 mb-0.5">Urządzenie u klienta (model / opis)</label>
+            <input type="text" id="visit-adhoc-device" placeholder="np. Klimatyzator Daikin 3.5kW, Kocioł gazowy..." class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs outline-none">
           </div>
         </div>
 
@@ -1956,6 +2214,45 @@ service cloud.firestore {
           <button type="button" onclick="saveEditedProtocolContent()" class="px-3 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition" title="Zapisz ręczne poprawki wprowadzone na arkuszu">
             <i data-lucide="save" class="w-4 h-4"></i> Zapisz zmiany
           </button>
+          <button type="button" onclick="resetEditedProtocolToTemplate()" class="px-2.5 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold transition flex items-center gap-1" title="Cofnij ręczne poprawki i przywróć szablon pierwotny">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Przywróć
+          </button>
+          <div class="relative inline-block text-left">
+            <button type="button" onclick="toggleCustomDropdown('dd-add-protocol-section')" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition" title="Wstaw nową sekcję: czeklistę, tabelę pomiarów lub pole tekstowe">
+              <i data-lucide="plus-circle" class="w-4 h-4"></i> + Dodaj sekcję <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+            </button>
+            <div id="dd-add-protocol-section" class="hidden absolute right-0 mt-1.5 w-64 bg-white dark:bg-zinc-800 rounded-xl shadow-2xl border border-zinc-200 dark:border-zinc-700 py-1.5 z-50 overflow-hidden">
+              <div class="px-3 py-1.5 text-[10px] font-extrabold uppercase text-zinc-400">Dodaj podpunkt do protokołu:</div>
+              <button type="button" onclick="addProtocolCustomSection('inspection_checklist'); toggleCustomDropdown('dd-add-protocol-section')" class="w-full text-left px-3.5 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 flex items-center gap-2.5 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition">
+                <span class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-sm shrink-0">📋</span>
+                <div>
+                  <div class="font-extrabold text-emerald-700 dark:text-emerald-400">Czeklista czynności przeglądowych</div>
+                  <div class="text-[10px] text-zinc-400 font-normal">Tabela Lp., opis czynności i status Wykonano</div>
+                </div>
+              </button>
+              <button type="button" onclick="addProtocolCustomSection('checklist'); toggleCustomDropdown('dd-add-protocol-section')" class="w-full text-left px-3.5 py-2 hover:bg-sky-50 dark:hover:bg-sky-950/50 flex items-center gap-2.5 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition">
+                <span class="w-7 h-7 rounded-lg bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-300 flex items-center justify-center text-sm shrink-0">☑️</span>
+                <div>
+                  <div class="font-extrabold text-sky-700 dark:text-sky-400">Punkty kontrolne</div>
+                  <div class="text-[10px] text-zinc-400 font-normal">Punkty z polami wyboru ☑ / ☐</div>
+                </div>
+              </button>
+              <button type="button" onclick="addProtocolCustomSection('table'); toggleCustomDropdown('dd-add-protocol-section')" class="w-full text-left px-3.5 py-2 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 flex items-center gap-2.5 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition">
+                <span class="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-sm shrink-0">📊</span>
+                <div>
+                  <div class="font-extrabold text-indigo-700 dark:text-indigo-400">Tabela parametrów / danych</div>
+                  <div class="text-[10px] text-zinc-400 font-normal">2 kolumny z opcją dodawania kolejnych</div>
+                </div>
+              </button>
+              <button type="button" onclick="addProtocolCustomSection('text'); toggleCustomDropdown('dd-add-protocol-section')" class="w-full text-left px-3.5 py-2 hover:bg-amber-50 dark:hover:bg-amber-950/50 flex items-center gap-2.5 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition">
+                <span class="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center text-sm shrink-0">📝</span>
+                <div>
+                  <div class="font-extrabold text-amber-700 dark:text-amber-400">Pole tekstowe / Notatki</div>
+                  <div class="text-[10px] text-zinc-400 font-normal">Ramka na zalecenia lub uwagi dla klienta</div>
+                </div>
+              </button>
+            </div>
+          </div>
           <button type="button" id="btn-download-protocol-pdf" onclick="downloadCurrentProtocolPDF()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition">
             <i data-lucide="download" class="w-4 h-4"></i> Pobierz PDF
           </button>
@@ -1971,10 +2268,10 @@ service cloud.firestore {
         </div>
       </div>
       <div class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/70 flex items-center justify-between gap-2 text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold shrink-0">
-        <span>✏️ <strong>Tryb edycji aktywny:</strong> Kliknij w dowolny tekst, tabelkę, adres, S/N, status lub uwagę na protokole poniżej, aby dowolnie edytować treść przed pobraniem PDF.</span>
+        <span>✏️ <strong>Tryb edycji aktywny:</strong> Kliknij w dowolny tekst, tabelkę, adres, S/N, status lub uwagę na protokole poniżej, aby dowolnie edytować treść przed pobraniem PDF. Zmiany zapisują się automatycznie oraz przyciskiem „Zapisz zmiany”.</span>
       </div>
       <div class="overflow-y-auto flex-1 bg-zinc-200/70 dark:bg-zinc-950 p-2 sm:p-5 rounded-xl border border-zinc-300 dark:border-zinc-800">
-        <div id="protocol-printable-area" oninput="autoSaveEditedProtocolHtml()" class="bg-white text-zinc-900 mx-auto shadow-lg p-5 sm:p-8 rounded-lg w-full max-w-[794px]"></div>
+        <div id="protocol-printable-area" oninput="autoSaveEditedProtocolHtml()" onblur="autoSaveEditedProtocolHtml()" class="bg-white text-zinc-900 mx-auto shadow-lg p-5 sm:p-8 rounded-lg w-full max-w-[794px]"></div>
       </div>
     </div>
   </div>
@@ -2077,7 +2374,11 @@ service cloud.firestore {
       SENDER_EMAIL: 'pp_sender_gmail_account',
       DARK_MODE: 'pp_dark_mode',
       FIREBASE_CFG: 'pp_firebase_config_json',
-      URGENT_DAYS: 'pp_urgent_days_threshold'
+      URGENT_DAYS: 'pp_urgent_days_threshold',
+      COMPANY_LOGO: 'pp_company_logo_dataurl',
+      COMPANY_NAME: 'pp_company_name',
+      COMPANY_SUBTITLE: 'pp_company_subtitle',
+      COMPANY_FGAZ: 'pp_company_fgaz'
     };
 
     const TILE_URLS = {
@@ -2299,12 +2600,48 @@ service cloud.firestore {
       }
     }
 
+    function isPhoneEmpty(phoneStr) {
+      if (!phoneStr) return true;
+      const raw = String(phoneStr).trim();
+      if (!raw) return true;
+      const digits = raw.replace(/\D/g, '');
+      return !digits || digits === '48' || digits === '4848' || digits === '484848';
+    }
+
     function ensurePhonePrefix(phoneStr) {
-      const trimmed = String(phoneStr || '').trim();
-      if (!trimmed) return '+48 ';
-      if (trimmed.startsWith('+')) return trimmed;
-      if (trimmed.startsWith('48') && trimmed.length > 9) return '+' + trimmed;
-      return '+48 ' + trimmed;
+      if (isPhoneEmpty(phoneStr)) return '+48 ';
+      let raw = String(phoneStr).trim();
+      if (raw.startsWith('+') && !raw.startsWith('+48')) return raw;
+
+      let digits = raw.replace(/\D/g, '');
+      while (digits.startsWith('4848') && digits.length >= 13) {
+        digits = digits.slice(2);
+      }
+
+      if (digits.startsWith('48') && digits.length >= 11) {
+        const sub = digits.slice(2);
+        if (sub.length === 9) {
+          return `+48 ${sub.slice(0, 3)} ${sub.slice(3, 6)} ${sub.slice(6)}`;
+        }
+        return `+48 ${sub}`;
+      }
+
+      if (digits.length === 9) {
+        return `+48 ${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+      }
+
+      if (raw.startsWith('+48')) {
+        let rest = raw.replace(/^\+48\s*/, '').trim();
+        rest = rest.replace(/^48\s*/, '').trim();
+        if (!rest) return '+48 ';
+        const subDigits = rest.replace(/\D/g, '');
+        if (subDigits.length === 9) {
+          return `+48 ${subDigits.slice(0, 3)} ${subDigits.slice(3, 6)} ${subDigits.slice(6)}`;
+        }
+        return `+48 ${rest}`;
+      }
+
+      return `+48 ${raw}`;
     }
 
     function cleanPolishStreet(raw) {
@@ -2325,6 +2662,12 @@ service cloud.firestore {
     }
 
     function closeModal(id) {
+      if (id === 'modal-protocol-preview') {
+        try {
+          if (typeof autoSaveEditedProtocolHtml === 'function') autoSaveEditedProtocolHtml();
+          if (typeof persistData === 'function') persistData();
+        } catch (e) { console.error('Błąd auto-zapisu protokołu przy zamykaniu:', e); }
+      }
       const el = document.getElementById(id);
       if (!el) return;
       el.classList.remove('flex');
@@ -2339,15 +2682,31 @@ service cloud.firestore {
       document.getElementById(ddId)?.classList.remove('hidden');
     }
 
+    document.addEventListener('click', (e) => {
+      const dd = document.getElementById('dd-add-protocol-section');
+      if (dd && !dd.classList.contains('hidden')) {
+        const btn = e.target.closest('button[onclick*="dd-add-protocol-section"]');
+        if (!btn && !dd.contains(e.target)) {
+          dd.classList.add('hidden');
+        }
+      }
+    });
+
+    let toastTimeout = null;
     function showToast(msg) {
       const t = document.getElementById('toast');
+      if (!t) return;
       setText('toast-msg', msg);
       t.classList.remove('hidden');
       t.classList.add('flex');
-      setTimeout(() => {
+      if (toastTimeout) {
+        clearTimeout(toastTimeout);
+      }
+      toastTimeout = setTimeout(() => {
         t.classList.remove('flex');
         t.classList.add('hidden');
-      }, 3200);
+        toastTimeout = null;
+      }, 3400);
     }
 
     function askConfirmation(title, message, callback) {
@@ -2721,6 +3080,10 @@ service cloud.firestore {
       try {
         const rawClients = JSON.parse(localStorage.getItem(STORAGE_KEYS.CLIENTS) || '[]');
         window.clientsData = Array.isArray(rawClients) ? rawClients : [];
+        window.clientsData.forEach(c => {
+          if (isPhoneEmpty(c.phone)) c.phone = '+48 ';
+          else if (c.phone) c.phone = ensurePhonePrefix(c.phone);
+        });
       } catch (e) { window.clientsData = []; }
 
       try {
@@ -2779,6 +3142,7 @@ service cloud.firestore {
       populateWorkerSelects();
       initStatsTimeFilters();
       renderDashboard();
+      updateSidebarCompanyLogo();
 
       const savedCfg = localStorage.getItem(STORAGE_KEYS.FIREBASE_CFG);
       if (HARDCODED_FIREBASE_CONFIG) initFirebaseConnection(HARDCODED_FIREBASE_CONFIG, false);
@@ -2793,6 +3157,7 @@ service cloud.firestore {
     function refreshAllViews() {
       populateWorkerSelects();
       renderDashboard();
+      updateSidebarCompanyLogo();
       if (currentTab === 'map_planner') {
         renderPlanner();
         renderMapMarkers();
@@ -2804,6 +3169,7 @@ service cloud.firestore {
         renderProtocolTemplatesManager();
       }
       if (currentTab === 'history') renderHistoryTable();
+      if (currentTab === 'settings') renderSettings();
     }
 
     function switchTab(tabId) {
@@ -2826,7 +3192,8 @@ service cloud.firestore {
         map_planner: 'Mapa i Planer Dnia',
         clients: 'Baza Klientów',
         devices_db: 'Urządzenia i Protokoły',
-        history: 'Historia i Statystyki'
+        history: 'Historia i Statystyki',
+        settings: 'Ustawienia i Logo Firmy'
       };
       setText('header-title', titles[tabId] || 'ServiTrak');
 
@@ -2835,6 +3202,7 @@ service cloud.firestore {
       if (tabId === 'clients') renderClients();
       if (tabId === 'devices_db') { renderCatalog(); renderProtocolTemplatesManager(); }
       if (tabId === 'history') { initStatsTimeFilters(); renderHistoryTable(); }
+      if (tabId === 'settings') renderSettings();
     }
 
     function switchDevicesSubView(subView) {
@@ -3002,7 +3370,10 @@ service cloud.firestore {
                     <div class="min-w-0">
                       <div class="flex items-center gap-2 flex-wrap">
                         <span class="text-xs font-extrabold ${isCanceled ? 'text-rose-700 bg-rose-100 dark:bg-rose-950 dark:text-rose-300 line-through' : 'text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950'} px-2 py-0.5 rounded-md">${v.time}</span>
-                        <span class="font-bold text-sm text-zinc-900 dark:text-white ${(isDone || isCanceled) ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</span>
+                        <span class="font-bold text-sm text-zinc-900 dark:text-white ${(isDone || isCanceled) ? 'line-through opacity-60' : ''}">
+                          ${client ? client.name : (v.clientName || 'Klient')}
+                          ${(v.isAdHoc || !client) ? '<span class="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 ml-1">Spoza bazy</span>' : ''}
+                        </span>
                         <span class="text-[11px] font-bold ${isMontaz ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200'} px-2 py-0.5 rounded">${v.serviceType}</span>
                         <button type="button" onclick="openReassignWorkerModal('${v.id}')" class="px-2.5 py-0.5 rounded-lg bg-sky-50 dark:bg-sky-950/70 hover:bg-sky-100 dark:hover:bg-sky-900 border border-sky-300 dark:border-sky-800 text-[11px] font-extrabold text-sky-800 dark:text-sky-300 inline-flex items-center gap-1 transition" title="Przenieś zlecenie (zmień dzień, godzinę lub serwisanta)">
                           👷 ${v.workerName || 'Serwisant 1'} • 📅 Przenieś <i data-lucide="calendar-clock" class="w-3 h-3"></i>
@@ -3010,13 +3381,13 @@ service cloud.firestore {
                         ${isCanceled ? '<span class="px-2 py-0.5 rounded bg-rose-600 text-white text-[10px] font-extrabold uppercase">Anulowane</span>' : ''}
                       </div>
                       ${isMontaz && v.plannedInstallModel && !dev ? `<div class="text-[11px] font-extrabold text-amber-700 dark:text-amber-300 mt-0.5">🏗️ Do zamontowania: ${getDeviceInfo(v.plannedInstallType).short} — ${v.plannedInstallModel}</div>` : ''}
-                      ${dev ? `<div class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5">🔧 ${dev.deviceModel} ${dev.serialNumber ? `<span class="font-mono text-zinc-500">(S/N: ${dev.serialNumber}${dev.serialNumberOutdoor ? ' / JZ: ' + dev.serialNumberOutdoor : ''})</span>` : ''}</div>` : ''}
+                      ${dev ? `<div class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5">🔧 ${dev.deviceModel} ${dev.serialNumber ? `<span class="font-mono text-zinc-500">(S/N: ${dev.serialNumber}${dev.serialNumberOutdoor ? ' / JZ: ' + dev.serialNumberOutdoor : ''})</span>` : ''}</div>` : (v.deviceModel ? `<div class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5">🔧 ${v.deviceModel}</div>` : '')}
                       ${customDevAddr ? `<div class="text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300 mt-0.5">📍 Miejsce montażu urządzenia: ${customDevAddr}</div>` : ''}
                       ${v.notes ? `<div class="text-[11px] text-amber-700 dark:text-amber-400 font-medium mt-0.5">📝 Notatka: ${v.notes}</div>` : ''}
                       ${v.completionComment ? `<div class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold mt-0.5">✅ Wykonano: ${v.completionComment}</div>` : ''}
                       ${v.protocolData ? `<div class="mt-1"><button onclick="openProtocolPreviewByVisit('${v.id}')" class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-extrabold inline-flex items-center gap-1 shadow-sm"><i data-lucide="file-text" class="w-3 h-3"></i> Podgląd protokołu / PDF</button></div>` : ''}
                       ${v.cancelReason ? `<div class="text-[11px] text-rose-600 dark:text-rose-400 font-bold mt-0.5">❌ Powód anulowania: ${v.cancelReason}</div>` : ''}
-                      ${client ? `<div class="text-xs text-zinc-600 dark:text-zinc-400 mt-1">🏠 Adres klienta: ${client.city}, ${client.street} • <a href="tel:${client.phone}" class="text-emerald-600 dark:text-emerald-400 font-bold underline">📞 ${client.phone}</a></div>` : ''}
+                      ${client ? `<div class="text-xs text-zinc-600 dark:text-zinc-400 mt-1">🏠 Adres klienta: ${client.city}, ${client.street} • <a href="tel:${client.phone}" class="text-emerald-600 dark:text-emerald-400 font-bold underline">📞 ${client.phone}</a></div>` : (v.clientCity || v.clientStreet || v.clientPhone ? `<div class="text-xs text-zinc-600 dark:text-zinc-400 mt-1">🏠 Adres: ${v.clientCity || ''}${v.clientStreet ? ', ' + v.clientStreet : ''} • <a href="tel:${v.clientPhone || ''}" class="text-emerald-600 dark:text-emerald-400 font-bold underline">📞 ${v.clientPhone || '—'}</a></div>` : '')}
                     </div>
                     <div class="flex items-center gap-1.5 shrink-0 flex-wrap">
                       ${!isCanceled ? `
@@ -3368,8 +3739,11 @@ service cloud.firestore {
       const enriched = getEnrichedClients();
       const bounds = [];
       const dayVisits = (window.appointmentsData || []).filter(a => a.date === selectedDate && a.status !== 'canceled');
+      const allActiveVisits = (window.appointmentsData || []).filter(a => a.status !== 'canceled' && a.status !== 'completed');
       const mapTypeFilter = document.getElementById('map-device-type-filter')?.value || 'all';
+      const mapVisitsFilter = document.getElementById('map-visits-filter')?.value || 'all';
 
+      // 1. Klienci z bazy danych
       enriched.forEach(c => {
         const matchingDevs = (c.devices || []).filter(d => {
           if (mapTypeFilter === 'all') return true;
@@ -3380,19 +3754,43 @@ service cloud.firestore {
 
         if (mapTypeFilter !== 'all' && matchingDevs.length === 0) return;
 
+        // Wizyty przypisane do tego klienta
+        const clientDayVisits = dayVisits.filter(a => a.clientId === c.id);
+        const clientAllActiveVisits = allActiveVisits.filter(a => a.clientId === c.id);
+        const relevantVisits = mapVisitsFilter === 'planned_day'
+          ? clientDayVisits
+          : mapVisitsFilter === 'planned_all'
+            ? clientAllActiveVisits
+            : null;
+
+        // Jeśli filtr wyjazdów jest włączony i klient nie ma żadnej pasującej wizyty — pomijamy
+        if (mapVisitsFilter !== 'all' && (!relevantVisits || relevantVisits.length === 0)) return;
+
         // Urządzenia zamontowane pod głównym adresem klienta vs pod własnym adresem montażu
         const mainAddrDevs = (mapTypeFilter === 'all' ? (c.devices || []) : matchingDevs).filter(d => !d.hasCustomLocation || (!d.installCity && !d.installStreet));
         const customLocDevs = (mapTypeFilter === 'all' ? (c.devices || []) : matchingDevs).filter(d => d.hasCustomLocation && (d.installCity || d.installStreet));
 
-        // 1. Pinezka głównego adresu klienta (jeśli ma urządzenia pod tym adresem lub nie ma żadnych urządzeń)
-        if (mainAddrDevs.length > 0 || (c.devices || []).length === 0) {
+        // 1. Pinezka głównego adresu klienta
+        const hasMainVisits = !relevantVisits || relevantVisits.some(a => !a.deviceId || mainAddrDevs.some(md => md.id === a.deviceId));
+        if ((mainAddrDevs.length > 0 || (c.devices || []).length === 0) && hasMainVisits) {
           const lat = parseFloat(c.lat), lng = parseFloat(c.lng);
           if (!isNaN(lat) && !isNaN(lng)) {
             bounds.push([lat, lng]);
             const isMainScheduledToday = dayVisits.some(a => a.clientId === c.id && (!a.deviceId || mainAddrDevs.some(md => md.id === a.deviceId)));
+            const isMainScheduledAny = allActiveVisits.some(a => a.clientId === c.id && (!a.deviceId || mainAddrDevs.some(md => md.id === a.deviceId)));
             const mainOverdue = mainAddrDevs.some(d => !d.status.remindersCanceled && d.status.isOverdue);
             const mainSoon = mainAddrDevs.some(d => !d.status.remindersCanceled && d.status.isSoon);
-            const color = isMainScheduledToday ? '#0284c7' : mainOverdue ? '#e11d48' : mainSoon ? '#d97706' : '#10b981';
+            const color = (isMainScheduledToday || (mapVisitsFilter === 'planned_all' && isMainScheduledAny))
+              ? '#0284c7'
+              : mainOverdue ? '#e11d48' : mainSoon ? '#d97706' : '#10b981';
+
+            const activeMainVisit = (mapVisitsFilter === 'planned_day' ? clientDayVisits : clientAllActiveVisits)?.[0];
+            const visitBadgeHtml = activeMainVisit ? `
+              <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:4px 6px;margin-top:5px;font-size:10px;color:#0369a1;">
+                <strong>📅 Wyjazd: ${formatDatePL(activeMainVisit.date)} o ${activeMainVisit.time}</strong><br>
+                <span>🔧 ${activeMainVisit.serviceType || 'Serwis'} • 👷 ${activeMainVisit.workerName || 'Serwisant'}</span>
+              </div>
+            ` : '';
 
             const svg = `
               <div style="background-color:${color};width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;">
@@ -3404,12 +3802,13 @@ service cloud.firestore {
             const devSummary = mainAddrDevs.map(d => `${getDeviceInfo(d.deviceType, d.customTypeLabel).short}: ${d.deviceModel}`).join('<br>');
 
             marker.bindPopup(`
-              <div style="min-width:210px;font-family:'Inter',sans-serif;">
+              <div style="min-width:220px;font-family:'Inter',sans-serif;">
                 <div style="font-weight:800;font-size:13px;color:#18181b;">${c.name}</div>
                 ${c.nip ? `<div style="font-size:10px;color:#059669;font-weight:700;">NIP: ${c.nip}</div>` : ''}
                 <div style="font-size:11px;color:#52525b;margin-top:2px;">🏠 Adres klienta: ${c.city}, ${c.street}</div>
                 ${devSummary ? `<div style="font-size:10px;color:#0f766e;font-weight:700;margin-top:3px;">🔧 ${devSummary}</div>` : ''}
                 <div style="margin-top:4px;"><a href="tel:${c.phone}" style="color:#059669;font-weight:700;font-size:12px;text-decoration:underline;">📞 ${c.phone}</a></div>
+                ${visitBadgeHtml}
                 <div style="display:flex;flex-direction:column;gap:5px;margin-top:8px;">
                   <button onclick="selectClientFromMapForPlanner('${c.id}', '${mainAddrDevs[0]?.id || ''}')" style="width:100%;background:#059669;color:#fff;border:none;padding:6px 10px;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;">
                     + Dodaj do planu (${formatDatePL(selectedDate)})
@@ -3426,13 +3825,27 @@ service cloud.firestore {
 
         // 2. Osobne pinezki dla każdego urządzenia zamontowanego w innej lokalizacji
         customLocDevs.forEach(dev => {
+          const hasDevVisits = !relevantVisits || relevantVisits.some(a => a.deviceId === dev.id);
+          if (mapVisitsFilter !== 'all' && !hasDevVisits) return;
+
           const dLat = parseFloat(dev.installLat ?? c.lat);
           const dLng = parseFloat(dev.installLng ?? c.lng);
           if (isNaN(dLat) || isNaN(dLng)) return;
           bounds.push([dLat, dLng]);
 
           const isDevScheduledToday = dayVisits.some(a => a.clientId === c.id && a.deviceId === dev.id);
-          const devColor = isDevScheduledToday ? '#0284c7' : dev.status.isOverdue ? '#e11d48' : dev.status.isSoon ? '#d97706' : '#10b981';
+          const isDevScheduledAny = allActiveVisits.some(a => a.clientId === c.id && a.deviceId === dev.id);
+          const devColor = (isDevScheduledToday || (mapVisitsFilter === 'planned_all' && isDevScheduledAny))
+            ? '#0284c7'
+            : dev.status.isOverdue ? '#e11d48' : dev.status.isSoon ? '#d97706' : '#10b981';
+
+          const activeDevVisit = (mapVisitsFilter === 'planned_day' ? clientDayVisits : clientAllActiveVisits)?.find(a => a.deviceId === dev.id);
+          const devVisitBadgeHtml = activeDevVisit ? `
+            <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:4px 6px;margin-top:5px;font-size:10px;color:#0369a1;">
+              <strong>📅 Wyjazd: ${formatDatePL(activeDevVisit.date)} o ${activeDevVisit.time}</strong><br>
+              <span>🔧 ${activeDevVisit.serviceType || 'Serwis'} • 👷 ${activeDevVisit.workerName || 'Serwisant'}</span>
+            </div>
+          ` : '';
 
           const devSvg = `
             <div style="background-color:${devColor};width:36px;height:36px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #e0e7ff;box-shadow:0 4px 14px rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;">
@@ -3451,6 +3864,7 @@ service cloud.firestore {
               <div style="font-size:10px;color:#71717a;">🏠 Adres klienta: ${c.city}, ${c.street}</div>
               <div style="font-size:11px;color:#0f766e;font-weight:800;margin-top:4px;">🔧 ${getDeviceInfo(dev.deviceType, dev.customTypeLabel).short}: ${dev.deviceModel}</div>
               <div style="margin-top:4px;"><a href="tel:${c.phone}" style="color:#059669;font-weight:700;font-size:12px;text-decoration:underline;">📞 ${c.phone}</a></div>
+              ${devVisitBadgeHtml}
               <div style="display:flex;flex-direction:column;gap:5px;margin-top:8px;">
                 <button onclick="selectClientFromMapForPlanner('${c.id}', '${dev.id}')" style="width:100%;background:#4f46e5;color:#fff;border:none;padding:6px 10px;border-radius:8px;font-weight:700;font-size:11px;cursor:pointer;">
                   + Dodaj to urządzenie do planu (${formatDatePL(selectedDate)})
@@ -3463,6 +3877,53 @@ service cloud.firestore {
           `);
           mapMarkersGroup.addLayer(devMarker);
         });
+      });
+
+      // 3. Wyjazdy dla klientów spoza bazy (ad-hoc) — jeśli filtr wyjazdów jest włączony lub mają współrzędne
+      const adhocVisits = (mapVisitsFilter === 'planned_day' ? dayVisits : allActiveVisits).filter(v =>
+        v.isAdHoc || !(window.clientsData || []).some(cl => cl.id === v.clientId)
+      );
+
+      adhocVisits.forEach(av => {
+        let aLat = parseFloat(av.lat);
+        let aLng = parseFloat(av.lng);
+
+        if ((isNaN(aLat) || isNaN(aLng)) && av.clientCity) {
+          const cityKey = av.clientCity.toLowerCase().trim();
+          if (POLISH_PLACES_FALLBACK[cityKey]) {
+            aLat = POLISH_PLACES_FALLBACK[cityKey][0];
+            aLng = POLISH_PLACES_FALLBACK[cityKey][1];
+            av.lat = aLat;
+            av.lng = aLng;
+          }
+        }
+
+        if (!isNaN(aLat) && !isNaN(aLng)) {
+          bounds.push([aLat, aLng]);
+          const adhocSvg = `
+            <div style="background-color:#d97706;width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fef3c7;box-shadow:0 4px 12px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;">
+              <div style="width:9px;height:9px;background:#fff;border-radius:50%;transform:rotate(45deg);"></div>
+            </div>
+          `;
+          const adhocIcon = L.divIcon({ className: 'custom-pin-adhoc', html: adhocSvg, iconSize: [34, 34], iconAnchor: [17, 34], popupAnchor: [0, -34] });
+          const adhocMarker = L.marker([aLat, aLng], { icon: adhocIcon });
+          const addrStr = `${av.clientCity || ''}${av.clientStreet ? ', ' + av.clientStreet : ''}`.trim() || 'Adres niepodany';
+
+          adhocMarker.bindPopup(`
+            <div style="min-width:220px;font-family:'Inter',sans-serif;">
+              <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#d97706;margin-bottom:2px;">🚗 Zlecenie spoza bazy</div>
+              <div style="font-weight:800;font-size:13px;color:#18181b;">${av.clientName || 'Klient spoza bazy'}</div>
+              <div style="font-size:11px;color:#52525b;margin-top:2px;">📍 ${addrStr}</div>
+              <div style="font-size:10px;color:#0f766e;font-weight:700;margin-top:3px;">🔧 ${av.serviceType || 'Wizyta'}: ${av.deviceModel || 'Urządzenie HVAC'}</div>
+              ${av.clientPhone ? `<div style="margin-top:4px;"><a href="tel:${av.clientPhone}" style="color:#059669;font-weight:700;font-size:12px;text-decoration:underline;">📞 ${av.clientPhone}</a></div>` : ''}
+              <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:4px 6px;margin-top:5px;font-size:10px;color:#92400e;">
+                <strong>📅 Data: ${formatDatePL(av.date)} o ${av.time}</strong><br>
+                <span>👷 Serwisant: ${av.workerName || 'Serwisant'}</span>
+              </div>
+            </div>
+          `);
+          mapMarkersGroup.addLayer(adhocMarker);
+        }
       });
 
       if (bounds.length > 0 && mapInstance) mapInstance.fitBounds(bounds, { padding: [45, 45], maxZoom: 12 });
@@ -3618,7 +4079,9 @@ service cloud.firestore {
               ${dayVisits.length === 0 ? '<div class="text-[11px] text-zinc-400 py-4 text-center">Brak wyjazdów</div>' : dayVisits.map(v => {
                 const client = (window.clientsData || []).find(c => c.id === v.clientId);
                 const dev = client?.devices?.find(d => d.id === v.deviceId);
-                const devAddr = dev ? formatDeviceInstallAddress(dev) : '';
+                const devAddr = dev ? formatDeviceInstallAddress(dev) : (v.clientCity ? `${v.clientCity}${v.clientStreet ? ', ' + v.clientStreet : ''}` : '');
+                const clientName = client ? client.name : (v.clientName || 'Klient');
+                const isAdHoc = v.isAdHoc || !client;
                 const isCanceled = v.status === 'canceled';
                 const isDone = v.status === 'completed';
                 return `
@@ -3630,9 +4093,12 @@ service cloud.firestore {
                         <button onclick="deleteVisit('${v.id}')" class="text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950 p-1 rounded inline-flex items-center" title="Usuń całkowicie zlecenie (wymaga hasła)"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                       </div>
                     </div>
-                    <div class="font-bold text-zinc-900 dark:text-white truncate ${(isCanceled || isDone) ? 'line-through opacity-60' : ''}">${client ? client.name : 'Klient'}</div>
+                    <div class="font-bold text-zinc-900 dark:text-white truncate ${(isCanceled || isDone) ? 'line-through opacity-60' : ''}">
+                      ${clientName}
+                      ${isAdHoc ? '<span class="text-[9px] bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 px-1 py-0.5 rounded font-extrabold ml-1">Spoza bazy</span>' : ''}
+                    </div>
                     ${isCanceled ? '<div class="text-[10px] font-extrabold text-rose-600 uppercase">Anulowane</div>' : ''}
-                    ${dev ? `<div class="text-[10px] text-teal-600 dark:text-teal-400 font-semibold truncate">🔧 ${dev.deviceModel}</div>` : ''}
+                    ${dev ? `<div class="text-[10px] text-teal-600 dark:text-teal-400 font-semibold truncate">🔧 ${dev.deviceModel}</div>` : (v.deviceModel ? `<div class="text-[10px] text-teal-600 dark:text-teal-400 font-semibold truncate">🔧 ${v.deviceModel}</div>` : '')}
                     ${devAddr ? `<div class="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold truncate">📍 ${devAddr}</div>` : ''}
                     ${v.notes ? `<div class="text-[10px] text-amber-600 dark:text-amber-400 font-medium truncate">📝 ${v.notes}</div>` : ''}
                     ${v.protocolData ? `<button type="button" onclick="openProtocolPreviewByVisit('${v.id}')" class="w-full mt-1 px-2 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-extrabold flex items-center justify-center gap-1 shadow-sm"><i data-lucide="file-text" class="w-3 h-3"></i> Protokół PDF</button>` : ''}
@@ -3663,7 +4129,17 @@ service cloud.firestore {
 
       const rawAddrs = dayVisits.map(v => {
         const c = (window.clientsData || []).find(cl => cl.id === v.clientId);
-        if (!c) return null;
+        if (!c) {
+          if (v.clientCity || v.clientStreet) {
+            const city = v.clientCity || '';
+            const street = v.clientStreet || '';
+            const postal = v.clientPostalCode || '';
+            const formatted = `${street}, ${postal} ${city}, Polska`.replace(/\s+/g, ' ').trim();
+            const normKey = `${city.toLowerCase().trim()}|${cleanPolishStreet(street).toLowerCase()}`;
+            return { formatted, normKey, clientId: v.clientId || 'adhoc' };
+          }
+          return null;
+        }
         const dev = (c.devices || []).find(d => d.id === v.deviceId);
         const useCustom = dev && dev.hasCustomLocation && (dev.installCity || dev.installStreet);
         const city = useCustom ? (dev.installCity || c.city) : c.city;
@@ -3857,9 +4333,11 @@ service cloud.firestore {
               ${c.email ? `<div class="text-[11px] font-semibold text-sky-600 dark:text-sky-400 mt-0.5">✉️ ${c.email}</div>` : ''}
               <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">🏠 Adres klienta: ${c.city}, ${c.street}</p>
             </div>
-            <a href="tel:${c.phone}" class="px-3 py-2 bg-emerald-600 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 shadow-sm">
-              <i data-lucide="phone" class="w-3.5 h-3.5"></i> ${c.phone}
-            </a>
+            ${!isPhoneEmpty(c.phone) ? `
+              <a href="tel:${c.phone}" class="px-3 py-2 bg-emerald-600 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 shadow-sm">
+                <i data-lucide="phone" class="w-3.5 h-3.5"></i> ${c.phone}
+              </a>
+            ` : ''}
           </div>
           <div class="space-y-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
             ${c.devices.length === 0 ? `<div class="text-xs text-zinc-400 italic py-1">Brak przypisanych urządzeń</div>` : c.devices.map(dev => {
@@ -3905,7 +4383,7 @@ service cloud.firestore {
             </div>
           </td>
           <td class="py-3.5 px-4 text-zinc-600 dark:text-zinc-300">🏠 ${c.city || '—'}${c.street ? `, ${c.street}` : ''}</td>
-          <td class="py-3.5 px-4"><a href="tel:${c.phone}" class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold hover:underline whitespace-nowrap">📞 ${c.phone || '—'}</a></td>
+          <td class="py-3.5 px-4">${!isPhoneEmpty(c.phone) ? `<a href="tel:${c.phone}" class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold hover:underline whitespace-nowrap">📞 ${c.phone}</a>` : '<span class="text-zinc-400 font-normal">—</span>'}</td>
           <td class="py-2.5 px-4">
             <div class="flex flex-col gap-2">
               ${c.devices.length === 0 ? `<span class="text-xs text-zinc-400 italic">Brak przypisanych urządzeń</span>` : c.devices.map(dev => {
@@ -4525,7 +5003,10 @@ service cloud.firestore {
       const street = (wrapper.querySelector('.dev-install-street')?.value || '').trim();
       const postal = (wrapper.querySelector('.dev-install-postal')?.value || '').trim();
       if (!city && !street && !postal) return;
-      const coords = await geocodeAddressHelper(city, street, postal);
+      let coords = await geocodeAddressHelper(city, street, postal);
+      if (!coords && city) {
+        coords = await geocodeAddressHelper(city, '', postal);
+      }
       if (coords) {
         const latInput = wrapper.querySelector('.dev-install-lat');
         const lngInput = wrapper.querySelector('.dev-install-lng');
@@ -4592,7 +5073,10 @@ service cloud.firestore {
       const statusDot = document.getElementById('gps-status-dot');
       if (statusTxt) statusTxt.innerText = 'Szukam dokładnej lokalizacji GPS...';
 
-      const coords = await geocodeAddressHelper(city, rawStreet, postal);
+      let coords = await geocodeAddressHelper(city, rawStreet, postal);
+      if (!coords && city) {
+        coords = await geocodeAddressHelper(city, '', postal);
+      }
       if (coords) {
         document.getElementById('client-lat').value = coords.lat.toFixed(5);
         document.getElementById('client-lng').value = coords.lng.toFixed(5);
@@ -4666,10 +5150,18 @@ service cloud.firestore {
 
     async function handleSaveClient(e) {
       e.preventDefault();
-      const curLat = parseFloat(document.getElementById('client-lat').value);
-      const curLng = parseFloat(document.getElementById('client-lng').value);
-      if (!editingClientId && Math.abs(curLat - 52.4064) < 0.0001 && Math.abs(curLng - 16.9252) < 0.0001) {
+      let curLat = parseFloat(document.getElementById('client-lat').value);
+      let curLng = parseFloat(document.getElementById('client-lng').value);
+      const clientCityVal = (document.getElementById('client-city')?.value || '').trim();
+      const clientStreetVal = (document.getElementById('client-street')?.value || '').trim();
+      const clientPostalVal = (document.getElementById('client-postal')?.value || '').trim();
+      const isDefaultPoznanCoords = isNaN(curLat) || isNaN(curLng) || (Math.abs(curLat - 52.4064) < 0.0005 && Math.abs(curLng - 16.9252) < 0.0005);
+      const isNotPoznanCity = clientCityVal && !clientCityVal.toLowerCase().includes('pozna');
+
+      if ((clientCityVal || clientStreetVal || clientPostalVal) && (isDefaultPoznanCoords || (isNotPoznanCity && isDefaultPoznanCoords) || !editingClientId)) {
         await autoGeocodeClientAddress();
+        curLat = parseFloat(document.getElementById('client-lat').value);
+        curLng = parseFloat(document.getElementById('client-lng').value);
       }
 
       const devEls = Array.from(document.querySelectorAll('#modal-devices-container > div'));
@@ -4681,7 +5173,8 @@ service cloud.firestore {
         const devId = el.dataset.devId || `dev_${Date.now()}`;
         const prevDev = existingClient?.devices?.find(d => d.id === devId);
         const type = el.querySelector('.dev-type').value;
-        const customTypeLabel = type === 'custom' ? (el.querySelector('.dev-custom-type')?.value || '').trim() || 'Inne urządzenie' : '';
+        const isCustomType = type === 'custom' || !['heat_pump', 'gas_boiler', 'ac', 'ventilation'].includes(type);
+        const customTypeLabel = isCustomType ? ((el.querySelector('.dev-custom-type')?.value || '').trim() || 'Inne urządzenie') : '';
         const model = el.querySelector('.dev-model').value.trim();
         const serialNumber = (el.querySelector('.dev-serial')?.value || '').trim();
         const serialNumberOutdoor = (el.querySelector('.dev-serial-outdoor')?.value || '').trim();
@@ -4694,15 +5187,21 @@ service cloud.firestore {
         let installLat = hasCustomLocation ? parseFloat(el.querySelector('.dev-install-lat')?.value) : null;
         let installLng = hasCustomLocation ? parseFloat(el.querySelector('.dev-install-lng')?.value) : null;
 
-        if (hasCustomLocation && (installCity || installStreet) && (isNaN(installLat) || isNaN(installLng))) {
-          const coords = await geocodeAddressHelper(installCity, installStreet, installPostalCode);
+        if (hasCustomLocation && (installCity || installStreet) && (isNaN(installLat) || isNaN(installLng) || (Math.abs(installLat - 52.4064) < 0.0005 && Math.abs(installLng - 16.9252) < 0.0005))) {
+          let coords = await geocodeAddressHelper(installCity, installStreet, installPostalCode);
+          if (!coords && installCity) {
+            coords = await geocodeAddressHelper(installCity, '', installPostalCode);
+          }
           if (coords) {
             installLat = coords.lat;
             installLng = coords.lng;
           }
         }
 
-        if (!model && !serialNumber && !deviceNotes && !installCity && !installStreet) continue;
+        // Ważne: nie pomijaj urządzenia typu "custom", jeśli ma wpisany własny rodzaj (np. Zmiękczacz, Rekuperator itp.)
+        if (!model && !serialNumber && !deviceNotes && !installCity && !installStreet && !(isCustomType && customTypeLabel)) continue;
+
+        const devModelFinal = model || (isCustomType ? customTypeLabel : getDeviceInfo(type, customTypeLabel).short) || 'Inne urządzenie';
 
         const ourUnknownDate = Boolean(el.querySelector('.dev-our-no-date')?.checked);
         const isExternal = !ourUnknownDate && Boolean(el.querySelector('.dev-no-install')?.checked);
@@ -4715,7 +5214,7 @@ service cloud.firestore {
           id: devId,
           deviceType: type,
           customTypeLabel,
-          deviceModel: model || getDeviceInfo(type, customTypeLabel).short,
+          deviceModel: devModelFinal,
           serialNumber,
           serialNumberOutdoor,
           deviceNotes,
@@ -4723,8 +5222,8 @@ service cloud.firestore {
           installPostalCode,
           installCity,
           installStreet,
-          installLat: !isNaN(installLat) ? installLat : null,
-          installLng: !isNaN(installLng) ? installLng : null,
+          installLat: (!isNaN(installLat) && installLat !== null) ? installLat : null,
+          installLng: (!isNaN(installLng) && installLng !== null) ? installLng : null,
           ourUnknownDate,
           noInstallDate,
           installDate: install,
@@ -4746,8 +5245,8 @@ service cloud.firestore {
         postalCode: document.getElementById('client-postal').value.trim(),
         city: capitalizeWords(document.getElementById('client-city').value.trim()),
         street: capitalizeWords(document.getElementById('client-street').value.trim()),
-        lat: parseFloat(document.getElementById('client-lat').value) || 52.4064,
-        lng: parseFloat(document.getElementById('client-lng').value) || 16.9252,
+        lat: (!isNaN(curLat) && curLat !== null) ? curLat : (parseFloat(document.getElementById('client-lat').value) || 52.4064),
+        lng: (!isNaN(curLng) && curLng !== null) ? curLng : (parseFloat(document.getElementById('client-lng').value) || 16.9252),
         notes: document.getElementById('client-notes').value.trim(),
         devices
       };
@@ -4966,7 +5465,10 @@ service cloud.firestore {
       let installLng = hasCustomLocation ? parseFloat(document.getElementById('assigned-dev-lng')?.value) : null;
 
       if (hasCustomLocation && (installCity || installStreet) && (isNaN(installLat) || isNaN(installLng))) {
-        const coords = await geocodeAddressHelper(installCity, installStreet, installPostalCode);
+        let coords = await geocodeAddressHelper(installCity, installStreet, installPostalCode);
+        if (!coords && installCity) {
+          coords = await geocodeAddressHelper(installCity, '', installPostalCode);
+        }
         if (coords) {
           installLat = coords.lat;
           installLng = coords.lng;
@@ -4986,11 +5488,13 @@ service cloud.firestore {
       const client = (window.clientsData || []).find(c => c.id === clientId);
       if (!client) { showToast('Wybierz klienta z listy!'); return; }
 
+      const finalAssignedModel = model || (type === 'custom' ? customTypeLabel : getDeviceInfo(type, customTypeLabel).short) || 'Inne urządzenie';
+
       client.devices = [...(client.devices || []), {
         id: `dev_${Date.now()}`,
         deviceType: type,
         customTypeLabel,
-        deviceModel: model || getDeviceInfo(type, customTypeLabel).short,
+        deviceModel: finalAssignedModel,
         serialNumber,
         serialNumberOutdoor,
         deviceNotes,
@@ -5016,11 +5520,60 @@ service cloud.firestore {
       showToast('Przypisano urządzenie do klienta!');
     }
 
+    function setVisitClientMode(mode) {
+      const modeInp = document.getElementById('visit-client-mode');
+      if (modeInp) modeInp.value = mode;
+
+      const isAdHoc = mode === 'adhoc';
+      const secExist = document.getElementById('visit-client-existing-section');
+      const secAdHoc = document.getElementById('visit-client-adhoc-section');
+      const btnExist = document.getElementById('tab-btn-client-existing');
+      const btnAdHoc = document.getElementById('tab-btn-client-adhoc');
+      const devExistingWrap = document.getElementById('visit-existing-device-wrap');
+
+      if (secExist) secExist.classList.toggle('hidden', isAdHoc);
+      if (secAdHoc) secAdHoc.classList.toggle('hidden', !isAdHoc);
+
+      const activeBtnClass = 'flex-1 py-1.5 px-2 rounded-lg bg-white dark:bg-zinc-900 text-emerald-700 dark:text-emerald-400 shadow-sm transition flex items-center justify-center gap-1.5 font-extrabold';
+      const inactiveBtnClass = 'flex-1 py-1.5 px-2 rounded-lg text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 transition flex items-center justify-center gap-1.5 font-bold';
+
+      if (btnExist) btnExist.className = isAdHoc ? inactiveBtnClass : activeBtnClass;
+      if (btnAdHoc) btnAdHoc.className = isAdHoc ? activeBtnClass : inactiveBtnClass;
+
+      const isMontaz = document.getElementById('visit-type-preset')?.value === 'Montaż';
+      if (devExistingWrap) {
+        devExistingWrap.classList.toggle('hidden', isAdHoc || isMontaz);
+      }
+      const adhocDevWrap = document.getElementById('visit-adhoc-device-wrap');
+      if (adhocDevWrap) {
+        adhocDevWrap.classList.toggle('hidden', isMontaz);
+      }
+      lucide.createIcons();
+    }
+
+    function switchToAdHocClient(initialName = '') {
+      setVisitClientMode('adhoc');
+      const nameInput = document.getElementById('visit-adhoc-name');
+      if (nameInput) {
+        if (initialName) nameInput.value = initialName;
+        setTimeout(() => nameInput.focus(), 60);
+      }
+      document.getElementById('visit-client-dd')?.classList.add('hidden');
+    }
+
     function openScheduleModal(preselectedClientId = '', preselectedDeviceId = '') {
       populateWorkerSelects();
+      setVisitClientMode('existing');
       document.getElementById('visit-client-dd').classList.add('hidden');
       if (document.getElementById('visit-device-filter-input')) document.getElementById('visit-device-filter-input').value = '';
       if (document.getElementById('visit-new-dev-cat-search')) document.getElementById('visit-new-dev-cat-search').value = '';
+
+      if (document.getElementById('visit-adhoc-name')) document.getElementById('visit-adhoc-name').value = '';
+      if (document.getElementById('visit-adhoc-phone')) document.getElementById('visit-adhoc-phone').value = '';
+      if (document.getElementById('visit-adhoc-city')) document.getElementById('visit-adhoc-city').value = '';
+      if (document.getElementById('visit-adhoc-street')) document.getElementById('visit-adhoc-street').value = '';
+      if (document.getElementById('visit-adhoc-postal')) document.getElementById('visit-adhoc-postal').value = '';
+      if (document.getElementById('visit-adhoc-device')) document.getElementById('visit-adhoc-device').value = '';
 
       const defaultClient = preselectedClientId
         ? (window.clientsData || []).find(c => c.id === preselectedClientId)
@@ -5108,8 +5661,11 @@ service cloud.firestore {
         if (val === 'custom') document.getElementById('visit-type-custom').focus();
 
         const isMontaz = val === 'Montaż';
-        document.getElementById('visit-existing-device-wrap')?.classList.toggle('hidden', isMontaz);
+        const isAdHoc = document.getElementById('visit-client-mode')?.value === 'adhoc';
+        document.getElementById('visit-existing-device-wrap')?.classList.toggle('hidden', isMontaz || isAdHoc);
         document.getElementById('visit-new-install-wrap')?.classList.toggle('hidden', !isMontaz);
+        const adhocDevWrap = document.getElementById('visit-adhoc-device-wrap');
+        if (adhocDevWrap) adhocDevWrap.classList.toggle('hidden', isMontaz);
         if (isMontaz) renderModalInstallCatalog();
       }
     }
@@ -5129,11 +5685,7 @@ service cloud.firestore {
       const workerName = document.getElementById('quick-map-worker').value || (window.workersData?.[0] || 'Serwisant 1');
       const notes = (document.getElementById('quick-map-notes').value || '').trim();
 
-      const conflict = (window.appointmentsData || []).some(a => a.date === selectedDate && a.workerName === workerName && a.time === time && a.status !== 'canceled');
-      if (conflict) {
-        showToast(`Błąd: Pracownik ${workerName} ma już zaplanowaną wizytę na godzinę ${time}!`);
-        return;
-      }
+      // Blokada usunięta - zezwalamy na wiele zleceń dla serwisanta na tę samą godzinę
 
       window.appointmentsData.push({
         id: 'v_' + Date.now(),
@@ -5176,14 +5728,23 @@ service cloud.firestore {
       const listEl = document.getElementById('visit-client-dd-list');
       if (!listEl) return;
       const filtered = (window.clientsData || []).filter(c => !q || c.name.toLowerCase().includes(q) || (c.city || '').toLowerCase().includes(q) || (c.street || '').toLowerCase().includes(q) || (c.phone || '').toLowerCase().includes(q));
-      listEl.innerHTML = filtered.length === 0
-        ? `<div class="p-2 text-zinc-400 text-center">Brak pasujących klientów</div>`
+      
+      const adhocBtnHtml = `
+        <div onclick="switchToAdHocClient('${q.replace(/'/g, "\\'")}')" class="p-2.5 bg-amber-50/80 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-900 dark:text-amber-200 cursor-pointer flex items-center justify-between rounded-lg font-bold border border-dashed border-amber-300 dark:border-amber-700 transition">
+          <span class="flex items-center gap-1.5"><i data-lucide="user-plus" class="w-3.5 h-3.5 text-amber-600"></i> ${q ? `Dodaj jako zlecenie spoza bazy: „${q}”` : '+ Dodaj zlecenie dla klienta spoza bazy'}</span>
+          <span class="text-[10px] bg-amber-600 hover:bg-amber-500 text-white px-2 py-0.5 rounded font-extrabold">Wybierz</span>
+        </div>
+      `;
+
+      listEl.innerHTML = (filtered.length === 0
+        ? `<div class="p-3 text-zinc-400 text-center text-xs">Brak klienta w bazie.<br>${adhocBtnHtml}</div>`
         : filtered.map(c => `
           <div onclick="selectVisitClient('${c.id}', true)" class="p-2 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 cursor-pointer flex justify-between items-center rounded-lg ${c.id === currentId ? 'bg-emerald-100/80 dark:bg-emerald-900/40 font-extrabold text-emerald-700 dark:text-emerald-300' : ''}">
             <span>${c.name} <span class="text-zinc-400">(${c.city}, ${c.street})</span></span>
             ${c.id === currentId ? '<span class="text-[10px] bg-emerald-600 text-white px-1.5 py-0.5 rounded">Wybrano</span>' : ''}
           </div>
-        `).join('');
+        `).join('') + `<div class="pt-1">${adhocBtnHtml}</div>`);
+      lucide.createIcons();
     }
 
     function renderVisitDeviceDropdown(preselectedDeviceId = '') {
@@ -5208,16 +5769,60 @@ service cloud.firestore {
       }
     }
 
-    function handleSaveVisit(e) {
+    async function handleSaveVisit(e) {
       e.preventDefault();
-      const clientId = document.getElementById('visit-client-select').value;
+      const clientMode = document.getElementById('visit-client-mode')?.value || 'existing';
+      const isAdHoc = clientMode === 'adhoc';
+
+      let clientId = '';
+      let adhocClientName = '';
+      let adhocClientPhone = '';
+      let adhocClientCity = '';
+      let adhocClientStreet = '';
+      let adhocClientPostal = '';
+      let adhocDevice = '';
+      let adhocLat = null;
+      let adhocLng = null;
+
+      if (isAdHoc) {
+        adhocClientName = (document.getElementById('visit-adhoc-name')?.value || '').trim();
+        if (!adhocClientName) {
+          showToast('Wpisz nazwisko lub nazwę firmy klienta!');
+          document.getElementById('visit-adhoc-name')?.focus();
+          return;
+        }
+        adhocClientPhone = (document.getElementById('visit-adhoc-phone')?.value || '').trim();
+        adhocClientCity = capitalizeWords((document.getElementById('visit-adhoc-city')?.value || '').trim());
+        adhocClientStreet = capitalizeWords((document.getElementById('visit-adhoc-street')?.value || '').trim());
+        adhocClientPostal = (document.getElementById('visit-adhoc-postal')?.value || '').trim();
+        adhocDevice = (document.getElementById('visit-adhoc-device')?.value || '').trim();
+        clientId = 'adhoc_' + Date.now();
+
+        if (adhocClientCity || adhocClientStreet) {
+          let coords = await geocodeAddressHelper(adhocClientCity, adhocClientStreet, adhocClientPostal);
+          if (!coords && adhocClientCity) {
+            coords = await geocodeAddressHelper(adhocClientCity, '', adhocClientPostal);
+          }
+          if (coords) {
+            adhocLat = coords.lat;
+            adhocLng = coords.lng;
+          }
+        }
+      } else {
+        clientId = document.getElementById('visit-client-select').value;
+        if (!clientId) {
+          showToast('Wybierz klienta z listy lub przełącz na klienta spoza bazy!');
+          return;
+        }
+      }
+
       const date = document.getElementById('visit-date').value;
       const time = document.getElementById('visit-time').value;
       const preset = document.getElementById('visit-type-preset').value;
       const customVal = (document.getElementById('visit-type-custom').value || '').trim();
       const serviceType = preset === 'custom' ? (customVal || 'Serwis') : preset;
       const isMontaz = preset === 'Montaż';
-      const deviceId = isMontaz ? '' : (document.getElementById('visit-device-select').value || '');
+      const deviceId = isMontaz ? '' : (isAdHoc ? '' : (document.getElementById('visit-device-select').value || ''));
       const plannedInstallType = isMontaz ? (document.getElementById('visit-new-dev-type')?.value || 'heat_pump') : '';
       const plannedInstallCustomType = (isMontaz && plannedInstallType === 'custom') ? (document.getElementById('visit-new-dev-custom-type')?.value || '').trim() : '';
       const plannedInstallModel = isMontaz ? ((document.getElementById('visit-new-dev-model')?.value || '').trim() || 'Nowe urządzenie HVAC') : '';
@@ -5226,20 +5831,20 @@ service cloud.firestore {
       const workerName = document.getElementById('visit-worker-select').value || (window.workersData?.[0] || 'Serwisant 1');
       const notes = (document.getElementById('visit-notes').value || '').trim();
 
-      if (!clientId) {
-        showToast('Wybierz klienta z listy!');
-        return;
-      }
-
-      const conflict = (window.appointmentsData || []).some(a => a.date === date && a.workerName === workerName && a.time === time && a.status !== 'canceled');
-      if (conflict) {
-        showToast(`Błąd: Pracownik ${workerName} ma już zapisaną wizytę na godzinę ${time}!`);
-        return;
-      }
+      // Blokada usunięta - zezwalamy na wiele zleceń dla jednego serwisanta o tej samej godzinie
 
       window.appointmentsData.push({
         id: 'v_' + Date.now(),
         clientId,
+        isAdHoc,
+        clientName: isAdHoc ? adhocClientName : '',
+        clientPhone: isAdHoc ? adhocClientPhone : '',
+        clientCity: isAdHoc ? adhocClientCity : '',
+        clientStreet: isAdHoc ? adhocClientStreet : '',
+        clientPostalCode: isAdHoc ? adhocClientPostal : '',
+        lat: adhocLat,
+        lng: adhocLng,
+        deviceModel: isAdHoc ? (adhocDevice || (isMontaz ? plannedInstallModel : 'Urządzenie HVAC')) : '',
         deviceId,
         plannedInstallType,
         plannedInstallCustomType,
@@ -5258,7 +5863,9 @@ service cloud.firestore {
 
       closeModal('modal-schedule');
       refreshAllViews();
-      showToast(`Zaplanowano zlecenie dla ${workerName}!`);
+      showToast(isAdHoc
+        ? `Zaplanowano wizytę dla klienta spoza bazy: ${adhocClientName} (${formatDatePL(date)} o ${time})!`
+        : `Zaplanowano wizytę na ${formatDatePL(date)} o ${time}!`);
     }
 
     function openInspectionModal(clientId, highlightDeviceId = null) {
@@ -5920,11 +6527,13 @@ service cloud.firestore {
         clearSignaturePad('sig-canvas-client');
       }, 90);
 
-      const devCustomAddr = dev ? formatDeviceInstallAddress(dev) : '';
+      const devCustomAddr = dev ? formatDeviceInstallAddress(dev) : (visit.clientCity ? `${visit.clientCity}${visit.clientStreet ? ', ' + visit.clientStreet : ''}` : '');
+      const clientName = client ? client.name : (visit.clientName || 'Klient');
+      const devName = dev ? dev.deviceModel : (visit.deviceModel || (isMontaz ? (visit.plannedInstallModel || 'Nowe urządzenie') : 'Ogólne urządzenie'));
       document.getElementById('close-visit-summary').innerHTML = `
-        <div class="font-extrabold text-zinc-900 dark:text-white">${client ? client.name : 'Klient'} • ${visit.serviceType}</div>
-        <div class="text-zinc-500">${isMontaz ? `🏗️ Planowany montaż: <strong>${visit.plannedInstallModel || 'Nowe urządzenie'}</strong>` : `🔧 Urządzenie: <strong>${dev ? dev.deviceModel : 'Ogólne'}</strong> ${dev?.serialNumber ? `(S/N: ${dev.serialNumber}${dev?.serialNumberOutdoor ? ' / JZ: ' + dev.serialNumberOutdoor : ''})` : ''}`}</div>
-        ${devCustomAddr ? `<div class="text-indigo-600 dark:text-indigo-400 font-bold">📍 Adres montażu: ${devCustomAddr}</div>` : ''}
+        <div class="font-extrabold text-zinc-900 dark:text-white">${clientName} • ${visit.serviceType} ${(visit.isAdHoc || !client) ? '<span class="text-[9px] bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 px-1.5 py-0.5 rounded font-extrabold ml-1">Spoza bazy</span>' : ''}</div>
+        <div class="text-zinc-500">${isMontaz ? `🏗️ Planowany montaż: <strong>${visit.plannedInstallModel || 'Nowe urządzenie'}</strong>` : `🔧 Urządzenie: <strong>${devName}</strong> ${dev?.serialNumber ? `(S/N: ${dev.serialNumber}${dev?.serialNumberOutdoor ? ' / JZ: ' + dev.serialNumberOutdoor : ''})` : ''}`}</div>
+        ${devCustomAddr ? `<div class="text-indigo-600 dark:text-indigo-400 font-bold">📍 Adres: ${devCustomAddr}</div>` : ''}
         <div class="text-zinc-500">👷 Wykonawca: <strong>${visit.workerName || 'Serwis ServiTrak'}</strong> • Data: <strong>${formatDatePL(visit.date)}</strong></div>
       `;
 
@@ -5949,17 +6558,17 @@ service cloud.firestore {
         type: protoKind,
         customTitle: tpl?.title || '',
         date: visit.date || toYMD(new Date()),
-        companyName: 'INSTAL',
-        fgazCert: 'FGAZ-P/27/0109/22',
+        companyName: getSavedCompanyName(),
+        fgazCert: getSavedFgazCert(),
         technician: visit.workerName || 'Serwis INSTAL',
-        clientName: client?.name || 'Klient',
-        clientNip: client?.nip || '',
-        clientEmail: client?.email || '',
-        clientAddress: client ? `${client.postalCode ? client.postalCode + ' ' : ''}${client.city || ''}, ${client.street || ''}` : '',
-        installAddress: deviceInstallAddress || '',
-        clientPhone: client?.phone || '',
-        deviceTypeLabel: devTypeLabel || 'Urządzenie HVAC',
-        deviceModel: deviceModel || 'Urządzenie HVAC',
+        clientName: client?.name || visit.clientName || 'Klient',
+        clientNip: client?.nip || visit.clientNip || '',
+        clientEmail: client?.email || visit.clientEmail || '',
+        clientAddress: client ? `${client.postalCode ? client.postalCode + ' ' : ''}${client.city || ''}, ${client.street || ''}` : (visit.clientAddress || `${visit.clientPostalCode ? visit.clientPostalCode + ' ' : ''}${visit.clientCity || ''}${visit.clientStreet ? ', ' + visit.clientStreet : ''}`.trim() || '—'),
+        installAddress: deviceInstallAddress || visit.installAddress || '',
+        clientPhone: client?.phone || visit.clientPhone || '',
+        deviceTypeLabel: devTypeLabel || visit.deviceTypeLabel || 'Urządzenie HVAC',
+        deviceModel: deviceModel || visit.deviceModel || visit.plannedInstallModel || 'Urządzenie HVAC',
         serialIndoor: (document.getElementById('proto-inst-sn-in')?.value || serialNumber || '').trim(),
         serialOutdoor: (document.getElementById('proto-inst-sn-out')?.value || serialNumberOutdoor || '').trim(),
         usedMaterials: (document.getElementById('proto-insp-materials')?.value || '').trim(),
@@ -5977,7 +6586,8 @@ service cloud.firestore {
           locationIndoor: document.getElementById('proto-inst-loc-in')?.value || deviceNotes || 'Salon / Pokój',
           locationOutdoor: document.getElementById('proto-inst-loc-out')?.value || 'Elewacja zewnętrzna',
           condensate: document.getElementById('proto-inst-condensate')?.value || 'Grawitacyjnie na zewnątrz',
-          testResult: document.getElementById('proto-inst-tests')?.value || 'Pozytywna / Urządzenie sprawne'
+          testResult: document.getElementById('proto-inst-tests')?.value || 'Pozytywna / Urządzenie sprawne',
+          checklist: (tpl?.checklist || []).map(label => ({ label, done: true }))
         };
       }
 
@@ -6073,7 +6683,8 @@ service cloud.firestore {
           refrigerant: document.getElementById('proto-hp-inst-refrig')?.value || 'R32 / R290',
           electricConn: document.getElementById('proto-hp-inst-elec')?.value || 'Zgodnie z DTR producenta',
           hydraulicsInfo: document.getElementById('proto-hp-inst-hydr')?.value || 'Filtr magnetyczny zamontowany, próba szczelności pozytywna',
-          testResult: document.getElementById('proto-hp-inst-test')?.value || 'Pozytywne / Inwestor przeszkolony z obsługi'
+          testResult: document.getElementById('proto-hp-inst-test')?.value || 'Pozytywne / Inwestor przeszkolony z obsługi',
+          checklist: (tpl?.checklist || []).map(label => ({ label, done: true }))
         };
       }
 
@@ -6285,6 +6896,30 @@ service cloud.firestore {
             ]
           };
         });
+      } else {
+        // Zlecenie dla klienta spoza bazy (brak kartoteki w clientsData)
+        const protoSnIn = (document.getElementById('proto-inst-sn-in')?.value || '').trim();
+        const protoSnOut = (document.getElementById('proto-inst-sn-out')?.value || '').trim();
+        const devModel = isMontaz
+          ? ((document.getElementById('close-install-model')?.value || '').trim() || visit.plannedInstallModel || 'Nowe urządzenie')
+          : (visit.deviceModel || 'Urządzenie HVAC');
+        const devNotes = isMontaz ? (document.getElementById('close-install-dev-notes')?.value || '') : (visit.notes || '');
+        const devType = isMontaz ? (document.getElementById('close-install-type')?.value || visit.plannedInstallType || 'heat_pump') : 'ac';
+        const devTypeInfo = getDeviceInfo(devType);
+        const customAddr = `${visit.clientPostalCode ? visit.clientPostalCode + ' ' : ''}${visit.clientCity || ''}${visit.clientStreet ? ', ' + visit.clientStreet : ''}`.trim();
+
+        savedProtocol = buildProtocolDataFromModal(
+          visit,
+          null,
+          devModel,
+          protoSnIn,
+          protoSnOut,
+          devNotes,
+          comment,
+          devTypeInfo.short,
+          customAddr
+        );
+        visit.protocolData = savedProtocol;
       }
 
       persistData();
@@ -6294,30 +6929,52 @@ service cloud.firestore {
       if (savedProtocol) {
         showToast('Zlecenie zamknięte i wygenerowano cyfrowy protokół!');
         setTimeout(() => {
-          openProtocolPreviewModal('device', client?.id || '', targetHistoryDeviceId, targetHistoryItemId);
+          if (client && targetHistoryItemId) {
+            openProtocolPreviewModal('device', client.id, targetHistoryDeviceId, targetHistoryItemId);
+          } else {
+            showProtocolObjectInModal(savedProtocol);
+          }
         }, 180);
       } else {
-        showToast(isMontaz ? 'Montaż zamknięty — nowe urządzenie przypisano do klienta!' : 'Zlecenie zamknięte i dopisane do historii urządzenia!');
+        showToast(isMontaz ? 'Montaż zamknięty — nowe urządzenie przypisano do klienta!' : 'Zlecenie zamknięte!');
       }
     }
 
     function openProtocolPreviewByVisit(visitId) {
       const visit = (window.appointmentsData || []).find(a => a.id === visitId);
-      if (visit?.protocolData) {
-        showProtocolObjectInModal(visit.protocolData);
-        return;
-      }
-      if (visit?.clientId) {
+      let proto = visit?.protocolData || null;
+
+      if (!proto && visit?.clientId) {
         const client = (window.clientsData || []).find(c => c.id === visit.clientId);
         for (const d of (client?.devices || [])) {
           const matchedHist = (d.inspectionHistory || []).find(h => h.date === visit.date && h.protocolData);
           if (matchedHist?.protocolData) {
-            showProtocolObjectInModal(matchedHist.protocolData);
-            return;
+            proto = matchedHist.protocolData;
+            break;
           }
         }
       }
-      showToast('Brak zapisanego protokołu dla tej wizyty.');
+
+      if (!proto) {
+        showToast('Brak zapisanego protokołu dla tej wizyty.');
+        return;
+      }
+
+      // Synchronizacja z najświeższą wersją customEditedHtml, jeśli istniała w clientsData
+      if (!proto.customEditedHtml && proto.protocolId) {
+        for (const c of (window.clientsData || [])) {
+          for (const d of (c.devices || [])) {
+            const hMatch = (d.inspectionHistory || []).find(h => h.protocolData?.protocolId === proto.protocolId && h.protocolData?.customEditedHtml);
+            if (hMatch) {
+              proto.customEditedHtml = hMatch.protocolData.customEditedHtml;
+              break;
+            }
+          }
+          if (proto.customEditedHtml) break;
+        }
+      }
+
+      showProtocolObjectInModal(proto);
     }
 
     function openProtocolPreviewModal(sourceType, clientId, deviceId, itemId) {
@@ -6348,9 +7005,22 @@ service cloud.firestore {
         }
       }
       if (!proto) {
+        const visit = (window.appointmentsData || []).find(v => v.id === itemId || v.protocolData?.protocolId === itemId);
+        if (visit?.protocolData) proto = visit.protocolData;
+      }
+      if (!proto) {
         showToast('Brak zapisanego protokołu dla tego wpisu.');
         return;
       }
+
+      // Synchronizacja z najświeższą wersją customEditedHtml, jeśli istniała w appointmentsData
+      if (!proto.customEditedHtml && proto.protocolId) {
+        const vMatch = (window.appointmentsData || []).find(v => v.protocolData?.protocolId === proto.protocolId && v.protocolData?.customEditedHtml);
+        if (vMatch) {
+          proto.customEditedHtml = vMatch.protocolData.customEditedHtml;
+        }
+      }
+
       showProtocolObjectInModal(proto);
     }
 
@@ -6391,23 +7061,72 @@ service cloud.firestore {
       openModal('modal-protocol-preview');
     }
 
-    // Sprawia, że każde okienko, komórka tabeli i pole tekstowe na protokole jest edytowalne po kliknięciu
+    // Sprawia, że każde pole tekstowe, komórka i uwaga na protokole jest edytowalna po kliknięciu
     function makeAllProtocolFieldsEditable(rootEl) {
       if (!rootEl) return;
-      const targets = rootEl.querySelectorAll('td, th, div, span, strong');
+      rootEl.querySelectorAll('[contenteditable]').forEach(el => {
+        el.removeAttribute('contenteditable');
+      });
+
+      const targets = rootEl.querySelectorAll('td, th, div, span, strong, p');
       targets.forEach(el => {
-        if (el.querySelector('img, table, tr, td, th')) return;
-        if ((el.textContent || '').trim().length > 0 || el.tagName === 'TD') {
+        if (el.querySelector('img, table, tr, td, th, div, p')) return;
+        if (el.closest('.sig-canvas-box') || el.querySelector('canvas')) return;
+        if (el.closest('.protocol-no-print')) return;
+        if (el.getAttribute('onclick')?.includes('toggleProtocolCheckmark')) return;
+        if (el.getAttribute('onclick')?.includes('toggleInspectionStatusCell')) return;
+        if (el.classList.contains('insp-row-lp')) return;
+        if ((el.textContent || '').trim().length > 0 || el.tagName === 'TD' || el.tagName === 'TH') {
           el.setAttribute('contenteditable', 'true');
           el.setAttribute('spellcheck', 'false');
         }
       });
     }
 
+    // Synchronizuje treść zedytowanego protokołu we wszystkich strukturach bazy (wzory, appointmentsData oraz clientsData)
+    function syncProtocolAcrossAllState(proto, editedHtml) {
+      if (!proto || !editedHtml) return;
+      proto.customEditedHtml = editedHtml;
+      const protoId = proto.protocolId;
+      const tplId = proto.templateId || proto.type;
+
+      // 1. Zapis we wzorach protokołów (window.protocolTemplatesData)
+      if (tplId && Array.isArray(window.protocolTemplatesData)) {
+        const foundTpl = window.protocolTemplatesData.find(t => t.id === tplId);
+        if (foundTpl) {
+          foundTpl.customEditedHtml = editedHtml;
+          persistData();
+        }
+      }
+
+      // 2. Zapis w window.appointmentsData
+      (window.appointmentsData || []).forEach(a => {
+        if (a.protocolData) {
+          if (a.protocolData === proto || (protoId && a.protocolData.protocolId === protoId)) {
+            a.protocolData.customEditedHtml = editedHtml;
+          }
+        }
+      });
+
+      // 3. Zapis w window.clientsData (historie urządzeń)
+      (window.clientsData || []).forEach(c => {
+        (c.devices || []).forEach(d => {
+          (d.inspectionHistory || []).forEach(h => {
+            if (h.protocolData) {
+              if (h.protocolData === proto || (protoId && h.protocolData.protocolId === protoId)) {
+                h.protocolData.customEditedHtml = editedHtml;
+              }
+            }
+          });
+        });
+      });
+    }
+
     function autoSaveEditedProtocolHtml() {
       const container = document.getElementById('protocol-printable-area');
       if (!container || !currentPreviewProtocolObj) return;
-      currentPreviewProtocolObj.customEditedHtml = container.innerHTML;
+      syncProtocolAcrossAllState(currentPreviewProtocolObj, container.innerHTML);
+      persistData();
     }
 
     function saveEditedProtocolContent() {
@@ -6416,8 +7135,688 @@ service cloud.firestore {
       showToast('Zapisano ręczne zmiany w treści protokołu!');
     }
 
+    function resetEditedProtocolToTemplate() {
+      if (!currentPreviewProtocolObj) return;
+      askConfirmation('Przywrócenie szablonu', 'Czy na pewno chcesz cofnąć wszystkie ręczne zmiany wprowadzone na arkuszu protokołu i przywrócić pierwotny szablon?', () => {
+        delete currentPreviewProtocolObj.customEditedHtml;
+        const protoId = currentPreviewProtocolObj.protocolId;
+        const tplId = currentPreviewProtocolObj.templateId || currentPreviewProtocolObj.type;
+        if (tplId && Array.isArray(window.protocolTemplatesData)) {
+          const foundTpl = window.protocolTemplatesData.find(t => t.id === tplId);
+          if (foundTpl) {
+            delete foundTpl.customEditedHtml;
+          }
+        }
+        (window.appointmentsData || []).forEach(a => {
+          if (a.protocolData && (a.protocolData === currentPreviewProtocolObj || (protoId && a.protocolData.protocolId === protoId))) {
+            delete a.protocolData.customEditedHtml;
+          }
+        });
+        (window.clientsData || []).forEach(c => {
+          (c.devices || []).forEach(d => {
+            (d.inspectionHistory || []).forEach(h => {
+              if (h.protocolData && (h.protocolData === currentPreviewProtocolObj || (protoId && h.protocolData.protocolId === protoId))) {
+                delete h.protocolData.customEditedHtml;
+              }
+            });
+          });
+        });
+        persistData();
+        const container = document.getElementById('protocol-printable-area');
+        if (container) {
+          container.innerHTML = renderProtocolSheetHtml(currentPreviewProtocolObj);
+          makeAllProtocolFieldsEditable(container);
+        }
+        showToast('Przywrócono oryginalny szablon protokołu!');
+      });
+    }
+
+    function addProtocolCustomSection(kind) {
+      const container = document.getElementById('protocol-printable-area');
+      if (!container) return;
+
+      let sectionHtml = '';
+      if (kind === 'inspection_checklist') {
+        sectionHtml = `
+          <div class="protocol-custom-section" style="margin-top:14px;margin-bottom:14px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:#ffffff;color:#0f172a;">
+            <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #059669;padding-bottom:6px;margin-bottom:8px;">
+              <div contenteditable="true" spellcheck="false" style="font-size:11px;font-weight:800;text-transform:uppercase;color:#059669;outline:none;">
+                📋 Wykaz wykonanych czynności przeglądowych i serwisowych
+              </div>
+              <div class="protocol-no-print" style="display:flex;gap:4px;">
+                <button type="button" onclick="addInspectionChecklistRow(this)" style="font-size:10px;font-weight:700;background:#059669;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">+ Dodaj czynność</button>
+                <button type="button" onclick="removeProtocolCustomSection(this)" style="font-size:10px;font-weight:700;background:#e11d48;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">🗑️ Usuń sekcję</button>
+              </div>
+            </div>
+            <table style="width:100%;border-collapse:collapse;margin-bottom:4px;font-size:10.5px;color:#0f172a;border:1px solid #cbd5e1;">
+              <thead>
+                <tr style="background:#f1f5f9;border-bottom:1px solid #cbd5e1;">
+                  <th style="border:1px solid #cbd5e1;padding:5px 8px;text-align:center;width:36px;color:#334155;font-weight:800;">Lp.</th>
+                  <th style="border:1px solid #cbd5e1;padding:5px 8px;text-align:left;color:#334155;font-weight:800;">Opis czynności kontrolnej / serwisowej</th>
+                  <th style="border:1px solid #cbd5e1;padding:5px 8px;text-align:center;width:130px;color:#334155;font-weight:800;">Wykonano</th>
+                  <th class="protocol-no-print" style="width:28px;text-align:center;border:none;"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid #cbd5e1;">
+                  <td class="insp-row-lp" style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:700;width:36px;">1.</td>
+                  <td contenteditable="true" spellcheck="false" style="border:1px solid #cbd5e1;padding:4px 8px;outline:none;">Czyszczenie i dezynfekcja parownika / filtrów</td>
+                  <td onclick="toggleInspectionStatusCell(this)" style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:130px;cursor:pointer;color:#059669;user-select:none;">✓ TAK (Wykonano)</td>
+                  <td class="protocol-no-print" style="width:28px;text-align:center;border:none;">
+                    <button type="button" onclick="removeInspectionChecklistRow(this)" style="background:transparent;border:none;color:#94a3b8;font-size:14px;cursor:pointer;font-weight:bold;" title="Usuń czynność">×</button>
+                  </td>
+                </tr>
+                <tr style="border-bottom:1px solid #cbd5e1;">
+                  <td class="insp-row-lp" style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:700;width:36px;">2.</td>
+                  <td contenteditable="true" spellcheck="false" style="border:1px solid #cbd5e1;padding:4px 8px;outline:none;">Kontrola szczelności i test parametrów pracy</td>
+                  <td onclick="toggleInspectionStatusCell(this)" style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:130px;cursor:pointer;color:#059669;user-select:none;">✓ TAK (Wykonano)</td>
+                  <td class="protocol-no-print" style="width:28px;text-align:center;border:none;">
+                    <button type="button" onclick="removeInspectionChecklistRow(this)" style="background:transparent;border:none;color:#94a3b8;font-size:14px;cursor:pointer;font-weight:bold;" title="Usuń czynność">×</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        `;
+      } else if (kind === 'checklist') {
+        sectionHtml = `
+          <div class="protocol-custom-section" style="margin-top:14px;margin-bottom:14px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:#ffffff;color:#0f172a;">
+            <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #0284c7;padding-bottom:6px;margin-bottom:8px;">
+              <div contenteditable="true" spellcheck="false" style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0369a1;outline:none;">
+                ☑️ Punkty kontrolne
+              </div>
+              <div class="protocol-no-print" style="display:flex;gap:4px;">
+                <button type="button" onclick="addChecklistRowToSection(this)" style="font-size:10px;font-weight:700;background:#0284c7;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">+ Dodaj punkt</button>
+                <button type="button" onclick="removeProtocolCustomSection(this)" style="font-size:10px;font-weight:700;background:#e11d48;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">🗑️ Usuń sekcję</button>
+              </div>
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:11px;">
+              <tbody>
+                <tr style="border-bottom:1px solid #e2e8f0;">
+                  <td onclick="toggleProtocolCheckmark(this)" style="width:28px;text-align:center;font-size:14px;cursor:pointer;color:#0284c7;user-select:none;font-weight:bold;">☑</td>
+                  <td contenteditable="true" spellcheck="false" style="padding:5px 6px;outline:none;">Wpisz treść punktu kontrolnego...</td>
+                  <td class="protocol-no-print" style="width:24px;text-align:center;">
+                    <button type="button" onclick="removeProtocolItemRow(this)" style="background:transparent;border:none;color:#94a3b8;font-size:14px;cursor:pointer;font-weight:bold;" title="Usuń ten punkt">×</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        `;
+      } else if (kind === 'table') {
+        sectionHtml = `
+          <div class="protocol-custom-section" style="margin-top:14px;margin-bottom:14px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:#ffffff;color:#0f172a;">
+            <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #0f766e;padding-bottom:6px;margin-bottom:8px;">
+              <div contenteditable="true" spellcheck="false" style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f766e;outline:none;">
+                📊 Tabela parametrów / pomiarów
+              </div>
+              <div class="protocol-no-print" style="display:flex;gap:4px;">
+                <button type="button" onclick="addTableRowToSection(this)" style="font-size:10px;font-weight:700;background:#0f766e;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">+ Dodaj wiersz</button>
+                <button type="button" onclick="addColumnToTableSection(this)" style="font-size:10px;font-weight:700;background:#0284c7;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">+ Dodaj kolumnę</button>
+                <button type="button" onclick="removeProtocolCustomSection(this)" style="font-size:10px;font-weight:700;background:#e11d48;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">🗑️ Usuń sekcję</button>
+              </div>
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:11px;border:1px solid #cbd5e1;">
+              <thead>
+                <tr style="background:#f1f5f9;border-bottom:1px solid #cbd5e1;text-align:left;font-weight:800;color:#334155;">
+                  <th contenteditable="true" spellcheck="false" style="padding:6px 8px;border-right:1px solid #cbd5e1;outline:none;width:50%;">Parametr / Badanie</th>
+                  <th contenteditable="true" spellcheck="false" style="padding:6px 8px;border-right:1px solid #cbd5e1;outline:none;width:50%;">Wartość / Wynik</th>
+                  <th class="protocol-no-print" style="width:28px;text-align:center;"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid #cbd5e1;">
+                  <td contenteditable="true" spellcheck="false" style="padding:5px 8px;border-right:1px solid #cbd5e1;outline:none;">Napięcie zasilania</td>
+                  <td contenteditable="true" spellcheck="false" style="padding:5px 8px;border-right:1px solid #cbd5e1;outline:none;">230 V (Prawidłowe)</td>
+                  <td class="protocol-no-print" style="width:28px;text-align:center;">
+                    <button type="button" onclick="removeProtocolItemRow(this)" style="background:transparent;border:none;color:#94a3b8;font-size:14px;cursor:pointer;font-weight:bold;" title="Usuń wiersz">×</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        `;
+      } else if (kind === 'text') {
+        sectionHtml = `
+          <div class="protocol-custom-section" style="margin-top:14px;margin-bottom:14px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:#ffffff;color:#0f172a;">
+            <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #d97706;padding-bottom:6px;margin-bottom:8px;">
+              <div contenteditable="true" spellcheck="false" style="font-size:11px;font-weight:800;text-transform:uppercase;color:#d97706;outline:none;">
+                📝 Uwagi serwisowe / Zalecenia po wykonaniu prac
+              </div>
+              <div class="protocol-no-print">
+                <button type="button" onclick="removeProtocolCustomSection(this)" style="font-size:10px;font-weight:700;background:#e11d48;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">🗑️ Usuń sekcję</button>
+              </div>
+            </div>
+            <div contenteditable="true" spellcheck="false" style="min-height:55px;padding:8px;background:#fefce8;border:1px dashed #fde047;border-radius:6px;font-size:11px;line-height:1.5;outline:none;color:#713f12;">
+              Wpisz tutaj dodatkowe uwagi, zalecenia eksploatacyjne dla klienta, wykaz użytych materiałów lub opis specyfiki montażu / serwisu...
+            </div>
+          </div>
+        `;
+      }
+
+      if (!sectionHtml) return;
+
+      const temp = document.createElement('div');
+      temp.innerHTML = sectionHtml.trim();
+      const newEl = temp.firstElementChild;
+
+      // Znajdź sekcję oświadczenia zgodności na dole protokołu, aby wstawić sekcję DOKŁADNIE NAD ZGODNOŚCIĄ
+      let insertBeforeEl = container.querySelector('.protocol-footer-signatures-wrap') ||
+                           container.querySelector('.protocol-statement-zgodnosc-table');
+
+      if (!insertBeforeEl) {
+        const allCandidates = container.querySelectorAll('table, div');
+        for (let i = 0; i < allCandidates.length; i++) {
+          const el = allCandidates[i];
+          const txt = (el.innerText || '').toLowerCase();
+          if (txt.includes('zgodność') || txt.includes('zgoność') || txt.includes('inwestor oświadcza')) {
+            insertBeforeEl = el.closest('.protocol-footer-signatures-wrap') || el.closest('table') || el;
+            break;
+          }
+        }
+      }
+
+      if (!insertBeforeEl) {
+        const allTables = container.querySelectorAll('table');
+        for (let i = allTables.length - 1; i >= 0; i--) {
+          const t = allTables[i];
+          const txt = (t.innerText || '').toLowerCase();
+          if (txt.includes('podpis serwisanta') || txt.includes('podpis zleceniodawcy')) {
+            insertBeforeEl = t.closest('.protocol-footer-signatures-wrap') || t.previousElementSibling || t;
+            break;
+          }
+        }
+      }
+
+      if (insertBeforeEl && insertBeforeEl.closest('.protocol-footer-signatures-wrap')) {
+        insertBeforeEl = insertBeforeEl.closest('.protocol-footer-signatures-wrap');
+      }
+
+      if (insertBeforeEl && insertBeforeEl.parentNode) {
+        insertBeforeEl.parentNode.insertBefore(newEl, insertBeforeEl);
+      } else {
+        const root = container.firstElementChild || container;
+        root.appendChild(newEl);
+      }
+
+      makeAllProtocolFieldsEditable(container);
+      autoSaveEditedProtocolHtml();
+      newEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      showToast('Dodano nową sekcję do protokołu (nad oświadczeniem zgodności)!');
+    }
+
+    function addInspectionChecklistRow(btnEl) {
+      const sec = btnEl.closest('.protocol-custom-section');
+      if (!sec) return;
+      const tbody = sec.querySelector('tbody');
+      if (!tbody) return;
+      const curRows = tbody.querySelectorAll('tr').length;
+      const nextNum = curRows + 1;
+      const tr = document.createElement('tr');
+      tr.style.cssText = 'border-bottom:1px solid #cbd5e1;';
+      tr.innerHTML = `
+        <td class="insp-row-lp" style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:700;width:36px;color:#0f172a;">${nextNum}.</td>
+        <td contenteditable="true" spellcheck="false" style="border:1px solid #cbd5e1;padding:4px 8px;outline:none;color:#0f172a;">Wpisz nową czynność kontrolną / serwisową...</td>
+        <td onclick="toggleInspectionStatusCell(this)" style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:130px;cursor:pointer;color:#059669;user-select:none;">✓ TAK (Wykonano)</td>
+        <td class="protocol-no-print" style="width:28px;text-align:center;border:none;">
+          <button type="button" onclick="removeInspectionChecklistRow(this)" style="background:transparent;border:none;color:#94a3b8;font-size:14px;cursor:pointer;font-weight:bold;" title="Usuń czynność">×</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+      makeAllProtocolFieldsEditable(tr);
+      autoSaveEditedProtocolHtml();
+      const textCell = tr.querySelectorAll('td[contenteditable]')[0];
+      if (textCell) {
+        textCell.focus();
+        try {
+          const range = document.createRange();
+          range.selectNodeContents(textCell);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } catch (e) {}
+      }
+    }
+
+    function removeInspectionChecklistRow(btnEl) {
+      const tr = btnEl.closest('tr');
+      const tbody = tr ? tr.closest('tbody') : null;
+      if (tr) tr.remove();
+      if (tbody) {
+        tbody.querySelectorAll('tr').forEach((row, idx) => {
+          const lpCell = row.querySelector('.insp-row-lp');
+          if (lpCell) lpCell.innerText = `${idx + 1}.`;
+        });
+      }
+      autoSaveEditedProtocolHtml();
+    }
+
+    function toggleInspectionStatusCell(td) {
+      const txt = (td.innerText || '').trim();
+      if (txt.includes('TAK') || txt.includes('Wykonano')) {
+        td.innerText = 'NIE DOTYCZY';
+        td.style.color = '#64748b';
+      } else if (txt.includes('NIE DOTYCZY')) {
+        td.innerText = '⚠ DO POPRAWY';
+        td.style.color = '#d97706';
+      } else if (txt.includes('POPRAWY')) {
+        td.innerText = '✗ NIEWYKONANO';
+        td.style.color = '#dc2626';
+      } else {
+        td.innerText = '✓ TAK (Wykonano)';
+        td.style.color = '#059669';
+      }
+      autoSaveEditedProtocolHtml();
+    }
+
+    function addColumnToTableSection(btnEl) {
+      const sec = btnEl.closest('.protocol-custom-section');
+      if (!sec) return;
+      const theadTr = sec.querySelector('thead tr');
+      if (!theadTr) return;
+      const allTh = theadTr.querySelectorAll('th:not(.protocol-no-print)');
+      const colNum = allTh.length + 1;
+
+      allTh.forEach(th => th.style.width = '');
+
+      const newTh = document.createElement('th');
+      newTh.setAttribute('contenteditable', 'true');
+      newTh.setAttribute('spellcheck', 'false');
+      newTh.style.cssText = 'padding:6px 8px;border-right:1px solid #cbd5e1;outline:none;text-align:left;font-weight:800;color:#334155;';
+      newTh.innerHTML = `Kolumna ${colNum} <span class="protocol-no-print" onclick="removeColumnFromTableSection(this)" style="float:right;cursor:pointer;color:#94a3b8;font-weight:bold;margin-left:4px;" title="Usuń tę kolumnę">×</span>`;
+
+      const actionTh = theadTr.querySelector('th.protocol-no-print');
+      if (actionTh) {
+        theadTr.insertBefore(newTh, actionTh);
+      } else {
+        theadTr.appendChild(newTh);
+      }
+
+      const rows = sec.querySelectorAll('tbody tr');
+      rows.forEach(tr => {
+        const newTd = document.createElement('td');
+        newTd.setAttribute('contenteditable', 'true');
+        newTd.setAttribute('spellcheck', 'false');
+        newTd.style.cssText = 'padding:5px 8px;border-right:1px solid #cbd5e1;outline:none;';
+        newTd.innerText = '—';
+        const actionTd = tr.querySelector('td.protocol-no-print');
+        if (actionTd) {
+          tr.insertBefore(newTd, actionTd);
+        } else {
+          tr.appendChild(newTd);
+        }
+      });
+
+      makeAllProtocolFieldsEditable(sec);
+      autoSaveEditedProtocolHtml();
+      showToast(`Dodano kolumnę ${colNum} do tabeli.`);
+      newTh.focus();
+    }
+
+    function removeColumnFromTableSection(spanEl) {
+      const th = spanEl.closest('th');
+      if (!th) return;
+      const tr = th.closest('tr');
+      const sec = th.closest('.protocol-custom-section');
+      if (!tr || !sec) return;
+      const nonPrintThs = Array.from(tr.querySelectorAll('th:not(.protocol-no-print)'));
+      if (nonPrintThs.length <= 2) {
+        showToast('Tabela musi posiadać co najmniej 2 kolumny.');
+        return;
+      }
+      const colIdx = Array.from(tr.children).indexOf(th);
+      th.remove();
+      const rows = sec.querySelectorAll('tbody tr');
+      rows.forEach(row => {
+        if (row.children[colIdx]) {
+          row.children[colIdx].remove();
+        }
+      });
+      autoSaveEditedProtocolHtml();
+      showToast('Usunięto kolumnę.');
+    }
+
+    function addTableRowToSection(btnEl) {
+      const sec = btnEl.closest('.protocol-custom-section');
+      if (!sec) return;
+      const tbody = sec.querySelector('tbody');
+      const theadTr = sec.querySelector('thead tr');
+      if (!tbody || !theadTr) return;
+
+      const colCount = theadTr.querySelectorAll('th:not(.protocol-no-print)').length || 2;
+      const tr = document.createElement('tr');
+      tr.style.cssText = 'border-bottom:1px solid #cbd5e1;';
+      let cellsHtml = '';
+      for (let i = 0; i < colCount; i++) {
+        cellsHtml += `<td contenteditable="true" spellcheck="false" style="padding:5px 8px;border-right:1px solid #cbd5e1;outline:none;">${i === 0 ? 'Nowy parametr' : '—'}</td>`;
+      }
+      cellsHtml += `
+        <td class="protocol-no-print" style="width:28px;text-align:center;">
+          <button type="button" onclick="removeProtocolItemRow(this)" style="background:transparent;border:none;color:#94a3b8;font-size:14px;cursor:pointer;font-weight:bold;" title="Usuń wiersz">×</button>
+        </td>
+      `;
+      tr.innerHTML = cellsHtml;
+      tbody.appendChild(tr);
+      makeAllProtocolFieldsEditable(tr);
+      autoSaveEditedProtocolHtml();
+      const firstCell = tr.querySelector('td[contenteditable]');
+      if (firstCell) firstCell.focus();
+    }
+
+    function addChecklistRowToSection(btnEl) {
+      const sec = btnEl.closest('.protocol-custom-section');
+      if (!sec) return;
+      const tbody = sec.querySelector('tbody');
+      if (!tbody) return;
+      const tr = document.createElement('tr');
+      tr.style.cssText = 'border-bottom:1px solid #e2e8f0;';
+      tr.innerHTML = `
+        <td onclick="toggleProtocolCheckmark(this)" style="width:28px;text-align:center;font-size:14px;cursor:pointer;color:#0284c7;user-select:none;font-weight:bold;">☑</td>
+        <td contenteditable="true" spellcheck="false" style="padding:5px 6px;outline:none;">Nowy punkt kontrolny...</td>
+        <td class="protocol-no-print" style="width:24px;text-align:center;">
+          <button type="button" onclick="removeProtocolItemRow(this)" style="background:transparent;border:none;color:#94a3b8;font-size:14px;cursor:pointer;font-weight:bold;" title="Usuń ten punkt">×</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+      makeAllProtocolFieldsEditable(tr);
+      autoSaveEditedProtocolHtml();
+      const textCell = tr.querySelector('td[contenteditable]');
+      if (textCell) {
+        textCell.focus();
+        try {
+          const range = document.createRange();
+          range.selectNodeContents(textCell);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } catch (e) {}
+      }
+    }
+
+    function removeProtocolItemRow(btnEl) {
+      const row = btnEl.closest('tr');
+      if (!row) return;
+      row.remove();
+      autoSaveEditedProtocolHtml();
+    }
+
+    function removeProtocolCustomSection(btnEl) {
+      const sec = btnEl.closest('.protocol-custom-section');
+      if (!sec) return;
+      sec.remove();
+      autoSaveEditedProtocolHtml();
+      showToast('Usunięto sekcję z protokołu.');
+    }
+
+    function toggleProtocolCheckmark(td) {
+      const isChecked = td.innerText.trim() === '☑';
+      td.innerText = isChecked ? '☐' : '☑';
+      td.style.color = isChecked ? '#94a3b8' : '#0284c7';
+      autoSaveEditedProtocolHtml();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function getSavedCompanyLogo() {
+      try {
+        return localStorage.getItem(STORAGE_KEYS.COMPANY_LOGO) || '';
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function updateSidebarCompanyLogo() {
+      try {
+        const logo = getSavedCompanyLogo();
+        const wrap = document.getElementById('sidebar-custom-logo-wrap');
+        const img = document.getElementById('sidebar-custom-logo-img');
+        if (!wrap || !img) return;
+        if (logo && typeof logo === 'string' && logo.trim().length > 0) {
+          img.src = logo;
+          img.onerror = function() {
+            wrap.classList.add('hidden');
+          };
+          wrap.classList.remove('hidden');
+        } else {
+          img.src = '';
+          wrap.classList.add('hidden');
+        }
+      } catch (err) {
+        console.error('Błąd aktualizacji logo w pasku bocznym:', err);
+      }
+    }
+
+    function getSavedCompanyName() {
+      try {
+        return localStorage.getItem(STORAGE_KEYS.COMPANY_NAME) || 'INSTAL';
+      } catch (e) {
+        return 'INSTAL';
+      }
+    }
+
+    function getSavedCompanySubtitle() {
+      try {
+        return localStorage.getItem(STORAGE_KEYS.COMPANY_SUBTITLE) || 'Systemy Klimatyzacji, Pomp Ciepła i Kotłów Gazowych';
+      } catch (e) {
+        return 'Systemy Klimatyzacji, Pomp Ciepła i Kotłów Gazowych';
+      }
+    }
+
+    function getSavedFgazCert() {
+      try {
+        return localStorage.getItem(STORAGE_KEYS.COMPANY_FGAZ) || 'FGAZ-P/27/0109/22';
+      } catch (e) {
+        return 'FGAZ-P/27/0109/22';
+      }
+    }
+
+    function renderSettings() {
+      updateSidebarCompanyLogo();
+      const nameInput = document.getElementById('settings-company-name');
+      const fgazInput = document.getElementById('settings-company-fgaz');
+      const subInput = document.getElementById('settings-company-subtitle');
+      if (nameInput) nameInput.value = getSavedCompanyName();
+      if (fgazInput) fgazInput.value = getSavedFgazCert();
+      if (subInput) subInput.value = getSavedCompanySubtitle();
+
+      const logoContainer = document.getElementById('settings-logo-preview-container');
+      const badge = document.getElementById('settings-logo-status-badge');
+      const details = document.getElementById('settings-logo-details');
+      const previewSubline = document.getElementById('settings-preview-subline');
+      const btnReset = document.getElementById('btn-reset-logo');
+
+      const customLogo = getSavedCompanyLogo();
+      if (logoContainer) {
+        logoContainer.innerHTML = getInstalLogoImgHtml();
+      }
+      if (previewSubline) {
+        previewSubline.textContent = `${getSavedCompanySubtitle()} • Certyfikat F-GAZ: ${getSavedFgazCert()}`;
+      }
+
+      if (customLogo) {
+        if (badge) {
+          badge.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800';
+          badge.textContent = '✓ Własne logo aktywne';
+        }
+        if (details) {
+          details.innerHTML = `<span class="font-bold text-emerald-700 dark:text-emerald-300">Własna grafika firmy zapisana i aktywna</span><span class="text-[10px] text-zinc-400">Wyświetla się na protokołach</span>`;
+        }
+        if (btnReset) {
+          btnReset.classList.remove('opacity-50', 'pointer-events-none');
+        }
+      } else {
+        if (badge) {
+          badge.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700';
+          badge.textContent = 'Domyślne logo INSTAL';
+        }
+        if (details) {
+          details.innerHTML = `<span class="text-zinc-500 dark:text-zinc-400">Stan: Domyślny napis INSTAL (fabryczny)</span><span class="text-[10px] font-mono text-zinc-400">canvas dataUrl</span>`;
+        }
+        if (btnReset) {
+          btnReset.classList.add('opacity-50');
+        }
+      }
+      lucide.createIcons();
+    }
+
+    function handleSettingsLogoUpload(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      e.target.value = '';
+
+      if (!file.type.startsWith('image/')) {
+        showToast('Wybierz poprawny plik graficzny (PNG, JPG, SVG, WebP).');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const rawResult = event.target.result;
+        
+        // Plik SVG - zapisujemy bezpośrednio dataUrl
+        if (file.type.includes('svg')) {
+          try {
+            localStorage.setItem(STORAGE_KEYS.COMPANY_LOGO, rawResult);
+            updateSidebarCompanyLogo();
+            renderSettings();
+            showToast('Logo SVG zostało pomyślnie zapisane! Zastąpiło napis INSTAL na protokołach.');
+          } catch (err) {
+            showToast('Błąd zapisu pliku SVG do pamięci przeglądarki.');
+          }
+          return;
+        }
+
+        // Obrazy rastrowe (PNG, JPG, WebP) - skalujemy przez canvas do max 1000x350
+        const img = new Image();
+        img.onload = function() {
+          try {
+            let width = img.width;
+            let height = img.height;
+            const maxW = 1000;
+            const maxH = 350;
+
+            if (width > maxW || height > maxH) {
+              const ratio = Math.min(maxW / width, maxH / height);
+              width = Math.round(width * ratio);
+              height = Math.round(height * ratio);
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const optimizedDataUrl = canvas.toDataURL('image/png', 0.92);
+            localStorage.setItem(STORAGE_KEYS.COMPANY_LOGO, optimizedDataUrl);
+            updateSidebarCompanyLogo();
+            renderSettings();
+            showToast('Logo firmy zostało pomyślnie wgrane! Jest widoczne na wszystkich protokołach.');
+          } catch (err) {
+            console.error(err);
+            try {
+              localStorage.setItem(STORAGE_KEYS.COMPANY_LOGO, rawResult);
+              updateSidebarCompanyLogo();
+              renderSettings();
+              showToast('Logo firmy zostało zapisane.');
+            } catch (storageErr) {
+              showToast('Plik obrazu jest zbyt duży. Wgraj mniejszy plik PNG lub SVG.');
+            }
+          }
+        };
+        img.onerror = function() {
+          showToast('Nie udało się wczytać wybranego pliku graficznego.');
+        };
+        img.src = rawResult;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function resetSettingsCompanyLogo() {
+      if (!getSavedCompanyLogo()) {
+        showToast('Obecnie używane jest już domyślne logo INSTAL.');
+        return;
+      }
+      if (confirm('Czy na pewno chcesz usunąć wgrane logo i przywrócić domyślny napis INSTAL?')) {
+        try {
+          localStorage.removeItem(STORAGE_KEYS.COMPANY_LOGO);
+          updateSidebarCompanyLogo();
+          renderSettings();
+          showToast('Przywrócono domyślne logo INSTAL.');
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+
+    function handleSaveCompanySettings(e) {
+      if (e) e.preventDefault();
+      const name = (document.getElementById('settings-company-name')?.value || '').trim() || 'INSTAL';
+      const fgaz = (document.getElementById('settings-company-fgaz')?.value || '').trim() || 'FGAZ-P/27/0109/22';
+      const sub = (document.getElementById('settings-company-subtitle')?.value || '').trim() || 'Systemy Klimatyzacji, Pomp Ciepła i Kotłów Gazowych';
+
+      localStorage.setItem(STORAGE_KEYS.COMPANY_NAME, name);
+      localStorage.setItem(STORAGE_KEYS.COMPANY_FGAZ, fgaz);
+      localStorage.setItem(STORAGE_KEYS.COMPANY_SUBTITLE, sub);
+
+      renderSettings();
+      showToast('Dane firmy zostały pomyślnie zaktualizowane!');
+    }
+
+    function openSettingsProtocolPreview() {
+      // Pobieramy pierwszy istniejący protokół lub tworzymy estetyczny wzorzec podglądu
+      let proto = null;
+      for (const c of (window.clientsData || [])) {
+        for (const d of (c.devices || [])) {
+          const found = (d.inspectionHistory || []).find(h => h.protocolData);
+          if (found) { proto = found.protocolData; break; }
+        }
+        if (proto) break;
+      }
+
+      if (!proto) {
+        proto = {
+          protocolId: 'WZÓR/2026/01',
+          type: 'ac_service',
+          typeName: 'Protokół Przeglądu Okresowego',
+          date: toYMD(new Date()),
+          technician: 'Serwisant Główny',
+          clientName: 'Jan Kowalski (Klient Wzorcowy)',
+          clientPhone: '+48 600 123 456',
+          clientEmail: 'klient@przyklad.pl',
+          clientAddress: 'ul. Przykładowa 12, 60-001 Poznań',
+          deviceType: 'ac',
+          deviceModel: 'Daikin Comfora 3.5 kW (Klimatyzacja)',
+          serialNumber: 'SN-DKN-8849201',
+          fgazCert: getSavedFgazCert(),
+          checklist: [
+            { label: 'Dezynfekcja parownika i filtrów jednostki wewnętrznej', status: 'ok', notes: 'Zastosowano preparat biobójczy' },
+            { label: 'Kontrola szczelności i ciśnień manometrycznych układu', status: 'ok', notes: 'Układ hermetyczny, ciśnienie prawidłowe' },
+            { label: 'Pomiar prądów roboczych i temperatury nawiewu (T: +6.8°C)', status: 'ok', notes: 'Pomiary zgodne ze specyfikacją fabryczną' },
+            { label: 'Sprawdzenie odpływu skroplin i pompki skroplin', status: 'ok', notes: 'Drożny, przetestowany wodą' }
+          ],
+          technicianNotes: 'Urządzenie po pełnym przeglądzie okresowym. Stan techniczny wzorowy, gotowe do dalszej eksploatacji.'
+        };
+      }
+      showProtocolObjectInModal(proto);
+    }
+
     let cachedInstalLogoDataUrl = null;
     function getInstalLogoImgHtml() {
+      const customLogo = getSavedCompanyLogo();
+      if (customLogo) {
+        return `<img src="${customLogo}" alt="${escapeHtml(getSavedCompanyName())}" style="max-height:52px;max-width:260px;width:auto;height:auto;display:block;object-fit:contain;" />`;
+      }
       if (!cachedInstalLogoDataUrl) {
         try {
           const canvas = document.createElement('canvas');
@@ -6480,16 +7879,16 @@ service cloud.firestore {
 
     function renderZgonoscStatementTableHtml() {
       return `
-        <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:10.5px;border:1.5px solid #000;">
+        <table class="protocol-statement-zgodnosc-table" style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:10.5px;border:1.5px solid #000;">
           <tbody>
             <tr>
               <td style="width:95px;border:1.5px solid #000;padding:8px;font-weight:800;text-align:center;vertical-align:middle;background:#fff;color:#000;">
-                Zgoność
+                Zgodność
               </td>
               <td style="border:1.5px solid #000;padding:8px 10px;background:#d9d9d9;color:#000;line-height:1.45;">
                 <div style="margin-bottom:6px;">Inwestor oświadcza, że wykonana usługa jest zgodna z zamówieniem oraz nie wnosi zastrzeżeń</div>
-                <div style="margin-bottom:6px;">Inwestor oświadcza, że zgadza się na zebranie danych osobowych przez firmę instal w celach obsługi posprzedażowej, oraz jest świadomy, że dane na jego życzenie zostaną niezwłocznie usunięte</div>
-                <div>Inwestor oświadcza, że został poinformaowany o warunkach 5-cio letniej gwarancji i związany z nią obowiązkiem zamówienia półrocznego przeglądu okresowego</div>
+                <div style="margin-bottom:6px;">Inwestor oświadcza, że zgadza się na zebranie danych osobowych przez firmę ${escapeHtml(getSavedCompanyName())} w celach obsługi posprzedażowej, oraz jest świadomy, że dane na jego życzenie zostaną niezwłocznie usunięte</div>
+                <div>Inwestor oświadcza, że został poinformowany o warunkach 5-cio letniej gwarancji i związany z nią obowiązkiem zamówienia półrocznego przeglądu okresowego</div>
               </td>
             </tr>
           </tbody>
@@ -6503,7 +7902,7 @@ service cloud.firestore {
         <div style="border-bottom:3px solid ${accentColor};padding-bottom:12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;background:#ffffff;color:#0f172a;">
           <div>
             ${getInstalLogoImgHtml()}
-            <div style="font-size:11px;color:#475569;margin-top:4px;font-weight:700;">Systemy Klimatyzacji, Pomp Ciepła i Kotłów Gazowych • Certyfikat F-GAZ: ${proto.fgazCert || 'FGAZ-P/27/0109/22'}</div>
+            <div style="font-size:11px;color:#475569;margin-top:4px;font-weight:700;">${getSavedCompanySubtitle()} • Certyfikat F-GAZ: ${proto.fgazCert || getSavedFgazCert()}</div>
           </div>
           <div style="text-align:right;">
             <div style="font-size:14px;font-weight:900;color:#0f172a;text-transform:uppercase;">${docTitle}</div>
@@ -6524,11 +7923,10 @@ service cloud.firestore {
             </td>
             <td style="width:50%;border:1px solid #cbd5e1;padding:8px;vertical-align:top;background:#f8fafc;color:#0f172a;">
               <div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:3px;">2. Wykonawca i identyfikacja urządzenia</div>
-              <div style="font-weight:800;font-size:12px;color:#0f172a;">INSTAL</div>
+              <div style="font-weight:800;font-size:12px;color:#0f172a;">${escapeHtml(getSavedCompanyName())}</div>
               <div>Serwisant / Instalator: <strong>${proto.technician || '—'}</strong></div>
               <div>Urządzenie: <strong>${proto.deviceModel || '—'}</strong></div>
               <div>Nr seryjny (S/N): <strong style="font-family:monospace;">${proto.serialIndoor || 'Brak danych'}${proto.serialOutdoor ? ` / JZ: ${proto.serialOutdoor}` : ''}</strong></div>
-              ${hasSecondAddress ? `<div style="margin-top:2px;color:#312e81;">Miejsce instalacji: <strong>${proto.installAddress}</strong></div>` : ''}
             </td>
           </tr>
         </table>
@@ -6537,24 +7935,26 @@ service cloud.firestore {
 
     function renderProtocolSignaturesFooterHtml(proto, sigTechImg, sigClientImg) {
       return `
-        ${renderZgonoscStatementTableHtml()}
-        <table style="width:100%;border-collapse:collapse;margin-top:8px;color:#0f172a;">
-          <tr>
-            <td style="width:48%;text-align:center;vertical-align:bottom;">
-              <div style="border:1px dashed #94a3b8;border-radius:8px;padding:6px;background:#ffffff;min-height:92px;display:flex;align-items:center;justify-content:center;">
-                ${sigTechImg}
-              </div>
-              <div style="font-size:10px;font-weight:800;color:#475569;margin-top:4px;text-transform:uppercase;">Podpis Serwisanta (${proto.technician || 'INSTAL'})</div>
-            </td>
-            <td style="width:4%;"></td>
-            <td style="width:48%;text-align:center;vertical-align:bottom;">
-              <div style="border:1px dashed #94a3b8;border-radius:8px;padding:6px;background:#ffffff;min-height:92px;display:flex;align-items:center;justify-content:center;">
-                ${sigClientImg}
-              </div>
-              <div style="font-size:10px;font-weight:800;color:#475569;margin-top:4px;text-transform:uppercase;">Podpis Zleceniodawcy / Klienta (${proto.clientName || ''})</div>
-            </td>
-          </tr>
-        </table>
+        <div class="protocol-footer-signatures-wrap" style="margin-top:14px;">
+          ${renderZgonoscStatementTableHtml()}
+          <table class="protocol-signatures-table" style="width:100%;border-collapse:collapse;margin-top:8px;color:#0f172a;">
+            <tr>
+              <td style="width:48%;text-align:center;vertical-align:bottom;">
+                <div style="border:1px dashed #94a3b8;border-radius:8px;padding:6px;background:#ffffff;min-height:92px;display:flex;align-items:center;justify-content:center;">
+                  ${sigTechImg}
+                </div>
+                <div style="font-size:10px;font-weight:800;color:#475569;margin-top:4px;text-transform:uppercase;">Podpis Serwisanta (${proto.technician || escapeHtml(getSavedCompanyName())})</div>
+              </td>
+              <td style="width:4%;"></td>
+              <td style="width:48%;text-align:center;vertical-align:bottom;">
+                <div style="border:1px dashed #94a3b8;border-radius:8px;padding:6px;background:#ffffff;min-height:92px;display:flex;align-items:center;justify-content:center;">
+                  ${sigClientImg}
+                </div>
+                <div style="font-size:10px;font-weight:800;color:#475569;margin-top:4px;text-transform:uppercase;">Podpis Zleceniodawcy / Klienta (${proto.clientName || ''})</div>
+              </td>
+            </tr>
+          </table>
+        </div>
       `;
     }
 
@@ -6568,9 +7968,25 @@ service cloud.firestore {
         : `<div contenteditable="true" style="height:65px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px;">(Brak podpisu cyfrowego)</div>`;
 
       if (proto.type === 'ac_install') {
+        const hasChecklist = (proto.checklist || []).length > 0;
+        const acInstChecklistHtml = hasChecklist ? `
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:4px;">4. Lista kontrolna montażu i odbioru</div>
+          <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10px;color:#0f172a;">
+            <tbody>
+              ${(proto.checklist || []).map((item, i) => `
+                <tr>
+                  <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:700;width:34px;">${i + 1}.</td>
+                  <td style="border:1px solid #cbd5e1;padding:4px 8px;">${typeof item === 'string' ? item : (item.label || '')}</td>
+                  <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && item.done === false) ? '#64748b' : '#059669'};">${(typeof item === 'object' && item.done === false) ? 'NIE DOTYCZY' : '✓ WYKONANO'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : '';
+
         return `
           <div style="font-family:'Inter',Arial,sans-serif;color:#18181b;background:#ffffff;line-height:1.45;">
-            ${renderProtocolHeaderAndPartiesHtml(proto, 'KARTA MONTAŻU KLIMATYZACJI', '#0284c7')}
+            ${renderProtocolHeaderAndPartiesHtml(proto, proto.customTitle || 'KARTA MONTAŻU KLIMATYZACJI', '#0284c7')}
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:6px;">3. Specyfikacja zamontowanego układu klimatyzacji i parametry instalacji</div>
             <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:11px;color:#0f172a;">
               <tbody>
@@ -6609,7 +8025,9 @@ service cloud.firestore {
               </tbody>
             </table>
 
-            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:4px;">4. Uwagi montażowe i zalecenia eksploatacyjne</div>
+            ${acInstChecklistHtml}
+
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:4px;">${hasChecklist ? '5' : '4'}. Uwagi montażowe i zalecenia eksploatacyjne</div>
             <div style="border:1px solid #cbd5e1;padding:8px;background:#f8fafc;margin-bottom:12px;font-size:11px;min-height:38px;color:#0f172a;">
               ${proto.comments || 'Urządzenie zamontowane i uruchomione prawidłowo. Przeszkolono użytkownika w zakresie podstawowej obsługi pilota i warunków gwarancji.'}
             </div>
@@ -6620,14 +8038,15 @@ service cloud.firestore {
 
       if (proto.type === 'gas_boiler_inspection' || proto.type === 'hp_inspection') {
         const isBoiler = proto.type === 'gas_boiler_inspection';
-        const title = isBoiler ? 'PROTOKÓŁ PRZEGLĄDU KOTŁA GAZOWEGO' : 'PROTOKÓŁ PRZEGLĄDU POMPY CIEPŁA';
+        const defaultTitle = isBoiler ? 'PROTOKÓŁ PRZEGLĄDU KOTŁA GAZOWEGO' : 'PROTOKÓŁ PRZEGLĄDU POMPY CIEPŁA';
+        const title = proto.customTitle || defaultTitle;
         const color = isBoiler ? '#d97706' : '#ea580c';
         const rowsHtml = (proto.checklist || []).map((item, i) => `
           <tr>
             <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:700;width:34px;">${i + 1}.</td>
-            <td style="border:1px solid #cbd5e1;padding:4px 8px;">${item.label}</td>
-            <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${item.done ? '#059669' : '#64748b'};">
-              ${item.done ? '✓ WYKONANO' : 'NIE DOTYCZY'}
+            <td style="border:1px solid #cbd5e1;padding:4px 8px;">${typeof item === 'string' ? item : (item.label || '')}</td>
+            <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && item.done === false) ? '#64748b' : '#059669'};">
+              ${(typeof item === 'object' && item.done === false) ? 'NIE DOTYCZY' : '✓ WYKONANO'}
             </td>
           </tr>
         `).join('');
@@ -6680,8 +8099,8 @@ service cloud.firestore {
         const gbChecklistRows = (proto.checklist || []).map((item, i) => `
           <tr>
             <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:700;width:34px;">${i + 1}.</td>
-            <td style="border:1px solid #cbd5e1;padding:4px 8px;">${item.label}</td>
-            <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:#059669;">✓ WYKONANO</td>
+            <td style="border:1px solid #cbd5e1;padding:4px 8px;">${typeof item === 'string' ? item : (item.label || '')}</td>
+            <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && item.done === false) ? '#64748b' : '#059669'};">${(typeof item === 'object' && item.done === false) ? 'NIE DOTYCZY' : '✓ WYKONANO'}</td>
           </tr>
         `).join('');
 
@@ -6739,9 +8158,25 @@ service cloud.firestore {
       }
 
       if (proto.type === 'hp_install') {
+        const hasHpChecklist = (proto.checklist || []).length > 0;
+        const hpInstChecklistHtml = hasHpChecklist ? `
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:4px;">4. Zakres czynności odbiorowych i kontrolnych</div>
+          <table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10px;color:#0f172a;">
+            <tbody>
+              ${(proto.checklist || []).map((item, i) => `
+                <tr>
+                  <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:700;width:34px;">${i + 1}.</td>
+                  <td style="border:1px solid #cbd5e1;padding:4px 8px;">${typeof item === 'string' ? item : (item.label || '')}</td>
+                  <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && item.done === false) ? '#64748b' : '#059669'};">${(typeof item === 'object' && item.done === false) ? 'NIE DOTYCZY' : '✓ WYKONANO'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : '';
+
         return `
           <div style="font-family:'Inter',Arial,sans-serif;color:#18181b;background:#ffffff;line-height:1.45;">
-            ${renderProtocolHeaderAndPartiesHtml(proto, 'PROTOKÓŁ ODBIORU I MONTAŻU POMPY CIEPŁA', '#ea580c')}
+            ${renderProtocolHeaderAndPartiesHtml(proto, proto.customTitle || 'PROTOKÓŁ ODBIORU I MONTAŻU POMPY CIEPŁA', '#ea580c')}
             <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:6px;">3. Parametry zamontowanej instalacji pompy ciepła</div>
             <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:11px;color:#0f172a;">
               <tbody>
@@ -6772,7 +8207,9 @@ service cloud.firestore {
               </tbody>
             </table>
 
-            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:4px;">4. Uwagi powykonawcze i zalecenia</div>
+            ${hpInstChecklistHtml}
+
+            <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f172a;margin-bottom:4px;">${hasHpChecklist ? '5' : '4'}. Uwagi powykonawcze i zalecenia</div>
             <div style="border:1px solid #cbd5e1;padding:8px;background:#f8fafc;margin-bottom:12px;font-size:11px;min-height:38px;color:#0f172a;">
               ${proto.comments || 'Instalacja pompy ciepła wykonana zgodnie z wytycznymi producenta, odpowietrzona i uruchomiona.'}
             </div>
@@ -6796,8 +8233,8 @@ service cloud.firestore {
               ${(proto.checklist || []).map((item, i) => `
                 <tr>
                   <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:700;width:34px;">${i + 1}.</td>
-                  <td style="border:1px solid #cbd5e1;padding:4px 8px;">${item.label}</td>
-                  <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${item.done ? '#059669' : '#64748b'};">${item.done ? '✓ WYKONANO' : 'NIE DOTYCZY'}</td>
+                  <td style="border:1px solid #cbd5e1;padding:4px 8px;">${typeof item === 'string' ? item : (item.label || '')}</td>
+                  <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && item.done === false) ? '#64748b' : '#059669'};">${(typeof item === 'object' && item.done === false) ? 'NIE DOTYCZY' : '✓ WYKONANO'}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -6853,9 +8290,9 @@ service cloud.firestore {
         const instRows = (proto.checklist || []).map((item, i) => `
           <tr>
             <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:700;width:34px;">${i + 1}.</td>
-            <td style="border:1px solid #cbd5e1;padding:4px 8px;">${item.label}</td>
-            <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${item.done ? '#059669' : '#64748b'};">
-              ${item.done ? '✓ WYKONANO' : 'NIE DOTYCZY'}
+            <td style="border:1px solid #cbd5e1;padding:4px 8px;">${typeof item === 'string' ? item : (item.label || '')}</td>
+            <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && item.done === false) ? '#64748b' : '#059669'};">
+              ${(typeof item === 'object' && item.done === false) ? 'NIE DOTYCZY' : '✓ WYKONANO'}
             </td>
           </tr>
         `).join('');
@@ -6915,9 +8352,9 @@ service cloud.firestore {
       const checklistRows = (proto.checklist || []).map((item, i) => `
         <tr>
           <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:700;width:36px;">${i + 1}.</td>
-          <td style="border:1px solid #cbd5e1;padding:4px 8px;">${item.label}</td>
-          <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${item.done ? '#059669' : '#dc2626'};">
-            ${item.done ? '✓ TAK (Wykonano)' : 'NIE DOTYCZY'}
+          <td style="border:1px solid #cbd5e1;padding:4px 8px;">${typeof item === 'string' ? item : (item.label || '')}</td>
+          <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && item.done === false) ? '#dc2626' : '#059669'};">
+            ${(typeof item === 'object' && item.done === false) ? 'NIE DOTYCZY' : '✓ TAK (Wykonano)'}
           </td>
         </tr>
       `).join('');
@@ -7003,6 +8440,7 @@ service cloud.firestore {
           el.style.boxShadow = 'none';
           el.style.backgroundColor = '';
         });
+        pdfStage.querySelectorAll('.protocol-no-print, .no-print').forEach(el => el.remove());
 
         document.body.appendChild(pdfStage);
 
@@ -7050,6 +8488,8 @@ service cloud.firestore {
     }
 
     function printCurrentProtocol() {
+      autoSaveEditedProtocolHtml();
+      persistData();
       const el = document.getElementById('protocol-printable-area');
       if (!el) return;
       const win = window.open('', '_blank', 'width=900,height=800');
@@ -7067,11 +8507,15 @@ service cloud.firestore {
           <style>
             @page { size: A4; margin: 10mm; }
             body { margin: 0; padding: 0; background: #fff; color: #0f172a; font-family: 'Inter', Arial, sans-serif; }
+            @media print { .protocol-no-print, .no-print { display: none !important; } }
           </style>
         </head>
         <body>
           ${el.innerHTML}
-          <script>window.onload = function(){ setTimeout(function(){ window.print(); }, 250); };<\/script>
+          <script>
+            document.querySelectorAll('.protocol-no-print, .no-print').forEach(function(e){ e.remove(); });
+            window.onload = function(){ setTimeout(function(){ window.print(); }, 250); };
+          <\/script>
         </body>
         </html>
       `);
@@ -7291,7 +8735,17 @@ service cloud.firestore {
 
       if (editId) {
         window.protocolTemplatesData = (window.protocolTemplatesData || []).map(t =>
-          t.id === editId ? { ...t, title, deviceGroup, customGroupName, actionCategory, checklist, installParams, serviceFields } : t
+          t.id === editId ? {
+            ...t,
+            title,
+            deviceGroup,
+            customGroupName,
+            actionCategory,
+            checklist,
+            installParams,
+            serviceFields,
+            customEditedHtml: undefined
+          } : t
         );
         showToast('Zaktualizowano wzór protokołu!');
       } else {
@@ -7337,12 +8791,14 @@ service cloud.firestore {
       if (!tpl) return;
       const sampleProto = {
         protocolId: 'WZÓR/PODGLĄD/2026',
+        templateId: tpl.id,
         type: tpl.id,
         customTitle: tpl.title,
         actionCategory: tpl.actionCategory,
+        customEditedHtml: tpl.customEditedHtml || null,
         date: toYMD(new Date()),
-        companyName: 'INSTAL',
-        fgazCert: 'FGAZ-P/27/0109/22',
+        companyName: getSavedCompanyName(),
+        fgazCert: getSavedFgazCert(),
         technician: 'Jan Serwisant (INSTAL)',
         clientName: 'Przykładowy Klient (Podgląd Wzoru)',
         clientNip: '777-000-11-22',
@@ -7368,6 +8824,7 @@ service cloud.firestore {
     }
 
     function previewTemplateFromEditor() {
+      const editId = document.getElementById('tpl-edit-id')?.value || '';
       const title = (document.getElementById('tpl-title').value || 'WZÓR PROTOKOŁU').trim();
       const deviceGroup = document.getElementById('tpl-device-group').value || 'custom';
       const customGroupName = deviceGroup === 'custom' ? (document.getElementById('tpl-custom-group-name').value || '').trim() : '';
@@ -7383,12 +8840,13 @@ service cloud.firestore {
 
       showProtocolObjectInModal({
         protocolId: 'WZÓR/EDYTOR',
-        type: actionCategory === 'service' ? 'universal_service' : actionCategory === 'install' ? 'universal_install' : 'universal_inspection',
+        templateId: editId || null,
+        type: editId || (actionCategory === 'service' ? 'universal_service' : actionCategory === 'install' ? 'universal_install' : 'universal_inspection'),
         customTitle: title,
         actionCategory,
         date: toYMD(new Date()),
-        companyName: 'INSTAL',
-        fgazCert: 'FGAZ-P/27/0109/22',
+        companyName: getSavedCompanyName(),
+        fgazCert: getSavedFgazCert(),
         technician: 'Serwisant INSTAL',
         clientName: 'Jan Kowalski (Podgląd)',
         clientAddress: 'Poznań, ul. Przykładowa 1',
@@ -7456,10 +8914,11 @@ service cloud.firestore {
       const visit = (window.appointmentsData || []).find(a => a.id === visitId);
       if (!visit) return;
       const client = (window.clientsData || []).find(c => c.id === visit.clientId);
+      const cName = client ? client.name : (visit.clientName || 'Klient');
 
       document.getElementById('reassign-visit-id').value = visit.id;
       document.getElementById('reassign-target-worker').value = visit.workerName || 'Serwisant 1';
-      setText('reassign-visit-subtitle', `Klient: ${client ? client.name : 'Klient'} (${visit.serviceType || 'Wizyta'}) • Obecnie: ${formatDatePL(visit.date)} o ${visit.time} (${visit.workerName || 'Serwisant 1'})`);
+      setText('reassign-visit-subtitle', `Klient: ${cName} (${visit.serviceType || 'Wizyta'}) • Obecnie: ${formatDatePL(visit.date)} o ${visit.time} (${visit.workerName || 'Serwisant 1'})`);
 
       const dateInput = document.getElementById('reassign-date-input');
       const timeInput = document.getElementById('reassign-time-input');
@@ -7518,13 +8977,13 @@ service cloud.firestore {
               ${dayVisitsForW.length === 0
                 ? '<span class="text-[11px] text-emerald-600 font-semibold">Wolny cały dzień (0 innych zleceń)</span>'
                 : `<div class="flex flex-wrap gap-1 items-center">${busyHours}</div>`}
-              ${conflictVisit ? `<div class="text-[10px] font-bold text-rose-600 mt-0.5">⚠️ Zajęta godz. ${targetTime}</div>` : ''}
+              ${conflictVisit ? `<div class="text-[10px] font-bold text-amber-600 dark:text-amber-400 mt-0.5">ℹ️ Ma inne zlecenie o godz. ${targetTime}</div>` : ''}
             </td>
             <td class="py-3 px-3 text-right">
               ${isUnchangedOriginal
                 ? '<span class="text-[11px] font-bold text-zinc-400">Aktualny termin</span>'
-                : `<button type="button" onclick="selectWorkerFromReassignTable('${w.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold shadow-sm transition ${conflictVisit ? 'bg-amber-500 hover:bg-amber-400 text-zinc-950' : 'bg-sky-600 hover:bg-sky-500 text-white'}">
-                    ${conflictVisit ? 'Wybierz (Zmień godz.)' : 'Przenieś tutaj'}
+                : `<button type="button" onclick="selectWorkerFromReassignTable('${w.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold shadow-sm transition bg-sky-600 hover:bg-sky-500 text-white">
+                    Przenieś tutaj
                   </button>`}
             </td>
           </tr>
@@ -7554,39 +9013,7 @@ service cloud.firestore {
       const workerSelect = document.getElementById('reassign-worker-select');
       if (workerSelect) workerSelect.value = newWorkerName;
 
-      const conflictVisit = (window.appointmentsData || []).find(a =>
-        a.id !== visitId &&
-        a.date === targetDate &&
-        (a.workerName || 'Serwisant 1') === newWorkerName &&
-        a.time === targetTime &&
-        a.status !== 'canceled'
-      );
-
-      if (conflictVisit) {
-        const conflictClient = (window.clientsData || []).find(c => c.id === conflictVisit.clientId);
-        document.getElementById('reassign-target-worker').value = newWorkerName;
-        setText(
-          'reassign-conflict-msg',
-          `Serwisant „${newWorkerName}” ma już w dniu ${formatDatePL(targetDate)} o godz. ${targetTime} wpisane zlecenie (${conflictVisit.serviceType || 'Wizyta'} u klienta: ${conflictClient ? conflictClient.name : 'Klient'}). Wybierz inną godzinę lub dzień poniżej:`
-        );
-
-        let suggestedHour = Math.min(19, (parseInt((targetTime || '09:00').slice(0, 2), 10) || 9) + 1);
-        let suggestedTime = `${String(suggestedHour).padStart(2, '0')}:00`;
-        while ((window.appointmentsData || []).some(a => a.id !== visitId && a.date === targetDate && (a.workerName || 'Serwisant 1') === newWorkerName && a.time === suggestedTime && a.status !== 'canceled') && suggestedHour < 21) {
-          suggestedHour++;
-          suggestedTime = `${String(suggestedHour).padStart(2, '0')}:00`;
-        }
-
-        const conflictDateInput = document.getElementById('reassign-conflict-date-input');
-        if (conflictDateInput) conflictDateInput.value = targetDate;
-        document.getElementById('reassign-new-time-input').value = suggestedTime;
-        document.getElementById('reassign-conflict-error').classList.add('hidden');
-        document.getElementById('reassign-step-table').classList.add('hidden');
-        document.getElementById('reassign-step-conflict').classList.remove('hidden');
-        setTimeout(() => document.getElementById('reassign-new-time-input').focus(), 60);
-        return;
-      }
-
+      // Blokada usunięta - zezwalamy na przypisanie wizyty nawet jeśli serwisant ma już zlecenie o tej samej godzinie
       visit.workerName = newWorkerName;
       visit.date = targetDate;
       visit.time = targetTime;
@@ -7604,19 +9031,7 @@ service cloud.firestore {
       const visit = (window.appointmentsData || []).find(a => a.id === visitId);
       if (!visit || !newWorkerName || !newTime || !newDate) return;
 
-      const stillConflict = (window.appointmentsData || []).some(a =>
-        a.id !== visitId &&
-        a.date === newDate &&
-        (a.workerName || 'Serwisant 1') === newWorkerName &&
-        a.time === newTime &&
-        a.status !== 'canceled'
-      );
-
-      if (stillConflict) {
-        document.getElementById('reassign-conflict-error').classList.remove('hidden');
-        return;
-      }
-
+      // Blokada usunięta
       visit.workerName = newWorkerName;
       visit.date = newDate;
       visit.time = newTime;
@@ -7630,12 +9045,13 @@ service cloud.firestore {
       const visit = (window.appointmentsData || []).find(a => a.id === id);
       if (!visit) return;
       const client = (window.clientsData || []).find(c => c.id === visit.clientId);
+      const cName = client ? client.name : (visit.clientName || 'Klient');
       const isCurrentlyCanceled = visit.status === 'canceled';
 
       if (isCurrentlyCanceled) {
         askConfirmation(
           'Przywrócenie zlecenia',
-          `Czy chcesz przywrócić anulowane zlecenie u klienta „${client ? client.name : 'Klient'}” (${formatDatePL(visit.date)} o ${visit.time}) z powrotem do realizacji?`,
+          `Czy chcesz przywrócić anulowane zlecenie u klienta „${cName}” (${formatDatePL(visit.date)} o ${visit.time}) z powrotem do realizacji?`,
           () => {
             visit.status = 'planned';
             delete visit.cancelReason;
@@ -7647,7 +9063,7 @@ service cloud.firestore {
       } else {
         askConfirmation(
           'Anulowanie zlecenia w planerze',
-          `Czy na pewno chcesz anulować (odwołać) zlecenie „${visit.serviceType}” u klienta ${client ? client.name : ''} zaplanowane na ${formatDatePL(visit.date)} o ${visit.time}? Zlecenie pozostanie widoczne jako anulowane i nie będzie brane pod uwagę w trasie Google Maps.`,
+          `Czy na pewno chcesz anulować (odwołać) zlecenie „${visit.serviceType}” u klienta ${cName} zaplanowane na ${formatDatePL(visit.date)} o ${visit.time}? Zlecenie pozostanie widoczne jako anulowane i nie będzie brane pod uwagę w trasie Google Maps.`,
           () => {
             visit.status = 'canceled';
             visit.cancelReason = 'Odwołane w planerze';
@@ -7663,10 +9079,11 @@ service cloud.firestore {
       const visit = (window.appointmentsData || []).find(a => a.id === id);
       if (!visit) return;
       const client = (window.clientsData || []).find(c => c.id === visit.clientId);
+      const cName = client ? client.name : (visit.clientName || 'Klient');
 
       requestAdminPin(
         'Całkowite usunięcie zlecenia',
-        `Podaj hasło autoryzacyjne, aby trwale usunąć zlecenie „${visit.serviceType || 'Wizyta'}” u klienta ${client ? client.name : ''} (${formatDatePL(visit.date)} o ${visit.time}):`,
+        `Podaj hasło autoryzacyjne, aby trwale usunąć zlecenie „${visit.serviceType || 'Wizyta'}” u klienta ${cName} (${formatDatePL(visit.date)} o ${visit.time}):`,
         () => {
           window.appointmentsData = (window.appointmentsData || []).filter(a => a.id !== id);
           persistData();
@@ -7734,7 +9151,11 @@ service cloud.firestore {
             appointments: window.appointmentsData || [],
             catalog: window.catalogData || [],
             workers: window.workersData || [],
-            protocolTemplates: window.protocolTemplatesData || []
+            protocolTemplates: window.protocolTemplatesData || [],
+            companyLogo: getSavedCompanyLogo(),
+            companyName: getSavedCompanyName(),
+            companySubtitle: getSavedCompanySubtitle(),
+            companyFgaz: getSavedFgazCert()
           };
           const jsonStr = JSON.stringify(fullBackup, null, 2);
           const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' });
@@ -7751,6 +9172,90 @@ service cloud.firestore {
       );
     }
 
+    function normalizeDateStr(d) {
+      if (!d) return '';
+      d = String(d).trim();
+      const m = d.match(/^(\d{1,2})[.-](\d{1,2})[.-](\d{4})$/);
+      if (m) {
+        return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+      }
+      if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
+      const parsed = new Date(d);
+      if (!isNaN(parsed.getTime())) return toYMD(parsed);
+      return d;
+    }
+
+    function isDateNewer(dateA, dateB) {
+      const a = normalizeDateStr(dateA);
+      const b = normalizeDateStr(dateB);
+      if (!a) return false;
+      if (!b) return true; // W pliku jest data, a na serwerze brak -> uznajemy za nowszą
+      return a > b;
+    }
+
+    function findMatchingDevice(serverDevices, fileDev) {
+      if (!Array.isArray(serverDevices) || serverDevices.length === 0 || !fileDev) return null;
+      if (fileDev.id) {
+        const byId = serverDevices.find(d => d.id === fileDev.id);
+        if (byId) return byId;
+      }
+      const fSerial = (fileDev.serialNumber || '').trim().toLowerCase();
+      if (fSerial) {
+        const bySerial = serverDevices.find(d => (d.serialNumber || '').trim().toLowerCase() === fSerial);
+        if (bySerial) return bySerial;
+      }
+      const fModel = (fileDev.deviceModel || '').trim().toLowerCase();
+      const fType = (fileDev.deviceType || '').trim().toLowerCase();
+      if (fModel) {
+        const byModel = serverDevices.find(d => {
+          const dModel = (d.deviceModel || '').trim().toLowerCase();
+          const dType = (d.deviceType || '').trim().toLowerCase();
+          return dModel === fModel && (!fType || !dType || dType === fType);
+        });
+        if (byModel) return byModel;
+      }
+      if (serverDevices.length === 1 && (!fileDev.deviceModel || serverDevices[0].deviceType === fileDev.deviceType)) {
+        return serverDevices[0];
+      }
+      return null;
+    }
+
+    function findMatchingClient(serverClients, fileClient) {
+      if (!Array.isArray(serverClients) || serverClients.length === 0 || !fileClient) return null;
+      if (fileClient.id) {
+        const byId = serverClients.find(c => c.id === fileClient.id);
+        if (byId) return byId;
+      }
+      const fNip = (fileClient.nip || '').replace(/[^0-9]/g, '');
+      if (fNip && fNip.length >= 10) {
+        const byNip = serverClients.find(c => (c.nip || '').replace(/[^0-9]/g, '') === fNip);
+        if (byNip) return byNip;
+      }
+      const fName = (fileClient.name || '').trim().toLowerCase();
+      const fCity = (fileClient.city || '').trim().toLowerCase();
+      const fStreet = (fileClient.street || '').trim().toLowerCase();
+      const fPhone = (fileClient.phone || '').replace(/[^0-9]/g, '').slice(-9);
+
+      if (fName) {
+        const byNameAndAddr = serverClients.find(c => {
+          const cName = (c.name || '').trim().toLowerCase();
+          if (cName !== fName) return false;
+          const cCity = (c.city || '').trim().toLowerCase();
+          const cStreet = (c.street || '').trim().toLowerCase();
+          const cPhone = (c.phone || '').replace(/[^0-9]/g, '').slice(-9);
+          if (fCity && cCity && fCity === cCity) return true;
+          if (fStreet && cStreet && fStreet === cStreet) return true;
+          if (fPhone && cPhone && fPhone === cPhone) return true;
+          return false;
+        });
+        if (byNameAndAddr) return byNameAndAddr;
+
+        const byNameExact = serverClients.filter(c => (c.name || '').trim().toLowerCase() === fName);
+        if (byNameExact.length === 1) return byNameExact[0];
+      }
+      return null;
+    }
+
     function handleRestoreFullBackupFile(e) {
       const file = e.target.files?.[0];
       if (!file) return;
@@ -7765,17 +9270,107 @@ service cloud.firestore {
           }
           requestAdminPin(
             'Przywracanie bazy z pliku Backup',
-            `Plik zawiera ${parsed.clients.length} klientów. Podaj hasło autoryzacyjne, aby przywrócić bazę:`,
+            `Plik zawiera ${parsed.clients.length} klientów. Podaj hasło autoryzacyjne, aby zaktualizować bazę:`,
             () => {
-              window.clientsData = parsed.clients || [];
-              window.appointmentsData = parsed.appointments || [];
+              const currentServerClients = window.clientsData || [];
+              let updatedDatesCount = 0;
+              let addedClientsCount = 0;
+              let updatedClientsCount = 0;
+
+              // Scalanie klientów: jeśli data w pliku jest NOWSZA niż na serwerze, nadpisujemy!
+              const mergedClients = JSON.parse(JSON.stringify(currentServerClients));
+
+              (parsed.clients || []).forEach(fileClient => {
+                const existing = findMatchingClient(mergedClients, fileClient);
+                if (existing) {
+                  updatedClientsCount++;
+                  // Uzupełnienie brakujących pól klienta z pliku
+                  if (!existing.nip && fileClient.nip) existing.nip = fileClient.nip;
+                  if (!existing.email && fileClient.email) existing.email = fileClient.email;
+                  if ((!existing.phone || isPhoneEmpty(existing.phone)) && !isPhoneEmpty(fileClient.phone)) existing.phone = ensurePhonePrefix(fileClient.phone);
+                  if (!existing.street && fileClient.street) existing.street = fileClient.street;
+                  if (!existing.postalCode && fileClient.postalCode) existing.postalCode = fileClient.postalCode;
+                  if (!existing.notes && fileClient.notes) existing.notes = fileClient.notes;
+
+                  existing.devices = existing.devices || [];
+                  (fileClient.devices || []).forEach(fileDev => {
+                    const matchDev = findMatchingDevice(existing.devices, fileDev);
+                    if (matchDev) {
+                      // Kluczowe wymaganie: Jeśli data następnego przeglądu w pliku jest NOWSZA niż na serwerze -> NADPISZ!
+                      if (isDateNewer(fileDev.nextInspectionDate, matchDev.nextInspectionDate)) {
+                        matchDev.nextInspectionDate = normalizeDateStr(fileDev.nextInspectionDate);
+                        updatedDatesCount++;
+                      }
+                      // Aktualizacja daty ostatniego przeglądu jeśli w pliku nowsza
+                      if (isDateNewer(fileDev.lastInspectionDate, matchDev.lastInspectionDate)) {
+                        matchDev.lastInspectionDate = normalizeDateStr(fileDev.lastInspectionDate);
+                      }
+                      if (!matchDev.serialNumber && fileDev.serialNumber) matchDev.serialNumber = fileDev.serialNumber;
+                      if (!matchDev.installDate && fileDev.installDate) matchDev.installDate = fileDev.installDate;
+                      if (!matchDev.deviceNotes && fileDev.deviceNotes) matchDev.deviceNotes = fileDev.deviceNotes;
+
+                      // Scalenie historii wpisów protokołów
+                      if (Array.isArray(fileDev.inspectionHistory) && fileDev.inspectionHistory.length > 0) {
+                        matchDev.inspectionHistory = matchDev.inspectionHistory || [];
+                        fileDev.inspectionHistory.forEach(fh => {
+                          const existsInHist = matchDev.inspectionHistory.some(sh => sh.id === fh.id || (sh.date === fh.date && sh.type === fh.type));
+                          if (!existsInHist) {
+                            matchDev.inspectionHistory.push(fh);
+                          }
+                        });
+                      }
+                    } else {
+                      // Nowe urządzenie u istniejącego klienta
+                      existing.devices.push(fileDev);
+                    }
+                  });
+                } else {
+                  // Nowy klient z pliku
+                  mergedClients.push(fileClient);
+                  addedClientsCount++;
+                }
+              });
+
+              window.clientsData = mergedClients;
+
+              // Scalanie zleceń (appointmentsData) bez utraty danych
+              if (Array.isArray(parsed.appointments)) {
+                const currentAppts = window.appointmentsData || [];
+                const apptMap = new Map();
+                currentAppts.forEach(a => apptMap.set(a.id, a));
+                parsed.appointments.forEach(a => {
+                  if (!apptMap.has(a.id)) {
+                    apptMap.set(a.id, a);
+                  }
+                });
+                window.appointmentsData = Array.from(apptMap.values());
+              }
+
               if (Array.isArray(parsed.catalog) && parsed.catalog.length > 0) window.catalogData = parsed.catalog;
               if (Array.isArray(parsed.workers) && parsed.workers.length > 0) window.workersData = parsed.workers;
               if (Array.isArray(parsed.protocolTemplates) && parsed.protocolTemplates.length > 0) window.protocolTemplatesData = parsed.protocolTemplates;
+              if (parsed.companyLogo) {
+                try { localStorage.setItem(STORAGE_KEYS.COMPANY_LOGO, parsed.companyLogo); } catch (e) {}
+              }
+              if (parsed.companyName) {
+                try { localStorage.setItem(STORAGE_KEYS.COMPANY_NAME, parsed.companyName); } catch (e) {}
+              }
+              if (parsed.companySubtitle) {
+                try { localStorage.setItem(STORAGE_KEYS.COMPANY_SUBTITLE, parsed.companySubtitle); } catch (e) {}
+              }
+              if (parsed.companyFgaz) {
+                try { localStorage.setItem(STORAGE_KEYS.COMPANY_FGAZ, parsed.companyFgaz); } catch (e) {}
+              }
+
               persistData();
               closeModal('modal-backup');
               refreshAllViews();
-              showToast(`Pomyślnie przywrócono pełny Backup (${window.clientsData.length} klientów)!`);
+
+              let msg = `Pomyślnie zaimportowano bazę (${window.clientsData.length} klientów)!`;
+              if (updatedDatesCount > 0) {
+                msg += ` Nadpisano ${updatedDatesCount} nowszych dat przeglądów z pliku.`;
+              }
+              showToast(msg);
             }
           );
         } catch (err) {
@@ -7804,13 +9399,14 @@ service cloud.firestore {
       const rows = [];
 
       snapshotClients.forEach(c => {
+        const exportPhone = isPhoneEmpty(c.phone) ? '' : c.phone;
         if (!c.devices || c.devices.length === 0) {
-          rows.push([c.name, c.nip || '', c.phone, c.email || '', c.postalCode, c.city, c.street, c.lat, c.lng, '', '', '', '', '', 'Brak urządzenia', '', '', c.notes].map(escape).join(';'));
+          rows.push([c.name, c.nip || '', exportPhone, c.email || '', c.postalCode, c.city, c.street, c.lat, c.lng, '', '', '', '', '', 'Brak urządzenia', '', '', c.notes].map(escape).join(';'));
         } else {
           c.devices.forEach(d => {
             const wStatus = d.status.ourUnknownDate ? 'Nasze (Brak daty)' : d.status.noInstallDate ? 'Obce' : d.status.isUnderWarranty ? `Na gwarancji do ${d.status.warrantyEndFormatted}` : `Po gwarancji (${d.status.warrantyEndFormatted})`;
             const devCustomAddr = formatDeviceInstallAddress(d);
-            rows.push([c.name, c.nip || '', c.phone, c.email || '', c.postalCode, c.city, c.street, c.lat, c.lng, getDeviceInfo(d.deviceType, d.customTypeLabel).short, d.deviceModel, devCustomAddr, d.installDate, d.warrantyMonths, wStatus, d.lastInspectionDate, d.nextInspectionDate, c.notes].map(escape).join(';'));
+            rows.push([c.name, c.nip || '', exportPhone, c.email || '', c.postalCode, c.city, c.street, c.lat, c.lng, getDeviceInfo(d.deviceType, d.customTypeLabel).short, d.deviceModel, devCustomAddr, d.installDate, d.warrantyMonths, wStatus, d.lastInspectionDate, d.nextInspectionDate, c.notes].map(escape).join(';'));
           });
         }
       });
@@ -7876,7 +9472,7 @@ service cloud.firestore {
         else if (low.includes('gwarancj') && !low.includes('status')) map.warranty = idx;
         else if (low.includes('status')) map.warrantyStatus = idx;
         else if (low.includes('ostatni')) map.lastInsp = idx;
-        else if (low.includes('następn') || low.includes('kolejn') || low.includes('termin')) map.nextInsp = idx;
+        else if (low.includes('nast') || low.includes('kolejn') || low.includes('termin') || (low.includes('przegl') && !low.includes('ostatni'))) map.nextInsp = idx;
         else if (low.includes('notatk') || low.includes('uwag') || low.includes('opis')) map.notes = idx;
       });
       return map;
@@ -8019,7 +9615,7 @@ service cloud.firestore {
           const finalName = capitalizeWords(rawName || `Klient (${parsedAddr.city || rawPhone || 'Import'})`);
           const finalNip = (rawNip || '').trim();
           const finalEmail = (rawEmail || '').trim();
-          const finalPhone = rawPhone ? ensurePhonePrefix(rawPhone) : '+48 ';
+          const finalPhone = isPhoneEmpty(rawPhone) ? '+48 ' : ensurePhonePrefix(rawPhone);
           const finalCity = parsedAddr.city;
           const finalStreet = parsedAddr.street;
           const finalPostal = parsedAddr.postal;
@@ -8333,6 +9929,7 @@ service cloud.firestore {
 
       let addedCount = 0;
       let updatedCount = 0;
+      let updatedDatesCount = 0;
 
       pendingCsvImportClients.forEach(imp => {
         if (imp.existingClientId) {
@@ -8340,7 +9937,7 @@ service cloud.firestore {
           if (existing) {
             if (!existing.nip && imp.nip) existing.nip = imp.nip;
             if (!existing.email && imp.email) existing.email = imp.email;
-            if ((!existing.phone || existing.phone.trim() === '+48') && imp.phone) existing.phone = imp.phone;
+            if ((!existing.phone || isPhoneEmpty(existing.phone)) && !isPhoneEmpty(imp.phone)) existing.phone = ensurePhonePrefix(imp.phone);
             if (!existing.street && imp.street) existing.street = imp.street;
             if (!existing.postalCode && imp.postalCode) existing.postalCode = imp.postalCode;
             if (!existing.notes && imp.notes) existing.notes = imp.notes;
@@ -8348,8 +9945,26 @@ service cloud.firestore {
               existing.lat = imp.lat;
               existing.lng = imp.lng;
             }
+            existing.devices = existing.devices || [];
             if (imp.devices && imp.devices.length > 0) {
-              existing.devices = [...(existing.devices || []), ...imp.devices];
+              imp.devices.forEach(impDev => {
+                const matchDev = findMatchingDevice(existing.devices, impDev);
+                if (matchDev) {
+                  // Jeśli data w pliku CSV jest nowsza niż na serwerze -> NADPISZ!
+                  if (isDateNewer(impDev.nextInspectionDate, matchDev.nextInspectionDate)) {
+                    matchDev.nextInspectionDate = normalizeDateStr(impDev.nextInspectionDate);
+                    updatedDatesCount++;
+                  }
+                  if (isDateNewer(impDev.lastInspectionDate, matchDev.lastInspectionDate)) {
+                    matchDev.lastInspectionDate = normalizeDateStr(impDev.lastInspectionDate);
+                  }
+                  if (!matchDev.serialNumber && impDev.serialNumber) matchDev.serialNumber = impDev.serialNumber;
+                  if (!matchDev.installDate && impDev.installDate) matchDev.installDate = impDev.installDate;
+                  if (!matchDev.deviceNotes && impDev.deviceNotes) matchDev.deviceNotes = impDev.deviceNotes;
+                } else {
+                  existing.devices.push(impDev);
+                }
+              });
             }
             updatedCount++;
           }
@@ -8368,7 +9983,11 @@ service cloud.firestore {
       persistData();
       closeModal('modal-csv-preview');
       refreshAllViews();
-      showToast(`Import zakończony: dopisano ${addedCount} klientów (z ustawionymi pinezkami GPS), uzupełniono ${updatedCount}!`);
+      let toastMsg = `Import zakończony: dopisano ${addedCount} klientów, uzupełniono ${updatedCount}!`;
+      if (updatedDatesCount > 0) {
+        toastMsg += ` Nadpisano ${updatedDatesCount} nowszych dat przeglądów z pliku.`;
+      }
+      showToast(toastMsg);
     }
 
     function seedSampleData() {
