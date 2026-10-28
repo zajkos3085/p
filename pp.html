@@ -2520,8 +2520,10 @@ service cloud.firestore {
     const MONTH_NAMES = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
 
     let firestoreDb = null;
-    let firestoreUnsubscribe = null;
-    let firestoreTplUnsubscribe = null;
+    let firestoreUnsubscribeMain = null;
+    let firestoreUnsubscribeClients = null;
+    let firestoreUnsubscribeAppts = null;
+    let firestoreUnsubscribeTpl = null;
     let isCloudConnected = false;
 
     window.clientsData = [];
@@ -3013,19 +3015,25 @@ service cloud.firestore {
       localStorage.setItem(STORAGE_KEYS.TEMPLATES, JSON.stringify(window.protocolTemplatesData));
     }
 
-    function getCloudPayload() {
+    function getMainCloudPayload() {
       return {
-        clients: window.clientsData || [],
-        appointments: window.appointmentsData || [],
         catalog: window.catalogData || [],
         workers: window.workersData || [],
         workerSignatures: getWorkerSignaturesMap(),
-        protocolTemplates: window.protocolTemplatesData || [],
         companyLogo: getSavedCompanyLogo(),
         companyName: getSavedCompanyName(),
         companySubtitle: getSavedCompanySubtitle(),
         companyFgaz: getSavedFgazCert(),
         updatedAt: new Date().toISOString()
+      };
+    }
+
+    function getCloudPayload() {
+      return {
+        ...getMainCloudPayload(),
+        clients: window.clientsData || [],
+        appointments: window.appointmentsData || [],
+        protocolTemplates: window.protocolTemplatesData || []
       };
     }
 
@@ -3166,21 +3174,182 @@ service cloud.firestore {
       }
     }
 
+    function compressSignatureDataUrl(dataUrl, maxW = 360, maxH = 140, quality = 0.70) {
+      return new Promise((resolve) => {
+        if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image')) {
+          return resolve(dataUrl);
+        }
+        if (dataUrl.startsWith('data:image/jpeg') && dataUrl.length < 20000) {
+          return resolve(dataUrl);
+        }
+        const img = new Image();
+        img.onload = () => {
+          try {
+            let w = img.width || maxW;
+            let h = img.height || maxH;
+            if (w > maxW || h > maxH) {
+              const ratio = Math.min(maxW / w, maxH / h);
+              w = Math.max(1, Math.round(w * ratio));
+              h = Math.max(1, Math.round(h * ratio));
+            }
+            const cvs = document.createElement('canvas');
+            cvs.width = w;
+            cvs.height = h;
+            const ctx = cvs.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+            const compressed = cvs.toDataURL('image/jpeg', quality);
+            resolve(compressed.length < dataUrl.length ? compressed : dataUrl);
+          } catch (e) {
+            resolve(dataUrl);
+          }
+        };
+        img.onerror = () => resolve(dataUrl);
+        img.src = dataUrl;
+      });
+    }
+
+    async function optimizeAllStoredSignatures() {
+      let changed = false;
+
+      // 1. Podpisy pracowników w localStorage
+      try {
+        const sigsMap = getWorkerSignaturesMap();
+        let sigsChanged = false;
+        for (const key of Object.keys(sigsMap)) {
+          const val = sigsMap[key];
+          if (val && typeof val === 'string' && (val.length > 20000 || val.startsWith('data:image/png'))) {
+            const comp = await compressSignatureDataUrl(val);
+            if (comp && comp !== val) {
+              sigsMap[key] = comp;
+              sigsChanged = true;
+            }
+          }
+        }
+        if (sigsChanged) {
+          localStorage.setItem(STORAGE_KEYS.WORKER_SIGNATURES, JSON.stringify(sigsMap));
+          changed = true;
+        }
+      } catch (e) {
+        console.warn('Błąd kompresji podpisów pracowników:', e);
+      }
+
+      // 2. Podpisy w appointmentsData
+      try {
+        if (Array.isArray(window.appointmentsData)) {
+          for (const app of window.appointmentsData) {
+            if (app && app.protocolData) {
+              if (app.protocolData.sigTechDataUrl && (app.protocolData.sigTechDataUrl.length > 20000 || app.protocolData.sigTechDataUrl.startsWith('data:image/png'))) {
+                const comp = await compressSignatureDataUrl(app.protocolData.sigTechDataUrl);
+                if (comp && comp !== app.protocolData.sigTechDataUrl) {
+                  app.protocolData.sigTechDataUrl = comp;
+                  changed = true;
+                }
+              }
+              if (app.protocolData.sigClientDataUrl && (app.protocolData.sigClientDataUrl.length > 20000 || app.protocolData.sigClientDataUrl.startsWith('data:image/png'))) {
+                const comp = await compressSignatureDataUrl(app.protocolData.sigClientDataUrl);
+                if (comp && comp !== app.protocolData.sigClientDataUrl) {
+                  app.protocolData.sigClientDataUrl = comp;
+                  changed = true;
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Błąd kompresji podpisów w zleceniach:', e);
+      }
+
+      // 3. Podpisy w clientsData (devices -> inspectionHistory)
+      try {
+        if (Array.isArray(window.clientsData)) {
+          for (const client of window.clientsData) {
+            if (client && Array.isArray(client.devices)) {
+              for (const dev of client.devices) {
+                if (dev && Array.isArray(dev.inspectionHistory)) {
+                  for (const insp of dev.inspectionHistory) {
+                    if (insp && insp.protocolData) {
+                      if (insp.protocolData.sigTechDataUrl && (insp.protocolData.sigTechDataUrl.length > 20000 || insp.protocolData.sigTechDataUrl.startsWith('data:image/png'))) {
+                        const comp = await compressSignatureDataUrl(insp.protocolData.sigTechDataUrl);
+                        if (comp && comp !== insp.protocolData.sigTechDataUrl) {
+                          insp.protocolData.sigTechDataUrl = comp;
+                          changed = true;
+                        }
+                      }
+                      if (insp.protocolData.sigClientDataUrl && (insp.protocolData.sigClientDataUrl.length > 20000 || insp.protocolData.sigClientDataUrl.startsWith('data:image/png'))) {
+                        const comp = await compressSignatureDataUrl(insp.protocolData.sigClientDataUrl);
+                        if (comp && comp !== insp.protocolData.sigClientDataUrl) {
+                          insp.protocolData.sigClientDataUrl = comp;
+                          changed = true;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Błąd kompresji podpisów u klientów:', e);
+      }
+
+      if (changed) {
+        console.log('Zoptymalizowano archiwalne podpisy cyfrowe.');
+        saveStateToLocalStorage();
+        if (isCloudConnected && firestoreDb) {
+          persistData();
+        }
+      }
+    }
+
     function persistData() {
       saveStateToLocalStorage();
       if (isCloudConnected && firestoreDb) {
+        // 1. Dedykowany, lekki zapis konfiguracji i metadanych (pp_state/main) - ok. 15 KB
         try {
-          const payload = sanitizeForFirestore(getCloudPayload());
-          firestoreDb.collection('pp_state').doc('main').set(payload).catch(err => {
+          const mainPayload = sanitizeForFirestore(getMainCloudPayload());
+          firestoreDb.collection('pp_state').doc('main').set(mainPayload).catch(err => {
             console.warn('Błąd zapisu Firestore pp_state/main:', err);
             updateCloudBadge('error', 'Błąd zapisu');
-            setDiagnosticStatus('error', 'Zapis odrzucony', explainFirestoreError(err, ''));
+            setDiagnosticStatus('error', 'Zapis odrzucony (main)', explainFirestoreError(err, ''));
           });
         } catch (err) {
           console.error('Błąd przygotowania danych Firestore (main):', err);
         }
 
-        // Dedykowany, bezpośredni zapis wzorów protokołów w osobnym dokumencie bazy Firestore
+        // 2. Dedykowany zapis klientów w osobnym dokumencie (pp_state/clients)
+        try {
+          const clientsPayload = sanitizeForFirestore({
+            clients: window.clientsData || [],
+            updatedAt: new Date().toISOString()
+          });
+          firestoreDb.collection('pp_state').doc('clients').set(clientsPayload).catch(err => {
+            console.warn('Błąd zapisu Firestore pp_state/clients:', err);
+            updateCloudBadge('error', 'Błąd zapisu');
+            setDiagnosticStatus('error', 'Zapis odrzucony (klienci)', explainFirestoreError(err, ''));
+          });
+        } catch (err) {
+          console.error('Błąd przygotowania danych Firestore (clients):', err);
+        }
+
+        // 3. Dedykowany zapis zleceń / wizyt w osobnym dokumencie (pp_state/appointments)
+        try {
+          const apptsPayload = sanitizeForFirestore({
+            appointments: window.appointmentsData || [],
+            updatedAt: new Date().toISOString()
+          });
+          firestoreDb.collection('pp_state').doc('appointments').set(apptsPayload).catch(err => {
+            console.warn('Błąd zapisu Firestore pp_state/appointments:', err);
+            updateCloudBadge('error', 'Błąd zapisu');
+            setDiagnosticStatus('error', 'Zapis odrzucony (zlecenia)', explainFirestoreError(err, ''));
+          });
+        } catch (err) {
+          console.error('Błąd przygotowania danych Firestore (appointments):', err);
+        }
+
+        // 4. Dedykowany, bezpośredni zapis wzorów protokołów w osobnym dokumencie bazy Firestore (pp_state/templates)
         try {
           const tplPayload = sanitizeForFirestore({
             protocolTemplates: window.protocolTemplatesData || [],
@@ -3293,8 +3462,10 @@ service cloud.firestore {
     }
 
     function disconnectFirebase() {
-      if (firestoreUnsubscribe) { firestoreUnsubscribe(); firestoreUnsubscribe = null; }
-      if (firestoreTplUnsubscribe) { firestoreTplUnsubscribe(); firestoreTplUnsubscribe = null; }
+      if (firestoreUnsubscribeMain) { firestoreUnsubscribeMain(); firestoreUnsubscribeMain = null; }
+      if (firestoreUnsubscribeClients) { firestoreUnsubscribeClients(); firestoreUnsubscribeClients = null; }
+      if (firestoreUnsubscribeAppts) { firestoreUnsubscribeAppts(); firestoreUnsubscribeAppts = null; }
+      if (firestoreUnsubscribeTpl) { firestoreUnsubscribeTpl(); firestoreUnsubscribeTpl = null; }
       localStorage.removeItem(STORAGE_KEYS.FIREBASE_CFG);
       isCloudConnected = false;
       firestoreDb = null;
@@ -3314,73 +3485,130 @@ service cloud.firestore {
     async function initFirebaseConnection(configObj, isInteractiveTest = false) {
       if (!window.firebase) return;
       try {
-        if (firestoreUnsubscribe) { firestoreUnsubscribe(); firestoreUnsubscribe = null; }
-        if (firestoreTplUnsubscribe) { firestoreTplUnsubscribe(); firestoreTplUnsubscribe = null; }
+        if (firestoreUnsubscribeMain) { firestoreUnsubscribeMain(); firestoreUnsubscribeMain = null; }
+        if (firestoreUnsubscribeClients) { firestoreUnsubscribeClients(); firestoreUnsubscribeClients = null; }
+        if (firestoreUnsubscribeAppts) { firestoreUnsubscribeAppts(); firestoreUnsubscribeAppts = null; }
+        if (firestoreUnsubscribeTpl) { firestoreUnsubscribeTpl(); firestoreUnsubscribeTpl = null; }
         const appName = 'pp_app_' + (configObj.projectId || 'default').replace(/[^a-zA-Z0-9_]/g, '_');
         let fbApp = firebase.apps.find(a => a.name === appName) || firebase.initializeApp(configObj, appName);
 
         firestoreDb = fbApp.firestore();
-        const docRef = firestoreDb.collection('pp_state').doc('main');
-        const docSnap = await docRef.get({ source: 'server' });
 
-        if (docSnap.exists) {
-          const cloudData = docSnap.data();
-          if ((cloudData.clients || []).length > 0 || (window.clientsData || []).length === 0) {
-            applyCloudPayload(cloudData);
-          } else {
-            await docRef.set(getCloudPayload());
+        const mainDocRef = firestoreDb.collection('pp_state').doc('main');
+        const clientsDocRef = firestoreDb.collection('pp_state').doc('clients');
+        const apptsDocRef = firestoreDb.collection('pp_state').doc('appointments');
+        const tplDocRef = firestoreDb.collection('pp_state').doc('templates');
+
+        const getDocSafe = async (doc) => {
+          try {
+            return await doc.get({ source: 'server' });
+          } catch (e) {
+            return await doc.get();
           }
-        } else {
-          await docRef.set(getCloudPayload());
+        };
+
+        const [mainSnap, clientsSnap, apptsSnap, tplSnap] = await Promise.all([
+          getDocSafe(mainDocRef).catch(err => ({ exists: false, error: err })),
+          getDocSafe(clientsDocRef).catch(err => ({ exists: false, error: err })),
+          getDocSafe(apptsDocRef).catch(err => ({ exists: false, error: err })),
+          getDocSafe(tplDocRef).catch(err => ({ exists: false, error: err }))
+        ]);
+
+        if (mainSnap.error && !mainSnap.exists) {
+          const code = mainSnap.error.code || '';
+          if (code === 'permission-denied' || code === 'not-found' || (mainSnap.error.message && mainSnap.error.message.includes('database (default) does not exist'))) {
+            throw mainSnap.error;
+          }
         }
+
+        // 1. Klienci: pobieramy z dedykowanego 'clients', a w razie braku migrujemy ze starego 'main'
+        if (clientsSnap.exists && Array.isArray(clientsSnap.data()?.clients)) {
+          const remoteClients = clientsSnap.data().clients;
+          if (remoteClients.length > 0 || (window.clientsData || []).length === 0) {
+            window.clientsData = remoteClients;
+          }
+        } else if (mainSnap.exists && Array.isArray(mainSnap.data()?.clients) && mainSnap.data().clients.length > 0) {
+          if (mainSnap.data().clients.length > 0 || (window.clientsData || []).length === 0) {
+            window.clientsData = mainSnap.data().clients;
+          }
+        }
+
+        // 2. Zlecenia / Wizyty: z dedykowanego 'appointments', a w razie braku migrujemy ze starego 'main'
+        if (apptsSnap.exists && Array.isArray(apptsSnap.data()?.appointments)) {
+          const remoteAppts = apptsSnap.data().appointments;
+          if (remoteAppts.length > 0 || (window.appointmentsData || []).length === 0) {
+            window.appointmentsData = remoteAppts;
+          }
+        } else if (mainSnap.exists && Array.isArray(mainSnap.data()?.appointments) && mainSnap.data().appointments.length > 0) {
+          if (mainSnap.data().appointments.length > 0 || (window.appointmentsData || []).length === 0) {
+            window.appointmentsData = mainSnap.data().appointments;
+          }
+        }
+
+        // 3. Konfiguracja główna (katalog, pracownicy, logo itp.)
+        if (mainSnap.exists) {
+          applyCloudPayload(mainSnap.data());
+        }
+
+        // 4. Szablony protokołów
+        if (tplSnap.exists && Array.isArray(tplSnap.data()?.protocolTemplates)) {
+          mergeProtocolTemplates(tplSnap.data().protocolTemplates);
+        } else if (mainSnap.exists && Array.isArray(mainSnap.data()?.protocolTemplates)) {
+          mergeProtocolTemplates(mainSnap.data().protocolTemplates);
+        }
+
+        saveStateToLocalStorage();
+        refreshAllViews();
 
         isCloudConnected = true;
         updateCloudBadge('online', `Online: ${configObj.projectId}`);
-        setDiagnosticStatus('ok', 'Połączono!', `Pomyślnie połączono z <strong>${configObj.projectId}</strong>. Klienci w chmurze: <strong>${(window.clientsData || []).length}</strong>.`);
+        setDiagnosticStatus('ok', 'Połączono!', `Pomyślnie połączono z <strong>${configObj.projectId}</strong>. Klienci: <strong>${(window.clientsData || []).length}</strong>, Zlecenia: <strong>${(window.appointmentsData || []).length}</strong>.`);
         if (isInteractiveTest) showToast('Połączono z chmurą!');
 
-        // Niezależny odczyt i nasłuch dedykowanego dokumentu wzorów protokołów z bazy
-        try {
-          const tplDocRef = firestoreDb.collection('pp_state').doc('templates');
-          const tplSnap = await tplDocRef.get({ source: 'server' });
-          if (tplSnap.exists) {
-            const tplData = tplSnap.data();
-            if (Array.isArray(tplData.protocolTemplates) && tplData.protocolTemplates.length > 0) {
-              mergeProtocolTemplates(tplData.protocolTemplates);
-            }
-          } else {
-            await tplDocRef.set({
-              protocolTemplates: window.protocolTemplatesData || [],
-              updatedAt: new Date().toISOString()
-            });
-          }
+        // Optymalizujemy archiwalne podpisy (kompresja) i zapisujemy strukturę podzieloną do chmury
+        await optimizeAllStoredSignatures();
+        persistData();
 
-          firestoreTplUnsubscribe = tplDocRef.onSnapshot(liveTplSnap => {
-            if (liveTplSnap.exists) {
-              const liveData = liveTplSnap.data();
-              if (Array.isArray(liveData.protocolTemplates) && liveData.protocolTemplates.length > 0) {
-                mergeProtocolTemplates(liveData.protocolTemplates);
-                if (currentTab === 'devices_db') renderProtocolTemplatesManager();
-                populateProtocolTemplatesSelect();
-              }
-            }
-          }, () => {});
-        } catch (tplErr) {
-          console.warn('Uwaga przy pobieraniu szablonów z chmury:', tplErr);
-        }
-
-        firestoreUnsubscribe = docRef.onSnapshot(liveSnap => {
+        // 5. Rejestracja nasłuchiwania w czasie rzeczywistym dla wszystkich 4 dokumentów
+        firestoreUnsubscribeMain = mainDocRef.onSnapshot(liveSnap => {
+          if (liveSnap.metadata && liveSnap.metadata.hasPendingWrites) return;
           if (liveSnap.exists) {
-            const snapData = liveSnap.data();
-            if ((snapData.clients || []).length > 0 || (window.clientsData || []).length === 0) {
-              applyCloudPayload(snapData);
-            }
+            applyCloudPayload(liveSnap.data());
           }
         }, err => {
+          console.warn('Błąd nasłuchu main:', err);
           isCloudConnected = false;
           updateCloudBadge('error', 'Błąd synchro');
           setDiagnosticStatus('error', 'Błąd autoryzacji', explainFirestoreError(err, configObj.projectId));
         });
+
+        firestoreUnsubscribeClients = clientsDocRef.onSnapshot(liveSnap => {
+          if (liveSnap.metadata && liveSnap.metadata.hasPendingWrites) return;
+          if (liveSnap.exists && Array.isArray(liveSnap.data()?.clients)) {
+            window.clientsData = liveSnap.data().clients;
+            saveStateToLocalStorage();
+            refreshAllViews();
+          }
+        }, err => console.warn('Błąd nasłuchu clients:', err));
+
+        firestoreUnsubscribeAppts = apptsDocRef.onSnapshot(liveSnap => {
+          if (liveSnap.metadata && liveSnap.metadata.hasPendingWrites) return;
+          if (liveSnap.exists && Array.isArray(liveSnap.data()?.appointments)) {
+            window.appointmentsData = liveSnap.data().appointments;
+            saveStateToLocalStorage();
+            refreshAllViews();
+          }
+        }, err => console.warn('Błąd nasłuchu appointments:', err));
+
+        firestoreUnsubscribeTpl = tplDocRef.onSnapshot(liveSnap => {
+          if (liveSnap.metadata && liveSnap.metadata.hasPendingWrites) return;
+          if (liveSnap.exists && Array.isArray(liveSnap.data()?.protocolTemplates)) {
+            mergeProtocolTemplates(liveSnap.data().protocolTemplates);
+            if (currentTab === 'devices_db') renderProtocolTemplatesManager();
+            populateProtocolTemplatesSelect();
+          }
+        }, err => console.warn('Błąd nasłuchu templates:', err));
+
       } catch (err) {
         isCloudConnected = false;
         updateCloudBadge('error', 'Błąd chmury');
@@ -3392,12 +3620,22 @@ service cloud.firestore {
     async function forcePushToCloud() {
       if (!firestoreDb) { openFirebaseModal(); return; }
       try {
-        await firestoreDb.collection('pp_state').doc('main').set(sanitizeForFirestore(getCloudPayload()));
-        await firestoreDb.collection('pp_state').doc('templates').set(sanitizeForFirestore({
-          protocolTemplates: window.protocolTemplatesData || [],
-          updatedAt: new Date().toISOString()
-        }));
-        showToast('Wysłano dane i szablony do chmury!');
+        await Promise.all([
+          firestoreDb.collection('pp_state').doc('main').set(sanitizeForFirestore(getMainCloudPayload())),
+          firestoreDb.collection('pp_state').doc('clients').set(sanitizeForFirestore({
+            clients: window.clientsData || [],
+            updatedAt: new Date().toISOString()
+          })),
+          firestoreDb.collection('pp_state').doc('appointments').set(sanitizeForFirestore({
+            appointments: window.appointmentsData || [],
+            updatedAt: new Date().toISOString()
+          })),
+          firestoreDb.collection('pp_state').doc('templates').set(sanitizeForFirestore({
+            protocolTemplates: window.protocolTemplatesData || [],
+            updatedAt: new Date().toISOString()
+          }))
+        ]);
+        showToast('Wysłano wszystkie dane do chmury!');
       } catch (err) {
         openFirebaseModal();
         setDiagnosticStatus('error', 'Błąd wysyłania', explainFirestoreError(err, ''));
@@ -3407,17 +3645,38 @@ service cloud.firestore {
     async function forcePullFromCloud() {
       if (!firestoreDb) { openFirebaseModal(); return; }
       try {
-        const snap = await firestoreDb.collection('pp_state').doc('main').get({ source: 'server' });
-        if (snap.exists) {
-          applyCloudPayload(snap.data());
+        const getDocSafe = async (doc) => {
+          try { return await doc.get({ source: 'server' }); } catch (e) { return await doc.get(); }
+        };
+        const [mainSnap, clientsSnap, apptsSnap, tplSnap] = await Promise.all([
+          getDocSafe(firestoreDb.collection('pp_state').doc('main')),
+          getDocSafe(firestoreDb.collection('pp_state').doc('clients')),
+          getDocSafe(firestoreDb.collection('pp_state').doc('appointments')),
+          getDocSafe(firestoreDb.collection('pp_state').doc('templates'))
+        ]);
+
+        if (mainSnap.exists) {
+          applyCloudPayload(mainSnap.data());
         }
-        try {
-          const tplSnap = await firestoreDb.collection('pp_state').doc('templates').get({ source: 'server' });
-          if (tplSnap.exists && Array.isArray(tplSnap.data()?.protocolTemplates)) {
-            mergeProtocolTemplates(tplSnap.data().protocolTemplates);
-          }
-        } catch (e) {}
-        showToast('Pobrano dane i szablony z chmury!');
+        if (clientsSnap.exists && Array.isArray(clientsSnap.data()?.clients)) {
+          window.clientsData = clientsSnap.data().clients;
+        } else if (mainSnap.exists && Array.isArray(mainSnap.data()?.clients) && mainSnap.data().clients.length > 0) {
+          window.clientsData = mainSnap.data().clients;
+        }
+
+        if (apptsSnap.exists && Array.isArray(apptsSnap.data()?.appointments)) {
+          window.appointmentsData = apptsSnap.data().appointments;
+        } else if (mainSnap.exists && Array.isArray(mainSnap.data()?.appointments) && mainSnap.data().appointments.length > 0) {
+          window.appointmentsData = mainSnap.data().appointments;
+        }
+
+        if (tplSnap.exists && Array.isArray(tplSnap.data()?.protocolTemplates)) {
+          mergeProtocolTemplates(tplSnap.data().protocolTemplates);
+        }
+
+        saveStateToLocalStorage();
+        refreshAllViews();
+        showToast('Pobrano wszystkie dane i szablony z chmury!');
       } catch (err) {
         openFirebaseModal();
         setDiagnosticStatus('error', 'Błąd pobierania', explainFirestoreError(err, ''));
@@ -3492,6 +3751,7 @@ service cloud.firestore {
       initStatsTimeFilters();
       renderDashboard();
       updateSidebarCompanyLogo();
+      setTimeout(optimizeAllStoredSignatures, 200);
 
       const savedCfg = localStorage.getItem(STORAGE_KEYS.FIREBASE_CFG);
       if (HARDCODED_FIREBASE_CONFIG) initFirebaseConnection(HARDCODED_FIREBASE_CONFIG, false);
@@ -6832,15 +7092,26 @@ service cloud.firestore {
     function getSignatureDataUrl(canvasId) {
       const canvas = document.getElementById(canvasId);
       if (!canvas || !signaturePadsState[canvasId]?.hasInk) return '';
-      // Tworzymy pomocniczy canvas z gwarantowanym białym tłem (aby JPEG/PDF nie robił czarnego lub pustego pola)
+      // Tworzymy pomocniczy canvas z gwarantowanym białym tłem i zoptymalizowanymi wymiarami
+      // Skalujemy do max 360x140 px i zapisujemy jako JPEG z jakością 0.70
+      // Daje to idealną ostrość na ekranie i w wydruku PDF (html2pdf), zmniejszając wagę podpisu z ~300 KB do ~6-8 KB
+      const maxW = 360;
+      const maxH = 140;
+      let targetW = canvas.width;
+      let targetH = canvas.height;
+      if (targetW > maxW || targetH > maxH) {
+        const ratio = Math.min(maxW / targetW, maxH / targetH);
+        targetW = Math.max(1, Math.round(targetW * ratio));
+        targetH = Math.max(1, Math.round(targetH * ratio));
+      }
       const exportCanvas = document.createElement('canvas');
-      exportCanvas.width = canvas.width;
-      exportCanvas.height = canvas.height;
+      exportCanvas.width = targetW;
+      exportCanvas.height = targetH;
       const eCtx = exportCanvas.getContext('2d');
       eCtx.fillStyle = '#ffffff';
-      eCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-      eCtx.drawImage(canvas, 0, 0);
-      return exportCanvas.toDataURL('image/png');
+      eCtx.fillRect(0, 0, targetW, targetH);
+      eCtx.drawImage(canvas, 0, 0, targetW, targetH);
+      return exportCanvas.toDataURL('image/jpeg', 0.70);
     }
 
     function toggleProtocolFormInCloseModal(checked) {
