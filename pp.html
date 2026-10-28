@@ -985,10 +985,13 @@
             
             <!-- PODGLĄD LOGO NA PROTOKOLE -->
             <div class="space-y-2">
-              <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400">Podgląd nagłówka protokołu z Twoim logo:</label>
-              <div class="p-4 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white shadow-inner flex flex-col justify-center min-h-[125px]">
+              <div class="flex items-center justify-between">
+                <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400">Podgląd nagłówka protokołu z Twoim logo:</label>
+                <span id="settings-logo-status-badge" class="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">Domyślne logo INSTAL</span>
+              </div>
+              <div class="p-4 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white shadow-inner flex flex-col justify-center min-h-[135px]">
                 <div class="flex items-center justify-between border-b-2 border-sky-600 pb-3 gap-2">
-                  <div id="settings-logo-preview-container" class="flex items-center">
+                  <div id="settings-logo-preview-container" class="flex items-center min-h-[55px]">
                     <!-- Dynamicznie wstawiane logo lub domyślny canvas -->
                   </div>
                   <div class="text-right text-[11px] text-zinc-700 shrink-0">
@@ -1003,11 +1006,11 @@
               </div>
               <div class="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 pt-0.5">
                 <i data-lucide="info" class="w-3.5 h-3.5 shrink-0 text-indigo-500"></i>
-                <span>Zalecany format: PNG z przezroczystym tłem lub SVG. Układ poziomy, maks. wysokość w nagłówku: 52px.</span>
+                <span>Wysoka tolerancja: obsługa PNG, JPG, WebP, SVG. System sam usuwa puste marginesy, a suwakiem obok dopasujesz wielkość.</span>
               </div>
             </div>
 
-            <!-- PRZYCISKI AKCJI LOGO -->
+            <!-- PRZYCISKI AKCJI LOGO I REGULACJA ROZMIARU -->
             <div class="space-y-3.5 bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
               <label class="block text-xs font-bold text-zinc-700 dark:text-zinc-300">Zarządzaj grafiką logo</label>
               
@@ -1020,6 +1023,23 @@
                 <button type="button" id="btn-reset-logo" onclick="resetSettingsCompanyLogo()" class="py-2.5 px-4 bg-zinc-200 dark:bg-zinc-700 hover:bg-rose-100 dark:hover:bg-rose-950/60 hover:text-rose-600 dark:hover:text-rose-400 text-zinc-700 dark:text-zinc-300 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition" title="Usuń własne logo i przywróć fabryczny napis INSTAL">
                   <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Przywróć INSTAL
                 </button>
+              </div>
+
+              <!-- SUWAK ROZMIARU I WYSOKOŚCI LOGO -->
+              <div class="pt-2 border-t border-zinc-200 dark:border-zinc-700/80 space-y-2">
+                <div class="flex items-center justify-between">
+                  <label for="settings-logo-height-slider" class="text-xs font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
+                    <i data-lucide="scaling" class="w-3.5 h-3.5 text-indigo-500"></i> Wielkość logo na protokołach:
+                  </label>
+                  <span id="settings-logo-height-val" class="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-extrabold text-xs">55 px</span>
+                </div>
+                <input type="range" id="settings-logo-height-slider" min="35" max="85" step="1" value="55" oninput="onSettingsLogoHeightChange(this.value)" class="w-full h-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                <div class="flex items-center justify-between gap-1 pt-0.5 flex-wrap">
+                  <button type="button" onclick="setSettingsLogoHeightPreset(40)" class="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg text-[10px] font-bold text-zinc-600 dark:text-zinc-300 transition">Kompaktowe (40px)</button>
+                  <button type="button" onclick="setSettingsLogoHeightPreset(55)" class="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg text-[10px] font-bold text-zinc-600 dark:text-zinc-300 transition">Standard (55px)</button>
+                  <button type="button" onclick="setSettingsLogoHeightPreset(70)" class="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg text-[10px] font-bold text-zinc-600 dark:text-zinc-300 transition">Wyraziste (70px)</button>
+                  <button type="button" onclick="setSettingsLogoHeightPreset(85)" class="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg text-[10px] font-bold text-zinc-600 dark:text-zinc-300 transition">Duże (85px)</button>
+                </div>
               </div>
 
               <div id="settings-logo-details" class="text-xs text-zinc-500 dark:text-zinc-400 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-zinc-200 dark:border-zinc-700/60 flex items-center justify-between">
@@ -2027,15 +2047,9 @@
               <div id="proto-srv-extra-fields-wrap" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1"></div>
             </div>
 
-            <!-- 7. WŁASNE TABELE POMIARÓW I SEKCJE ZE WZORU PROTOKOŁU -->
-            <div id="proto-custom-template-sections-wrap" class="hidden space-y-2.5 p-3 rounded-xl bg-teal-50/90 dark:bg-teal-950/40 border border-teal-300 dark:border-teal-700">
-              <div class="flex items-center justify-between">
-                <div class="font-extrabold text-[11px] text-teal-900 dark:text-teal-200 uppercase flex items-center gap-1.5">
-                  <span>📊</span> <span>Własna tabela pomiarów / parametry z szablonu:</span>
-                </div>
-                <span class="text-[10px] text-teal-700 dark:text-teal-300 font-bold">Wpisz na protokół</span>
-              </div>
-              <div id="proto-custom-template-sections-box" class="space-y-2"></div>
+            <!-- 7. WŁASNE OKNA I SEKCJE ZE WZORU PROTOKOŁU -->
+            <div id="proto-custom-template-sections-wrap" class="hidden space-y-3">
+              <div id="proto-custom-template-sections-box" class="space-y-3"></div>
             </div>
 
             <!-- PODPISY DOTYKOWE (PALCEM NA EKRANIE TELEFONU LUB MYSZKĄ) -->
@@ -2399,7 +2413,7 @@ service cloud.firestore {
         <span id="protocol-preview-mode-banner-text">✏️ <strong>Tryb edycji aktywny:</strong> Kliknij w dowolny tekst, tabelkę, adres, S/N, status lub uwagę na protokole poniżej, aby dowolnie edytować treść przed pobraniem PDF. Zmiany zapisują się automatycznie oraz przyciskiem „Zapisz zmiany”.</span>
       </div>
       <div class="overflow-y-auto flex-1 bg-zinc-200/70 dark:bg-zinc-950 p-2 sm:p-5 rounded-xl border border-zinc-300 dark:border-zinc-800">
-        <div id="protocol-printable-area" oninput="autoSaveEditedProtocolHtml()" onblur="autoSaveEditedProtocolHtml()" class="bg-white text-zinc-900 mx-auto shadow-lg p-5 sm:p-8 rounded-lg w-full max-w-[794px]"></div>
+        <div id="protocol-printable-area" class="bg-white text-zinc-900 mx-auto shadow-lg p-5 sm:p-8 rounded-lg w-full max-w-[794px]"></div>
       </div>
     </div>
   </div>
@@ -2506,6 +2520,7 @@ service cloud.firestore {
       FIREBASE_CFG: 'pp_firebase_config_json',
       URGENT_DAYS: 'pp_urgent_days_threshold',
       COMPANY_LOGO: 'pp_company_logo_dataurl',
+      COMPANY_LOGO_HEIGHT: 'pp_company_logo_height',
       COMPANY_NAME: 'pp_company_name',
       COMPANY_SUBTITLE: 'pp_company_subtitle',
       COMPANY_FGAZ: 'pp_company_fgaz'
@@ -2815,10 +2830,11 @@ service cloud.firestore {
     function closeModal(id) {
       if (id === 'modal-protocol-preview') {
         try {
-          if (currentPreviewProtocolObj) {
+          if (currentPreviewProtocolObj && currentPreviewProtocolObj.isTemplatePreview) {
             if (typeof autoSaveEditedProtocolHtml === 'function') autoSaveEditedProtocolHtml();
             if (typeof persistData === 'function') persistData();
           }
+          currentPreviewProtocolObj = null;
         } catch (e) { console.error('Błąd auto-zapisu protokołu przy zamykaniu:', e); }
       }
       const el = document.getElementById(id);
@@ -3021,6 +3037,7 @@ service cloud.firestore {
         workers: window.workersData || [],
         workerSignatures: getWorkerSignaturesMap(),
         companyLogo: getSavedCompanyLogo(),
+        companyLogoHeight: getSavedCompanyLogoHeight(),
         companyName: getSavedCompanyName(),
         companySubtitle: getSavedCompanySubtitle(),
         companyFgaz: getSavedFgazCert(),
@@ -3147,6 +3164,9 @@ service cloud.firestore {
           }
           updateSidebarCompanyLogo();
         } catch (e) {}
+      }
+      if (typeof data.companyLogoHeight === 'number' || typeof data.companyLogoHeight === 'string') {
+        try { localStorage.setItem(STORAGE_KEYS.COMPANY_LOGO_HEIGHT, String(data.companyLogoHeight)); } catch (e) {}
       }
       if (typeof data.companyName === 'string') {
         try { localStorage.setItem(STORAGE_KEYS.COMPANY_NAME, data.companyName); } catch (e) {}
@@ -4168,21 +4188,23 @@ service cloud.firestore {
                       ${v.cancelReason ? `<div class="text-[11px] text-rose-600 dark:text-rose-400 font-bold mt-0.5">❌ Powód anulowania: ${v.cancelReason}</div>` : ''}
                       ${client ? `<div class="text-xs text-zinc-600 dark:text-zinc-400 mt-1">🏠 Adres klienta: ${client.city}, ${client.street} • <a href="tel:${client.phone}" class="text-emerald-600 dark:text-emerald-400 font-bold underline">📞 ${client.phone}</a></div>` : (v.clientCity || v.clientStreet || v.clientPhone ? `<div class="text-xs text-zinc-600 dark:text-zinc-400 mt-1">🏠 Adres: ${v.clientCity || ''}${v.clientStreet ? ', ' + v.clientStreet : ''} • <a href="tel:${v.clientPhone || ''}" class="text-emerald-600 dark:text-emerald-400 font-bold underline">📞 ${v.clientPhone || '—'}</a></div>` : '')}
                     </div>
-                    <div class="flex items-center gap-1.5 shrink-0 flex-wrap">
+                    <div class="flex flex-col sm:items-end gap-1.5 shrink-0 w-full sm:w-auto">
                       ${!isCanceled ? `
-                        <button onclick="handleVisitActionButton('${v.id}')" class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold transition ${isDone ? 'bg-zinc-200 dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'}">
+                        <button onclick="handleVisitActionButton('${v.id}')" class="w-full sm:w-auto px-3 py-1.5 rounded-xl text-xs font-extrabold transition text-center shadow-sm ${isDone ? 'bg-zinc-200 dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}">
                           ${isDone ? (isPlannerView ? '✓ Zamknięte' : '✓ Zamknięte (Cofnij)') : (isPlannerView ? 'Zamknij' : 'Zamknij zlecenie')}
                         </button>
                       ` : ''}
-                      ${!isDone ? `
-                        <button onclick="cancelOrRestoreVisit('${v.id}')" class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold transition ${isCanceled ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800' : 'bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800'}" title="${isCanceled ? 'Przywróć zlecenie do realizacji' : 'Oznacz zlecenie jako anulowane'}">
-                          ${isCanceled ? (isPlannerView ? 'Przywróć' : 'Przywróć zlecenie') : (isPlannerView ? 'Anuluj' : 'Anuluj zlecenie')}
+                      <div class="flex items-center gap-1.5 justify-end w-full sm:w-auto">
+                        ${!isDone ? `
+                          <button onclick="cancelOrRestoreVisit('${v.id}')" class="flex-1 sm:flex-initial px-2.5 py-1.5 rounded-xl text-xs font-bold transition text-center ${isCanceled ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800' : 'bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800'}" title="${isCanceled ? 'Przywróć zlecenie do realizacji' : 'Oznacz zlecenie jako anulowane'}">
+                            ${isCanceled ? (isPlannerView ? 'Przywróć' : 'Przywróć zlecenie') : (isPlannerView ? 'Anuluj' : 'Anuluj zlecenie')}
+                          </button>
+                        ` : ''}
+                        <button onclick="deleteVisit('${v.id}')" class="text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 p-1.5 rounded-xl border border-transparent hover:border-rose-200 dark:hover:border-rose-800 inline-flex items-center justify-center gap-1 text-xs font-bold transition" title="Usuń całkowicie zlecenie (wymaga hasła)">
+                          <i data-lucide="lock" class="w-3 h-3"></i>
+                          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                         </button>
-                      ` : ''}
-                      <button onclick="deleteVisit('${v.id}')" class="text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 px-2 py-1.5 rounded-xl border border-transparent hover:border-rose-200 dark:hover:border-rose-800 inline-flex items-center gap-1 text-xs font-bold transition" title="Usuń całkowicie zlecenie (wymaga hasła)">
-                        <i data-lucide="lock" class="w-3 h-3"></i>
-                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                      </button>
+                      </div>
                     </div>
                   </div>
                 `;
@@ -7139,6 +7161,32 @@ service cloud.firestore {
       }).join('');
     }
 
+    function detectCustomSectionKind(sec) {
+      if (!sec) return 'table';
+      const explicitKind = sec.getAttribute('data-section-kind');
+      if (explicitKind) return explicitKind;
+
+      const table = sec.querySelector('table');
+      if (!table) return 'text';
+
+      const theadText = (table.querySelector('thead')?.innerText || '').toLowerCase();
+      const titleText = (sec.querySelector('[contenteditable]')?.innerText || '').toLowerCase();
+      const firstRowCells = table.querySelectorAll('tbody tr:first-child td');
+
+      if (theadText.includes('wykonano') || theadText.includes('status') || titleText.includes('wykaz') || titleText.includes('czynno') || sec.querySelector('.insp-row-lp')) {
+        return 'inspection_checklist';
+      }
+
+      if (firstRowCells.length >= 1) {
+        const firstCellText = (firstRowCells[0]?.innerText || '').trim();
+        if (firstCellText === '☑' || firstCellText === '☐' || titleText.includes('punkty kontrolne') || titleText.includes('☑')) {
+          return 'checklist';
+        }
+      }
+
+      return 'table';
+    }
+
     function onProtocolKindSelectChange(kind) {
       const allBoxes = [
         'proto-fields-ac-install',
@@ -7155,10 +7203,13 @@ service cloud.firestore {
       const tpl = (window.protocolTemplatesData || DEFAULT_PROTOCOL_TEMPLATES).find(t => t.id === kind);
       const isBuiltInSpecial = ['ac_install', 'ac_inspection', 'gas_boiler_inspection', 'gas_boiler_install', 'hp_inspection', 'hp_install', 'universal_service'].includes(kind);
 
-      const hascustomEditedChecklist = tpl && isBuiltInSpecial && (() => {
-        const def = DEFAULT_PROTOCOL_TEMPLATES.find(d => d.id === kind);
-        return JSON.stringify(def?.checklist || []) !== JSON.stringify(tpl.checklist || []);
-      })();
+      const hascustomEditedChecklist = tpl && (
+        Boolean(tpl.customEditedHtml) ||
+        (isBuiltInSpecial && (() => {
+          const def = DEFAULT_PROTOCOL_TEMPLATES.find(d => d.id === kind);
+          return JSON.stringify(def?.checklist || []) !== JSON.stringify(tpl.checklist || []);
+        })())
+      );
 
       if (kind === 'ac_install' && !hascustomEditedChecklist) document.getElementById('proto-fields-ac-install')?.classList.remove('hidden');
       else if (kind === 'ac_inspection' && !hascustomEditedChecklist) document.getElementById('proto-fields-ac-inspection')?.classList.remove('hidden');
@@ -7250,36 +7301,160 @@ service cloud.firestore {
             const sections = doc.querySelectorAll('.protocol-custom-section');
 
             sections.forEach((sec, sIdx) => {
+              const secKind = detectCustomSectionKind(sec);
               const secTitleEl = sec.querySelector('[contenteditable]');
-              const secTitle = (secTitleEl?.innerText || 'Własna tabela parametrów / pomiarów').trim();
-              const table = sec.querySelector('table');
+              const secTitle = (secTitleEl?.innerText || '').trim() || (
+                secKind === 'table' ? '📊 Tabela parametrów / pomiarów' :
+                secKind === 'inspection_checklist' ? '📋 Wykaz czynności kontrolnych' :
+                secKind === 'checklist' ? '☑️ Punkty kontrolne' :
+                '📝 Uwagi i zalecenia'
+              );
 
-              if (table) {
-                const tbodyRows = table.querySelectorAll('tbody tr');
-                if (tbodyRows.length > 0) {
-                  hasCustomSections = true;
-                  const secBlock = document.createElement('div');
-                  secBlock.className = 'space-y-1.5 pt-2 border-t border-teal-200 dark:border-teal-800 first:border-0 first:pt-0';
-                  secBlock.innerHTML = `
-                    <div class="font-extrabold text-[10px] uppercase text-teal-900 dark:text-teal-200">${escapeHtml(secTitle)}:</div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="proto-custom-grid-${sIdx}"></div>
-                  `;
-                  const grid = secBlock.querySelector(`#proto-custom-grid-${sIdx}`);
-                  tbodyRows.forEach((row, rIdx) => {
-                    const cells = row.querySelectorAll('td');
-                    if (cells.length >= 2) {
-                      const labelText = (cells[0].innerText || `Parametr ${rIdx + 1}`).trim();
-                      const defaultVal = (cells[1].innerText || '').trim();
-                      const itemEl = document.createElement('div');
-                      itemEl.innerHTML = `
-                        <label class="block text-[10px] font-bold text-zinc-600 dark:text-zinc-300 mb-0.5">${escapeHtml(labelText)}</label>
-                        <input type="text" class="proto-custom-table-input w-full px-2.5 py-1.5 rounded-lg border border-teal-300 dark:border-teal-700 bg-white dark:bg-zinc-900 text-xs font-semibold" data-sec-idx="${sIdx}" data-row-idx="${rIdx}" value="${escapeHtml(defaultVal)}">
-                      `;
-                      grid.appendChild(itemEl);
-                    }
-                  });
-                  customSectionsBox.appendChild(secBlock);
+              if (secKind === 'table') {
+                const table = sec.querySelector('table');
+                if (table) {
+                  const theadThs = Array.from(table.querySelectorAll('thead th:not(.protocol-no-print)'));
+                  const tbodyRows = table.querySelectorAll('tbody tr');
+                  if (tbodyRows.length > 0) {
+                    hasCustomSections = true;
+                    const win = document.createElement('div');
+                    win.className = 'p-3.5 rounded-2xl bg-teal-50/80 dark:bg-teal-950/40 border border-teal-300 dark:border-teal-700/80 space-y-2.5 shadow-sm';
+                    win.innerHTML = `
+                      <div class="flex items-center justify-between border-b border-teal-200 dark:border-teal-800/80 pb-2">
+                        <div class="font-extrabold text-xs text-teal-950 dark:text-teal-200 uppercase flex items-center gap-1.5">
+                          <span>📊</span>
+                          <span>${escapeHtml(secTitle)}</span>
+                        </div>
+                        <span class="text-[10px] font-bold text-teal-700 dark:text-teal-300 bg-teal-100 dark:bg-teal-900/60 px-2 py-0.5 rounded-full border border-teal-200 dark:border-teal-800">Tabela pomiarów</span>
+                      </div>
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="proto-custom-grid-${sIdx}"></div>
+                    `;
+                    const grid = win.querySelector(`#proto-custom-grid-${sIdx}`);
+                    tbodyRows.forEach((row, rIdx) => {
+                      const cells = row.querySelectorAll('td');
+                      if (cells.length >= 2) {
+                        const rowLabel = (cells[0].innerText || `Parametr ${rIdx + 1}`).trim();
+                        if (cells.length > 2 && theadThs.length > 2) {
+                          for (let c = 1; c < cells.length; c++) {
+                            if (cells[c].classList.contains('protocol-no-print')) continue;
+                            const colHeader = (theadThs[c]?.innerText || `Kolumna ${c + 1}`).trim();
+                            const defaultVal = (cells[c].innerText || '').trim();
+                            const itemEl = document.createElement('div');
+                            itemEl.innerHTML = `
+                              <label class="block text-[10px] font-bold text-zinc-600 dark:text-zinc-300 mb-0.5">${escapeHtml(rowLabel)} — ${escapeHtml(colHeader)}</label>
+                              <input type="text" class="proto-custom-table-input w-full px-2.5 py-1.5 rounded-lg border border-teal-300 dark:border-teal-700 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-800 dark:text-zinc-100 outline-none focus:border-teal-500" data-sec-idx="${sIdx}" data-row-idx="${rIdx}" data-col-idx="${c}" value="${escapeHtml(defaultVal)}">
+                            `;
+                            grid.appendChild(itemEl);
+                          }
+                        } else {
+                          const defaultVal = (cells[1].innerText || '').trim();
+                          const itemEl = document.createElement('div');
+                          itemEl.innerHTML = `
+                            <label class="block text-[10px] font-bold text-zinc-600 dark:text-zinc-300 mb-0.5">${escapeHtml(rowLabel)}</label>
+                            <input type="text" class="proto-custom-table-input w-full px-2.5 py-1.5 rounded-lg border border-teal-300 dark:border-teal-700 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-800 dark:text-zinc-100 outline-none focus:border-teal-500" data-sec-idx="${sIdx}" data-row-idx="${rIdx}" data-col-idx="1" value="${escapeHtml(defaultVal)}">
+                          `;
+                          grid.appendChild(itemEl);
+                        }
+                      }
+                    });
+                    customSectionsBox.appendChild(win);
+                  }
                 }
+              } else if (secKind === 'inspection_checklist') {
+                const table = sec.querySelector('table');
+                if (table) {
+                  const tbodyRows = table.querySelectorAll('tbody tr');
+                  if (tbodyRows.length > 0) {
+                    hasCustomSections = true;
+                    const win = document.createElement('div');
+                    win.className = 'p-3.5 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/80 space-y-2.5 shadow-sm';
+                    win.innerHTML = `
+                      <div class="flex items-center justify-between border-b border-emerald-200 dark:border-emerald-800/80 pb-2">
+                        <div class="font-extrabold text-xs text-emerald-950 dark:text-emerald-200 uppercase flex items-center gap-1.5">
+                          <span>📋</span>
+                          <span>${escapeHtml(secTitle)}</span>
+                        </div>
+                        <span class="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">Czynności serwisowe</span>
+                      </div>
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5" id="proto-custom-insp-${sIdx}"></div>
+                    `;
+                    const grid = win.querySelector(`#proto-custom-insp-${sIdx}`);
+                    tbodyRows.forEach((row, rIdx) => {
+                      const cells = row.querySelectorAll('td');
+                      if (cells.length >= 2) {
+                        const rowLp = (cells[0].innerText || `${rIdx + 1}.`).trim();
+                        const desc = (cells[1].innerText || '').trim();
+                        const statusTxt = cells.length >= 3 ? (cells[2].innerText || '').trim().toLowerCase() : '';
+                        const isDone = !statusTxt.includes('nie dotyczy') && !statusTxt.includes('niewykonano');
+                        const itemEl = document.createElement('label');
+                        itemEl.className = 'flex items-center gap-2 cursor-pointer text-[11px] font-semibold p-2 rounded-xl bg-white dark:bg-zinc-900 border border-emerald-200 dark:border-emerald-800/80 hover:bg-emerald-50/50 dark:hover:bg-zinc-800 transition select-none';
+                        itemEl.innerHTML = `
+                          <input type="checkbox" class="proto-custom-insp-chk rounded text-emerald-600 focus:ring-emerald-500" data-sec-idx="${sIdx}" data-row-idx="${rIdx}" ${isDone ? 'checked' : ''}>
+                          <span class="text-zinc-800 dark:text-zinc-200 leading-snug">${escapeHtml(rowLp)} ${escapeHtml(desc)}</span>
+                        `;
+                        grid.appendChild(itemEl);
+                      }
+                    });
+                    customSectionsBox.appendChild(win);
+                  }
+                }
+              } else if (secKind === 'checklist') {
+                const table = sec.querySelector('table');
+                if (table) {
+                  const tbodyRows = table.querySelectorAll('tbody tr');
+                  if (tbodyRows.length > 0) {
+                    hasCustomSections = true;
+                    const win = document.createElement('div');
+                    win.className = 'p-3.5 rounded-2xl bg-sky-50/80 dark:bg-sky-950/40 border border-sky-300 dark:border-sky-700/80 space-y-2.5 shadow-sm';
+                    win.innerHTML = `
+                      <div class="flex items-center justify-between border-b border-sky-200 dark:border-sky-800/80 pb-2">
+                        <div class="font-extrabold text-xs text-sky-950 dark:text-sky-200 uppercase flex items-center gap-1.5">
+                          <span>☑️</span>
+                          <span>${escapeHtml(secTitle)}</span>
+                        </div>
+                        <span class="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-100 dark:bg-sky-900/60 px-2 py-0.5 rounded-full border border-sky-200 dark:border-sky-800">Punkty kontrolne</span>
+                      </div>
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5" id="proto-custom-chk-${sIdx}"></div>
+                    `;
+                    const grid = win.querySelector(`#proto-custom-chk-${sIdx}`);
+                    tbodyRows.forEach((row, rIdx) => {
+                      const cells = row.querySelectorAll('td');
+                      if (cells.length >= 2) {
+                        const checkTxt = (cells[0].innerText || '').trim();
+                        const itemText = (cells[1].innerText || '').trim();
+                        const isChecked = checkTxt !== '☐';
+                        const itemEl = document.createElement('label');
+                        itemEl.className = 'flex items-center gap-2 cursor-pointer text-[11px] font-semibold p-2 rounded-xl bg-white dark:bg-zinc-900 border border-sky-200 dark:border-sky-800/80 hover:bg-sky-50/50 dark:hover:bg-zinc-800 transition select-none';
+                        itemEl.innerHTML = `
+                          <input type="checkbox" class="proto-custom-checklist-chk rounded text-sky-600 focus:ring-sky-500" data-sec-idx="${sIdx}" data-row-idx="${rIdx}" ${isChecked ? 'checked' : ''}>
+                          <span class="text-zinc-800 dark:text-zinc-200 leading-snug">${escapeHtml(itemText)}</span>
+                        `;
+                        grid.appendChild(itemEl);
+                      }
+                    });
+                    customSectionsBox.appendChild(win);
+                  }
+                }
+              } else if (secKind === 'text') {
+                const allContentEditables = sec.querySelectorAll('[contenteditable]');
+                const textDiv = allContentEditables.length > 1 ? allContentEditables[1] : (sec.querySelector('div[style*="min-height"]') || sec.querySelector('div:last-child'));
+                const defaultText = (textDiv?.innerText || '').trim();
+                hasCustomSections = true;
+                const win = document.createElement('div');
+                win.className = 'p-3.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/80 space-y-2 shadow-sm';
+                win.innerHTML = `
+                  <div class="flex items-center justify-between border-b border-amber-200 dark:border-amber-800/80 pb-2">
+                    <div class="font-extrabold text-xs text-amber-950 dark:text-amber-200 uppercase flex items-center gap-1.5">
+                      <span>📝</span>
+                      <span>${escapeHtml(secTitle)}</span>
+                    </div>
+                    <span class="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/60 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">Uwagi / Zalecenia</span>
+                  </div>
+                  <div>
+                    <textarea rows="2" class="proto-custom-text-input w-full px-2.5 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 bg-white dark:bg-zinc-900 text-xs text-zinc-800 dark:text-zinc-100 outline-none leading-relaxed focus:border-amber-500" data-sec-idx="${sIdx}" placeholder="Wpisz treść uwag lub zaleceń do tej sekcji...">${escapeHtml(defaultText)}</textarea>
+                  </div>
+                `;
+                customSectionsBox.appendChild(win);
               }
             });
           } catch (e) {
@@ -7340,6 +7515,173 @@ service cloud.firestore {
       } catch (e) {
         console.error('Błąd scalania sekcji szablonu:', e);
         return baseHtml;
+      }
+    }
+
+    function applyVisitDataToTemplateHtml(tplHtml, proto) {
+      if (!tplHtml || typeof tplHtml !== 'string') return renderProtocolSheetHtml(proto);
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(tplHtml, 'text/html');
+
+        // 1. Numer protokołu
+        const nrDiv = Array.from(doc.querySelectorAll('div')).find(d => (d.textContent || '').trim().startsWith('Nr:'));
+        if (nrDiv) {
+          nrDiv.textContent = 'Nr: ' + (proto.protocolId || '-');
+        }
+
+        // 2. Data wykonania
+        const dateDiv = Array.from(doc.querySelectorAll('div')).find(d => (d.textContent || '').trim().startsWith('Data wykonania:'));
+        if (dateDiv) {
+          dateDiv.innerHTML = 'Data wykonania: <strong>' + formatDatePL(proto.date) + '</strong>';
+        }
+
+        // 3. Blok klienta (TD zawierający "1. Dane Zleceniodawcy")
+        const clientTitleDiv = Array.from(doc.querySelectorAll('div')).find(d => (d.textContent || '').trim().startsWith('1. Dane Zleceniodawcy'));
+        if (clientTitleDiv && clientTitleDiv.parentElement && clientTitleDiv.parentElement.tagName === 'TD') {
+          const clientCell = clientTitleDiv.parentElement;
+          const hasSecondAddress = Boolean(proto.installAddress && proto.installAddress.trim() && proto.installAddress.trim().toLowerCase() !== (proto.clientAddress || '').trim().toLowerCase());
+          clientCell.innerHTML = 
+            '<div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:3px;">1. Dane Zleceniodawcy / Klienta</div>' +
+            '<div style="font-weight:800;font-size:12px;color:#0f172a;">' + (proto.clientName || '-') + '</div>' +
+            (proto.clientNip ? '<div style="font-weight:700;color:#059669;">NIP: ' + proto.clientNip + '</div>' : '') +
+            '<div>Adres Zleceniodawcy: <strong>' + (proto.clientAddress || '-') + '</strong></div>' +
+            (hasSecondAddress ? '<div style="margin-top:2px;color:#312e81;">Adres montażu urządzenia: <strong>' + proto.installAddress + '</strong></div>' : '') +
+            '<div style="margin-top:2px;">Telefon: <strong>' + (proto.clientPhone || '-') + '</strong>' + (proto.clientEmail ? ' • E-mail: <strong>' + proto.clientEmail + '</strong>' : '') + '</div>';
+        }
+
+        // 4. Blok wykonawcy i urządzenia (TD zawierający "2. Wykonawca")
+        const execTitleDiv = Array.from(doc.querySelectorAll('div')).find(d => (d.textContent || '').trim().startsWith('2. Wykonawca'));
+        if (execTitleDiv && execTitleDiv.parentElement && execTitleDiv.parentElement.tagName === 'TD') {
+          const execCell = execTitleDiv.parentElement;
+          execCell.innerHTML = 
+            '<div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:3px;">2. Wykonawca i identyfikacja urządzenia</div>' +
+            '<div style="font-weight:800;font-size:12px;color:#0f172a;">' + escapeHtml(getSavedCompanyName()) + '</div>' +
+            '<div>Serwisant / Instalator: <strong>' + (proto.technician || '-') + '</strong></div>' +
+            '<div>Urządzenie: <strong>' + (proto.deviceModel || '-') + '</strong></div>' +
+            '<div>Nr seryjny (S/N): <strong style="font-family:monospace;">' + (proto.serialIndoor || 'Brak danych') + (proto.serialOutdoor ? ' / JZ: ' + proto.serialOutdoor : '') + '</strong></div>';
+        }
+
+        // 5. Zaktualizuj dane we wszystkich własnych oknach i sekcjach ze wzoru protokołu
+        const customSections = doc.querySelectorAll('.protocol-custom-section');
+
+        // 5a. Tabele pomiarów / parametrów (.proto-custom-table-input)
+        document.querySelectorAll('.proto-custom-table-input').forEach(inp => {
+          const sIdx = Number(inp.getAttribute('data-sec-idx'));
+          const rIdx = Number(inp.getAttribute('data-row-idx'));
+          const cIdx = Number(inp.getAttribute('data-col-idx') || 1);
+          const val = inp.value.trim();
+          if (customSections[sIdx]) {
+            const rows = customSections[sIdx].querySelectorAll('tbody tr');
+            if (rows[rIdx]) {
+              const cells = rows[rIdx].querySelectorAll('td');
+              if (cells[cIdx]) {
+                cells[cIdx].textContent = val;
+              }
+            }
+          }
+        });
+
+        // 5b. Czynności serwisowe z tabeli (.proto-custom-insp-chk)
+        document.querySelectorAll('.proto-custom-insp-chk').forEach(chk => {
+          const sIdx = Number(chk.getAttribute('data-sec-idx'));
+          const rIdx = Number(chk.getAttribute('data-row-idx'));
+          const isDone = chk.checked;
+          if (customSections[sIdx]) {
+            const rows = customSections[sIdx].querySelectorAll('tbody tr');
+            if (rows[rIdx]) {
+              const cells = rows[rIdx].querySelectorAll('td');
+              const statusCell = cells.length >= 3 ? cells[2] : cells[cells.length - 1];
+              if (statusCell) {
+                if (isDone) {
+                  statusCell.textContent = '✓ TAK (Wykonano)';
+                  statusCell.style.color = '#059669';
+                } else {
+                  statusCell.textContent = 'NIE DOTYCZY';
+                  statusCell.style.color = '#64748b';
+                }
+              }
+            }
+          }
+        });
+
+        // 5c. Punkty kontrolne checklisty (.proto-custom-checklist-chk)
+        document.querySelectorAll('.proto-custom-checklist-chk').forEach(chk => {
+          const sIdx = Number(chk.getAttribute('data-sec-idx'));
+          const rIdx = Number(chk.getAttribute('data-row-idx'));
+          const isChecked = chk.checked;
+          if (customSections[sIdx]) {
+            const rows = customSections[sIdx].querySelectorAll('tbody tr');
+            if (rows[rIdx]) {
+              const cells = rows[rIdx].querySelectorAll('td');
+              if (cells.length > 0) {
+                cells[0].textContent = isChecked ? '☑' : '☐';
+                cells[0].style.color = isChecked ? '#0284c7' : '#94a3b8';
+              }
+            }
+          }
+        });
+
+        // 5d. Bloki tekstowe / Uwagi i zalecenia (.proto-custom-text-input)
+        document.querySelectorAll('.proto-custom-text-input').forEach(txt => {
+          const sIdx = Number(txt.getAttribute('data-sec-idx'));
+          const val = txt.value.trim();
+          if (customSections[sIdx]) {
+            const allContentEditables = customSections[sIdx].querySelectorAll('[contenteditable]');
+            const textDiv = allContentEditables.length > 1 ? allContentEditables[1] : (customSections[sIdx].querySelector('div[style*="min-height"]') || customSections[sIdx].querySelector('div:last-child'));
+            if (textDiv) {
+              textDiv.textContent = val;
+            }
+          }
+        });
+
+        // 6. Zaktualizuj podpisy
+        const sigFooter = doc.querySelector('.protocol-footer-signatures-wrap');
+        const sigTechImg = proto.sigTechDataUrl
+          ? '<img src="' + proto.sigTechDataUrl + '" style="max-height:78px;max-width:100%;margin:0 auto;display:block;background:#ffffff;" alt="Podpis serwisanta">'
+          : '<div style="height:65px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px;">(Brak podpisu cyfrowego)</div>';
+        const sigClientImg = proto.sigClientDataUrl
+          ? '<img src="' + proto.sigClientDataUrl + '" style="max-height:78px;max-width:100%;margin:0 auto;display:block;background:#ffffff;" alt="Podpis klienta">'
+          : '<div style="height:65px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px;">(Brak podpisu cyfrowego)</div>';
+
+        if (sigFooter) {
+          const tempContainer = document.createElement('div');
+          tempContainer.innerHTML = renderProtocolSignaturesFooterHtml(proto, sigTechImg, sigClientImg);
+          const newFooter = tempContainer.firstElementChild;
+          if (newFooter) {
+            sigFooter.replaceWith(newFooter);
+          }
+        }
+
+        // 7. Zaktualizuj uwagi i zużyte materiały jeśli istnieją
+        const allLeafDivs = Array.from(doc.querySelectorAll('div')).filter(el => el.children.length === 0);
+        if (proto.comments) {
+          const commentsHeader = allLeafDivs.find(el => {
+            const txt = (el.textContent || '').toLowerCase().trim();
+            return txt.includes('uwagi serwisowe') || txt.includes('uwagi montażowe');
+          });
+          if (commentsHeader && commentsHeader.nextElementSibling) {
+            commentsHeader.nextElementSibling.textContent = proto.comments;
+          }
+        }
+        if (proto.usedMaterials) {
+          const matHeader = allLeafDivs.find(el => {
+            const txt = (el.textContent || '').toLowerCase().trim();
+            return txt.includes('zużyte materiały');
+          });
+          if (matHeader && matHeader.nextElementSibling) {
+            matHeader.nextElementSibling.textContent = proto.usedMaterials;
+          }
+        }
+
+        // 8. Oczyszczenie wystawionego protokołu z przycisków edycji wzoru i atrybutów contenteditable
+        doc.querySelectorAll('.protocol-no-print').forEach(el => el.remove());
+        doc.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+
+        return doc.body.innerHTML;
+      } catch (e) {
+        console.error('Błąd nanoszenia danych wizyty na wzór protokołu:', e);
+        return tplHtml;
       }
     }
 
@@ -7585,10 +7927,13 @@ service cloud.firestore {
       const protoKind = document.getElementById('proto-form-kind')?.value || 'ac_inspection';
       const tpl = (window.protocolTemplatesData || DEFAULT_PROTOCOL_TEMPLATES).find(t => t.id === protoKind);
       const isBuiltInSpecial = ['ac_install', 'ac_inspection', 'gas_boiler_inspection', 'gas_boiler_install', 'hp_inspection', 'hp_install', 'universal_service'].includes(protoKind);
-      const hasCustomEditedChecklist = tpl && isBuiltInSpecial && (() => {
-        const def = DEFAULT_PROTOCOL_TEMPLATES.find(d => d.id === protoKind);
-        return JSON.stringify(def?.checklist || []) !== JSON.stringify(tpl.checklist || []);
-      })();
+      const hasCustomEditedChecklist = tpl && (
+        Boolean(tpl.customEditedHtml) ||
+        (isBuiltInSpecial && (() => {
+          const def = DEFAULT_PROTOCOL_TEMPLATES.find(d => d.id === protoKind);
+          return JSON.stringify(def?.checklist || []) !== JSON.stringify(tpl.checklist || []);
+        })())
+      );
 
       const protoIdGenerated = `PROT/${(visit.date || toYMD(new Date())).replace(/-/g, '')}/${Math.floor(100 + Math.random() * 900)}`;
       const clientAddrFormatted = client ? `${client.postalCode ? client.postalCode + ' ' : ''}${client.city || ''}, ${client.street || ''}` : (visit.clientAddress || `${visit.clientPostalCode ? visit.clientPostalCode + ' ' : ''}${visit.clientCity || ''}${visit.clientStreet ? ', ' + visit.clientStreet : ''}`.trim() || '—');
@@ -7760,34 +8105,9 @@ service cloud.firestore {
         };
       }
 
-      // Jeśli szablon posiada zedytowany arkusz A4 z tabelami pomiarów lub własnymi sekcjami
-      if (tpl && tpl.customEditedHtml && tpl.customEditedHtml.includes('protocol-custom-section')) {
-        try {
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(tpl.customEditedHtml, 'text/html');
-
-          // Zaktualizuj wartości w tabelach pomiarów z wpisanych pól w modalu zamknięcia
-          document.querySelectorAll('.proto-custom-table-input').forEach(inp => {
-            const sIdx = Number(inp.getAttribute('data-sec-idx'));
-            const rIdx = Number(inp.getAttribute('data-row-idx'));
-            const val = inp.value.trim();
-            const customSections = doc.querySelectorAll('.protocol-custom-section');
-            if (customSections[sIdx]) {
-              const rows = customSections[sIdx].querySelectorAll('tbody tr');
-              if (rows[rIdx]) {
-                const cells = rows[rIdx].querySelectorAll('td');
-                if (cells.length >= 2) {
-                  cells[1].textContent = val;
-                }
-              }
-            }
-          });
-
-          const baseVisitHtml = renderProtocolSheetHtml(protoObj);
-          protoObj.customEditedHtml = mergeTemplateCustomSections(baseVisitHtml, doc.body.innerHTML);
-        } catch (e) {
-          console.error('Błąd scalania sekcji szablonu do protokołu zlecenia:', e);
-        }
+      // Jeśli szablon posiada zedytowany arkusz A4 (własne tabele pomiarów, usunięte punkty, zmodyfikowany tekst)
+      if (tpl && tpl.customEditedHtml) {
+        protoObj.customEditedHtml = applyVisitDataToTemplateHtml(tpl.customEditedHtml, protoObj);
       }
 
       return protoObj;
@@ -8181,9 +8501,8 @@ service cloud.firestore {
       const banner = document.getElementById('protocol-preview-mode-banner');
       const bannerText = document.getElementById('protocol-preview-mode-banner-text');
 
-      if (btnSave) btnSave.classList.remove('hidden');
-
       if (isTemplate) {
+        if (btnSave) btnSave.classList.remove('hidden');
         if (btnReset) btnReset.classList.remove('hidden');
         if (wrapAddSec) wrapAddSec.classList.remove('hidden');
         if (banner) {
@@ -8191,18 +8510,20 @@ service cloud.firestore {
           banner.classList.remove('hidden');
         }
         if (bannerText) {
-          bannerText.innerHTML = '✏️ <strong>Edycja wzoru / szablonu protokołu:</strong> Kliknij w dowolny tekst lub dodaj sekcje z menu powyżej. Wprowadzone zmiany zapisują się w szablonie protokołu.';
+          bannerText.innerHTML = '📋 <strong>Edycja wzoru / szablonu protokołu:</strong> Kliknij w dowolny tekst lub dodaj sekcje z menu powyżej. Wprowadzone zmiany zapisują się w szablonie protokołu.';
         }
       } else {
-        // Wystawiony protokół wizyty — umożliwiamy edycję komórek pomiarów i uwag bezpośrednio na arkuszu!
+        // Wystawiony protokół zlecenia (naprawy/serwisu/montażu/przeglądu) — dokument oficjalny
+        // Edycja szablonów dozwolona jest wyłącznie w module: Wzory protokołów i listy kontrolne
+        if (btnSave) btnSave.classList.add('hidden');
         if (btnReset) btnReset.classList.add('hidden');
         if (wrapAddSec) wrapAddSec.classList.add('hidden');
         if (banner) {
-          banner.className = 'px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/70 flex items-center justify-between gap-2 text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold shrink-0';
+          banner.className = 'px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 flex items-center justify-between gap-2 text-[11px] text-zinc-700 dark:text-zinc-300 font-medium shrink-0';
           banner.classList.remove('hidden');
         }
         if (bannerText) {
-          bannerText.innerHTML = '📝 <strong>Protokół wygenerowany do zlecenia:</strong> Możesz edytować i uzupełnić pomiary lub uwagi bezpośrednio na arkuszu. Po naniesieniu zmian kliknij „Zapisz zmiany”.';
+          bannerText.innerHTML = '📄 <strong>Wystawiony protokół zlecenia:</strong> Oficjalny dokument gotowy do pobrania PDF, wydruku lub wysyłki e-mail. Edycja wzorów i punktów kontrolnych odbywa się wyłącznie w zakładce „Wzory protokołów i listy kontrolne”.';
         }
       }
 
@@ -8232,8 +8553,16 @@ service cloud.firestore {
       const container = document.getElementById('protocol-printable-area');
       if (container) {
         container.innerHTML = proto.customEditedHtml || renderProtocolSheetHtml(proto);
-        makeAllProtocolFieldsEditable(container);
-        setupLiveAutoSaveForProtocol(container);
+        if (isTemplate) {
+          makeAllProtocolFieldsEditable(container);
+          setupLiveAutoSaveForProtocol(container);
+        } else {
+          // Dla wystawionego protokołu: całkowity brak edycji wzoru
+          container.oninput = null;
+          container.onblur = null;
+          container.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+          container.querySelectorAll('.protocol-no-print').forEach(el => el.remove());
+        }
       }
       openModal('modal-protocol-preview');
     }
@@ -8296,6 +8625,32 @@ service cloud.firestore {
           foundTpl.customEditedHtml = editedHtml;
           foundTpl.updatedAt = Date.now();
           foundTpl.isCustomized = true;
+
+          // Automatycznie zaktualizuj listę checklist w obiekcie szablonu z treści arkusza A4
+          try {
+            const pDoc = new DOMParser().parseFromString(editedHtml, 'text/html');
+            const checkTable = Array.from(pDoc.querySelectorAll('table')).find(tbl => {
+              const text = (tbl.innerText || '').toLowerCase();
+              return (text.includes('czynno') || text.includes('zakres')) && (text.includes('wykonano') || text.includes('status'));
+            });
+            if (checkTable) {
+              const rows = checkTable.querySelectorAll('tbody tr');
+              const parsedChecklist = [];
+              rows.forEach(tr => {
+                const tds = tr.querySelectorAll('td');
+                if (tds.length >= 2) {
+                  const itemText = (tds[1].innerText || '').trim();
+                  if (itemText && !itemText.toLowerCase().includes('czynność kontrolna') && !itemText.toLowerCase().includes('opis czynności')) {
+                    parsedChecklist.push(itemText);
+                  }
+                }
+              });
+              if (parsedChecklist.length > 0) {
+                foundTpl.checklist = parsedChecklist;
+              }
+            }
+          } catch (e) {}
+
           persistData();
         }
       }
@@ -8325,23 +8680,18 @@ service cloud.firestore {
 
     function autoSaveEditedProtocolHtml() {
       const container = document.getElementById('protocol-printable-area');
-      if (!container || !currentPreviewProtocolObj) return;
+      if (!container || !currentPreviewProtocolObj || !currentPreviewProtocolObj.isTemplatePreview) return;
       syncProtocolAcrossAllState(currentPreviewProtocolObj, container.innerHTML);
       persistData();
     }
 
     function saveEditedProtocolContent() {
-      if (!currentPreviewProtocolObj) return;
+      if (!currentPreviewProtocolObj || !currentPreviewProtocolObj.isTemplatePreview) return;
       const container = document.getElementById('protocol-printable-area');
       if (!container) return;
-      const isTemplate = Boolean(currentPreviewProtocolObj.isTemplatePreview);
       syncProtocolAcrossAllState(currentPreviewProtocolObj, container.innerHTML);
       persistData();
-      if (isTemplate) {
-        showToast('Zapisano ręczne zmiany we wzorze protokołu!');
-      } else {
-        showToast('Zapisano wprowadzone pomiary i zmiany w protokole tego zlecenia!');
-      }
+      showToast('Zapisano ręczne zmiany we wzorze protokołu!');
     }
 
     function resetEditedProtocolToTemplate() {
@@ -8378,7 +8728,7 @@ service cloud.firestore {
       let sectionHtml = '';
       if (kind === 'inspection_checklist') {
         sectionHtml = `
-          <div class="protocol-custom-section" style="margin-top:14px;margin-bottom:14px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:#ffffff;color:#0f172a;">
+          <div class="protocol-custom-section" data-section-kind="inspection_checklist" style="margin-top:14px;margin-bottom:14px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:#ffffff;color:#0f172a;">
             <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #059669;padding-bottom:6px;margin-bottom:8px;">
               <div contenteditable="true" spellcheck="false" style="font-size:11px;font-weight:800;text-transform:uppercase;color:#059669;outline:none;">
                 📋 Wykaz wykonanych czynności przeglądowych i serwisowych
@@ -8420,7 +8770,7 @@ service cloud.firestore {
         `;
       } else if (kind === 'checklist') {
         sectionHtml = `
-          <div class="protocol-custom-section" style="margin-top:14px;margin-bottom:14px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:#ffffff;color:#0f172a;">
+          <div class="protocol-custom-section" data-section-kind="checklist" style="margin-top:14px;margin-bottom:14px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:#ffffff;color:#0f172a;">
             <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #0284c7;padding-bottom:6px;margin-bottom:8px;">
               <div contenteditable="true" spellcheck="false" style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0369a1;outline:none;">
                 ☑️ Punkty kontrolne
@@ -8445,7 +8795,7 @@ service cloud.firestore {
         `;
       } else if (kind === 'table') {
         sectionHtml = `
-          <div class="protocol-custom-section" style="margin-top:14px;margin-bottom:14px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:#ffffff;color:#0f172a;">
+          <div class="protocol-custom-section" data-section-kind="table" style="margin-top:14px;margin-bottom:14px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:#ffffff;color:#0f172a;">
             <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #0f766e;padding-bottom:6px;margin-bottom:8px;">
               <div contenteditable="true" spellcheck="false" style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f766e;outline:none;">
                 📊 Tabela parametrów / pomiarów
@@ -8478,7 +8828,7 @@ service cloud.firestore {
         `;
       } else if (kind === 'text') {
         sectionHtml = `
-          <div class="protocol-custom-section" style="margin-top:14px;margin-bottom:14px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:#ffffff;color:#0f172a;">
+          <div class="protocol-custom-section" data-section-kind="text" style="margin-top:14px;margin-bottom:14px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:#ffffff;color:#0f172a;">
             <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #d97706;padding-bottom:6px;margin-bottom:8px;">
               <div contenteditable="true" spellcheck="false" style="font-size:11px;font-weight:800;text-transform:uppercase;color:#d97706;outline:none;">
                 📝 Uwagi serwisowe / Zalecenia po wykonaniu prac
@@ -8546,6 +8896,7 @@ service cloud.firestore {
     }
 
     function addInspectionChecklistRow(btnEl) {
+      if (!currentPreviewProtocolObj?.isTemplatePreview) return;
       const sec = btnEl.closest('.protocol-custom-section');
       if (!sec) return;
       const tbody = sec.querySelector('tbody');
@@ -8579,6 +8930,7 @@ service cloud.firestore {
     }
 
     function removeInspectionChecklistRow(btnEl) {
+      if (!currentPreviewProtocolObj?.isTemplatePreview) return;
       const tr = btnEl.closest('tr');
       const tbody = tr ? tr.closest('tbody') : null;
       if (tr) tr.remove();
@@ -8611,6 +8963,7 @@ service cloud.firestore {
     }
 
     function addColumnToTableSection(btnEl) {
+      if (!currentPreviewProtocolObj?.isTemplatePreview) return;
       const sec = btnEl.closest('.protocol-custom-section');
       if (!sec) return;
       const theadTr = sec.querySelector('thead tr');
@@ -8655,6 +9008,7 @@ service cloud.firestore {
     }
 
     function removeColumnFromTableSection(spanEl) {
+      if (!currentPreviewProtocolObj?.isTemplatePreview) return;
       const th = spanEl.closest('th');
       if (!th) return;
       const tr = th.closest('tr');
@@ -8678,6 +9032,7 @@ service cloud.firestore {
     }
 
     function addTableRowToSection(btnEl) {
+      if (!currentPreviewProtocolObj?.isTemplatePreview) return;
       const sec = btnEl.closest('.protocol-custom-section');
       if (!sec) return;
       const tbody = sec.querySelector('tbody');
@@ -8705,6 +9060,7 @@ service cloud.firestore {
     }
 
     function addChecklistRowToSection(btnEl) {
+      if (!currentPreviewProtocolObj?.isTemplatePreview) return;
       const sec = btnEl.closest('.protocol-custom-section');
       if (!sec) return;
       const tbody = sec.querySelector('tbody');
@@ -8735,6 +9091,7 @@ service cloud.firestore {
     }
 
     function removeProtocolItemRow(btnEl) {
+      if (!currentPreviewProtocolObj?.isTemplatePreview) return;
       const row = btnEl.closest('tr');
       if (!row) return;
       row.remove();
@@ -8742,6 +9099,7 @@ service cloud.firestore {
     }
 
     function removeProtocolCustomSection(btnEl) {
+      if (!currentPreviewProtocolObj?.isTemplatePreview) return;
       const sec = btnEl.closest('.protocol-custom-section');
       if (!sec) return;
       sec.remove();
@@ -8775,6 +9133,44 @@ service cloud.firestore {
       } catch (e) {
         return (typeof DEFAULT_COMPANY_LOGO_DATA_URL === 'string' && DEFAULT_COMPANY_LOGO_DATA_URL) ? DEFAULT_COMPANY_LOGO_DATA_URL : '';
       }
+    }
+
+    function getSavedCompanyLogoHeight() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEYS.COMPANY_LOGO_HEIGHT);
+        if (saved) {
+          const parsed = parseInt(saved, 10);
+          if (!isNaN(parsed) && parsed >= 30 && parsed <= 100) return parsed;
+        }
+        return 55;
+      } catch (e) {
+        return 55;
+      }
+    }
+
+    function onSettingsLogoHeightChange(val) {
+      const h = parseInt(val, 10);
+      if (isNaN(h) || h < 30 || h > 100) return;
+      try {
+        localStorage.setItem(STORAGE_KEYS.COMPANY_LOGO_HEIGHT, String(h));
+        persistData();
+      } catch (e) {}
+      const label = document.getElementById('settings-logo-height-val');
+      if (label) label.textContent = `${h} px`;
+      const slider = document.getElementById('settings-logo-height-slider');
+      if (slider && slider.value !== String(h)) slider.value = String(h);
+      const logoContainer = document.getElementById('settings-logo-preview-container');
+      if (logoContainer) {
+        logoContainer.innerHTML = getInstalLogoImgHtml();
+      }
+      const details = document.getElementById('settings-logo-details');
+      if (details && getSavedCompanyLogo()) {
+        details.innerHTML = `<span class="font-bold text-emerald-700 dark:text-emerald-300">Własna grafika firmy zapisana i aktywna</span><span class="text-[10px] text-zinc-400">Wysokość: ${h}px</span>`;
+      }
+    }
+
+    function setSettingsLogoHeightPreset(val) {
+      onSettingsLogoHeightChange(val);
     }
 
     function updateSidebarCompanyLogo() {
@@ -8838,6 +9234,12 @@ service cloud.firestore {
       const btnReset = document.getElementById('btn-reset-logo');
 
       const customLogo = getSavedCompanyLogo();
+      const currentHeight = getSavedCompanyLogoHeight();
+      const slider = document.getElementById('settings-logo-height-slider');
+      const label = document.getElementById('settings-logo-height-val');
+      if (slider) slider.value = String(currentHeight);
+      if (label) label.textContent = `${currentHeight} px`;
+
       if (logoContainer) {
         logoContainer.innerHTML = getInstalLogoImgHtml();
       }
@@ -8851,7 +9253,7 @@ service cloud.firestore {
           badge.textContent = '✓ Własne logo aktywne';
         }
         if (details) {
-          details.innerHTML = `<span class="font-bold text-emerald-700 dark:text-emerald-300">Własna grafika firmy zapisana i aktywna</span><span class="text-[10px] text-zinc-400">Wyświetla się na protokołach</span>`;
+          details.innerHTML = `<span class="font-bold text-emerald-700 dark:text-emerald-300">Własna grafika firmy zapisana i aktywna</span><span class="text-[10px] text-zinc-400">Wysokość: ${currentHeight}px</span>`;
         }
         if (btnReset) {
           btnReset.classList.remove('opacity-50', 'pointer-events-none');
@@ -8870,6 +9272,110 @@ service cloud.firestore {
       }
       renderWorkersList();
       lucide.createIcons();
+    }
+
+    function trimAndOptimizeLogoCanvas(img) {
+      let origW = img.naturalWidth || img.width;
+      let origH = img.naturalHeight || img.height;
+      if (!origW || !origH) return null;
+
+      // Limit poczatkowy dla bardzo wielkich grafik
+      const initMax = 2000;
+      if (origW > initMax || origH > initMax) {
+        const initRatio = Math.min(initMax / origW, initMax / origH);
+        origW = Math.round(origW * initRatio);
+        origH = Math.round(origH * initRatio);
+      }
+
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = origW;
+      tempCanvas.height = origH;
+      const tCtx = tempCanvas.getContext('2d');
+      tCtx.imageSmoothingEnabled = true;
+      tCtx.imageSmoothingQuality = 'high';
+      tCtx.drawImage(img, 0, 0, origW, origH);
+
+      // Automatyczne wykrywanie marginesow (przezroczystych oraz bialych)
+      let minX = origW, minY = origH, maxX = -1, maxY = -1;
+      let isCropped = false;
+
+      try {
+        const imgData = tCtx.getImageData(0, 0, origW, origH);
+        const data = imgData.data;
+
+        function isCornerWhite(x, y) {
+          const idx = (y * origW + x) * 4;
+          return data[idx + 3] > 180 && data[idx] > 238 && data[idx + 1] > 238 && data[idx + 2] > 238;
+        }
+
+        const cornersWhite = isCornerWhite(0, 0) && isCornerWhite(origW - 1, 0) && isCornerWhite(0, origH - 1) && isCornerWhite(origW - 1, origH - 1);
+
+        for (let y = 0; y < origH; y++) {
+          for (let x = 0; x < origW; x++) {
+            const idx = (y * origW + x) * 4;
+            const a = data[idx + 3];
+            const r = data[idx];
+            const g = data[idx + 1];
+            const b = data[idx + 2];
+
+            let isContent = false;
+            if (cornersWhite) {
+              if (a > 30 && (r < 240 || g < 240 || b < 240)) {
+                isContent = true;
+              }
+            } else {
+              if (a > 20) {
+                isContent = true;
+              }
+            }
+
+            if (isContent) {
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+            }
+          }
+        }
+
+        if (maxX > minX && maxY > minY) {
+          isCropped = true;
+        }
+      } catch (cropErr) {
+        console.warn('Nie udało się przeanalizować marginesów obrazu:', cropErr);
+      }
+
+      let srcX = 0, srcY = 0, srcW = origW, srcH = origH;
+      if (isCropped) {
+        const pad = 4;
+        srcX = Math.max(0, minX - pad);
+        srcY = Math.max(0, minY - pad);
+        const endX = Math.min(origW, maxX + pad + 1);
+        const endY = Math.min(origH, maxY + pad + 1);
+        srcW = endX - srcX;
+        srcH = endY - srcY;
+      }
+
+      const targetMaxW = 1000;
+      const targetMaxH = 350;
+      let finalW = srcW;
+      let finalH = srcH;
+
+      if (finalW > targetMaxW || finalH > targetMaxH) {
+        const ratio = Math.min(targetMaxW / finalW, targetMaxH / finalH);
+        finalW = Math.round(finalW * ratio);
+        finalH = Math.round(finalH * ratio);
+      }
+
+      const outCanvas = document.createElement('canvas');
+      outCanvas.width = finalW;
+      outCanvas.height = finalH;
+      const oCtx = outCanvas.getContext('2d');
+      oCtx.imageSmoothingEnabled = true;
+      oCtx.imageSmoothingQuality = 'high';
+      oCtx.drawImage(tempCanvas, srcX, srcY, srcW, srcH, 0, 0, finalW, finalH);
+
+      return outCanvas.toDataURL('image/png', 0.92);
     }
 
     function handleSettingsLogoUpload(e) {
@@ -8900,35 +9406,16 @@ service cloud.firestore {
           return;
         }
 
-        // Obrazy rastrowe (PNG, JPG, WebP) - skalujemy przez canvas do max 1000x350
+        // Obrazy rastrowe (PNG, JPG, WebP) - autotrim pustych marginesów + optymalizacja wymiarów
         const img = new Image();
         img.onload = function() {
           try {
-            let width = img.width;
-            let height = img.height;
-            const maxW = 1000;
-            const maxH = 350;
-
-            if (width > maxW || height > maxH) {
-              const ratio = Math.min(maxW / width, maxH / height);
-              width = Math.round(width * ratio);
-              height = Math.round(height * ratio);
-            }
-
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(img, 0, 0, width, height);
-
-            const optimizedDataUrl = canvas.toDataURL('image/png', 0.92);
+            const optimizedDataUrl = trimAndOptimizeLogoCanvas(img) || rawResult;
             localStorage.setItem(STORAGE_KEYS.COMPANY_LOGO, optimizedDataUrl);
             persistData();
             updateSidebarCompanyLogo();
             renderSettings();
-            showToast('Logo firmy zostało pomyślnie wgrane! Jest widoczne na wszystkich protokołach.');
+            showToast('Logo firmy zostało pomyślnie wgrane i wykadrowane z marginesów!');
           } catch (err) {
             console.error(err);
             try {
@@ -9024,8 +9511,10 @@ service cloud.firestore {
     let cachedInstalLogoDataUrl = null;
     function getInstalLogoImgHtml() {
       const customLogo = getSavedCompanyLogo();
+      const logoH = getSavedCompanyLogoHeight();
+      const maxW = Math.max(320, Math.round(logoH * 5.5));
       if (customLogo) {
-        return `<img src="${customLogo}" alt="${escapeHtml(getSavedCompanyName())}" style="max-height:52px;max-width:260px;width:auto;height:auto;display:block;object-fit:contain;" />`;
+        return `<img src="${customLogo}" alt="${escapeHtml(getSavedCompanyName())}" style="max-height:${logoH}px;max-width:${maxW}px;width:auto;height:auto;display:block;object-fit:contain;" />`;
       }
       if (!cachedInstalLogoDataUrl) {
         try {
@@ -9084,7 +9573,7 @@ service cloud.firestore {
           return `<div style="font-size:32px;font-weight:900;letter-spacing:2px;color:#1c3d82;">INSTAL</div>`;
         }
       }
-      return `<img src="${cachedInstalLogoDataUrl}" alt="INSTAL" style="height:46px;width:auto;display:block;" />`;
+      return `<img src="${cachedInstalLogoDataUrl}" alt="INSTAL" style="height:${Math.min(52, logoH)}px;width:auto;display:block;" />`;
     }
 
     function renderZgonoscStatementTableHtml() {
@@ -9171,11 +9660,11 @@ service cloud.firestore {
     function renderProtocolSheetHtml(proto) {
       const sigTechImg = proto.sigTechDataUrl
         ? `<img src="${proto.sigTechDataUrl}" style="max-height:78px;max-width:100%;margin:0 auto;display:block;background:#ffffff;" alt="Podpis serwisanta">`
-        : `<div contenteditable="true" style="height:65px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px;">(Brak podpisu cyfrowego)</div>`;
+        : `<div style="height:65px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px;">(Brak podpisu cyfrowego)</div>`;
 
       const sigClientImg = proto.sigClientDataUrl
         ? `<img src="${proto.sigClientDataUrl}" style="max-height:78px;max-width:100%;margin:0 auto;display:block;background:#ffffff;" alt="Podpis klienta">`
-        : `<div contenteditable="true" style="height:65px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px;">(Brak podpisu cyfrowego)</div>`;
+        : `<div style="height:65px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px;">(Brak podpisu cyfrowego)</div>`;
 
       if (proto.type === 'ac_install') {
         const hasChecklist = (proto.checklist || []).length > 0;
@@ -9955,40 +10444,15 @@ service cloud.firestore {
           if (t.id !== editId) return t;
           found = true;
           let updatedCustomHtml = t.customEditedHtml || null;
-          if (updatedCustomHtml && updatedCustomHtml.includes('protocol-custom-section')) {
-            const sampleProto = {
-              protocolId: 'WZÓR/PODGLĄD/2026',
-              templateId: editId,
-              isTemplatePreview: true,
-              type: editId,
-              customTitle: title,
-              actionCategory,
-              date: toYMD(new Date()),
-              companyName: getSavedCompanyName(),
-              fgazCert: getSavedFgazCert(),
-              technician: 'Jan Serwisant (INSTAL)',
-              clientName: 'Przykładowy Klient (Podgląd Wzoru)',
-              clientNip: '777-000-11-22',
-              clientEmail: 'klient@przyklad.pl',
-              clientAddress: '60-101 Poznań, ul. Słoneczna 15',
-              installAddress: '62-020 Swarzędz, ul. Polna 10',
-              clientPhone: '+48 600 100 200',
-              deviceTypeLabel: customGroupName || getDeviceInfo(deviceGroup).short,
-              deviceModel: 'Model Przykładowy 9kW',
-              serialIndoor: 'SN-2026-000123',
-              serialOutdoor: (deviceGroup === 'ac' || deviceGroup === 'heat_pump') ? 'SN-JZ-2026-000456' : '',
-              faultDescription: 'Przykładowe objawy ze zgłoszenia klienta',
-              diagnosis: 'Przykładowa diagnoza serwisowa',
-              workCourse: 'Weryfikacja parametrów pracy, czyszczenie podzespołów, wymiana elementu eksploatacyjnego, test szczelności i uruchomienie.',
-              postServiceStatus: 'Urządzenie sprawne, przetestowane i przekazane do eksploatacji',
-              usedMaterials: 'Brak dodatkowych części.',
-              comments: 'Podgląd wydruku wzoru protokołu A4.',
-              customInstallRows: (installParams || []).map(p => ({ label: p.label, value: p.defaultValue || 'Wykonano / Zgodnie z DTR' })),
-              customServiceFields: (serviceFields || []).map(f => ({ label: f.label, value: f.defaultValue || 'W normie' })),
-              checklist: (checklist || []).map(label => ({ label, done: true }))
-            };
-            const freshBase = renderProtocolSheetHtml(sampleProto);
-            updatedCustomHtml = mergeTemplateCustomSections(freshBase, updatedCustomHtml);
+          if (updatedCustomHtml && title && title !== t.title) {
+            try {
+              const pDoc = new DOMParser().parseFromString(updatedCustomHtml, 'text/html');
+              const titleDiv = Array.from(pDoc.querySelectorAll('div')).find(d => (d.textContent || '').trim() === (t.title || '').trim());
+              if (titleDiv) {
+                titleDiv.textContent = title;
+                updatedCustomHtml = pDoc.body.innerHTML;
+              }
+            } catch (err) {}
           }
           return {
             ...t,
@@ -10104,12 +10568,11 @@ service cloud.firestore {
         checklist: (tpl.checklist || []).map(label => ({ label, done: true }))
       };
 
-      const freshBaseHtml = renderProtocolSheetHtml(sampleProto);
-      const mergedHtml = (tpl.customEditedHtml && tpl.customEditedHtml.includes('protocol-custom-section'))
-        ? mergeTemplateCustomSections(freshBaseHtml, tpl.customEditedHtml)
-        : (tpl.customEditedHtml || freshBaseHtml);
-      tpl.customEditedHtml = mergedHtml;
-      sampleProto.customEditedHtml = mergedHtml;
+      if (!tpl.customEditedHtml) {
+        sampleProto.customEditedHtml = renderProtocolSheetHtml(sampleProto);
+      } else {
+        sampleProto.customEditedHtml = tpl.customEditedHtml;
+      }
       showProtocolObjectInModal(sampleProto);
     }
 
@@ -10161,40 +10624,15 @@ service cloud.firestore {
           existing.serviceFields = serviceFields;
           existing.updatedAt = now;
           existing.isCustomized = true;
-          if (existing.customEditedHtml && existing.customEditedHtml.includes('protocol-custom-section')) {
-            const sampleProto = {
-              protocolId: 'WZÓR/PODGLĄD/2026',
-              templateId: editId,
-              isTemplatePreview: true,
-              type: editId,
-              customTitle: title,
-              actionCategory,
-              date: toYMD(new Date()),
-              companyName: getSavedCompanyName(),
-              fgazCert: getSavedFgazCert(),
-              technician: 'Jan Serwisant (INSTAL)',
-              clientName: 'Przykładowy Klient (Podgląd Wzoru)',
-              clientNip: '777-000-11-22',
-              clientEmail: 'klient@przyklad.pl',
-              clientAddress: '60-101 Poznań, ul. Słoneczna 15',
-              installAddress: '62-020 Swarzędz, ul. Polna 10',
-              clientPhone: '+48 600 100 200',
-              deviceTypeLabel: customGroupName || getDeviceInfo(deviceGroup).short,
-              deviceModel: 'Model Przykładowy 9kW',
-              serialIndoor: 'SN-2026-000123',
-              serialOutdoor: (deviceGroup === 'ac' || deviceGroup === 'heat_pump') ? 'SN-JZ-2026-000456' : '',
-              faultDescription: 'Przykładowe objawy ze zgłoszenia klienta',
-              diagnosis: 'Przykładowa diagnoza serwisowa',
-              workCourse: 'Weryfikacja parametrów pracy, czyszczenie podzespołów, wymiana elementu eksploatacyjnego, test szczelności i uruchomienie.',
-              postServiceStatus: 'Urządzenie sprawne, przetestowane i przekazane do eksploatacji',
-              usedMaterials: 'Brak dodatkowych części.',
-              comments: 'Podgląd wydruku wzoru protokołu A4.',
-              customInstallRows: installParams.map(p => ({ label: p.label, value: p.defaultValue || 'Wykonano / Zgodnie z DTR' })),
-              customServiceFields: serviceFields.map(f => ({ label: f.label, value: f.defaultValue || 'W normie' })),
-              checklist: checklist.map(label => ({ label, done: true }))
-            };
-            const freshBase = renderProtocolSheetHtml(sampleProto);
-            existing.customEditedHtml = mergeTemplateCustomSections(freshBase, existing.customEditedHtml);
+          if (existing.customEditedHtml && title && title !== existing.title) {
+            try {
+              const pDoc = new DOMParser().parseFromString(existing.customEditedHtml, 'text/html');
+              const titleDiv = Array.from(pDoc.querySelectorAll('div')).find(d => (d.textContent || '').trim() === (existing.title || '').trim());
+              if (titleDiv) {
+                titleDiv.textContent = title;
+                existing.customEditedHtml = pDoc.body.innerHTML;
+              }
+            } catch (err) {}
           }
         } else {
           window.protocolTemplatesData.push({
@@ -10507,6 +10945,7 @@ service cloud.firestore {
             workerSignatures: getWorkerSignaturesMap(),
             protocolTemplates: window.protocolTemplatesData || [],
             companyLogo: getSavedCompanyLogo(),
+            companyLogoHeight: getSavedCompanyLogoHeight(),
             companyName: getSavedCompanyName(),
             companySubtitle: getSavedCompanySubtitle(),
             companyFgaz: getSavedFgazCert()
@@ -10714,6 +11153,9 @@ service cloud.firestore {
               }
               if (parsed.companyLogo) {
                 try { localStorage.setItem(STORAGE_KEYS.COMPANY_LOGO, parsed.companyLogo); } catch (e) {}
+              }
+              if (parsed.companyLogoHeight) {
+                try { localStorage.setItem(STORAGE_KEYS.COMPANY_LOGO_HEIGHT, String(parsed.companyLogoHeight)); } catch (e) {}
               }
               if (parsed.companyName) {
                 try { localStorage.setItem(STORAGE_KEYS.COMPANY_NAME, parsed.companyName); } catch (e) {}
