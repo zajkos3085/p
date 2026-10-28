@@ -351,7 +351,7 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
-          <div class="lg:col-span-5 space-y-6">
+          <div class="lg:col-span-6 space-y-6">
             <!-- CALENDAR -->
             <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
               <div class="flex justify-between items-center mb-4">
@@ -398,6 +398,19 @@
               <div id="cal-preview-body" class="p-4 space-y-3 max-h-[460px] overflow-y-auto"></div>
             </div>
 
+            <!-- TODAY'S PLAN -->
+            <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+              <div class="px-4 sm:px-5 py-3.5 sm:py-4 bg-zinc-900 dark:bg-zinc-800 text-white flex justify-between items-center flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="navigation" class="w-4 h-4 text-emerald-400"></i>
+                  <h2 id="today-panel-title" class="text-sm sm:text-base font-extrabold">Plan pracy na dzisiaj</h2>
+                </div>
+              </div>
+              <div id="today-visits-list" class="p-4 space-y-4"></div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-6 space-y-5 sm:space-y-6">
             <!-- ZAPLANOWANE PRZEGLĄDY -->
             <div id="scheduled-urgent-card" class="bg-white dark:bg-zinc-900 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 shadow-sm overflow-hidden">
               <div class="px-5 py-4 border-b border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/70 dark:bg-emerald-950/30 flex justify-between items-center flex-wrap gap-2">
@@ -411,19 +424,6 @@
                 <span id="scheduled-urgent-count-badge" class="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-xs font-extrabold">0</span>
               </div>
               <div id="scheduled-urgent-list" class="divide-y divide-emerald-100 dark:divide-emerald-900/40"></div>
-            </div>
-          </div>
-
-          <div class="lg:col-span-7 space-y-5 sm:space-y-6">
-            <!-- TODAY'S PLAN -->
-            <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
-              <div class="px-4 sm:px-5 py-3.5 sm:py-4 bg-zinc-900 dark:bg-zinc-800 text-white flex justify-between items-center flex-wrap gap-2">
-                <div class="flex items-center gap-2">
-                  <i data-lucide="navigation" class="w-4 h-4 text-emerald-400"></i>
-                  <h2 id="today-panel-title" class="text-sm sm:text-base font-extrabold">Plan pracy na dzisiaj</h2>
-                </div>
-              </div>
-              <div id="today-visits-list" class="p-4 space-y-4"></div>
             </div>
 
             <!-- DO ZAPLANOWANIA: URGENT INSPECTIONS -->
@@ -10359,8 +10359,27 @@ service cloud.firestore {
         document.body.appendChild(pdfWrapper);
 
         const imgs = Array.from(pdfStage.querySelectorAll('img'));
-        await Promise.all(imgs.map(img => img.complete ? Promise.resolve() : new Promise(res => { img.onload = res; img.onerror = res; })));
-        await new Promise(r => setTimeout(r, 150));
+        await Promise.all(imgs.map(img => {
+          if (img.complete) return Promise.resolve();
+          return new Promise(res => {
+            const timer = setTimeout(res, 800);
+            img.onload = () => { clearTimeout(timer); res(); };
+            img.onerror = () => { clearTimeout(timer); res(); };
+          });
+        }));
+        await new Promise(r => setTimeout(r, 120));
+
+        // Jeśli treść mieści się na 1 stronie (<= 1080px), dopasowujemy arkusz do pełnej wysokości A4 z równomiernym rozmieszczeniem sekcji
+        if (pdfStage.scrollHeight <= 1080) {
+          pdfStage.style.minHeight = '1060px';
+          const firstChild = pdfStage.firstElementChild;
+          if (firstChild) {
+            firstChild.style.minHeight = '1012px';
+            firstChild.style.display = 'flex';
+            firstChild.style.flexDirection = 'column';
+            firstChild.style.justifyContent = 'space-between';
+          }
+        }
 
         const opt = {
           margin: [0, 0, 0, 0],
@@ -10371,9 +10390,7 @@ service cloud.firestore {
             useCORS: true,
             allowTaint: true,
             backgroundColor: '#ffffff',
-            logging: false,
-            width: 794,
-            windowWidth: 794
+            logging: false
           },
           pagebreak: {
             mode: ['avoid-all', 'css', 'legacy'],
