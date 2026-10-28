@@ -102,6 +102,11 @@
         height: 350px !important;
       }
     }
+    [contenteditable][data-placeholder]:empty:before {
+      content: attr(data-placeholder);
+      color: #94a3b8;
+      pointer-events: none;
+    }
     .sig-canvas {
       touch-action: none;
       cursor: crosshair;
@@ -1573,7 +1578,7 @@
   <div id="modal-schedule" class="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-md w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800 max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
-        <h3 class="text-base font-extrabold">Zaplanuj zlecenie / wizytę</h3>
+        <h3 id="modal-schedule-title" class="text-base font-extrabold">Zaplanuj zlecenie / wizytę</h3>
         <button onclick="closeModal('modal-schedule')"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
       <form onsubmit="handleSaveVisit(event)" class="space-y-3.5">
@@ -1649,6 +1654,10 @@
               <option value="Montaż">🏗️ Montaż (Nowe urz.)</option>
               <option value="custom">✏️ Wpisz ręcznie...</option>
             </select>
+            <div id="visit-type-locked-badge" class="hidden mt-1.5 p-1.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-lg text-[10px] font-extrabold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+              <i data-lucide="lock" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></i>
+              <span>Zablokowano: zlecenie przeglądu (wykluczono montaż)</span>
+            </div>
           </div>
           <div>
             <label class="block text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-1">Pracownik / Ekipa</label>
@@ -2924,6 +2933,9 @@ service cloud.firestore {
     }
 
     function closeModal(id) {
+      if (id === 'modal-schedule') {
+        if (typeof unlockScheduleVisitType === 'function') unlockScheduleVisitType();
+      }
       if (id === 'modal-protocol-preview') {
         try {
           if (currentPreviewProtocolObj && currentPreviewProtocolObj.isTemplatePreview) {
@@ -4496,7 +4508,7 @@ service cloud.firestore {
 
     function createServiceFromUrgent(clientId, deviceId) {
       switchTab('map_planner');
-      openScheduleModal(clientId, deviceId);
+      openScheduleModal(clientId, deviceId, true);
     }
 
     function toggleUrgentList() {
@@ -6677,7 +6689,7 @@ service cloud.firestore {
       if (btnExist) btnExist.className = isAdHoc ? inactiveBtnClass : activeBtnClass;
       if (btnAdHoc) btnAdHoc.className = isAdHoc ? activeBtnClass : inactiveBtnClass;
 
-      const isMontaz = document.getElementById('visit-type-preset')?.value === 'Montaż';
+      const isMontaz = !isScheduleVisitTypeLocked && document.getElementById('visit-type-preset')?.value === 'Montaż';
       if (devExistingWrap) {
         devExistingWrap.classList.toggle('hidden', isAdHoc || isMontaz);
       }
@@ -6698,7 +6710,40 @@ service cloud.firestore {
       document.getElementById('visit-client-dd')?.classList.add('hidden');
     }
 
-    function openScheduleModal(preselectedClientId = '', preselectedDeviceId = '') {
+    let isScheduleVisitTypeLocked = false;
+
+    function lockScheduleVisitTypeToInspection() {
+      isScheduleVisitTypeLocked = true;
+      const sel = document.getElementById('visit-type-preset');
+      if (sel) {
+        sel.value = 'Przegląd';
+        sel.disabled = true;
+        sel.classList.add('cursor-not-allowed', 'opacity-80', 'bg-zinc-100', 'dark:bg-zinc-800/80');
+      }
+      const badge = document.getElementById('visit-type-locked-badge');
+      if (badge) badge.classList.remove('hidden');
+      const titleEl = document.getElementById('modal-schedule-title');
+      if (titleEl) titleEl.innerText = 'Zaplanuj wyjazd na przegląd okresowy';
+      document.getElementById('visit-new-install-wrap')?.classList.add('hidden');
+      document.getElementById('visit-type-custom-wrap')?.classList.add('hidden');
+      lucide.createIcons();
+    }
+
+    function unlockScheduleVisitType() {
+      isScheduleVisitTypeLocked = false;
+      const sel = document.getElementById('visit-type-preset');
+      if (sel) {
+        sel.disabled = false;
+        sel.classList.remove('cursor-not-allowed', 'opacity-80', 'bg-zinc-100', 'dark:bg-zinc-800/80');
+      }
+      const badge = document.getElementById('visit-type-locked-badge');
+      if (badge) badge.classList.add('hidden');
+      const titleEl = document.getElementById('modal-schedule-title');
+      if (titleEl) titleEl.innerText = 'Zaplanuj zlecenie / wizytę';
+      lucide.createIcons();
+    }
+
+    function openScheduleModal(preselectedClientId = '', preselectedDeviceId = '', lockToInspection = false) {
       populateWorkerSelects();
       setVisitClientMode('existing');
       document.getElementById('visit-client-dd').classList.add('hidden');
@@ -6733,6 +6778,13 @@ service cloud.firestore {
       if (document.getElementById('visit-new-dev-notes')) document.getElementById('visit-new-dev-notes').value = '';
       onServicePresetChange('modal');
       document.getElementById('visit-notes').value = '';
+
+      if (lockToInspection) {
+        lockScheduleVisitTypeToInspection();
+      } else {
+        unlockScheduleVisitType();
+      }
+
       openModal('modal-schedule');
     }
 
@@ -6793,11 +6845,11 @@ service cloud.firestore {
         document.getElementById('quick-map-install-new-wrap')?.classList.toggle('hidden', !isMontaz);
         if (isMontaz) renderQuickInstallCatalog();
       } else {
-        const val = document.getElementById('visit-type-preset').value;
+        const val = isScheduleVisitTypeLocked ? 'Przegląd' : (document.getElementById('visit-type-preset')?.value || 'Przegląd');
         document.getElementById('visit-type-custom-wrap')?.classList.toggle('hidden', val !== 'custom');
         if (val === 'custom') document.getElementById('visit-type-custom').focus();
 
-        const isMontaz = val === 'Montaż';
+        const isMontaz = !isScheduleVisitTypeLocked && val === 'Montaż';
         const isAdHoc = document.getElementById('visit-client-mode')?.value === 'adhoc';
         document.getElementById('visit-existing-device-wrap')?.classList.toggle('hidden', isMontaz || isAdHoc);
         document.getElementById('visit-new-install-wrap')?.classList.toggle('hidden', !isMontaz);
@@ -6968,10 +7020,13 @@ service cloud.firestore {
 
       const date = document.getElementById('visit-date').value;
       const time = document.getElementById('visit-time').value;
-      const preset = document.getElementById('visit-type-preset').value;
+      let preset = document.getElementById('visit-type-preset')?.value || 'Przegląd';
+      if (isScheduleVisitTypeLocked) {
+        preset = 'Przegląd';
+      }
       const customVal = (document.getElementById('visit-type-custom').value || '').trim();
-      const serviceType = preset === 'custom' ? (customVal || 'Serwis') : preset;
-      const isMontaz = preset === 'Montaż';
+      const serviceType = isScheduleVisitTypeLocked ? 'Przegląd' : (preset === 'custom' ? (customVal || 'Serwis') : preset);
+      const isMontaz = !isScheduleVisitTypeLocked && preset === 'Montaż';
       const deviceId = isMontaz ? '' : (isAdHoc ? '' : (document.getElementById('visit-device-select').value || ''));
       const plannedInstallType = isMontaz ? (document.getElementById('visit-new-dev-type')?.value || 'heat_pump') : '';
       const plannedInstallCustomType = (isMontaz && plannedInstallType === 'custom') ? (document.getElementById('visit-new-dev-custom-type')?.value || '').trim() : '';
@@ -7664,6 +7719,23 @@ service cloud.firestore {
           (proto.type || '').includes('service') ? 'Serwis / Naprawa' :
           'Przegląd okresowy'
         );
+        let cCity = client ? client.city : '';
+        let cStreet = client ? client.street : '';
+        let cPostal = client ? client.postalCode : '';
+        if (!cCity && proto.clientAddress) {
+          const postalM = proto.clientAddress.match(/\b\d{2}-\d{3}\b/);
+          if (postalM) cPostal = postalM[0];
+          const parts = proto.clientAddress.split(',');
+          if (parts.length > 1) {
+            cStreet = parts[1].trim();
+            cCity = parts[0].replace(/\b\d{2}-\d{3}\b/, '').trim();
+          } else {
+            cStreet = proto.clientAddress.replace(/\b\d{2}-\d{3}\b/, '').trim();
+          }
+        }
+        const pTypeLow = (proto.type || '').toLowerCase();
+        const pInstallType = pTypeLow.startsWith('ac_') ? 'ac' : (pTypeLow.startsWith('gas_boiler_') ? 'gas_boiler' : 'heat_pump');
+
         visit = {
           id: `synth_${(proto.protocolId || Date.now().toString()).replace(/[^a-zA-Z0-9]/g, '_')}`,
           clientId: client ? client.id : null,
@@ -7671,15 +7743,18 @@ service cloud.firestore {
           clientName: client ? client.name : (proto.clientName || 'Klient'),
           clientPhone: client ? client.phone : (proto.clientPhone || ''),
           clientEmail: client ? client.email : (proto.clientEmail || ''),
-          clientCity: client ? client.city : '',
-          clientStreet: client ? client.street : '',
-          clientPostalCode: client ? client.postalCode : '',
+          clientNip: client ? client.nip : (proto.clientNip || ''),
+          clientCity: cCity,
+          clientStreet: cStreet,
+          clientPostalCode: cPostal,
           serviceType: srvType,
           date: proto.date || toYMD(new Date()),
           workerName: proto.technician || '',
           notes: proto.comments || '',
           status: 'completed',
           protocolData: proto,
+          plannedInstallModel: proto.deviceModel || '',
+          plannedInstallType: pInstallType,
           isAdHoc: !client,
           isSynthetic: true
         };
@@ -7794,7 +7869,8 @@ service cloud.firestore {
       return 'table';
     }
 
-    function onProtocolKindSelectChange(kind) {
+    function onProtocolKindSelectChange(kind, customProtoToLoad = null) {
+      const protoToLoad = customProtoToLoad || currentlyEditingProtocol;
       const allBoxes = [
         'proto-fields-ac-install',
         'proto-fields-ac-inspection',
@@ -7849,12 +7925,20 @@ service cloud.firestore {
           document.getElementById('proto-dynamic-checklist-wrap')?.classList.remove('hidden');
           const box = document.getElementById('proto-dynamic-checklist-box');
           if (box) {
-            box.innerHTML = (tpl.checklist || []).map((itemText, idx) => `
-              <label class="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold">
-                <input type="checkbox" id="proto-dyn-chk-${idx}" checked class="rounded text-emerald-600">
-                <span>${idx + 1}. ${itemText}</span>
-              </label>
-            `).join('');
+            const savedChecklist = protoToLoad?.checklist;
+            box.innerHTML = (tpl.checklist || []).map((itemText, idx) => {
+              let isItemChecked = true;
+              if (savedChecklist && savedChecklist[idx] !== undefined) {
+                const it = savedChecklist[idx];
+                isItemChecked = (typeof it === 'object' && it !== null) ? (it.done !== false && it.done !== 'false' && it.done !== 0) : true;
+              }
+              return `
+                <label class="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold">
+                  <input type="checkbox" id="proto-dyn-chk-${idx}" ${isItemChecked ? 'checked' : ''} class="rounded text-emerald-600">
+                  <span>${idx + 1}. ${itemText}</span>
+                </label>
+              `;
+            }).join('');
           }
         }
       } else {
@@ -7880,12 +7964,20 @@ service cloud.firestore {
 
         const box = document.getElementById('proto-dynamic-checklist-box');
         if (box) {
-          box.innerHTML = list.map((itemText, idx) => `
-            <label class="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold">
-              <input type="checkbox" id="proto-dyn-chk-${idx}" checked class="rounded text-emerald-600">
-              <span>${idx + 1}. ${itemText}</span>
-            </label>
-          `).join('');
+          const savedChecklist = protoToLoad?.checklist;
+          box.innerHTML = list.map((itemText, idx) => {
+            let isItemChecked = true;
+            if (savedChecklist && savedChecklist[idx] !== undefined) {
+              const it = savedChecklist[idx];
+              isItemChecked = (typeof it === 'object' && it !== null) ? (it.done !== false && it.done !== 'false' && it.done !== 0) : true;
+            }
+            return `
+              <label class="flex items-center gap-1.5 cursor-pointer text-[11px] font-semibold">
+                <input type="checkbox" id="proto-dyn-chk-${idx}" ${isItemChecked ? 'checked' : ''} class="rounded text-emerald-600">
+                <span>${idx + 1}. ${itemText}</span>
+              </label>
+            `;
+          }).join('');
         }
         setText('proto-dynamic-checklist-title', `${tpl?.title || 'Lista kontrolna'} — Zakres czynności:`);
       }
@@ -7901,10 +7993,14 @@ service cloud.firestore {
         customSectionsBox.innerHTML = '';
         let hasCustomSections = false;
 
-        if (tpl && tpl.customEditedHtml && tpl.customEditedHtml.includes('protocol-custom-section')) {
+        const baseCustomHtml = (protoToLoad?.customEditedHtml && protoToLoad.customEditedHtml.includes('protocol-custom-section'))
+          ? protoToLoad.customEditedHtml
+          : tpl?.customEditedHtml;
+
+        if (baseCustomHtml && baseCustomHtml.includes('protocol-custom-section')) {
           try {
             const parser = new DOMParser();
-            const doc = parser.parseFromString(tpl.customEditedHtml, 'text/html');
+            const doc = parser.parseFromString(baseCustomHtml, 'text/html');
             const sections = doc.querySelectorAll('.protocol-custom-section');
 
             sections.forEach((sec, sIdx) => {
@@ -7937,6 +8033,8 @@ service cloud.firestore {
                       <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="proto-custom-grid-${sIdx}"></div>
                     `;
                     const grid = win.querySelector(`#proto-custom-grid-${sIdx}`);
+                    const savedSec = (protoToLoad?.customSectionsData || []).find(s => s.secIdx === sIdx && s.kind === 'table');
+
                     tbodyRows.forEach((row, rIdx) => {
                       const cells = row.querySelectorAll('td');
                       if (cells.length >= 2) {
@@ -7945,20 +8043,22 @@ service cloud.firestore {
                           for (let c = 1; c < cells.length; c++) {
                             if (cells[c].classList.contains('protocol-no-print')) continue;
                             const colHeader = (theadThs[c]?.innerText || `Kolumna ${c + 1}`).trim();
-                            const defaultVal = (cells[c].innerText || '').trim();
+                            const savedCell = savedSec?.cells?.find(cl => cl.rowIdx === rIdx && cl.colIdx === c);
+                            const valToUse = savedCell !== undefined ? savedCell.value : (cells[c].innerText || '').trim();
                             const itemEl = document.createElement('div');
                             itemEl.innerHTML = `
                               <label class="block text-[10px] font-bold text-zinc-600 dark:text-zinc-300 mb-0.5">${escapeHtml(rowLabel)} — ${escapeHtml(colHeader)}</label>
-                              <input type="text" class="proto-custom-table-input w-full px-2.5 py-1.5 rounded-lg border border-teal-300 dark:border-teal-700 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-800 dark:text-zinc-100 outline-none focus:border-teal-500" data-sec-idx="${sIdx}" data-row-idx="${rIdx}" data-col-idx="${c}" value="${escapeHtml(defaultVal)}">
+                              <input type="text" class="proto-custom-table-input w-full px-2.5 py-1.5 rounded-lg border border-teal-300 dark:border-teal-700 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-800 dark:text-zinc-100 outline-none focus:border-teal-500" data-sec-idx="${sIdx}" data-row-idx="${rIdx}" data-col-idx="${c}" value="${escapeHtml(valToUse)}">
                             `;
                             grid.appendChild(itemEl);
                           }
                         } else {
-                          const defaultVal = (cells[1].innerText || '').trim();
+                          const savedCell = savedSec?.cells?.find(cl => cl.rowIdx === rIdx && cl.colIdx === 1);
+                          const valToUse = savedCell !== undefined ? savedCell.value : (cells[1].innerText || '').trim();
                           const itemEl = document.createElement('div');
                           itemEl.innerHTML = `
                             <label class="block text-[10px] font-bold text-zinc-600 dark:text-zinc-300 mb-0.5">${escapeHtml(rowLabel)}</label>
-                            <input type="text" class="proto-custom-table-input w-full px-2.5 py-1.5 rounded-lg border border-teal-300 dark:border-teal-700 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-800 dark:text-zinc-100 outline-none focus:border-teal-500" data-sec-idx="${sIdx}" data-row-idx="${rIdx}" data-col-idx="1" value="${escapeHtml(defaultVal)}">
+                            <input type="text" class="proto-custom-table-input w-full px-2.5 py-1.5 rounded-lg border border-teal-300 dark:border-teal-700 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-800 dark:text-zinc-100 outline-none focus:border-teal-500" data-sec-idx="${sIdx}" data-row-idx="${rIdx}" data-col-idx="1" value="${escapeHtml(valToUse)}">
                           `;
                           grid.appendChild(itemEl);
                         }
@@ -7986,13 +8086,18 @@ service cloud.firestore {
                       <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5" id="proto-custom-insp-${sIdx}"></div>
                     `;
                     const grid = win.querySelector(`#proto-custom-insp-${sIdx}`);
+                    const savedSec = (protoToLoad?.customSectionsData || []).find(s => s.secIdx === sIdx && s.kind === 'inspection_checklist');
+
                     tbodyRows.forEach((row, rIdx) => {
                       const cells = row.querySelectorAll('td');
                       if (cells.length >= 2) {
                         const rowLp = (cells[0].innerText || `${rIdx + 1}.`).trim();
                         const desc = (cells[1].innerText || '').trim();
                         const statusTxt = cells.length >= 3 ? (cells[2].innerText || '').trim().toLowerCase() : '';
-                        const isDone = !statusTxt.includes('nie dotyczy') && !statusTxt.includes('niewykonano');
+                        const defaultIsDone = !statusTxt.includes('nie dotyczy') && !statusTxt.includes('niewykonano');
+                        const savedItem = savedSec?.items?.find(it => it.rowIdx === rIdx);
+                        const isDone = savedItem !== undefined ? Boolean(savedItem.checked) : defaultIsDone;
+
                         const itemEl = document.createElement('label');
                         itemEl.className = 'flex items-center gap-2 cursor-pointer text-[11px] font-semibold p-2 rounded-xl bg-white dark:bg-zinc-900 border border-emerald-200 dark:border-emerald-800/80 hover:bg-emerald-50/50 dark:hover:bg-zinc-800 transition select-none';
                         itemEl.innerHTML = `
@@ -8024,12 +8129,17 @@ service cloud.firestore {
                       <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5" id="proto-custom-chk-${sIdx}"></div>
                     `;
                     const grid = win.querySelector(`#proto-custom-chk-${sIdx}`);
+                    const savedSec = (protoToLoad?.customSectionsData || []).find(s => s.secIdx === sIdx && s.kind === 'checklist');
+
                     tbodyRows.forEach((row, rIdx) => {
                       const cells = row.querySelectorAll('td');
                       if (cells.length >= 2) {
                         const checkTxt = (cells[0].innerText || '').trim();
                         const itemText = (cells[1].innerText || '').trim();
-                        const isChecked = checkTxt !== '☐';
+                        const defaultIsChecked = checkTxt !== '☐';
+                        const savedItem = savedSec?.items?.find(it => it.rowIdx === rIdx);
+                        const isChecked = savedItem !== undefined ? Boolean(savedItem.checked) : defaultIsChecked;
+
                         const itemEl = document.createElement('label');
                         itemEl.className = 'flex items-center gap-2 cursor-pointer text-[11px] font-semibold p-2 rounded-xl bg-white dark:bg-zinc-900 border border-sky-200 dark:border-sky-800/80 hover:bg-sky-50/50 dark:hover:bg-zinc-800 transition select-none';
                         itemEl.innerHTML = `
@@ -8043,9 +8153,21 @@ service cloud.firestore {
                   }
                 }
               } else if (secKind === 'text') {
-                const allContentEditables = sec.querySelectorAll('[contenteditable]');
-                const textDiv = allContentEditables.length > 1 ? allContentEditables[1] : (sec.querySelector('div[style*="min-height"]') || sec.querySelector('div:last-child'));
-                const defaultText = (textDiv?.innerText || '').trim();
+                const savedSec = (protoToLoad?.customSectionsData || []).find(s => s.secIdx === sIdx && s.kind === 'text');
+                let defaultText = '';
+                if (savedSec && savedSec.text !== undefined) {
+                  defaultText = savedSec.text;
+                } else if (protoToLoad?.customEditedHtml) {
+                  const existingDoc = new DOMParser().parseFromString(protoToLoad.customEditedHtml, 'text/html');
+                  const existingSec = existingDoc.querySelectorAll('.protocol-custom-section')?.[sIdx];
+                  const allContentEditables = existingSec?.querySelectorAll('[contenteditable]') || [];
+                  const textDiv = allContentEditables.length > 1 ? allContentEditables[1] : (existingSec?.querySelector('div[style*="min-height"]') || existingSec?.querySelector('div:last-child'));
+                  const rawText = (textDiv?.innerText || '').trim();
+                  if (!rawText.startsWith('Wpisz tutaj dodatkowe uwagi')) {
+                    defaultText = rawText;
+                  }
+                }
+
                 hasCustomSections = true;
                 const win = document.createElement('div');
                 win.className = 'p-3.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/80 space-y-2 shadow-sm';
@@ -8131,42 +8253,48 @@ service cloud.firestore {
         const parser = new DOMParser();
         const doc = parser.parseFromString(tplHtml, 'text/html');
 
+        const allLeafDivs = Array.from(doc.querySelectorAll('div, td, p, span')).filter(el => el.children.length === 0);
+
         // 1. Numer protokołu
-        const nrDiv = Array.from(doc.querySelectorAll('div')).find(d => (d.textContent || '').trim().startsWith('Nr:'));
+        const nrDiv = allLeafDivs.find(d => (d.textContent || '').trim().startsWith('Nr:'));
         if (nrDiv) {
           nrDiv.textContent = 'Nr: ' + (proto.protocolId || '-');
         }
 
         // 2. Data wykonania
-        const dateDiv = Array.from(doc.querySelectorAll('div')).find(d => (d.textContent || '').trim().startsWith('Data wykonania:'));
+        const dateDiv = allLeafDivs.find(d => (d.textContent || '').trim().startsWith('Data wykonania:'));
         if (dateDiv) {
           dateDiv.innerHTML = 'Data wykonania: <strong>' + formatDatePL(proto.date) + '</strong>';
         }
 
         // 3. Blok klienta (TD zawierający "1. Dane Zleceniodawcy")
-        const clientTitleDiv = Array.from(doc.querySelectorAll('div')).find(d => (d.textContent || '').trim().startsWith('1. Dane Zleceniodawcy'));
-        if (clientTitleDiv && clientTitleDiv.parentElement && clientTitleDiv.parentElement.tagName === 'TD') {
-          const clientCell = clientTitleDiv.parentElement;
-          const hasSecondAddress = Boolean(proto.installAddress && proto.installAddress.trim() && proto.installAddress.trim().toLowerCase() !== (proto.clientAddress || '').trim().toLowerCase());
-          clientCell.innerHTML = 
-            '<div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:3px;">1. Dane Zleceniodawcy / Klienta</div>' +
-            '<div style="font-weight:800;font-size:12px;color:#0f172a;">' + (proto.clientName || '-') + '</div>' +
-            (proto.clientNip ? '<div style="font-weight:700;color:#059669;">NIP: ' + proto.clientNip + '</div>' : '') +
-            '<div>Adres Zleceniodawcy: <strong>' + (proto.clientAddress || '-') + '</strong></div>' +
-            (hasSecondAddress ? '<div style="margin-top:2px;color:#312e81;">Adres montażu urządzenia: <strong>' + proto.installAddress + '</strong></div>' : '') +
-            '<div style="margin-top:2px;">Telefon: <strong>' + (proto.clientPhone || '-') + '</strong>' + (proto.clientEmail ? ' • E-mail: <strong>' + proto.clientEmail + '</strong>' : '') + '</div>';
+        const clientTitleDiv = allLeafDivs.find(d => (d.textContent || '').trim().startsWith('1. Dane Zleceniodawcy'));
+        if (clientTitleDiv) {
+          const clientCell = clientTitleDiv.closest('td') || clientTitleDiv.parentElement;
+          if (clientCell && clientCell.tagName === 'TD') {
+            const hasSecondAddress = Boolean(proto.installAddress && proto.installAddress.trim() && proto.installAddress.trim().toLowerCase() !== (proto.clientAddress || '').trim().toLowerCase());
+            clientCell.innerHTML = 
+              '<div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:3px;">1. Dane Zleceniodawcy / Klienta</div>' +
+              '<div style="font-weight:800;font-size:12px;color:#0f172a;">' + (proto.clientName || '-') + '</div>' +
+              (proto.clientNip ? '<div style="font-weight:700;color:#059669;">NIP: ' + proto.clientNip + '</div>' : '') +
+              '<div>Adres Zleceniodawcy: <strong>' + (proto.clientAddress || '-') + '</strong></div>' +
+              (hasSecondAddress ? '<div style="margin-top:2px;color:#312e81;">Adres montażu urządzenia: <strong>' + proto.installAddress + '</strong></div>' : '') +
+              '<div style="margin-top:2px;">Telefon: <strong>' + (proto.clientPhone || '-') + '</strong>' + (proto.clientEmail ? ' • E-mail: <strong>' + proto.clientEmail + '</strong>' : '') + '</div>';
+          }
         }
 
         // 4. Blok wykonawcy i urządzenia (TD zawierający "2. Wykonawca")
-        const execTitleDiv = Array.from(doc.querySelectorAll('div')).find(d => (d.textContent || '').trim().startsWith('2. Wykonawca'));
-        if (execTitleDiv && execTitleDiv.parentElement && execTitleDiv.parentElement.tagName === 'TD') {
-          const execCell = execTitleDiv.parentElement;
-          execCell.innerHTML = 
-            '<div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:3px;">2. Wykonawca i identyfikacja urządzenia</div>' +
-            '<div style="font-weight:800;font-size:12px;color:#0f172a;">' + escapeHtml(getSavedCompanyName()) + '</div>' +
-            '<div>Serwisant / Instalator: <strong>' + (proto.technician || '-') + '</strong></div>' +
-            '<div>Urządzenie: <strong>' + (proto.deviceModel || '-') + '</strong></div>' +
-            '<div>Nr seryjny (S/N): <strong style="font-family:monospace;">' + (proto.serialIndoor || 'Brak danych') + (proto.serialOutdoor ? ' / JZ: ' + proto.serialOutdoor : '') + '</strong></div>';
+        const execTitleDiv = allLeafDivs.find(d => (d.textContent || '').trim().startsWith('2. Wykonawca'));
+        if (execTitleDiv) {
+          const execCell = execTitleDiv.closest('td') || execTitleDiv.parentElement;
+          if (execCell && execCell.tagName === 'TD') {
+            execCell.innerHTML = 
+              '<div style="font-size:10px;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:3px;">2. Wykonawca i identyfikacja urządzenia</div>' +
+              '<div style="font-weight:800;font-size:12px;color:#0f172a;">' + escapeHtml(getSavedCompanyName()) + '</div>' +
+              '<div>Serwisant / Instalator: <strong>' + (proto.technician || '-') + '</strong></div>' +
+              '<div>Urządzenie: <strong>' + (proto.deviceModel || '-') + '</strong></div>' +
+              '<div>Nr seryjny (S/N): <strong style="font-family:monospace;">' + (proto.serialIndoor || 'Brak danych') + (proto.serialOutdoor ? ' / JZ: ' + proto.serialOutdoor : '') + '</strong></div>';
+          }
         }
 
         // 5. Zaktualizuj dane we wszystkich własnych oknach i sekcjach ze wzoru protokołu
@@ -8242,6 +8370,90 @@ service cloud.firestore {
           }
         });
 
+        // Fallback z proto.customSectionsData jeśli inputs nie są akurat w aktywnym DOM
+        if (Array.isArray(proto.customSectionsData) && proto.customSectionsData.length > 0) {
+          proto.customSectionsData.forEach(secData => {
+            const sIdx = secData.secIdx;
+            if (!customSections[sIdx]) return;
+            if (secData.kind === 'table' && Array.isArray(secData.cells)) {
+              const rows = customSections[sIdx].querySelectorAll('tbody tr');
+              secData.cells.forEach(c => {
+                if (rows[c.rowIdx]) {
+                  const cells = rows[c.rowIdx].querySelectorAll('td');
+                  if (cells[c.colIdx]) cells[c.colIdx].textContent = c.value || '';
+                }
+              });
+            } else if (secData.kind === 'inspection_checklist' && Array.isArray(secData.items)) {
+              const rows = customSections[sIdx].querySelectorAll('tbody tr');
+              secData.items.forEach(it => {
+                if (rows[it.rowIdx]) {
+                  const cells = rows[it.rowIdx].querySelectorAll('td');
+                  const statusCell = cells.length >= 3 ? cells[2] : cells[cells.length - 1];
+                  if (statusCell) {
+                    if (it.checked) {
+                      statusCell.textContent = '✓ TAK (Wykonano)';
+                      statusCell.style.color = '#059669';
+                    } else {
+                      statusCell.textContent = 'NIE DOTYCZY';
+                      statusCell.style.color = '#64748b';
+                    }
+                  }
+                }
+              });
+            } else if (secData.kind === 'checklist' && Array.isArray(secData.items)) {
+              const rows = customSections[sIdx].querySelectorAll('tbody tr');
+              secData.items.forEach(it => {
+                if (rows[it.rowIdx]) {
+                  const cells = rows[it.rowIdx].querySelectorAll('td');
+                  if (cells.length > 0) {
+                    cells[0].textContent = it.checked ? '☑' : '☐';
+                    cells[0].style.color = it.checked ? '#0284c7' : '#94a3b8';
+                  }
+                }
+              });
+            } else if (secData.kind === 'text') {
+              const allContentEditables = customSections[sIdx].querySelectorAll('[contenteditable]');
+              const textDiv = allContentEditables.length > 1 ? allContentEditables[1] : (customSections[sIdx].querySelector('div[style*="min-height"]') || customSections[sIdx].querySelector('div:last-child'));
+              if (textDiv) textDiv.textContent = secData.text || '';
+            }
+          });
+        }
+
+        // 5e. Główna tabela listy kontrolnej / zakresu czynności (jeśli istnieje poza sekcjami własnymi)
+        if (Array.isArray(proto.checklist) && proto.checklist.length > 0) {
+          const allTables = Array.from(doc.querySelectorAll('table'));
+          const mainChecklistTable = allTables.find(tbl => {
+            if (tbl.closest('.protocol-custom-section')) return false;
+            if (tbl.classList.contains('protocol-signatures-table') || tbl.classList.contains('protocol-statement-zgodnosc-table')) return false;
+            const thTxt = (tbl.querySelector('thead')?.innerText || '').toLowerCase();
+            const tdTxt = (tbl.querySelector('tbody')?.innerText || '').toLowerCase();
+            return thTxt.includes('status') || thTxt.includes('wykonano') || thTxt.includes('czynno') ||
+                   tdTxt.includes('wykonano') || tdTxt.includes('nie dotyczy') || tdTxt.includes('tak (wykonano)');
+          });
+
+          if (mainChecklistTable) {
+            const tbodyRows = mainChecklistTable.querySelectorAll('tbody tr');
+            tbodyRows.forEach((tr, rIdx) => {
+              if (proto.checklist[rIdx]) {
+                const item = proto.checklist[rIdx];
+                const isDone = (typeof item === 'object' && item !== null) ? (item.done !== false && item.done !== 'false' && item.done !== 0) : true;
+                const cells = tr.querySelectorAll('td');
+                const statusCell = cells.length >= 3 ? cells[2] : cells[cells.length - 1];
+                if (statusCell) {
+                  if (isDone) {
+                    const currentTxt = (statusCell.textContent || '').trim();
+                    statusCell.textContent = currentTxt.includes('TAK') ? '✓ TAK (Wykonano)' : '✓ WYKONANO';
+                    statusCell.style.color = '#059669';
+                  } else {
+                    statusCell.textContent = 'NIE DOTYCZY';
+                    statusCell.style.color = '#64748b';
+                  }
+                }
+              }
+            });
+          }
+        }
+
         // 6. Zaktualizuj podpisy
         const sigFooter = doc.querySelector('.protocol-footer-signatures-wrap');
         const sigTechImg = proto.sigTechDataUrl
@@ -8260,12 +8472,12 @@ service cloud.firestore {
           }
         }
 
-        // 7. Zaktualizuj uwagi i zużyte materiały jeśli istnieją
-        const allLeafDivs = Array.from(doc.querySelectorAll('div')).filter(el => el.children.length === 0);
+        // 7. Zaktualizuj uwagi i zużyte materiały jeśli istnieją (z pominięciem sekcji własnych)
         if (proto.comments) {
           const commentsHeader = allLeafDivs.find(el => {
+            if (el.closest('.protocol-custom-section')) return false;
             const txt = (el.textContent || '').toLowerCase().trim();
-            return txt.includes('uwagi serwisowe') || txt.includes('uwagi montażowe');
+            return txt.includes('uwagi serwisowe') || txt.includes('uwagi montażowe') || txt.includes('uwagi') || txt.includes('zalecenia') || txt.includes('komentarz');
           });
           if (commentsHeader && commentsHeader.nextElementSibling) {
             commentsHeader.nextElementSibling.textContent = proto.comments;
@@ -8273,8 +8485,9 @@ service cloud.firestore {
         }
         if (proto.usedMaterials) {
           const matHeader = allLeafDivs.find(el => {
+            if (el.closest('.protocol-custom-section')) return false;
             const txt = (el.textContent || '').toLowerCase().trim();
-            return txt.includes('zużyte materiały');
+            return txt.includes('zużyte materiały') || txt.includes('materiały');
           });
           if (matHeader && matHeader.nextElementSibling) {
             matHeader.nextElementSibling.textContent = proto.usedMaterials;
@@ -8372,15 +8585,34 @@ service cloud.firestore {
       const existingProto = currentlyEditingProtocol || visit.protocolData || null;
 
       const srvLow = (visit.serviceType || '').toLowerCase();
-      const isMontaz = srvLow.includes('monta') || Boolean(existingProto && (existingProto.type || '').includes('install'));
-      const isServiceRepair = srvLow.includes('serwis') || srvLow.includes('awaria') || srvLow.includes('napraw') || Boolean(existingProto && (existingProto.type || '').includes('service'));
+      const protoTypeLow = (existingProto?.type || existingProto?.templateId || '').toLowerCase();
+      const isMontaz = srvLow.includes('monta') || protoTypeLow.includes('install');
+      const isServiceRepair = srvLow.includes('serwis') || srvLow.includes('awaria') || srvLow.includes('napraw') || protoTypeLow.includes('service');
 
-      const devType = isMontaz ? (visit.plannedInstallType || 'heat_pump') : (dev?.deviceType || 'ac');
-      const isAc = devType === 'ac';
+      // Rozpoznaj precyzyjnie typ montowanego urządzenia z protokołu, zlecenia lub kartoteki urządzenia
+      let installTypeVal = 'heat_pump';
+      if (existingProto) {
+        if (protoTypeLow.startsWith('ac_') || protoTypeLow === 'ac') installTypeVal = 'ac';
+        else if (protoTypeLow.startsWith('gas_boiler_') || protoTypeLow === 'gas_boiler') installTypeVal = 'gas_boiler';
+        else if (protoTypeLow.startsWith('hp_') || protoTypeLow === 'heat_pump') installTypeVal = 'heat_pump';
+        else if (protoTypeLow.includes('ventilation')) installTypeVal = 'ventilation';
+        else if (existingProto.deviceType) installTypeVal = existingProto.deviceType;
+        else if (visit.plannedInstallType) installTypeVal = ['heat_pump', 'gas_boiler', 'ac', 'ventilation'].includes(visit.plannedInstallType) ? visit.plannedInstallType : 'custom';
+      } else if (visit.plannedInstallType) {
+        installTypeVal = ['heat_pump', 'gas_boiler', 'ac', 'ventilation'].includes(visit.plannedInstallType) ? visit.plannedInstallType : 'custom';
+      } else if (dev?.deviceType) {
+        installTypeVal = dev.deviceType;
+      }
+
+      const devType = isMontaz ? installTypeVal : (dev?.deviceType || (protoTypeLow.startsWith('hp_') ? 'heat_pump' : (protoTypeLow.startsWith('gas_boiler_') ? 'gas_boiler' : 'ac')));
+      const isAc = isMontaz ? (installTypeVal === 'ac') : (devType === 'ac');
+      const hasTwoUnits = isAc || (isMontaz && installTypeVal === 'heat_pump') || protoTypeLow.startsWith('hp_') || devType === 'heat_pump';
 
       document.getElementById('close-visit-id').value = visit.id;
       if (existingProto && existingProto.comments !== undefined) {
         document.getElementById('close-visit-comment').value = existingProto.comments;
+      } else if (visit.completionComment) {
+        document.getElementById('close-visit-comment').value = visit.completionComment;
       } else {
         document.getElementById('close-visit-comment').value = isMontaz
           ? `Zamontowano i uruchomiono urządzenie: ${visit.plannedInstallModel || 'HVAC'}.${visit.notes ? ' (' + visit.notes + ')' : ''}`
@@ -8393,24 +8625,36 @@ service cloud.firestore {
       if (isMontaz) {
         installBox.classList.remove('hidden');
         nextInspLabel.classList.add('hidden');
-        document.getElementById('close-install-type').value = ['heat_pump', 'gas_boiler', 'ac', 'ventilation'].includes(visit.plannedInstallType) ? visit.plannedInstallType : (visit.plannedInstallType ? 'custom' : 'heat_pump');
-        document.getElementById('close-install-custom-type')?.classList.toggle('hidden', document.getElementById('close-install-type').value !== 'custom');
-        if (document.getElementById('close-install-custom-type')) document.getElementById('close-install-custom-type').value = visit.plannedInstallCustomType || '';
-        document.getElementById('close-install-model').value = (existingProto && existingProto.deviceModel) || visit.plannedInstallModel || '';
-        document.getElementById('close-install-warranty').value = visit.plannedInstallWarranty || 60;
-        document.getElementById('close-install-serial').value = (existingProto && existingProto.serialIndoor) || '';
-        if (document.getElementById('close-install-serial-outdoor')) document.getElementById('close-install-serial-outdoor').value = (existingProto && existingProto.serialOutdoor) || '';
-        document.getElementById('close-install-serial-out-wrap')?.classList.toggle('hidden', !isAc);
+        document.getElementById('close-install-type').value = installTypeVal;
+        document.getElementById('close-install-custom-type')?.classList.toggle('hidden', installTypeVal !== 'custom');
+        if (document.getElementById('close-install-custom-type')) {
+          document.getElementById('close-install-custom-type').value = existingProto?.customTypeLabel || existingProto?.deviceTypeLabel || visit.plannedInstallCustomType || dev?.customTypeLabel || '';
+        }
+        document.getElementById('close-install-model').value = (existingProto && existingProto.deviceModel) || visit.plannedInstallModel || dev?.deviceModel || '';
+        document.getElementById('close-install-warranty').value = (existingProto && existingProto.warrantyMonths) || visit.plannedInstallWarranty || dev?.warrantyMonths || 60;
+        document.getElementById('close-install-serial').value = (existingProto && existingProto.serialIndoor) || dev?.serialNumber || '';
+        if (document.getElementById('close-install-serial-outdoor')) {
+          document.getElementById('close-install-serial-outdoor').value = (existingProto && existingProto.serialOutdoor) || dev?.serialNumberOutdoor || '';
+        }
+        document.getElementById('close-install-serial-out-wrap')?.classList.toggle('hidden', !hasTwoUnits);
         if (document.getElementById('close-install-dev-notes')) {
-          document.getElementById('close-install-dev-notes').value = (existingProto && (existingProto.deviceNotes || existingProto.locationIndoor)) || visit.plannedInstallDeviceNotes || '';
+          document.getElementById('close-install-dev-notes').value = (existingProto && (existingProto.deviceNotes || existingProto.locationIndoor)) || visit.plannedInstallDeviceNotes || dev?.deviceNotes || '';
         }
-        if (document.getElementById('close-install-custom-loc')) {
-          document.getElementById('close-install-custom-loc').checked = false;
+        const existingCustomAddr = (existingProto && existingProto.installAddress) || (dev?.hasCustomLocation ? formatDeviceInstallAddress(dev) : '');
+        if (existingCustomAddr) {
+          if (document.getElementById('close-install-custom-loc')) document.getElementById('close-install-custom-loc').checked = true;
+          document.getElementById('close-install-custom-addr-fields')?.classList.remove('hidden');
+          const postalMatch = existingCustomAddr.match(/\b\d{2}-\d{3}\b/);
+          if (document.getElementById('close-install-postal')) document.getElementById('close-install-postal').value = postalMatch ? postalMatch[0] : (dev?.installPostalCode || '');
+          if (document.getElementById('close-install-city')) document.getElementById('close-install-city').value = dev?.installCity || '';
+          if (document.getElementById('close-install-street')) document.getElementById('close-install-street').value = dev?.installStreet || existingCustomAddr;
+        } else {
+          if (document.getElementById('close-install-custom-loc')) document.getElementById('close-install-custom-loc').checked = false;
+          document.getElementById('close-install-custom-addr-fields')?.classList.add('hidden');
+          if (document.getElementById('close-install-postal')) document.getElementById('close-install-postal').value = '';
+          if (document.getElementById('close-install-city')) document.getElementById('close-install-city').value = '';
+          if (document.getElementById('close-install-street')) document.getElementById('close-install-street').value = '';
         }
-        document.getElementById('close-install-custom-addr-fields')?.classList.add('hidden');
-        if (document.getElementById('close-install-postal')) document.getElementById('close-install-postal').value = '';
-        if (document.getElementById('close-install-city')) document.getElementById('close-install-city').value = '';
-        if (document.getElementById('close-install-street')) document.getElementById('close-install-street').value = '';
       } else {
         installBox.classList.add('hidden');
         nextInspLabel.classList.remove('hidden');
@@ -8456,14 +8700,17 @@ service cloud.firestore {
         document.getElementById('proto-form-kind').value = defaultProtoKind;
       }
       toggleProtocolFormInCloseModal(true);
-      onProtocolKindSelectChange(defaultProtoKind);
+      onProtocolKindSelectChange(defaultProtoKind, existingProto);
 
       document.getElementById('proto-inst-sn-in').value = (existingProto && existingProto.serialIndoor) || dev?.serialNumber || '';
       document.getElementById('proto-inst-sn-out').value = (existingProto && existingProto.serialOutdoor) || dev?.serialNumberOutdoor || '';
-      document.getElementById('proto-inst-loc-in').value = (existingProto && existingProto.locationIndoor) || visit.plannedInstallDeviceNotes || dev?.deviceNotes || 'Pomieszczenie klimatyzowane';
-      document.getElementById('proto-inst-loc-out').value = (existingProto && existingProto.locationOutdoor) || 'Elewacja zewnętrzna / Balkon';
+      document.getElementById('proto-inst-loc-in').value = (existingProto && (existingProto.locationIndoor || existingProto.deviceNotes)) || visit.plannedInstallDeviceNotes || dev?.deviceNotes || 'Pomieszczenie klimatyzowane';
+      document.getElementById('proto-inst-loc-out').value = (existingProto && (existingProto.locationOutdoor || existingProto.deviceNotes)) || 'Elewacja zewnętrzna / Balkon';
       if (document.getElementById('proto-univ-inst-loc')) {
-        document.getElementById('proto-univ-inst-loc').value = (existingProto && existingProto.univInstallLocation) || visit.plannedInstallDeviceNotes || dev?.deviceNotes || 'Zgodnie z dokumentacją techniczną';
+        document.getElementById('proto-univ-inst-loc').value = (existingProto && (existingProto.univInstallLocation || existingProto.locationIndoor)) || visit.plannedInstallDeviceNotes || dev?.deviceNotes || 'Zgodnie z dokumentacją techniczną';
+      }
+      if (document.getElementById('proto-univ-inst-test')) {
+        document.getElementById('proto-univ-inst-test').value = (existingProto && (existingProto.univInstallTest || existingProto.testResult)) || 'Pozytywny — urządzenie sprawne, przeszkolono użytkownika';
       }
       if (document.getElementById('proto-insp-materials')) {
         document.getElementById('proto-insp-materials').value = (existingProto && existingProto.usedMaterials) || '';
@@ -8480,69 +8727,81 @@ service cloud.firestore {
       if (document.getElementById('proto-srv-work-course')) {
         document.getElementById('proto-srv-work-course').value = (existingProto && existingProto.workCourse) || (visit.notes ? `Weryfikacja zgłoszenia (${visit.notes}), diagnostyka układu i usunięcie usterki.` : '');
       }
-      if (document.getElementById('proto-srv-status') && existingProto && existingProto.postServiceStatus) {
-        document.getElementById('proto-srv-status').value = existingProto.postServiceStatus;
+      if (document.getElementById('proto-srv-status')) {
+        document.getElementById('proto-srv-status').value = (existingProto && existingProto.postServiceStatus) || 'Urządzenie sprawne, przetestowane i przekazane do eksploatacji';
       }
-      if (document.getElementById('proto-inst-refrigerant') && existingProto && existingProto.refrigerant) {
-        document.getElementById('proto-inst-refrigerant').value = existingProto.refrigerant;
+      if (document.getElementById('proto-inst-refrigerant')) {
+        document.getElementById('proto-inst-refrigerant').value = (existingProto && existingProto.refrigerant) || 'R32';
       }
-      if (document.getElementById('proto-inst-length') && existingProto && existingProto.installLength) {
-        document.getElementById('proto-inst-length').value = existingProto.installLength;
+      if (document.getElementById('proto-inst-length')) {
+        document.getElementById('proto-inst-length').value = (existingProto && existingProto.installLength) || 'do 3 mb';
       }
-      if (document.getElementById('proto-inst-electric') && existingProto && existingProto.electricConn) {
-        document.getElementById('proto-inst-electric').value = existingProto.electricConn;
+      if (document.getElementById('proto-inst-electric')) {
+        document.getElementById('proto-inst-electric').value = (existingProto && existingProto.electricConn) || 'Do istniejącej instalacji';
       }
-      if (document.getElementById('proto-inst-condensate') && existingProto && existingProto.condensate) {
-        document.getElementById('proto-inst-condensate').value = existingProto.condensate;
+      if (document.getElementById('proto-inst-condensate')) {
+        document.getElementById('proto-inst-condensate').value = (existingProto && existingProto.condensate) || 'Grawitacyjnie na zewnątrz';
       }
-      if (document.getElementById('proto-inst-tests') && existingProto && existingProto.testResult) {
-        document.getElementById('proto-inst-tests').value = existingProto.testResult;
+      if (document.getElementById('proto-inst-tests')) {
+        document.getElementById('proto-inst-tests').value = (existingProto && existingProto.testResult) || 'Pozytywna / Urządzenie sprawne';
       }
-      if (document.getElementById('proto-insp-fgaz') && existingProto && existingProto.fgazTool) {
-        document.getElementById('proto-insp-fgaz').value = existingProto.fgazTool;
+      if (document.getElementById('proto-insp-fgaz')) {
+        document.getElementById('proto-insp-fgaz').value = (existingProto && existingProto.fgazTool) || 'Wykrywacz nieszczelności / Certyfikat F-GAZ';
       }
-      if (document.getElementById('proto-gb-flue') && existingProto && existingProto.flueAnalysis) {
-        document.getElementById('proto-gb-flue').value = existingProto.flueAnalysis;
+      if (document.getElementById('proto-gb-flue')) {
+        document.getElementById('proto-gb-flue').value = (existingProto && existingProto.flueAnalysis) || 'W normie (wydruk / pomiar prawidłowy)';
       }
-      if (document.getElementById('proto-gb-pressure') && existingProto && existingProto.coPressure) {
-        document.getElementById('proto-gb-pressure').value = existingProto.coPressure;
+      if (document.getElementById('proto-gb-pressure')) {
+        document.getElementById('proto-gb-pressure').value = (existingProto && existingProto.coPressure) || '1,5 bar / Naczynie: 1,0 bar';
       }
-      if (document.getElementById('proto-gb-gas-tight') && existingProto && existingProto.gasTightness) {
-        document.getElementById('proto-gb-gas-tight').value = existingProto.gasTightness;
+      if (document.getElementById('proto-gb-gas-tight')) {
+        document.getElementById('proto-gb-gas-tight').value = (existingProto && existingProto.gasTightness) || 'Szczelna / Detektor gazu i analizator';
       }
-      if (document.getElementById('proto-gb-inst-gas') && existingProto && existingProto.gbGasType) {
-        document.getElementById('proto-gb-inst-gas').value = existingProto.gbGasType;
+      if (document.getElementById('proto-gb-inst-gas')) {
+        document.getElementById('proto-gb-inst-gas').value = (existingProto && existingProto.gbGasType) || 'GZ-50 (E) / 230V';
       }
-      if (document.getElementById('proto-gb-inst-flue-sys') && existingProto && existingProto.gbFlueSystem) {
-        document.getElementById('proto-gb-inst-flue-sys').value = existingProto.gbFlueSystem;
+      if (document.getElementById('proto-gb-inst-flue-sys')) {
+        document.getElementById('proto-gb-inst-flue-sys').value = (existingProto && existingProto.gbFlueSystem) || 'Koncentryczny 60/100 lub wkład kominowy';
       }
-      if (document.getElementById('proto-gb-inst-tight') && existingProto && existingProto.gbTightnessTest) {
-        document.getElementById('proto-gb-inst-tight').value = existingProto.gbTightnessTest;
+      if (document.getElementById('proto-gb-inst-tight')) {
+        document.getElementById('proto-gb-inst-tight').value = (existingProto && existingProto.gbTightnessTest) || 'Pozytywna (Instalacja szczelna)';
       }
-      if (document.getElementById('proto-gb-inst-hydr') && existingProto && existingProto.gbHydraulics) {
-        document.getElementById('proto-gb-inst-hydr').value = existingProto.gbHydraulics;
+      if (document.getElementById('proto-gb-inst-hydr')) {
+        document.getElementById('proto-gb-inst-hydr').value = (existingProto && existingProto.gbHydraulics) || 'Zamontowano filtr magnetyczny, syfon podłączony';
       }
-      if (document.getElementById('proto-gb-inst-comb') && existingProto && existingProto.gbCombustionTest) {
-        document.getElementById('proto-gb-inst-comb').value = existingProto.gbCombustionTest;
+      if (document.getElementById('proto-gb-inst-comb')) {
+        document.getElementById('proto-gb-inst-comb').value = (existingProto && existingProto.gbCombustionTest) || 'Wykonano analizę spalin — parametry w normie';
       }
-      if (document.getElementById('proto-hp-inst-type') && existingProto && existingProto.hpSystemType) {
-        document.getElementById('proto-hp-inst-type').value = existingProto.hpSystemType;
+      if (document.getElementById('proto-hp-inst-type')) {
+        document.getElementById('proto-hp-inst-type').value = (existingProto && existingProto.hpSystemType) || 'Powietrze-Woda';
+      }
+      if (document.getElementById('proto-hp-inst-refrig')) {
+        document.getElementById('proto-hp-inst-refrig').value = (existingProto && existingProto.refrigerant) || 'R32 / R290';
+      }
+      if (document.getElementById('proto-hp-inst-elec')) {
+        document.getElementById('proto-hp-inst-elec').value = (existingProto && existingProto.electricConn) || 'Zgodnie z DTR producenta';
+      }
+      if (document.getElementById('proto-hp-inst-hydr')) {
+        document.getElementById('proto-hp-inst-hydr').value = (existingProto && existingProto.hydraulicsInfo) || 'Zamontowano filtr magnetyczny, próbę ciśnieniową wykonano';
+      }
+      if (document.getElementById('proto-hp-inst-test')) {
+        document.getElementById('proto-hp-inst-test').value = (existingProto && existingProto.testResult) || 'Pozytywne / Inwestor przeszkolony z obsługi';
       }
       if (existingProto && Array.isArray(existingProto.customServiceFields)) {
         existingProto.customServiceFields.forEach((f, idx) => {
           const inp = document.getElementById(`proto-srv-extra-${idx}`);
-          if (inp && f.value !== undefined) inp.value = f.value;
+          if (inp) inp.value = f.value !== undefined ? f.value : (typeof f === 'string' ? f : '');
         });
       }
       if (existingProto && Array.isArray(existingProto.customInstallRows)) {
         existingProto.customInstallRows.forEach((r, idx) => {
           const inp = document.getElementById(`proto-dyn-param-${idx}`);
-          if (inp && r.value !== undefined) inp.value = r.value;
+          if (inp) inp.value = r.value !== undefined ? r.value : (typeof r === 'string' ? r : '');
         });
       }
       if (existingProto && Array.isArray(existingProto.checklist)) {
         existingProto.checklist.forEach((item, idx) => {
-          const isDone = Boolean(item.done);
+          const isDone = (typeof item === 'object' && item !== null) ? Boolean(item.done ?? item.checked ?? true) : true;
           const c1 = document.getElementById(`proto-chk-${idx + 1}`);
           if (c1) c1.checked = isDone;
           const c2 = document.getElementById(`proto-gb-chk-${idx + 1}`);
@@ -8551,6 +8810,34 @@ service cloud.firestore {
           if (c3) c3.checked = isDone;
           const c4 = document.getElementById(`proto-dyn-chk-${idx}`);
           if (c4) c4.checked = isDone;
+          const cInsp = document.querySelector(`.proto-custom-insp-chk[data-row-idx="${idx}"]`);
+          if (cInsp) cInsp.checked = isDone;
+          const cChk = document.querySelector(`.proto-custom-checklist-chk[data-row-idx="${idx}"]`);
+          if (cChk) cChk.checked = isDone;
+        });
+      }
+
+      if (existingProto && Array.isArray(existingProto.customSectionsData)) {
+        existingProto.customSectionsData.forEach(sec => {
+          if (sec.kind === 'table' && Array.isArray(sec.cells)) {
+            sec.cells.forEach(c => {
+              const inp = document.querySelector(`.proto-custom-table-input[data-sec-idx="${sec.secIdx}"][data-row-idx="${c.rowIdx}"][data-col-idx="${c.colIdx}"]`);
+              if (inp) inp.value = c.value || '';
+            });
+          } else if (sec.kind === 'inspection_checklist' && Array.isArray(sec.items)) {
+            sec.items.forEach(it => {
+              const chk = document.querySelector(`.proto-custom-insp-chk[data-sec-idx="${sec.secIdx}"][data-row-idx="${it.rowIdx}"]`);
+              if (chk) chk.checked = Boolean(it.checked);
+            });
+          } else if (sec.kind === 'checklist' && Array.isArray(sec.items)) {
+            sec.items.forEach(it => {
+              const chk = document.querySelector(`.proto-custom-checklist-chk[data-sec-idx="${sec.secIdx}"][data-row-idx="${it.rowIdx}"]`);
+              if (chk) chk.checked = Boolean(it.checked);
+            });
+          } else if (sec.kind === 'text') {
+            const txt = document.querySelector(`.proto-custom-text-input[data-sec-idx="${sec.secIdx}"]`);
+            if (txt) txt.value = sec.text || '';
+          }
         });
       }
 
@@ -8619,8 +8906,8 @@ service cloud.firestore {
       }, 90);
 
       const devCustomAddr = dev ? formatDeviceInstallAddress(dev) : (visit.clientCity ? `${visit.clientCity}${visit.clientStreet ? ', ' + visit.clientStreet : ''}` : '');
-      const clientName = client ? client.name : (visit.clientName || 'Klient');
-      const devName = dev ? dev.deviceModel : (visit.deviceModel || (isMontaz ? ((existingProto && existingProto.deviceModel) || visit.plannedInstallModel || 'Nowe urządzenie') : 'Ogólne urządzenie'));
+      const clientName = (existingProto && existingProto.clientName) || (client ? client.name : (visit.clientName || 'Klient'));
+      const devName = (existingProto && existingProto.deviceModel) || (dev ? dev.deviceModel : (visit.deviceModel || (isMontaz ? (visit.plannedInstallModel || 'Nowe urządzenie') : 'Ogólne urządzenie')));
 
       const editBannerHtml = currentlyEditingProtocol ? `
         <div class="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700/80 text-[11px] font-bold text-amber-800 dark:text-amber-200 flex items-center gap-1.5 mb-1.5">
@@ -8642,8 +8929,9 @@ service cloud.firestore {
       if (adhocDbBox) {
         if (isAdHocVisit) {
           adhocDbBox.classList.remove('hidden');
-          if (saveClientChk) saveClientChk.checked = false;
-          document.getElementById('close-visit-adhoc-fields')?.classList.add('hidden');
+          const shouldShowAdhocFields = Boolean(currentlyEditingProtocol || (visit.clientName && !visit.clientName.match(/^Klient(\s*\(.*?\))?$/i)));
+          if (saveClientChk) saveClientChk.checked = shouldShowAdhocFields;
+          document.getElementById('close-visit-adhoc-fields')?.classList.toggle('hidden', !shouldShowAdhocFields);
 
           const nameInput = document.getElementById('close-adhoc-client-name');
           const phoneInput = document.getElementById('close-adhoc-client-phone');
@@ -8653,13 +8941,13 @@ service cloud.firestore {
           const nipInput = document.getElementById('close-adhoc-client-nip');
           const emailInput = document.getElementById('close-adhoc-client-email');
 
-          if (nameInput) nameInput.value = (visit.clientName || '').replace(/^Klient(\s*\(.*?\))?$/i, '').trim();
-          if (phoneInput) phoneInput.value = visit.clientPhone || '+48 ';
-          if (cityInput) cityInput.value = visit.clientCity || '';
-          if (streetInput) streetInput.value = visit.clientStreet || '';
-          if (postalInput) postalInput.value = visit.clientPostalCode || '';
-          if (nipInput) nipInput.value = visit.clientNip || '';
-          if (emailInput) emailInput.value = visit.clientEmail || '';
+          if (nameInput) nameInput.value = (existingProto?.clientName || visit.clientName || '').replace(/^Klient(\s*\(.*?\))?$/i, '').trim();
+          if (phoneInput) phoneInput.value = existingProto?.clientPhone || visit.clientPhone || '+48 ';
+          if (cityInput) cityInput.value = existingProto?.clientCity || visit.clientCity || '';
+          if (streetInput) streetInput.value = existingProto?.clientStreet || visit.clientStreet || '';
+          if (postalInput) postalInput.value = existingProto?.clientPostalCode || visit.clientPostalCode || '';
+          if (nipInput) nipInput.value = existingProto?.clientNip || visit.clientNip || '';
+          if (emailInput) emailInput.value = existingProto?.clientEmail || visit.clientEmail || '';
         } else {
           adhocDbBox.classList.add('hidden');
         }
@@ -8721,6 +9009,43 @@ service cloud.firestore {
         sigClientDataUrl: sigClientUrl
       };
 
+      function getChecklistDoneState(idx) {
+        const dynWrap = document.getElementById('proto-fields-dynamic-checklist');
+        if (dynWrap && !dynWrap.classList.contains('hidden')) {
+          const elDyn = document.getElementById(`proto-dyn-chk-${idx}`);
+          if (elDyn) return elDyn.checked;
+        }
+        const acWrap = document.getElementById('proto-fields-ac-inspection');
+        if (acWrap && !acWrap.classList.contains('hidden')) {
+          const elChk = document.getElementById(`proto-chk-${idx + 1}`);
+          if (elChk) return elChk.checked;
+        }
+        const gbWrap = document.getElementById('proto-fields-gas-boiler-inspection');
+        if (gbWrap && !gbWrap.classList.contains('hidden')) {
+          const elGb = document.getElementById(`proto-gb-chk-${idx + 1}`);
+          if (elGb) return elGb.checked;
+        }
+        const hpWrap = document.getElementById('proto-fields-hp-inspection');
+        if (hpWrap && !hpWrap.classList.contains('hidden')) {
+          const elHp = document.getElementById(`proto-hp-chk-${idx + 1}`);
+          if (elHp) return elHp.checked;
+        }
+        const elCustomInsp = document.querySelector(`.proto-custom-insp-chk[data-row-idx="${idx}"]`);
+        if (elCustomInsp) return elCustomInsp.checked;
+        const elCustomChk = document.querySelector(`.proto-custom-checklist-chk[data-row-idx="${idx}"]`);
+        if (elCustomChk) return elCustomChk.checked;
+
+        const fallbackDyn = document.getElementById(`proto-dyn-chk-${idx}`);
+        if (fallbackDyn) return fallbackDyn.checked;
+        const fallbackChk = document.getElementById(`proto-chk-${idx + 1}`);
+        if (fallbackChk) return fallbackChk.checked;
+        const fallbackGb = document.getElementById(`proto-gb-chk-${idx + 1}`);
+        if (fallbackGb) return fallbackGb.checked;
+        const fallbackHp = document.getElementById(`proto-hp-chk-${idx + 1}`);
+        if (fallbackHp) return fallbackHp.checked;
+        return true;
+      }
+
       let protoObj = null;
 
       if (protoKind === 'ac_install' && !hasCustomEditedChecklist) {
@@ -8749,7 +9074,7 @@ service cloud.firestore {
         ];
         const checklist = checklistLabels.map((label, idx) => ({
           label,
-          done: Boolean(document.getElementById(`proto-chk-${idx + 1}`)?.checked)
+          done: getChecklistDoneState(idx)
         }));
         protoObj = {
           ...base,
@@ -8777,7 +9102,7 @@ service cloud.firestore {
           gasTightness: document.getElementById('proto-gb-gas-tight')?.value || 'Szczelna',
           checklist: gbLabels.map((label, idx) => ({
             label,
-            done: Boolean(document.getElementById(`proto-gb-chk-${idx + 1}`)?.checked)
+            done: getChecklistDoneState(idx)
           }))
         };
       } else if (protoKind === 'gas_boiler_install' && !hasCustomEditedChecklist) {
@@ -8809,7 +9134,7 @@ service cloud.firestore {
           ...base,
           checklist: hpLabels.map((label, idx) => ({
             label,
-            done: Boolean(document.getElementById(`proto-hp-chk-${idx + 1}`)?.checked)
+            done: getChecklistDoneState(idx)
           }))
         };
       } else if (protoKind === 'hp_install' && !hasCustomEditedChecklist) {
@@ -8829,7 +9154,7 @@ service cloud.firestore {
         }));
         const dynChecklist = (tpl?.checklist || []).map((label, idx) => ({
           label,
-          done: Boolean(document.getElementById(`proto-dyn-chk-${idx}`)?.checked ?? true)
+          done: getChecklistDoneState(idx)
         }));
         protoObj = {
           ...base,
@@ -8855,15 +9180,59 @@ service cloud.firestore {
           customInstallRows,
           checklist: dynLabels.map((label, idx) => ({
             label,
-            done: Boolean(document.getElementById(`proto-dyn-chk-${idx}`)?.checked ?? true)
+            done: getChecklistDoneState(idx)
           }))
         };
       }
 
-      // Jeśli szablon posiada zedytowany arkusz A4 (własne tabele pomiarów, usunięte punkty, zmodyfikowany tekst) lub protokół był edytowany
-      const sourceHtml = currentlyEditingProtocol?.customEditedHtml || (tpl && tpl.customEditedHtml ? tpl.customEditedHtml : null);
-      if (sourceHtml) {
-        protoObj.customEditedHtml = applyVisitDataToTemplateHtml(sourceHtml, protoObj);
+      // Zbierz dane ze wszystkich sekcji własnych formularza szablonu
+      const customSectionsData = [];
+      document.querySelectorAll('#proto-custom-template-sections-box > div').forEach((win, sIdx) => {
+        const tableInputs = win.querySelectorAll('.proto-custom-table-input');
+        const inspChecks = win.querySelectorAll('.proto-custom-insp-chk');
+        const checklistChecks = win.querySelectorAll('.proto-custom-checklist-chk');
+        const textInputs = win.querySelectorAll('.proto-custom-text-input');
+
+        if (tableInputs.length > 0) {
+          const cells = [];
+          tableInputs.forEach(inp => {
+            cells.push({
+              rowIdx: Number(inp.getAttribute('data-row-idx')),
+              colIdx: Number(inp.getAttribute('data-col-idx') || 1),
+              value: inp.value.trim()
+            });
+          });
+          customSectionsData.push({ secIdx: sIdx, kind: 'table', cells });
+        } else if (inspChecks.length > 0) {
+          const items = [];
+          inspChecks.forEach(chk => {
+            items.push({
+              rowIdx: Number(chk.getAttribute('data-row-idx')),
+              checked: chk.checked
+            });
+          });
+          customSectionsData.push({ secIdx: sIdx, kind: 'inspection_checklist', items });
+        } else if (checklistChecks.length > 0) {
+          const items = [];
+          checklistChecks.forEach(chk => {
+            items.push({
+              rowIdx: Number(chk.getAttribute('data-row-idx')),
+              checked: chk.checked
+            });
+          });
+          customSectionsData.push({ secIdx: sIdx, kind: 'checklist', items });
+        } else if (textInputs.length > 0) {
+          customSectionsData.push({ secIdx: sIdx, kind: 'text', text: textInputs[0].value.trim() });
+        }
+      });
+      protoObj.customSectionsData = customSectionsData;
+
+      // Zastosuj zaktualizowane dane do arkusza A4 protokołu
+      const baseHtmlToUse = currentlyEditingProtocol?.customEditedHtml || tpl?.customEditedHtml;
+      if (baseHtmlToUse) {
+        protoObj.customEditedHtml = applyVisitDataToTemplateHtml(baseHtmlToUse, protoObj);
+      } else {
+        protoObj.customEditedHtml = renderProtocolSheetHtml(protoObj);
       }
 
       return protoObj;
@@ -8969,7 +9338,20 @@ service cloud.firestore {
         const devNotes = isMontaz ? (document.getElementById('close-install-dev-notes')?.value || '') : (currentlyEditingProtocol.deviceNotes || visit.notes || '');
         const devType = isMontaz ? (document.getElementById('close-install-type')?.value || visit.plannedInstallType || 'heat_pump') : (currentlyEditingProtocol.type || 'ac');
         const devTypeInfo = getDeviceInfo(devType);
-        const devCustomAddr = currentlyEditingProtocol.installAddress || (client ? formatDeviceInstallAddress(client.devices?.find(d => d.id === visit.deviceId) || {}) : '');
+
+        const hasCustomLoc = Boolean(document.getElementById('close-install-custom-loc')?.checked);
+        let devCustomAddr = '';
+        if (hasCustomLoc) {
+          const cCity = (document.getElementById('close-install-city')?.value || '').trim();
+          const cStreet = (document.getElementById('close-install-street')?.value || '').trim();
+          const cPostal = (document.getElementById('close-install-postal')?.value || '').trim();
+          if (cCity || cStreet) {
+            devCustomAddr = `${cPostal ? cPostal + ' ' : ''}${cCity}${cStreet ? ', ' + cStreet : ''}`.trim();
+          }
+        }
+        if (!devCustomAddr) {
+          devCustomAddr = currentlyEditingProtocol.installAddress || (client ? formatDeviceInstallAddress(client.devices?.find(d => d.id === visit.deviceId) || {}) : '');
+        }
 
         savedProtocol = buildProtocolDataFromModal(
           visit,
@@ -8984,6 +9366,30 @@ service cloud.firestore {
         );
         if (savedProtocol) {
           savedProtocol.protocolId = editingProtoId;
+          if (isMontaz) {
+            savedProtocol.warrantyMonths = Number(document.getElementById('close-install-warranty')?.value) || currentlyEditingProtocol.warrantyMonths || 60;
+            savedProtocol.customTypeLabel = (document.getElementById('close-install-custom-type')?.value || '').trim() || currentlyEditingProtocol.customTypeLabel || '';
+          }
+        }
+
+        if (!client || visit.isAdHoc) {
+          const cName = (document.getElementById('close-adhoc-client-name')?.value || '').trim();
+          const cPhone = (document.getElementById('close-adhoc-client-phone')?.value || '').trim();
+          const cCity = (document.getElementById('close-adhoc-client-city')?.value || '').trim();
+          const cStreet = (document.getElementById('close-adhoc-client-street')?.value || '').trim();
+          const cPostal = (document.getElementById('close-adhoc-client-postal')?.value || '').trim();
+          const cNip = (document.getElementById('close-adhoc-client-nip')?.value || '').trim();
+          const cEmail = (document.getElementById('close-adhoc-client-email')?.value || '').trim();
+          if (cName) { visit.clientName = cName; if (savedProtocol) savedProtocol.clientName = cName; }
+          if (cPhone) { visit.clientPhone = cPhone; if (savedProtocol) savedProtocol.clientPhone = cPhone; }
+          if (cCity || cStreet) {
+            visit.clientCity = cCity;
+            visit.clientStreet = cStreet;
+            visit.clientPostalCode = cPostal;
+            if (savedProtocol) savedProtocol.clientAddress = `${cPostal ? cPostal + ' ' : ''}${cCity}${cStreet ? ', ' + cStreet : ''}`.trim();
+          }
+          if (cNip) { visit.clientNip = cNip; if (savedProtocol) savedProtocol.clientNip = cNip; }
+          if (cEmail) { visit.clientEmail = cEmail; if (savedProtocol) savedProtocol.clientEmail = cEmail; }
         }
 
         visit.completionComment = comment;
@@ -9004,6 +9410,7 @@ service cloud.firestore {
                 if (protoSnIn) dev.serialNumber = protoSnIn;
                 if (protoSnOut) dev.serialNumberOutdoor = protoSnOut;
                 if (isMontaz && devModel) dev.deviceModel = devModel;
+                if (isMontaz && savedProtocol?.warrantyMonths) dev.warrantyMonths = savedProtocol.warrantyMonths;
                 histFound = true;
                 break;
               }
@@ -9022,6 +9429,7 @@ service cloud.firestore {
               if (protoSnIn) dev.serialNumber = protoSnIn;
               if (protoSnOut) dev.serialNumberOutdoor = protoSnOut;
               if (isMontaz && devModel) dev.deviceModel = devModel;
+              if (isMontaz && savedProtocol?.warrantyMonths) dev.warrantyMonths = savedProtocol.warrantyMonths;
             }
           }
         }
@@ -9679,9 +10087,7 @@ service cloud.firestore {
                 <button type="button" onclick="removeProtocolCustomSection(this)" style="font-size:10px;font-weight:700;background:#e11d48;color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;">🗑️ Usuń sekcję</button>
               </div>
             </div>
-            <div contenteditable="true" spellcheck="false" style="min-height:55px;padding:8px;background:#fefce8;border:1px dashed #fde047;border-radius:6px;font-size:11px;line-height:1.5;outline:none;color:#713f12;">
-              Wpisz tutaj dodatkowe uwagi, zalecenia eksploatacyjne dla klienta, wykaz użytych materiałów lub opis specyfiki montażu / serwisu...
-            </div>
+            <div contenteditable="true" spellcheck="false" data-placeholder="Wpisz treść uwag lub zaleceń..." style="min-height:55px;padding:8px;background:#fefce8;border:1px dashed #fde047;border-radius:6px;font-size:11px;line-height:1.5;outline:none;color:#713f12;"></div>
           </div>
         `;
       }
@@ -10518,7 +10924,7 @@ service cloud.firestore {
                 <tr>
                   <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:700;width:34px;">${i + 1}.</td>
                   <td style="border:1px solid #cbd5e1;padding:4px 8px;">${typeof item === 'string' ? item : (item.label || '')}</td>
-                  <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && item.done === false) ? '#64748b' : '#059669'};">${(typeof item === 'object' && item.done === false) ? 'NIE DOTYCZY' : '✓ WYKONANO'}</td>
+                  <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && (item.done === false || item.done === 'false')) ? '#64748b' : '#059669'};">${(typeof item === 'object' && (item.done === false || item.done === 'false')) ? 'NIE DOTYCZY' : '✓ WYKONANO'}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -10586,8 +10992,8 @@ service cloud.firestore {
           <tr>
             <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:700;width:34px;">${i + 1}.</td>
             <td style="border:1px solid #cbd5e1;padding:4px 8px;">${typeof item === 'string' ? item : (item.label || '')}</td>
-            <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && item.done === false) ? '#64748b' : '#059669'};">
-              ${(typeof item === 'object' && item.done === false) ? 'NIE DOTYCZY' : '✓ WYKONANO'}
+            <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && (item.done === false || item.done === 'false')) ? '#64748b' : '#059669'};">
+              ${(typeof item === 'object' && (item.done === false || item.done === 'false')) ? 'NIE DOTYCZY' : '✓ WYKONANO'}
             </td>
           </tr>
         `).join('');
@@ -10641,7 +11047,7 @@ service cloud.firestore {
           <tr>
             <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:700;width:34px;">${i + 1}.</td>
             <td style="border:1px solid #cbd5e1;padding:4px 8px;">${typeof item === 'string' ? item : (item.label || '')}</td>
-            <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && item.done === false) ? '#64748b' : '#059669'};">${(typeof item === 'object' && item.done === false) ? 'NIE DOTYCZY' : '✓ WYKONANO'}</td>
+            <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && (item.done === false || item.done === 'false')) ? '#64748b' : '#059669'};">${(typeof item === 'object' && (item.done === false || item.done === 'false')) ? 'NIE DOTYCZY' : '✓ WYKONANO'}</td>
           </tr>
         `).join('');
 
@@ -10708,7 +11114,7 @@ service cloud.firestore {
                 <tr>
                   <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:700;width:34px;">${i + 1}.</td>
                   <td style="border:1px solid #cbd5e1;padding:4px 8px;">${typeof item === 'string' ? item : (item.label || '')}</td>
-                  <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && item.done === false) ? '#64748b' : '#059669'};">${(typeof item === 'object' && item.done === false) ? 'NIE DOTYCZY' : '✓ WYKONANO'}</td>
+                  <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && (item.done === false || item.done === 'false')) ? '#64748b' : '#059669'};">${(typeof item === 'object' && (item.done === false || item.done === 'false')) ? 'NIE DOTYCZY' : '✓ WYKONANO'}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -10775,7 +11181,7 @@ service cloud.firestore {
                 <tr>
                   <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:700;width:34px;">${i + 1}.</td>
                   <td style="border:1px solid #cbd5e1;padding:4px 8px;">${typeof item === 'string' ? item : (item.label || '')}</td>
-                  <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && item.done === false) ? '#64748b' : '#059669'};">${(typeof item === 'object' && item.done === false) ? 'NIE DOTYCZY' : '✓ WYKONANO'}</td>
+                  <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && (item.done === false || item.done === 'false')) ? '#64748b' : '#059669'};">${(typeof item === 'object' && (item.done === false || item.done === 'false')) ? 'NIE DOTYCZY' : '✓ WYKONANO'}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -10832,8 +11238,8 @@ service cloud.firestore {
           <tr>
             <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:700;width:34px;">${i + 1}.</td>
             <td style="border:1px solid #cbd5e1;padding:4px 8px;">${typeof item === 'string' ? item : (item.label || '')}</td>
-            <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && item.done === false) ? '#64748b' : '#059669'};">
-              ${(typeof item === 'object' && item.done === false) ? 'NIE DOTYCZY' : '✓ WYKONANO'}
+            <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && (item.done === false || item.done === 'false')) ? '#64748b' : '#059669'};">
+              ${(typeof item === 'object' && (item.done === false || item.done === 'false')) ? 'NIE DOTYCZY' : '✓ WYKONANO'}
             </td>
           </tr>
         `).join('');
@@ -10894,8 +11300,8 @@ service cloud.firestore {
         <tr>
           <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:700;width:36px;">${i + 1}.</td>
           <td style="border:1px solid #cbd5e1;padding:4px 8px;">${typeof item === 'string' ? item : (item.label || '')}</td>
-          <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && item.done === false) ? '#dc2626' : '#059669'};">
-            ${(typeof item === 'object' && item.done === false) ? 'NIE DOTYCZY' : '✓ TAK (Wykonano)'}
+          <td style="border:1px solid #cbd5e1;padding:4px 8px;text-align:center;font-weight:800;width:110px;color:${(typeof item === 'object' && (item.done === false || item.done === 'false')) ? '#64748b' : '#059669'};">
+            ${(typeof item === 'object' && (item.done === false || item.done === 'false')) ? 'NIE DOTYCZY' : '✓ TAK (Wykonano)'}
           </td>
         </tr>
       `).join('');
@@ -11098,6 +11504,7 @@ service cloud.firestore {
             }
             @media print {
               .protocol-no-print, .no-print { display: none !important; }
+              [contenteditable][data-placeholder]:empty:before { display: none !important; }
               .protocol-footer-signatures-wrap,
               .protocol-signatures-table,
               .protocol-statement-zgodnosc-table,
