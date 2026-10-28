@@ -122,6 +122,19 @@
       box-shadow: 0 0 0 2px #10b981;
       color: #0f172a;
     }
+    /* Zapobieganie ucinaniu elementów (np. podpisów, tabel, sekcji) na przejściu stron w druku i PDF */
+    .protocol-footer-signatures-wrap,
+    .protocol-signatures-table,
+    .protocol-statement-zgodnosc-table,
+    .protocol-custom-section,
+    .avoid-page-break,
+    #servitrack-pdf-stage table,
+    #servitrack-pdf-stage tr,
+    #protocol-printable-area table,
+    #protocol-printable-area tr {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
   </style>
 </head>
 <body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 font-sans min-h-screen flex flex-col md:flex-row antialiased overflow-x-hidden">
@@ -8728,7 +8741,7 @@ service cloud.firestore {
       let sectionHtml = '';
       if (kind === 'inspection_checklist') {
         sectionHtml = `
-          <div class="protocol-custom-section" data-section-kind="inspection_checklist" style="margin-top:14px;margin-bottom:14px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:#ffffff;color:#0f172a;">
+          <div class="protocol-custom-section" data-section-kind="inspection_checklist" style="margin-top:14px;margin-bottom:14px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:#ffffff;color:#0f172a;break-inside:avoid;page-break-inside:avoid;">
             <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #059669;padding-bottom:6px;margin-bottom:8px;">
               <div contenteditable="true" spellcheck="false" style="font-size:11px;font-weight:800;text-transform:uppercase;color:#059669;outline:none;">
                 📋 Wykaz wykonanych czynności przeglądowych i serwisowych
@@ -8770,7 +8783,7 @@ service cloud.firestore {
         `;
       } else if (kind === 'checklist') {
         sectionHtml = `
-          <div class="protocol-custom-section" data-section-kind="checklist" style="margin-top:14px;margin-bottom:14px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:#ffffff;color:#0f172a;">
+          <div class="protocol-custom-section" data-section-kind="checklist" style="margin-top:14px;margin-bottom:14px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:#ffffff;color:#0f172a;break-inside:avoid;page-break-inside:avoid;">
             <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #0284c7;padding-bottom:6px;margin-bottom:8px;">
               <div contenteditable="true" spellcheck="false" style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0369a1;outline:none;">
                 ☑️ Punkty kontrolne
@@ -8795,7 +8808,7 @@ service cloud.firestore {
         `;
       } else if (kind === 'table') {
         sectionHtml = `
-          <div class="protocol-custom-section" data-section-kind="table" style="margin-top:14px;margin-bottom:14px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:#ffffff;color:#0f172a;">
+          <div class="protocol-custom-section" data-section-kind="table" style="margin-top:14px;margin-bottom:14px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:#ffffff;color:#0f172a;break-inside:avoid;page-break-inside:avoid;">
             <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #0f766e;padding-bottom:6px;margin-bottom:8px;">
               <div contenteditable="true" spellcheck="false" style="font-size:11px;font-weight:800;text-transform:uppercase;color:#0f766e;outline:none;">
                 📊 Tabela parametrów / pomiarów
@@ -8828,7 +8841,7 @@ service cloud.firestore {
         `;
       } else if (kind === 'text') {
         sectionHtml = `
-          <div class="protocol-custom-section" data-section-kind="text" style="margin-top:14px;margin-bottom:14px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:#ffffff;color:#0f172a;">
+          <div class="protocol-custom-section" data-section-kind="text" style="margin-top:14px;margin-bottom:14px;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;background:#ffffff;color:#0f172a;break-inside:avoid;page-break-inside:avoid;">
             <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #d97706;padding-bottom:6px;margin-bottom:8px;">
               <div contenteditable="true" spellcheck="false" style="font-size:11px;font-weight:800;text-transform:uppercase;color:#d97706;outline:none;">
                 📝 Uwagi serwisowe / Zalecenia po wykonaniu prac
@@ -9578,7 +9591,7 @@ service cloud.firestore {
 
     function renderZgonoscStatementTableHtml() {
       return `
-        <table class="protocol-statement-zgodnosc-table" style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:10.5px;border:1.5px solid #000;">
+        <table class="protocol-statement-zgodnosc-table" style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:10.5px;border:1.5px solid #000;break-inside:avoid;page-break-inside:avoid;">
           <tbody>
             <tr>
               <td style="width:95px;border:1.5px solid #000;padding:8px;font-weight:800;text-align:center;vertical-align:middle;background:#fff;color:#000;">
@@ -9634,9 +9647,9 @@ service cloud.firestore {
 
     function renderProtocolSignaturesFooterHtml(proto, sigTechImg, sigClientImg) {
       return `
-        <div class="protocol-footer-signatures-wrap" style="margin-top:14px;">
+        <div class="protocol-footer-signatures-wrap" style="margin-top:14px;break-inside:avoid;page-break-inside:avoid;">
           ${renderZgonoscStatementTableHtml()}
-          <table class="protocol-signatures-table" style="width:100%;border-collapse:collapse;margin-top:8px;color:#0f172a;">
+          <table class="protocol-signatures-table" style="width:100%;border-collapse:collapse;margin-top:8px;color:#0f172a;break-inside:avoid;page-break-inside:avoid;">
             <tr>
               <td style="width:48%;text-align:center;vertical-align:bottom;">
                 <div style="border:1px dashed #94a3b8;border-radius:8px;padding:6px;background:#ffffff;min-height:92px;display:flex;align-items:center;justify-content:center;">
@@ -10103,6 +10116,7 @@ service cloud.firestore {
       }
 
       const savedScrollY = window.scrollY;
+      let pdfWrapper = null;
       let pdfStage = null;
 
       try {
@@ -10127,10 +10141,15 @@ service cloud.firestore {
 
         window.scrollTo(0, 0);
 
-        // Tworzymy arkusz dopasowany w proporcji 1:1 do pełnej szerokości A4 (794px przy windowWidth: 794),
-        // umieszczony w punkcie (0,0) bez nakładek flex centrujących, które obcinały połowę strony
+        // Tworzymy nadrzędny wrapper w punkcie (0,0), który nie zakłóca układu strony
+        pdfWrapper = document.createElement('div');
+        pdfWrapper.id = 'servitrack-pdf-wrapper';
+        pdfWrapper.style.cssText = 'position:fixed;top:0;left:0;width:794px;background:#ffffff;z-index:99999999;overflow:visible;pointer-events:none;';
+
+        // Arkusz dopasowany w proporcji 1:1 do pełnej szerokości A4 (794px przy 96 DPI) w standardowym document flow
         pdfStage = document.createElement('div');
-        pdfStage.style.cssText = 'position:absolute;top:0;left:0;width:794px;background:#ffffff;color:#0f172a;padding:24px 30px;box-sizing:border-box;margin:0;z-index:2147483647;';
+        pdfStage.id = 'servitrack-pdf-stage';
+        pdfStage.style.cssText = 'width:794px;background:#ffffff;color:#0f172a;padding:24px 30px;box-sizing:border-box;margin:0;';
         pdfStage.innerHTML = sourceEl.innerHTML || renderProtocolSheetHtml(p);
 
         // Usuwamy obramowania edycji na czas generowania PDF
@@ -10141,13 +10160,18 @@ service cloud.firestore {
         });
         pdfStage.querySelectorAll('.protocol-no-print, .no-print').forEach(el => el.remove());
 
-        document.body.appendChild(pdfStage);
+        // Wymuszenie reguł zapobiegających dzieleniu sekcji i wierszy pomiędzy strony
+        pdfStage.querySelectorAll('.protocol-footer-signatures-wrap, .protocol-signatures-table, .protocol-statement-zgodnosc-table, .protocol-custom-section, .avoid-page-break, table, tr').forEach(el => {
+          el.style.breakInside = 'avoid';
+          el.style.pageBreakInside = 'avoid';
+        });
+
+        pdfWrapper.appendChild(pdfStage);
+        document.body.appendChild(pdfWrapper);
 
         const imgs = Array.from(pdfStage.querySelectorAll('img'));
         await Promise.all(imgs.map(img => img.complete ? Promise.resolve() : new Promise(res => { img.onload = res; img.onerror = res; })));
         await new Promise(r => setTimeout(r, 150));
-
-        const stageHeight = Math.max(pdfStage.scrollHeight, pdfStage.offsetHeight, 950);
 
         const opt = {
           margin: [0, 0, 0, 0],
@@ -10159,13 +10183,20 @@ service cloud.firestore {
             allowTaint: true,
             backgroundColor: '#ffffff',
             logging: false,
-            x: 0,
-            y: 0,
-            scrollY: 0,
-            scrollX: 0,
             width: 794,
-            height: stageHeight,
             windowWidth: 794
+          },
+          pagebreak: {
+            mode: ['avoid-all', 'css', 'legacy'],
+            avoid: [
+              '.protocol-footer-signatures-wrap',
+              '.protocol-signatures-table',
+              '.protocol-statement-zgodnosc-table',
+              '.protocol-custom-section',
+              '.avoid-page-break',
+              'table',
+              'tr'
+            ]
           },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
@@ -10174,7 +10205,9 @@ service cloud.firestore {
       } catch (err) {
         printCurrentProtocol();
       } finally {
-        if (pdfStage && pdfStage.parentNode) {
+        if (pdfWrapper && pdfWrapper.parentNode) {
+          pdfWrapper.parentNode.removeChild(pdfWrapper);
+        } else if (pdfStage && pdfStage.parentNode) {
           pdfStage.parentNode.removeChild(pdfStage);
         }
         window.scrollTo(0, savedScrollY);
@@ -10206,7 +10239,27 @@ service cloud.firestore {
           <style>
             @page { size: A4; margin: 10mm; }
             body { margin: 0; padding: 0; background: #fff; color: #0f172a; font-family: 'Inter', Arial, sans-serif; }
-            @media print { .protocol-no-print, .no-print { display: none !important; } }
+            .protocol-footer-signatures-wrap,
+            .protocol-signatures-table,
+            .protocol-statement-zgodnosc-table,
+            .protocol-custom-section,
+            .avoid-page-break,
+            table, tr {
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+            @media print {
+              .protocol-no-print, .no-print { display: none !important; }
+              .protocol-footer-signatures-wrap,
+              .protocol-signatures-table,
+              .protocol-statement-zgodnosc-table,
+              .protocol-custom-section,
+              .avoid-page-break,
+              table, tr {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+              }
+            }
           </style>
         </head>
         <body>
@@ -10968,11 +11021,16 @@ service cloud.firestore {
     function normalizeDateStr(d) {
       if (!d) return '';
       d = String(d).trim();
-      const m = d.match(/^(\d{1,2})[.-](\d{1,2})[.-](\d{4})$/);
-      if (m) {
-        return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+      // DD.MM.YYYY lub DD/MM/YYYY lub DD-MM-YYYY
+      const m1 = d.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})/);
+      if (m1) {
+        return `${m1[3]}-${m1[2].padStart(2, '0')}-${m1[1].padStart(2, '0')}`;
       }
-      if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
+      // YYYY.MM.DD lub YYYY/MM/DD lub YYYY-MM-DD
+      const m2 = d.match(/^(\d{4})[./-](\d{1,2})[./-](\d{1,2})/);
+      if (m2) {
+        return `${m2[1]}-${m2[2].padStart(2, '0')}-${m2[3].padStart(2, '0')}`;
+      }
       const parsed = new Date(d);
       if (!isNaN(parsed.getTime())) return toYMD(parsed);
       return d;
@@ -10986,30 +11044,88 @@ service cloud.firestore {
       return a > b;
     }
 
+    function normalizeDeviceStr(str) {
+      return (str || '')
+        .toLowerCase()
+        .replace(/[\s\-_/\\,.]+/g, '')
+        .trim();
+    }
+
     function findMatchingDevice(serverDevices, fileDev) {
       if (!Array.isArray(serverDevices) || serverDevices.length === 0 || !fileDev) return null;
+
+      // 1. Dopasowanie po bezpośrednim ID urządzenia
       if (fileDev.id) {
         const byId = serverDevices.find(d => d.id === fileDev.id);
         if (byId) return byId;
       }
+
+      // 2. Dopasowanie po numerze seryjnym (jeśli występuje w obu)
       const fSerial = (fileDev.serialNumber || '').trim().toLowerCase();
       if (fSerial) {
-        const bySerial = serverDevices.find(d => (d.serialNumber || '').trim().toLowerCase() === fSerial);
+        const bySerial = serverDevices.find(d => {
+          const s1 = (d.serialNumber || '').trim().toLowerCase();
+          const s2 = (d.serialNumberOutdoor || '').trim().toLowerCase();
+          return (s1 && s1 === fSerial) || (s2 && s2 === fSerial);
+        });
         if (bySerial) return bySerial;
       }
-      const fModel = (fileDev.deviceModel || '').trim().toLowerCase();
+
+      const fModelRaw = (fileDev.deviceModel || '').trim();
+      const fModelNorm = normalizeDeviceStr(fModelRaw);
       const fType = (fileDev.deviceType || '').trim().toLowerCase();
-      if (fModel) {
-        const byModel = serverDevices.find(d => {
-          const dModel = (d.deviceModel || '').trim().toLowerCase();
+      const fInstall = normalizeDateStr(fileDev.installDate);
+
+      // 3. Dopasowanie po identycznym lub znormalizowanym modelu
+      if (fModelNorm) {
+        // Dokładna zgodność znormalizowanego modelu
+        const exactModel = serverDevices.find(d => {
+          const dModelNorm = normalizeDeviceStr(d.deviceModel);
           const dType = (d.deviceType || '').trim().toLowerCase();
-          return dModel === fModel && (!fType || !dType || dType === fType);
+          const typeMatch = !fType || !dType || dType === fType;
+          return typeMatch && dModelNorm === fModelNorm;
         });
-        if (byModel) return byModel;
+        if (exactModel) return exactModel;
+
+        // Zawieranie się modelu (np. "Panasonic Aquarea T-CAP 9kW" zawiera "Aquarea T-CAP 9kW" lub odwrotnie)
+        const partialModel = serverDevices.find(d => {
+          const dModelNorm = normalizeDeviceStr(d.deviceModel);
+          const dType = (d.deviceType || '').trim().toLowerCase();
+          const typeMatch = !fType || !dType || dType === fType;
+          if (!typeMatch || !dModelNorm || !fModelNorm) return false;
+          return dModelNorm.includes(fModelNorm) || fModelNorm.includes(dModelNorm);
+        });
+        if (partialModel) return partialModel;
       }
-      if (serverDevices.length === 1 && (!fileDev.deviceModel || serverDevices[0].deviceType === fileDev.deviceType)) {
-        return serverDevices[0];
+
+      // 4. Jeśli klient ma TYLKO JEDNO urządzenie w bazie
+      if (serverDevices.length === 1) {
+        const single = serverDevices[0];
+        const sType = (single.deviceType || '').trim().toLowerCase();
+        if (!fType || !sType || fType === sType) {
+          return single;
+        }
       }
+
+      // 5. Jeśli klient ma kilka urządzeń, ale tylko JEDNO tego samego typu (np. 1 klimatyzator i 1 pompę ciepła)
+      if (fType) {
+        const sameTypeDevs = serverDevices.filter(d => (d.deviceType || '').trim().toLowerCase() === fType);
+        if (sameTypeDevs.length === 1) {
+          return sameTypeDevs[0];
+        }
+      }
+
+      // 6. Dopasowanie po dacie montażu jeśli występuje w obu
+      if (fInstall) {
+        const byInstall = serverDevices.find(d => {
+          const dInstall = normalizeDateStr(d.installDate);
+          const dType = (d.deviceType || '').trim().toLowerCase();
+          const typeMatch = !fType || !dType || dType === fType;
+          return typeMatch && dInstall && dInstall === fInstall;
+        });
+        if (byInstall) return byInstall;
+      }
+
       return null;
     }
 
@@ -11258,27 +11374,60 @@ service cloud.firestore {
       const map = {};
       headerCols.forEach((h, idx) => {
         const low = (h || '').toLowerCase().trim();
-        if (low.includes('imi') || low.includes('nazw') || low.includes('klient') || low.includes(' kontrahent') || low.includes('firma') || low === 'name') {
+        if (low.includes('imi') || low.includes('nazw') || low.includes('klient') || low.includes('kontrahent') || low.includes('firma') || low === 'name') {
           if (map.name === undefined) map.name = idx;
         }
-        else if (low.includes('nip')) map.nip = idx;
-        else if (low.includes('mail') || low.includes('e-mail')) map.email = idx;
-        else if (low.includes('tel') || low.includes('phone') || low.includes('kom')) map.phone = idx;
-        else if (low.includes('kod') || low.includes('poczt') || low.includes('postal')) map.postal = idx;
-        else if (low.includes('miast') || low.includes('miejscow') || low.includes('poczta') || low === 'city') map.city = idx;
+        else if (low.includes('nip')) {
+          if (map.nip === undefined) map.nip = idx;
+        }
+        else if (low.includes('mail') || low.includes('e-mail')) {
+          if (map.email === undefined) map.email = idx;
+        }
+        else if (low.includes('tel') || low.includes('phone') || low.includes('kom')) {
+          if (map.phone === undefined) map.phone = idx;
+        }
+        else if (low.includes('kod') || low.includes('poczt') || low.includes('postal')) {
+          if (map.postal === undefined) map.postal = idx;
+        }
+        else if (low.includes('miast') || low.includes('miejscow') || low.includes('poczta') || low === 'city') {
+          if (map.city === undefined) map.city = idx;
+        }
         else if ((low.includes('ulic') || low.includes('adres') || low.includes('nr') || low === 'street') && !low.includes('monta')) {
           if (map.street === undefined) map.street = idx;
         }
-        else if (low === 'lat' || low.includes('szeroko')) map.lat = idx;
-        else if (low === 'lng' || low === 'lon' || low.includes('długo')) map.lng = idx;
-        else if (low.includes('typ') || low.includes('rodzaj')) map.typeStr = idx;
-        else if (low.includes('model') || low.includes('urządz') || low.includes('sprzęt') || low.includes('pompa') || low.includes('kocioł') || low.includes('kociol') || low.includes('piec') || low.includes('klima')) map.model = idx;
-        else if (low.includes('monta') && !low.includes('adres')) map.install = idx;
-        else if (low.includes('gwarancj') && !low.includes('status')) map.warranty = idx;
-        else if (low.includes('status')) map.warrantyStatus = idx;
-        else if (low.includes('ostatni')) map.lastInsp = idx;
-        else if (low.includes('nast') || low.includes('kolejn') || low.includes('termin') || (low.includes('przegl') && !low.includes('ostatni'))) map.nextInsp = idx;
-        else if (low.includes('notatk') || low.includes('uwag') || low.includes('opis')) map.notes = idx;
+        else if (low.includes('adres') && low.includes('monta')) {
+          if (map.devAddress === undefined) map.devAddress = idx;
+        }
+        else if (low === 'lat' || low.includes('szeroko')) {
+          if (map.lat === undefined) map.lat = idx;
+        }
+        else if (low === 'lng' || low === 'lon' || low.includes('długo')) {
+          if (map.lng === undefined) map.lng = idx;
+        }
+        else if (low.includes('typ') || low.includes('rodzaj')) {
+          if (map.typeStr === undefined) map.typeStr = idx;
+        }
+        else if ((low.includes('model') || low.includes('urządz') || low.includes('sprzęt') || low.includes('pompa') || low.includes('kocioł') || low.includes('kociol') || low.includes('piec') || low.includes('klima')) && !low.includes('adres') && !low.includes('monta') && !low.includes('typ') && !low.includes('rodzaj')) {
+          if (map.model === undefined || low.includes('model')) map.model = idx;
+        }
+        else if (low.includes('monta') && !low.includes('adres')) {
+          if (map.install === undefined) map.install = idx;
+        }
+        else if (low.includes('gwarancj') && !low.includes('status')) {
+          if (map.warranty === undefined) map.warranty = idx;
+        }
+        else if (low.includes('status')) {
+          if (map.warrantyStatus === undefined) map.warrantyStatus = idx;
+        }
+        else if (low.includes('ostatni')) {
+          if (map.lastInsp === undefined) map.lastInsp = idx;
+        }
+        else if (low.includes('nast') || low.includes('kolejn') || low.includes('termin') || (low.includes('przegl') && !low.includes('ostatni'))) {
+          if (map.nextInsp === undefined) map.nextInsp = idx;
+        }
+        else if (low.includes('notatk') || low.includes('uwag') || low.includes('opis')) {
+          if (map.notes === undefined) map.notes = idx;
+        }
       });
       return map;
     }
@@ -11387,22 +11536,23 @@ service cloud.firestore {
           };
 
           let rawName = getCol('name', 0);
-          let rawNip = getCol('nip', undefined);
-          let rawEmail = getCol('email', undefined);
-          let rawPhone = getCol('phone', 1);
-          let rawPostal = getCol('postal', 2);
-          let rawCity = getCol('city', 3);
-          let rawStreet = getCol('street', 4);
-          let rawLat = getCol('lat', 5);
-          let rawLng = getCol('lng', 6);
-          let rawType = getCol('typeStr', 7);
-          let rawModel = getCol('model', 8);
-          let rawInstall = getCol('install', 9);
-          let rawWarranty = getCol('warranty', 10);
-          let rawWarrantyStatus = getCol('warrantyStatus', 11);
-          let rawLastInsp = getCol('lastInsp', 12);
-          let rawNextInsp = getCol('nextInsp', 13);
-          let rawNotes = getCol('notes', cols.length === 15 ? 14 : 13);
+          let rawNip = getCol('nip', 1);
+          let rawPhone = getCol('phone', 2);
+          let rawEmail = getCol('email', 3);
+          let rawPostal = getCol('postal', 4);
+          let rawCity = getCol('city', 5);
+          let rawStreet = getCol('street', 6);
+          let rawLat = getCol('lat', 7);
+          let rawLng = getCol('lng', 8);
+          let rawType = getCol('typeStr', 9);
+          let rawModel = getCol('model', 10);
+          let rawDevAddr = getCol('devAddress', 11);
+          let rawInstall = getCol('install', 12);
+          let rawWarranty = getCol('warranty', 13);
+          let rawWarrantyStatus = getCol('warrantyStatus', 14);
+          let rawLastInsp = getCol('lastInsp', 15);
+          let rawNextInsp = getCol('nextInsp', 16);
+          let rawNotes = getCol('notes', cols.length === 18 ? 17 : (cols.length === 15 ? 14 : 13));
 
           if (!hasHeader && cols.length <= 4) {
             rawName = cols[0] || '';
@@ -11437,7 +11587,9 @@ service cloud.firestore {
             const statusLow = (rawWarrantyStatus || '').toLowerCase();
             const ourUnknownDate = statusLow.includes('nasze') && !rawInstall;
             const noInstallDate = ourUnknownDate || statusLow.includes('obce') || !rawInstall;
-            const installDate = noInstallDate ? '' : rawInstall;
+            const installDate = noInstallDate ? '' : normalizeDateStr(rawInstall);
+            const normalizedLastInsp = normalizeDateStr(rawLastInsp) || installDate || today;
+            const normalizedNextInsp = normalizeDateStr(rawNextInsp) || addMonths(installDate || today, 12);
 
             dev = {
               id: `dev_imp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
@@ -11445,12 +11597,13 @@ service cloud.firestore {
               deviceModel: (rawModel || '').trim() || getDeviceInfo(type).short,
               serialNumber: '',
               deviceNotes: '',
+              customAddressFormatted: (rawDevAddr || '').trim(),
               ourUnknownDate,
               noInstallDate,
               installDate,
               warrantyMonths: noInstallDate ? 0 : (Number(rawWarranty) || 60),
-              lastInspectionDate: rawLastInsp || installDate || today,
-              nextInspectionDate: rawNextInsp || addMonths(installDate || today, 12),
+              lastInspectionDate: normalizedLastInsp,
+              nextInspectionDate: normalizedNextInsp,
               inspectionIntervalMonths: 12,
               remindersCanceled: false,
               inspectionHistory: []
@@ -11459,11 +11612,14 @@ service cloud.firestore {
 
           const key = `${finalName.toLowerCase()}|${finalPhone.replace(/\s+/g, '')}|${finalCity.toLowerCase()}|${finalStreet.toLowerCase()}`;
           if (!groupedMap.has(key)) {
-            const existingMatch = (window.clientsData || []).find(ec =>
-              ec.name.toLowerCase() === finalName.toLowerCase() &&
-              (ec.city || '').toLowerCase() === finalCity.toLowerCase() &&
-              (ec.street || '').toLowerCase() === finalStreet.toLowerCase()
-            );
+            const existingMatch = findMatchingClient(window.clientsData || [], {
+              name: finalName,
+              phone: finalPhone,
+              city: finalCity,
+              street: finalStreet,
+              nip: finalNip,
+              email: finalEmail
+            });
 
             const parsedLat = parseFloat(String(rawLat || '').replace(',', '.'));
             const parsedLng = parseFloat(String(rawLng || '').replace(',', '.'));
@@ -11489,7 +11645,21 @@ service cloud.firestore {
               existingClientId: existingMatch ? existingMatch.id : null
             });
           } else if (dev) {
-            groupedMap.get(key).devices.push(dev);
+            const clientDevs = groupedMap.get(key).devices;
+            const matchInGroup = findMatchingDevice(clientDevs, dev);
+            if (matchInGroup) {
+              if (isDateNewer(dev.nextInspectionDate, matchInGroup.nextInspectionDate)) {
+                matchInGroup.nextInspectionDate = normalizeDateStr(dev.nextInspectionDate);
+              }
+              if (isDateNewer(dev.lastInspectionDate, matchInGroup.lastInspectionDate)) {
+                matchInGroup.lastInspectionDate = normalizeDateStr(dev.lastInspectionDate);
+              }
+              if (!matchInGroup.serialNumber && dev.serialNumber) matchInGroup.serialNumber = dev.serialNumber;
+              if (!matchInGroup.installDate && dev.installDate) matchInGroup.installDate = dev.installDate;
+              if (!matchInGroup.customAddressFormatted && dev.customAddressFormatted) matchInGroup.customAddressFormatted = dev.customAddressFormatted;
+            } else {
+              clientDevs.push(dev);
+            }
           }
         }
 
@@ -11766,6 +11936,7 @@ service cloud.firestore {
                   if (!matchDev.serialNumber && impDev.serialNumber) matchDev.serialNumber = impDev.serialNumber;
                   if (!matchDev.installDate && impDev.installDate) matchDev.installDate = impDev.installDate;
                   if (!matchDev.deviceNotes && impDev.deviceNotes) matchDev.deviceNotes = impDev.deviceNotes;
+                  if (!matchDev.customAddressFormatted && impDev.customAddressFormatted) matchDev.customAddressFormatted = impDev.customAddressFormatted;
                 } else {
                   existing.devices.push(impDev);
                 }
