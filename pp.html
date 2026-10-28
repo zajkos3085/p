@@ -127,11 +127,7 @@
     .protocol-signatures-table,
     .protocol-statement-zgodnosc-table,
     .protocol-custom-section,
-    .avoid-page-break,
-    #servitrack-pdf-stage table,
-    #servitrack-pdf-stage tr,
-    #protocol-printable-area table,
-    #protocol-printable-area tr {
+    .avoid-page-break {
       break-inside: avoid !important;
       page-break-inside: avoid !important;
     }
@@ -628,6 +624,7 @@
                 <option value="all">🛡️ Wszystkie gwarancje</option>
                 <option value="under_warranty">🛡️ Tylko Na gwarancji</option>
                 <option value="expired_warranty">⚠️ Tylko Po gwarancji</option>
+                <option value="void_warranty">🚫 Utrata gwarancji</option>
                 <option value="our_no_date">🏠 Nasze (Brak daty montażu)</option>
                 <option value="external">🔧 Obce urządzenia (Brak gw.)</option>
               </select>
@@ -1466,6 +1463,59 @@
     </div>
   </div>
 
+  <!-- MODAL: VOID WARRANTY WITH PASSWORD -->
+  <div id="modal-void-warranty" class="fixed inset-0 z-[65] bg-zinc-950/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-md w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-rose-300 dark:border-rose-900">
+      <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-950 flex items-center justify-center text-rose-600 dark:text-rose-400">
+            <i data-lucide="shield-alert" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm sm:text-base font-extrabold text-zinc-900 dark:text-white">Utrata gwarancji urządzenia</h3>
+            <p class="text-[11px] text-zinc-500">Wymagane hasło autoryzacyjne i wpisanie powodu</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-void-warranty')" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <form onsubmit="handleConfirmVoidWarranty(event)" class="space-y-3.5">
+        <input type="hidden" id="void-w-client-id">
+        <input type="hidden" id="void-w-device-id">
+        <div id="void-w-device-label" class="p-3 rounded-xl bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/60 text-xs font-bold text-rose-950 dark:text-rose-200 space-y-1"></div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-[11px] font-bold text-zinc-500 mb-1">Data utraty gwarancji</label>
+            <input type="date" id="void-w-date" required class="w-full px-2.5 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-zinc-500 mb-1">Osoba / Serwisant</label>
+            <input type="text" id="void-w-tech" required class="w-full px-2.5 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mb-1">Powód utraty gwarancji <span class="text-rose-600">*</span></label>
+          <textarea id="void-w-reason" rows="3" required placeholder="Wpisz szczegółowy powód utraty gwarancji (np. montaż nieautoryzowanych części, brak wymaganych przeglądów rocznych, uszkodzenie mechaniczne, zalanie, ingerencja nieautoryzowanego serwisu)..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-rose-300 dark:border-rose-800/80 rounded-xl text-xs outline-none focus:ring-1 focus:ring-rose-500"></textarea>
+        </div>
+
+        <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800">
+          <label class="block text-[11px] font-extrabold text-amber-700 dark:text-amber-400 mb-1">Hasło autoryzacyjne (PIN)</label>
+          <input type="password" id="void-w-password" required placeholder="Wpisz hasło..." class="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-bold tracking-widest text-center outline-none focus:border-rose-500">
+          <p id="void-w-password-error" class="text-xs text-rose-600 font-bold text-center mt-1 hidden">Nieprawidłowe hasło!</p>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('modal-void-warranty')" class="px-3.5 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800">Anuluj</button>
+          <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-extrabold shadow-sm flex items-center gap-1.5">
+            <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Potwierdź utratę gwarancji
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- MODAL: EDIT EXISTING HISTORY NOTE WITH PASSWORD -->
   <div id="modal-edit-history-note" class="fixed inset-0 z-[70] bg-zinc-950/75 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 rounded-2xl max-w-md w-full shadow-2xl p-5 sm:p-6 space-y-4 border border-zinc-200 dark:border-zinc-800">
@@ -1797,9 +1847,9 @@
           </div>
 
           <div id="close-visit-protocol-fields" class="space-y-3 pt-2 border-t border-sky-200 dark:border-sky-800 text-xs">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white dark:bg-zinc-900 p-2.5 rounded-xl border border-sky-200 dark:border-sky-800">
-              <label class="text-[10px] font-extrabold uppercase text-sky-800 dark:text-sky-300">Wzór protokołu:</label>
-              <select id="proto-form-kind" onchange="onProtocolKindSelectChange(this.value)" class="px-2.5 py-1.5 rounded-lg border border-sky-300 dark:border-sky-700 bg-sky-50/60 dark:bg-zinc-800 font-extrabold text-xs text-sky-900 dark:text-sky-200 outline-none">
+            <div class="space-y-1.5 bg-white dark:bg-zinc-900 p-2.5 rounded-xl border border-sky-200 dark:border-sky-800">
+              <label for="proto-form-kind" class="block text-[10px] font-extrabold uppercase text-sky-800 dark:text-sky-300">Wzór protokołu:</label>
+              <select id="proto-form-kind" onchange="onProtocolKindSelectChange(this.value)" class="w-full max-w-full px-2.5 py-1.5 rounded-lg border border-sky-300 dark:border-sky-700 bg-sky-50/60 dark:bg-zinc-800 font-extrabold text-xs text-sky-900 dark:text-sky-200 outline-none truncate">
                 <option value="ac_inspection">❄️ Protokół przeglądu klimatyzatora</option>
                 <option value="ac_install">❄️ Karta montażu klimatyzacji</option>
                 <option value="gas_boiler_inspection">🔥 Protokół przeglądu kotła gazowego</option>
@@ -2722,6 +2772,19 @@ service cloud.firestore {
       }
     ];
 
+    function isDummyProtocolTemplate(t) {
+      if (!t || !t.title || typeof t.title !== 'string') return true;
+      const low = t.title.trim().toLowerCase();
+      const norm = low.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\u0142\u0141]/g, 'l');
+      return norm === 'wzor protokolu' ||
+             norm === 'nowy wzor protokolu' ||
+             norm === 'nowy wzor' ||
+             norm.startsWith('nowy wzor') ||
+             norm.startsWith('wzor protokolu') ||
+             norm.includes('nowy wzor') ||
+             norm.includes('wzor protokolu');
+    }
+
     let currentTab = 'dashboard';
     let selectedDate = toYMD(new Date());
     let selectedWorkerFilter = '';
@@ -2767,6 +2830,16 @@ service cloud.firestore {
       if (!ymdStr) return '—';
       const d = new Date(ymdStr + 'T12:00:00');
       return isNaN(d.getTime()) ? ymdStr : d.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    function escapeJsQuotes(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '&quot;')
+        .replace(/\n/g, ' ')
+        .replace(/\r/g, '');
     }
 
     function capitalizeWords(str) {
@@ -2959,6 +3032,7 @@ service cloud.firestore {
 
       return (window.clientsData || []).map(c => {
         const devices = (c.devices || []).map(dev => {
+          const isWarrantyVoid = Boolean(dev.isWarrantyVoid);
           const ourUnknownDate = Boolean(dev.ourUnknownDate);
           const isExternal = !ourUnknownDate && (Boolean(dev.noInstallDate) || !dev.installDate);
           const noInstallDate = ourUnknownDate || isExternal;
@@ -2967,9 +3041,9 @@ service cloud.firestore {
           const warrantyEnd = new Date(install);
           warrantyEnd.setMonth(warrantyEnd.getMonth() + Number(dev.warrantyMonths || 60));
 
-          const daysToWarranty = noInstallDate ? -1 : Math.ceil((warrantyEnd - now) / 86400000);
-          const isUnderWarranty = !noInstallDate && daysToWarranty >= 0;
-          const isExpiredWarranty = !noInstallDate && daysToWarranty < 0;
+          const daysToWarranty = (noInstallDate || isWarrantyVoid) ? -1 : Math.ceil((warrantyEnd - now) / 86400000);
+          const isUnderWarranty = !noInstallDate && !isWarrantyVoid && daysToWarranty >= 0;
+          const isExpiredWarranty = !noInstallDate && (isWarrantyVoid || daysToWarranty < 0);
 
           const baseNext = dev.nextInspectionDate || addMonths(dev.installDate || toYMD(new Date()), dev.inspectionIntervalMonths || 12);
           const nextInsp = new Date(baseNext + 'T12:00:00');
@@ -2987,7 +3061,10 @@ service cloud.firestore {
               noInstallDate,
               ourUnknownDate,
               isExternal,
-              warrantyEndFormatted: ourUnknownDate ? 'Nasze (Brak daty)' : isExternal ? 'Brak (Obce)' : formatDatePL(toYMD(warrantyEnd)),
+              isWarrantyVoid,
+              warrantyVoidReason: dev.warrantyVoidReason || '',
+              warrantyVoidDate: dev.warrantyVoidDate || '',
+              warrantyEndFormatted: isWarrantyVoid ? `Utrata gwarancji (${formatDatePL(dev.warrantyVoidDate || toYMD(new Date()))})` : ourUnknownDate ? 'Nasze (Brak daty)' : isExternal ? 'Brak (Obce)' : formatDatePL(toYMD(warrantyEnd)),
               daysToWarranty,
               isUnderWarranty,
               isExpiredWarranty,
@@ -3008,12 +3085,18 @@ service cloud.firestore {
           anySoon: activeDevs.some(d => d.status.isSoon),
           anyUnderWarranty: devices.some(d => d.status.isUnderWarranty),
           anyExpiredWarranty: devices.some(d => d.status.isExpiredWarranty),
+          anyWarrantyVoid: devices.some(d => d.status.isWarrantyVoid),
           anyOurUnknownDate: devices.some(d => d.status.ourUnknownDate)
         };
       });
     }
 
     function getWarrantyBadgeHtml(st) {
+      if (st.isWarrantyVoid) {
+        const reasonText = st.warrantyVoidReason ? `Powód: ${st.warrantyVoidReason}` : 'Decyzja serwisu';
+        const dateText = st.warrantyVoidDate ? ` (${formatDatePL(st.warrantyVoidDate)})` : '';
+        return `<span class="px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-950/90 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800 text-[10px] font-extrabold shrink-0" title="Utrata gwarancji: ${escapeHtml(reasonText)}${dateText}">🚫 Utrata gwarancji</span>`;
+      }
       if (st.ourUnknownDate) {
         return `<span class="px-1.5 py-0.5 rounded bg-sky-100 dark:bg-sky-950/90 text-sky-800 dark:text-sky-300 border border-sky-300 dark:border-sky-800 text-[10px] font-extrabold shrink-0">🏠 Nasze (Brak daty montażu)</span>`;
       }
@@ -3143,7 +3226,7 @@ service cloud.firestore {
         }
       });
 
-      window.protocolTemplatesData = Array.from(tplMap.values());
+      window.protocolTemplatesData = Array.from(tplMap.values()).filter(t => !isDummyProtocolTemplate(t));
       localStorage.setItem(STORAGE_KEYS.TEMPLATES, JSON.stringify(window.protocolTemplatesData));
 
       if (needsCloudPush && isCloudConnected && firestoreDb) {
@@ -3746,7 +3829,7 @@ service cloud.firestore {
 
       try {
         const rawTpl = JSON.parse(localStorage.getItem(STORAGE_KEYS.TEMPLATES) || '[]');
-        window.protocolTemplatesData = Array.isArray(rawTpl) ? rawTpl : [];
+        window.protocolTemplatesData = Array.isArray(rawTpl) ? rawTpl.filter(t => !isDummyProtocolTemplate(t)) : [];
       } catch (e) { window.protocolTemplatesData = []; }
 
       if (!Array.isArray(window.protocolTemplatesData) || window.protocolTemplatesData.length === 0) {
@@ -3758,6 +3841,7 @@ service cloud.firestore {
           }
         });
       }
+      localStorage.setItem(STORAGE_KEYS.TEMPLATES, JSON.stringify(window.protocolTemplatesData));
 
       if (window.catalogData.length === 0) {
         window.catalogData = [
@@ -4187,10 +4271,11 @@ service cloud.firestore {
                     <div class="min-w-0">
                       <div class="flex items-center gap-2 flex-wrap">
                         <span class="text-xs font-extrabold ${isCanceled ? 'text-rose-700 bg-rose-100 dark:bg-rose-950 dark:text-rose-300 line-through' : 'text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950'} px-2 py-0.5 rounded-md">${v.time}</span>
-                        <span class="font-bold text-sm text-zinc-900 dark:text-white ${(isDone || isCanceled) ? 'line-through opacity-60' : ''}">
-                          ${client ? client.name : (v.clientName || 'Klient')}
-                          ${(v.isAdHoc || !client) ? '<span class="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 ml-1">Spoza bazy</span>' : ''}
-                        </span>
+                        <a href="javascript:void(0)" onclick="navigateToClientSearch('${escapeJsQuotes(client ? client.name : (v.clientName || 'Klient'))}')" class="font-bold text-sm text-zinc-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline cursor-pointer inline-flex items-center gap-1 ${(isDone || isCanceled) ? 'line-through opacity-60' : ''}" title="Wyszukaj i otwórz profil klienta w bazie">
+                          <span>${escapeHtml(client ? client.name : (v.clientName || 'Klient'))}</span>
+                          <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 text-zinc-400 opacity-60"></i>
+                        </a>
+                        ${(v.isAdHoc || !client) ? '<span class="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 ml-1">Spoza bazy</span>' : ''}
                         <span class="text-[11px] font-bold ${isMontaz ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200'} px-2 py-0.5 rounded">${v.serviceType}</span>
                         <button type="button" onclick="openReassignWorkerModal('${v.id}')" class="px-2.5 py-0.5 rounded-lg bg-sky-50 dark:bg-sky-950/70 hover:bg-sky-100 dark:hover:bg-sky-900 border border-sky-300 dark:border-sky-800 text-[11px] font-extrabold text-sky-800 dark:text-sky-300 inline-flex items-center gap-1 transition" title="Przenieś zlecenie (zmień dzień, godzinę lub serwisanta)">
                           👷 ${v.workerName || 'Serwisant 1'} • 📅 Przenieś <i data-lucide="calendar-clock" class="w-3 h-3"></i>
@@ -4326,7 +4411,10 @@ service cloud.firestore {
               <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                 <div>
                   <div class="flex items-center gap-2 flex-wrap">
-                    <span class="font-bold text-sm text-zinc-900 dark:text-white">${client.name}</span>
+                    <a href="javascript:void(0)" onclick="navigateToClientSearch('${escapeJsQuotes(client.name)}')" class="font-bold text-sm text-zinc-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline cursor-pointer inline-flex items-center gap-1" title="Wyszukaj i otwórz profil klienta w bazie">
+                      <span>${escapeHtml(client.name)}</span>
+                      <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 text-zinc-400 opacity-60"></i>
+                    </a>
                     <span class="text-xs font-semibold text-zinc-500">(${device.deviceModel}${device.serialNumber ? ` • S/N: ${device.serialNumber}` : ''})</span>
                     ${getWarrantyBadgeHtml(status)}
                   </div>
@@ -4362,7 +4450,10 @@ service cloud.firestore {
                     <button type="button" onclick="openReassignWorkerModal('${scheduledVisit.id}')" class="px-2.5 py-0.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-extrabold inline-flex items-center gap-1 shadow-sm transition" title="Przenieś zlecenie na inny dzień, godzinę lub zmień serwisanta">
                       👷 ${scheduledVisit.workerName || 'Serwisant 1'} • Przenieś <i data-lucide="calendar-clock" class="w-3 h-3"></i>
                     </button>
-                    <span class="font-extrabold text-sm text-zinc-900 dark:text-white">${client.name}</span>
+                    <a href="javascript:void(0)" onclick="navigateToClientSearch('${escapeJsQuotes(client.name)}')" class="font-extrabold text-sm text-zinc-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline cursor-pointer inline-flex items-center gap-1" title="Wyszukaj i otwórz profil klienta w bazie">
+                      <span>${escapeHtml(client.name)}</span>
+                      <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 text-zinc-400 opacity-60"></i>
+                    </a>
                     ${getWarrantyBadgeHtml(status)}
                   </div>
                   <div class="text-xs font-bold text-teal-800 dark:text-teal-300">
@@ -4748,16 +4839,52 @@ service cloud.firestore {
       if (bounds.length > 0 && mapInstance) mapInstance.fitBounds(bounds, { padding: [45, 45], maxZoom: 12 });
     }
 
-    function openClientInDatabaseFromMap(clientId) {
-      const client = (window.clientsData || []).find(c => c.id === clientId);
-      if (!client) return;
-      mapInstance?.closePopup();
-      const searchInput = document.getElementById('client-search-input');
+    function navigateToClientSearch(clientIdentifier) {
+      if (!clientIdentifier) return;
+      let targetName = '';
+      if (typeof clientIdentifier === 'string') {
+        const foundClient = (window.clientsData || []).find(c => c.id === clientIdentifier);
+        if (foundClient) {
+          targetName = foundClient.name;
+        } else {
+          targetName = clientIdentifier.trim();
+        }
+      }
+      if (!targetName) return;
+
+      // Zamknij ewentualnie otwarte modale w tle (np. szczegóły, edycje, podglądy)
+      document.querySelectorAll('.fixed.inset-0:not(.hidden)').forEach(modalEl => {
+        if (modalEl.id) closeModal(modalEl.id);
+      });
+
       const typeFilter = document.getElementById('client-device-type-filter');
       if (typeFilter) typeFilter.value = 'all';
-      if (searchInput) searchInput.value = client.name;
+      const wFilter = document.getElementById('client-warranty-filter');
+      if (wFilter) wFilter.value = 'all';
+
+      const searchInput = document.getElementById('client-search-input');
+      if (searchInput) {
+        searchInput.value = targetName;
+      }
+
       switchTab('clients');
-      showToast(`Wyświetlono w bazie: ${client.name}`);
+
+      if (searchInput) {
+        setTimeout(() => {
+          try {
+            searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            searchInput.focus();
+            searchInput.select();
+          } catch (e) {}
+        }, 120);
+      }
+
+      showToast(`Wyszukano klienta w bazie: ${targetName}`);
+    }
+
+    function openClientInDatabaseFromMap(clientId) {
+      mapInstance?.closePopup();
+      navigateToClientSearch(clientId);
     }
 
     function selectClientFromMapForPlanner(clientId, preselectDeviceId = '') {
@@ -4913,7 +5040,10 @@ service cloud.firestore {
                       </div>
                     </div>
                     <div class="font-bold text-zinc-900 dark:text-white truncate ${(isCanceled || isDone) ? 'line-through opacity-60' : ''}">
-                      ${clientName}
+                      <a href="javascript:void(0)" onclick="navigateToClientSearch('${escapeJsQuotes(clientName)}')" class="hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline cursor-pointer inline-flex items-center gap-0.5 truncate" title="Wyszukaj i otwórz profil klienta w bazie">
+                        <span class="truncate">${escapeHtml(clientName)}</span>
+                        <i data-lucide="arrow-up-right" class="w-3 h-3 text-zinc-400 shrink-0 opacity-60"></i>
+                      </a>
                       ${isAdHoc ? '<span class="text-[9px] bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 px-1 py-0.5 rounded font-extrabold ml-1">Spoza bazy</span>' : ''}
                     </div>
                     ${isCanceled ? '<div class="text-[10px] font-extrabold text-rose-600 uppercase">Anulowane</div>' : ''}
@@ -5034,6 +5164,7 @@ service cloud.firestore {
           matchingDevs = matchingDevs.filter(d => {
             if (warrantyFilter === 'under_warranty') return d.status.isUnderWarranty;
             if (warrantyFilter === 'expired_warranty') return d.status.isExpiredWarranty;
+            if (warrantyFilter === 'void_warranty') return d.status.isWarrantyVoid;
             if (warrantyFilter === 'our_no_date') return d.status.ourUnknownDate;
             if (warrantyFilter === 'external') return d.status.isExternal;
             return true;
@@ -5052,13 +5183,15 @@ service cloud.firestore {
           const clientText = `${c.name || ''} ${c.nip || ''} ${c.email || ''} ${c.city || ''} ${c.street || ''} ${c.phone || ''} ${(c.phone || '').replace(/\s+/g, '')} ${c.postalCode || ''} ${c.notes || ''}`;
           const devsText = (c.devices || []).map(d => {
             const typeInfo = getDeviceInfo(d.deviceType, d.customTypeLabel);
-            const wStatus = d.status.ourUnknownDate
-              ? 'nasze brak daty'
-              : d.status.isExternal
-                ? 'obce brak gwarancji'
-                : d.status.isUnderWarranty
-                  ? 'na gwarancji'
-                  : 'po gwarancji';
+            const wStatus = d.status.isWarrantyVoid
+              ? 'utrata gwarancji unieważniona gwarancja anulowana'
+              : d.status.ourUnknownDate
+                ? 'nasze brak daty'
+                : d.status.isExternal
+                  ? 'obce brak gwarancji'
+                  : d.status.isUnderWarranty
+                    ? 'na gwarancji'
+                    : 'po gwarancji';
             const iStatus = d.status.isOverdue
               ? 'po terminie'
               : d.status.isSoon
@@ -5607,16 +5740,24 @@ service cloud.firestore {
 
       tbody.innerHTML = filtered.map(h => {
         const actLow = (h.actionType || h.notes || '').toLowerCase();
-        const actBadge = actLow.includes('monta')
-          ? `<span class="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[10px] font-extrabold">🏗️ ${h.actionType || 'Montaż'}</span>`
-          : (actLow.includes('serwis') || actLow.includes('awaria') || actLow.includes('napraw'))
-            ? `<span class="px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 text-[10px] font-extrabold">⚡ ${h.actionType || 'Serwis'}</span>`
-            : `<span class="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-extrabold">🛠️ ${h.actionType || 'Przegląd'}</span>`;
+        const actBadge = (actLow.includes('utrata gwarancj') || actLow.includes('utrata gwar'))
+          ? `<span class="px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 text-[10px] font-extrabold border border-rose-300 dark:border-rose-800">🚫 ${h.actionType || 'Utrata gwarancji'}</span>`
+          : actLow.includes('monta')
+            ? `<span class="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[10px] font-extrabold">🏗️ ${h.actionType || 'Montaż'}</span>`
+            : (actLow.includes('serwis') || actLow.includes('awaria') || actLow.includes('napraw'))
+              ? `<span class="px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 text-[10px] font-extrabold">⚡ ${h.actionType || 'Serwis'}</span>`
+              : `<span class="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-extrabold">🛠️ ${h.actionType || 'Przegląd'}</span>`;
 
         return `
         <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
           <td class="py-3 px-4 font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">${formatDatePL(h.date)}</td>
-          <td class="py-3 px-4 font-bold text-zinc-900 dark:text-white">${h.clientName} <span class="text-xs text-zinc-400 font-normal">(${h.clientCity})</span></td>
+          <td class="py-3 px-4 font-bold text-zinc-900 dark:text-white">
+            <a href="javascript:void(0)" onclick="navigateToClientSearch('${escapeJsQuotes(h.clientName)}')" class="hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline cursor-pointer inline-flex items-center gap-1" title="Wyszukaj i otwórz profil klienta w bazie">
+              <span>${escapeHtml(h.clientName)}</span>
+              <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 text-zinc-400 opacity-60"></i>
+            </a>
+            <span class="text-xs text-zinc-400 font-normal">(${h.clientCity})</span>
+          </td>
           <td class="py-3 px-4 text-zinc-700 dark:text-zinc-300 font-medium">
             <div class="flex flex-col gap-1">
               <span>${h.deviceModel}</span>
@@ -6908,7 +7049,11 @@ service cloud.firestore {
             type: h.actionType || 'Przegląd / Wpis w karcie',
             notes: h.notes || '',
             protocolData: h.protocolData || null,
-            badgeColor: 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+            badgeColor: (h.actionType === 'Utrata gwarancji' || (h.notes || '').includes('UTRATA GWARANCJI'))
+              ? 'bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
+              : (h.actionType === 'Przywrócenie gwarancji')
+                ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
           })),
           ...deviceVisits.filter(v => !v.savedToDeviceHistory).map(v => ({
             sourceType: 'visit',
@@ -6938,6 +7083,15 @@ service cloud.firestore {
                   Ostatni przegląd: <span class="font-bold text-zinc-800 dark:text-zinc-200">${formatDatePL(d.lastInspectionDate)}</span> •
                   Następny przegląd: <span class="font-bold text-emerald-700 dark:text-emerald-400">${d.status.nextInspectionFormatted}</span>
                 </p>
+                ${d.status.isWarrantyVoid ? `
+                  <div class="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-xs text-rose-900 dark:text-rose-200 space-y-1">
+                    <div class="flex items-center gap-1.5 font-extrabold text-rose-700 dark:text-rose-400">
+                      <i data-lucide="shield-alert" class="w-4 h-4 shrink-0"></i>
+                      <span>UTRATA GWARANCJI ${d.status.warrantyVoidDate ? `(${formatDatePL(d.status.warrantyVoidDate)})` : ''}</span>
+                    </div>
+                    <div class="font-medium text-zinc-700 dark:text-zinc-300"><strong class="font-bold text-rose-900 dark:text-rose-200">Powód:</strong> ${escapeHtml(d.status.warrantyVoidReason || 'Decyzja serwisu')}</div>
+                  </div>
+                ` : ''}
                 <div class="p-2.5 rounded-xl bg-teal-50/70 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div class="text-xs text-teal-900 dark:text-teal-200">
                     <span class="font-extrabold">🏢 Lokalizacja w budynku / Notatki:</span>
@@ -6950,6 +7104,16 @@ service cloud.firestore {
                 </div>
               </div>
               <div class="flex gap-1.5 flex-wrap">
+                ${d.status.isUnderWarranty ? `
+                  <button type="button" onclick="openVoidWarrantyModal('${c.id}', '${d.id}')" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1 shadow-sm transition" title="Oznacz utratę gwarancji (wymaga hasła i podania powodu)">
+                    <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Utrata gwarancji
+                  </button>
+                ` : ''}
+                ${d.status.isWarrantyVoid ? `
+                  <button type="button" onclick="restoreWarrantyWithPin('${c.id}', '${d.id}')" class="px-3 py-1.5 bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800 hover:bg-amber-200 rounded-xl text-xs font-bold flex items-center gap-1 transition" title="Cofnij utratę gwarancji (wymaga hasła)">
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i> Przywróć gwarancję
+                  </button>
+                ` : ''}
                 <button onclick="openSupplementHistoryModal('${c.id}', '${d.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1 shadow-sm">
                   <i data-lucide="lock" class="w-3.5 h-3.5"></i> Uzupełnij historię
                 </button>
@@ -7172,6 +7336,118 @@ service cloud.firestore {
       showToast('Uzupełniono historię urządzenia!');
     }
 
+    function openVoidWarrantyModal(clientId, devId) {
+      const client = (window.clientsData || []).find(c => c.id === clientId);
+      const dev = (client?.devices || []).find(d => d.id === devId);
+      if (!client || !dev) return;
+
+      document.getElementById('void-w-client-id').value = clientId;
+      document.getElementById('void-w-device-id').value = devId;
+
+      const labelEl = document.getElementById('void-w-device-label');
+      if (labelEl) {
+        labelEl.innerHTML = `
+          <div>👤 Klient: <strong>${escapeHtml(client.name)}</strong></div>
+          <div>🔧 Urządzenie: <strong>${escapeHtml(dev.deviceModel)}</strong> ${(dev.serialNumber || dev.serialNumberOutdoor) ? `<span class="font-mono text-[11px]">[S/N: ${escapeHtml(dev.serialNumber || '—')}${dev.serialNumberOutdoor ? ' / JZ: ' + escapeHtml(dev.serialNumberOutdoor) : ''}]</span>` : ''}</div>
+          <div class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">📅 Data montażu: ${formatDatePL(dev.installDate) || 'Brak'}</div>
+        `;
+      }
+
+      document.getElementById('void-w-date').value = toYMD(new Date());
+      document.getElementById('void-w-tech').value = (window.workersData && window.workersData[0]) || 'Serwis ServiTrak';
+      document.getElementById('void-w-reason').value = '';
+      document.getElementById('void-w-password').value = '';
+      document.getElementById('void-w-password-error').classList.add('hidden');
+
+      openModal('modal-void-warranty');
+      setTimeout(() => {
+        document.getElementById('void-w-reason')?.focus();
+      }, 90);
+    }
+
+    function handleConfirmVoidWarranty(e) {
+      e.preventDefault();
+      const pwd = document.getElementById('void-w-password')?.value;
+      if (pwd !== ADMIN_PIN) {
+        document.getElementById('void-w-password-error')?.classList.remove('hidden');
+        return;
+      }
+
+      const clientId = document.getElementById('void-w-client-id').value;
+      const devId = document.getElementById('void-w-device-id').value;
+      const actionDate = document.getElementById('void-w-date').value || toYMD(new Date());
+      const technician = (document.getElementById('void-w-tech').value || 'Serwis ServiTrak').trim();
+      const reason = (document.getElementById('void-w-reason').value || '').trim();
+
+      if (!reason) {
+        showToast('Wpisz powód utraty gwarancji!');
+        return;
+      }
+
+      const client = (window.clientsData || []).find(c => c.id === clientId);
+      if (!client) return;
+
+      client.devices = (client.devices || []).map(d => {
+        if (d.id !== devId) return d;
+        const history = d.inspectionHistory || [];
+        const voidEntry = {
+          id: `h_void_${Date.now()}`,
+          date: actionDate,
+          actionType: 'Utrata gwarancji',
+          technician: technician,
+          notes: `UTRATA GWARANCJI: ${reason}`
+        };
+        return {
+          ...d,
+          isWarrantyVoid: true,
+          warrantyVoidReason: reason,
+          warrantyVoidDate: actionDate,
+          inspectionHistory: [voidEntry, ...history]
+        };
+      });
+
+      persistData();
+      closeModal('modal-void-warranty');
+      openInspectionModal(clientId, devId);
+      refreshAllViews();
+      showToast('Oznaczono utratę gwarancji urządzenia i zapisano wpis w historii!');
+    }
+
+    function restoreWarrantyWithPin(clientId, devId) {
+      const client = (window.clientsData || []).find(c => c.id === clientId);
+      const dev = (client?.devices || []).find(d => d.id === devId);
+      if (!client || !dev) return;
+
+      requestAdminPin(
+        'Przywrócenie gwarancji urządzenia',
+        `Podaj hasło autoryzacyjne, aby cofnąć utratę gwarancji dla urządzenia ${dev.deviceModel} (${client.name}):`,
+        () => {
+          client.devices = (client.devices || []).map(d => {
+            if (d.id !== devId) return d;
+            const history = d.inspectionHistory || [];
+            const restoreEntry = {
+              id: `h_restore_${Date.now()}`,
+              date: toYMD(new Date()),
+              actionType: 'Przywrócenie gwarancji',
+              technician: (window.workersData && window.workersData[0]) || 'Serwis ServiTrak',
+              notes: 'Cofnięto status utraty gwarancji decyzją serwisu.'
+            };
+            const updated = { ...d };
+            delete updated.isWarrantyVoid;
+            delete updated.warrantyVoidReason;
+            delete updated.warrantyVoidDate;
+            updated.inspectionHistory = [restoreEntry, ...history];
+            return updated;
+          });
+
+          persistData();
+          openInspectionModal(clientId, devId);
+          refreshAllViews();
+          showToast('Przywrócono gwarancję urządzenia!');
+        }
+      );
+    }
+
     /* ==========================================================================
        9. OBSŁUGA PODPISÓW DOTYKOWYCH (CANVAS) I PROTOKOŁÓW CYFROWYCH PDF
        ========================================================================== */
@@ -7355,7 +7631,8 @@ service cloud.firestore {
     function populateProtocolTemplatesSelect() {
       const sel = document.getElementById('proto-form-kind');
       if (!sel) return;
-      const templates = window.protocolTemplatesData || DEFAULT_PROTOCOL_TEMPLATES;
+      const allTemplates = window.protocolTemplatesData || DEFAULT_PROTOCOL_TEMPLATES;
+      const templates = allTemplates.filter(t => !isDummyProtocolTemplate(t));
       const groupIcons = { ac: '❄️', heat_pump: '🔥', gas_boiler: '🔥', ventilation: '💨', all: '🛠️', custom: '📋' };
       sel.innerHTML = templates.map(t => {
         const ic = groupIcons[t.deviceGroup] || '📄';
@@ -10349,8 +10626,8 @@ service cloud.firestore {
         });
         pdfStage.querySelectorAll('.protocol-no-print, .no-print').forEach(el => el.remove());
 
-        // Wymuszenie reguł zapobiegających dzieleniu sekcji i wierszy pomiędzy strony
-        pdfStage.querySelectorAll('.protocol-footer-signatures-wrap, .protocol-signatures-table, .protocol-statement-zgodnosc-table, .protocol-custom-section, .avoid-page-break, table, tr').forEach(el => {
+        // Wymuszenie reguł zapobiegających dzieleniu sekcji pomiędzy strony
+        pdfStage.querySelectorAll('.protocol-footer-signatures-wrap, .protocol-signatures-table, .protocol-statement-zgodnosc-table, .protocol-custom-section, .avoid-page-break').forEach(el => {
           el.style.breakInside = 'avoid';
           el.style.pageBreakInside = 'avoid';
         });
@@ -10370,6 +10647,9 @@ service cloud.firestore {
         await new Promise(r => setTimeout(r, 120));
 
         // Jeśli treść mieści się na 1 stronie (<= 1080px), dopasowujemy arkusz do pełnej wysokości A4 z równomiernym rozmieszczeniem sekcji
+        if (pdfStage.firstElementChild) {
+          pdfStage.firstElementChild.style.minHeight = '';
+        }
         if (pdfStage.scrollHeight <= 1080) {
           pdfStage.style.minHeight = '1060px';
           const firstChild = pdfStage.firstElementChild;
@@ -10378,6 +10658,7 @@ service cloud.firestore {
             firstChild.style.display = 'flex';
             firstChild.style.flexDirection = 'column';
             firstChild.style.justifyContent = 'space-between';
+            firstChild.style.boxSizing = 'border-box';
           }
         }
 
@@ -10393,15 +10674,13 @@ service cloud.firestore {
             logging: false
           },
           pagebreak: {
-            mode: ['avoid-all', 'css', 'legacy'],
+            mode: ['css', 'legacy'],
             avoid: [
               '.protocol-footer-signatures-wrap',
               '.protocol-signatures-table',
               '.protocol-statement-zgodnosc-table',
               '.protocol-custom-section',
-              '.avoid-page-break',
-              'table',
-              'tr'
+              '.avoid-page-break'
             ]
           },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -10601,7 +10880,8 @@ service cloud.firestore {
         service: '⚡ Serwis / Naprawa'
       };
 
-      const templates = window.protocolTemplatesData || DEFAULT_PROTOCOL_TEMPLATES;
+      const allTemplates = window.protocolTemplatesData || DEFAULT_PROTOCOL_TEMPLATES;
+      const templates = allTemplates.filter(t => !isDummyProtocolTemplate(t));
       listEl.innerHTML = templates.map(t => `
         <div class="p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50/70 dark:bg-zinc-800/50 space-y-2">
           <div class="flex justify-between items-start gap-2 flex-wrap">
@@ -10690,8 +10970,8 @@ service cloud.firestore {
       const installParams = actionCategory === 'install' ? parseLinesToParamObjects(document.getElementById('tpl-install-params')?.value || '') : [];
       const serviceFields = actionCategory === 'service' ? parseLinesToParamObjects(document.getElementById('tpl-service-fields')?.value || '') : [];
 
-      if (!title) {
-        showToast('Wprowadź nazwę wzoru protokołu!');
+      if (!title || isDummyProtocolTemplate({ title })) {
+        showToast('Wprowadź konkretną nazwę wzoru (np. Protokół montażu rekuperacji)!');
         return;
       }
 
@@ -10839,8 +11119,9 @@ service cloud.firestore {
       let editId = (document.getElementById('tpl-edit-id')?.value || '').trim();
       let title = (document.getElementById('tpl-title')?.value || '').trim();
       if (!title) {
-        title = 'Nowy Wzór Protokołu';
-        if (document.getElementById('tpl-title')) document.getElementById('tpl-title').value = title;
+        showToast('Wprowadź najpierw nazwę wzoru protokołu!');
+        document.getElementById('tpl-title')?.focus();
+        return;
       }
       const deviceGroup = document.getElementById('tpl-device-group')?.value || 'custom';
       const customGroupName = deviceGroup === 'custom' ? (document.getElementById('tpl-custom-group-name')?.value || '').trim() : '';
