@@ -1732,7 +1732,7 @@
           <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600"></i>
           <h3 id="close-visit-modal-title" class="text-base font-extrabold">Zamknij zlecenie i wpisz do historii</h3>
         </div>
-        <button onclick="closeModal('modal-close-visit')"><i data-lucide="x" class="w-5 h-5"></i></button>
+        <button type="button" onclick="handleCancelCloseVisitModal()"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
       <form onsubmit="handleConfirmCloseVisit(event)" class="space-y-3.5">
         <input type="hidden" id="close-visit-id">
@@ -2127,7 +2127,7 @@
                     <button type="button" id="btn-load-worker-sig" onclick="loadAssignedWorkerSignature()" class="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-emerald-300 dark:border-emerald-700 px-2 py-0.5 rounded-md flex items-center gap-1 transition shadow-sm" title="Wczytaj przypisany podpis dla tego zlecenia">
                       <i data-lucide="download" class="w-3 h-3"></i> Wczytaj podpis
                     </button>
-                    <button type="button" onclick="clearSignaturePad('sig-canvas-tech')" class="text-[10px] font-bold text-rose-600 hover:underline px-1">Wyczyść</button>
+                    <button type="button" onclick="handleClearTechSignature()" class="text-[10px] font-bold text-rose-600 hover:underline px-1">Wyczyść</button>
                   </div>
                 </div>
                 <div class="bg-white rounded-xl border-2 border-dashed border-sky-400 overflow-hidden shadow-inner">
@@ -2141,10 +2141,14 @@
               <div class="space-y-1.5">
                 <div class="flex justify-between items-center">
                   <span class="text-[10px] font-extrabold uppercase text-emerald-700 dark:text-emerald-400">✍️ Podpis Klienta (palcem)</span>
-                  <button type="button" onclick="clearSignaturePad('sig-canvas-client')" class="text-[10px] font-bold text-rose-600 hover:underline">Wyczyść</button>
+                  <button type="button" onclick="handleClearClientSignature()" class="text-[10px] font-bold text-rose-600 hover:underline">Wyczyść</button>
                 </div>
                 <div class="bg-white rounded-xl border-2 border-dashed border-emerald-500 overflow-hidden shadow-inner">
                   <canvas id="sig-canvas-client" width="320" height="120" class="sig-canvas w-full h-[105px] block bg-white"></canvas>
+                </div>
+                <div id="sig-client-loaded-badge" class="hidden text-[10px] font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1 bg-emerald-50/70 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                  <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-600 shrink-0"></i>
+                  <span>✓ Wczytano i zachowano podpis klienta</span>
                 </div>
               </div>
             </div>
@@ -2165,7 +2169,7 @@
           <span>Zaktualizuj również datę kolejnego przeglądu okresowego (+ interwał urządzenia)</span>
         </label>
         <div class="flex justify-end gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-          <button type="button" onclick="closeModal('modal-close-visit')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">Anuluj</button>
+          <button type="button" onclick="handleCancelCloseVisitModal()" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">Anuluj</button>
           <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow-sm transition">Zatwierdź i zamknij zlecenie</button>
         </div>
       </form>
@@ -2461,6 +2465,9 @@ service cloud.firestore {
               </button>
             </div>
           </div>
+          <button type="button" id="btn-edit-protocol-form" onclick="editCurrentProtocolForm()" class="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition" title="Edytuj dane wprowadzone w formularzu tego protokołu (podpisy pozostaną zachowane)">
+            <i data-lucide="edit-3" class="w-4 h-4"></i> Edytuj formularz
+          </button>
           <button type="button" id="btn-download-protocol-pdf" onclick="downloadCurrentProtocolPDF()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition">
             <i data-lucide="download" class="w-4 h-4"></i> Pobierz PDF
           </button>
@@ -7494,6 +7501,7 @@ service cloud.firestore {
           ctx.lineJoin = 'round';
           signaturePadsState[canvasId].drawing = true;
           signaturePadsState[canvasId].hasInk = true;
+          signaturePadsState[canvasId].userDrew = true;
           const pos = getPos(e);
           ctx.beginPath();
           ctx.moveTo(pos.x, pos.y);
@@ -7549,9 +7557,10 @@ service cloud.firestore {
         prepareSignatureCanvasBackground(canvas);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         if (!signaturePadsState[canvasId]) {
-          signaturePadsState[canvasId] = { drawing: false, hasInk: true, initialized: true };
+          signaturePadsState[canvasId] = { drawing: false, hasInk: true, initialized: true, userDrew: false };
         } else {
           signaturePadsState[canvasId].hasInk = true;
+          signaturePadsState[canvasId].userDrew = false;
         }
         if (typeof callback === 'function') callback(true);
       };
@@ -7562,6 +7571,125 @@ service cloud.firestore {
     }
 
     let currentCloseVisitWorkerName = '';
+    let currentlyEditingProtocol = null;
+
+    function resetCloseVisitModalTitleAndButton() {
+      const titleEl = document.getElementById('close-visit-modal-title');
+      if (titleEl) titleEl.innerText = 'Zamknij zlecenie i wpisz do historii';
+      const submitBtn = document.querySelector('#modal-close-visit button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> Zatwierdź i zamknij zlecenie';
+      }
+      const badgeClient = document.getElementById('sig-client-loaded-badge');
+      if (badgeClient) badgeClient.classList.add('hidden');
+    }
+
+    function handleClearClientSignature() {
+      clearSignaturePad('sig-canvas-client');
+      if (signaturePadsState['sig-canvas-client']) {
+        signaturePadsState['sig-canvas-client'].userDrew = false;
+      }
+      if (currentlyEditingProtocol) {
+        currentlyEditingProtocol.sigClientDataUrl = '';
+      }
+      const badge = document.getElementById('sig-client-loaded-badge');
+      if (badge) badge.classList.add('hidden');
+    }
+
+    function handleClearTechSignature() {
+      clearSignaturePad('sig-canvas-tech');
+      if (signaturePadsState['sig-canvas-tech']) {
+        signaturePadsState['sig-canvas-tech'].userDrew = false;
+      }
+      if (currentlyEditingProtocol) {
+        currentlyEditingProtocol.sigTechDataUrl = '';
+      }
+      const badge = document.getElementById('sig-tech-loaded-badge');
+      if (badge) badge.classList.add('hidden');
+    }
+
+    function handleCancelCloseVisitModal() {
+      const protoToRestore = currentlyEditingProtocol || currentPreviewProtocolObj;
+      currentlyEditingProtocol = null;
+      closeModal('modal-close-visit');
+      resetCloseVisitModalTitleAndButton();
+      if (protoToRestore) {
+        showProtocolObjectInModal(protoToRestore);
+      }
+    }
+
+    function editCurrentProtocolForm() {
+      if (!currentPreviewProtocolObj || currentPreviewProtocolObj.isTemplatePreview) {
+        showToast('Brak aktywnego protokołu zlecenia do edycji.');
+        return;
+      }
+      const proto = currentPreviewProtocolObj;
+
+      // 1. Znajdź powiązane zlecenie w appointmentsData
+      let visit = (window.appointmentsData || []).find(v =>
+        v.protocolData === proto ||
+        (v.protocolData && v.protocolData.protocolId === proto.protocolId)
+      );
+
+      // 2. Jeśli nie znaleziono bezpośrednio, poszukaj w klientach i historii urządzeń
+      let client = null;
+      let device = null;
+      let histEntry = null;
+      for (const c of (window.clientsData || [])) {
+        for (const d of (c.devices || [])) {
+          const h = (d.inspectionHistory || []).find(item =>
+            item.protocolData?.protocolId === proto.protocolId ||
+            item.protocolData === proto
+          );
+          if (h) {
+            client = c;
+            device = d;
+            histEntry = h;
+            break;
+          }
+        }
+        if (histEntry) break;
+      }
+
+      if (!client && proto.clientName) {
+        client = (window.clientsData || []).find(c =>
+          c.name === proto.clientName ||
+          (proto.clientEmail && c.email === proto.clientEmail)
+        );
+      }
+
+      if (!visit) {
+        const srvType = histEntry?.actionType || (
+          (proto.type || '').includes('install') ? 'Montaż i uruchomienie' :
+          (proto.type || '').includes('service') ? 'Serwis / Naprawa' :
+          'Przegląd okresowy'
+        );
+        visit = {
+          id: `synth_${(proto.protocolId || Date.now().toString()).replace(/[^a-zA-Z0-9]/g, '_')}`,
+          clientId: client ? client.id : null,
+          deviceId: device ? device.id : null,
+          clientName: client ? client.name : (proto.clientName || 'Klient'),
+          clientPhone: client ? client.phone : (proto.clientPhone || ''),
+          clientEmail: client ? client.email : (proto.clientEmail || ''),
+          clientCity: client ? client.city : '',
+          clientStreet: client ? client.street : '',
+          clientPostalCode: client ? client.postalCode : '',
+          serviceType: srvType,
+          date: proto.date || toYMD(new Date()),
+          workerName: proto.technician || '',
+          notes: proto.comments || '',
+          status: 'completed',
+          protocolData: proto,
+          isAdHoc: !client,
+          isSynthetic: true
+        };
+        if (!Array.isArray(window.appointmentsData)) window.appointmentsData = [];
+        window.appointmentsData.push(visit);
+      }
+
+      closeModal('modal-protocol-preview');
+      openCloseVisitModal(visit.id, proto);
+    }
 
     function loadAssignedWorkerSignature() {
       const worker = currentCloseVisitWorkerName || (window.workersData && window.workersData[0]) || '';
@@ -8223,22 +8351,41 @@ service cloud.firestore {
       }
     }
 
-    function openCloseVisitModal(visitId) {
+    function openCloseVisitModal(visitId, existingProtocolToEdit = null) {
       const visit = (window.appointmentsData || []).find(a => a.id === visitId);
       if (!visit) return;
+      currentlyEditingProtocol = existingProtocolToEdit || null;
+
+      if (currentlyEditingProtocol) {
+        const titleEl = document.getElementById('close-visit-modal-title');
+        if (titleEl) titleEl.innerHTML = '✏️ Edytuj formularz i dane protokołu';
+        const submitBtn = document.querySelector('#modal-close-visit button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i> Zapisz poprawione dane protokołu';
+        }
+      } else {
+        resetCloseVisitModalTitleAndButton();
+      }
+
       const client = (window.clientsData || []).find(c => c.id === visit.clientId);
       const dev = client?.devices?.find(d => d.id === visit.deviceId) || (client?.devices?.length === 1 ? client.devices[0] : null);
+      const existingProto = currentlyEditingProtocol || visit.protocolData || null;
+
       const srvLow = (visit.serviceType || '').toLowerCase();
-      const isMontaz = srvLow.includes('monta');
-      const isServiceRepair = srvLow.includes('serwis') || srvLow.includes('awaria') || srvLow.includes('napraw');
+      const isMontaz = srvLow.includes('monta') || Boolean(existingProto && (existingProto.type || '').includes('install'));
+      const isServiceRepair = srvLow.includes('serwis') || srvLow.includes('awaria') || srvLow.includes('napraw') || Boolean(existingProto && (existingProto.type || '').includes('service'));
 
       const devType = isMontaz ? (visit.plannedInstallType || 'heat_pump') : (dev?.deviceType || 'ac');
       const isAc = devType === 'ac';
 
       document.getElementById('close-visit-id').value = visit.id;
-      document.getElementById('close-visit-comment').value = isMontaz
-        ? `Zamontowano i uruchomiono urządzenie: ${visit.plannedInstallModel || 'HVAC'}.${visit.notes ? ' (' + visit.notes + ')' : ''}`
-        : (visit.notes ? `Wykonano: ${visit.serviceType}. (${visit.notes})` : `Wykonano: ${visit.serviceType} — urządzenie sprawne.`);
+      if (existingProto && existingProto.comments !== undefined) {
+        document.getElementById('close-visit-comment').value = existingProto.comments;
+      } else {
+        document.getElementById('close-visit-comment').value = isMontaz
+          ? `Zamontowano i uruchomiono urządzenie: ${visit.plannedInstallModel || 'HVAC'}.${visit.notes ? ' (' + visit.notes + ')' : ''}`
+          : (visit.notes ? `Wykonano: ${visit.serviceType}. (${visit.notes})` : `Wykonano: ${visit.serviceType} — urządzenie sprawne.`);
+      }
 
       const installBox = document.getElementById('close-visit-install-box');
       const nextInspLabel = document.getElementById('close-visit-next-insp-label');
@@ -8249,13 +8396,13 @@ service cloud.firestore {
         document.getElementById('close-install-type').value = ['heat_pump', 'gas_boiler', 'ac', 'ventilation'].includes(visit.plannedInstallType) ? visit.plannedInstallType : (visit.plannedInstallType ? 'custom' : 'heat_pump');
         document.getElementById('close-install-custom-type')?.classList.toggle('hidden', document.getElementById('close-install-type').value !== 'custom');
         if (document.getElementById('close-install-custom-type')) document.getElementById('close-install-custom-type').value = visit.plannedInstallCustomType || '';
-        document.getElementById('close-install-model').value = visit.plannedInstallModel || '';
+        document.getElementById('close-install-model').value = (existingProto && existingProto.deviceModel) || visit.plannedInstallModel || '';
         document.getElementById('close-install-warranty').value = visit.plannedInstallWarranty || 60;
-        document.getElementById('close-install-serial').value = '';
-        if (document.getElementById('close-install-serial-outdoor')) document.getElementById('close-install-serial-outdoor').value = '';
+        document.getElementById('close-install-serial').value = (existingProto && existingProto.serialIndoor) || '';
+        if (document.getElementById('close-install-serial-outdoor')) document.getElementById('close-install-serial-outdoor').value = (existingProto && existingProto.serialOutdoor) || '';
         document.getElementById('close-install-serial-out-wrap')?.classList.toggle('hidden', !isAc);
         if (document.getElementById('close-install-dev-notes')) {
-          document.getElementById('close-install-dev-notes').value = visit.plannedInstallDeviceNotes || '';
+          document.getElementById('close-install-dev-notes').value = (existingProto && (existingProto.deviceNotes || existingProto.locationIndoor)) || visit.plannedInstallDeviceNotes || '';
         }
         if (document.getElementById('close-install-custom-loc')) {
           document.getElementById('close-install-custom-loc').checked = false;
@@ -8278,27 +8425,31 @@ service cloud.firestore {
       attachChk.checked = true;
 
       let defaultProtoKind = 'universal_service';
-      const actionCat = isMontaz ? 'install' : isServiceRepair ? 'service' : 'inspection';
-      const customMatch = (window.protocolTemplatesData || []).find(t =>
-        !t.isBuiltIn &&
-        t.actionCategory === actionCat &&
-        (t.deviceGroup === devType || (devType === 'custom' && t.deviceGroup === 'custom'))
-      );
-
-      if (customMatch) {
-        defaultProtoKind = customMatch.id;
-      } else if (isMontaz) {
-        if (devType === 'ac') defaultProtoKind = 'ac_install';
-        else if (devType === 'heat_pump') defaultProtoKind = 'hp_install';
-        else if (devType === 'gas_boiler') defaultProtoKind = 'gas_boiler_install';
-        else defaultProtoKind = 'universal_install';
-      } else if (isServiceRepair) {
-        defaultProtoKind = 'universal_service';
+      if (existingProto && (existingProto.templateId || existingProto.type)) {
+        defaultProtoKind = existingProto.templateId || existingProto.type;
       } else {
-        if (devType === 'ac') defaultProtoKind = 'ac_inspection';
-        else if (devType === 'gas_boiler') defaultProtoKind = 'gas_boiler_inspection';
-        else if (devType === 'heat_pump') defaultProtoKind = 'hp_inspection';
-        else defaultProtoKind = 'universal_inspection';
+        const actionCat = isMontaz ? 'install' : isServiceRepair ? 'service' : 'inspection';
+        const customMatch = (window.protocolTemplatesData || []).find(t =>
+          !t.isBuiltIn &&
+          t.actionCategory === actionCat &&
+          (t.deviceGroup === devType || (devType === 'custom' && t.deviceGroup === 'custom'))
+        );
+
+        if (customMatch) {
+          defaultProtoKind = customMatch.id;
+        } else if (isMontaz) {
+          if (devType === 'ac') defaultProtoKind = 'ac_install';
+          else if (devType === 'heat_pump') defaultProtoKind = 'hp_install';
+          else if (devType === 'gas_boiler') defaultProtoKind = 'gas_boiler_install';
+          else defaultProtoKind = 'universal_install';
+        } else if (isServiceRepair) {
+          defaultProtoKind = 'universal_service';
+        } else {
+          if (devType === 'ac') defaultProtoKind = 'ac_inspection';
+          else if (devType === 'gas_boiler') defaultProtoKind = 'gas_boiler_inspection';
+          else if (devType === 'heat_pump') defaultProtoKind = 'hp_inspection';
+          else defaultProtoKind = 'universal_inspection';
+        }
       }
 
       if (document.getElementById('proto-form-kind')) {
@@ -8307,27 +8458,103 @@ service cloud.firestore {
       toggleProtocolFormInCloseModal(true);
       onProtocolKindSelectChange(defaultProtoKind);
 
-      document.getElementById('proto-inst-sn-in').value = dev?.serialNumber || '';
-      document.getElementById('proto-inst-sn-out').value = dev?.serialNumberOutdoor || '';
-      document.getElementById('proto-inst-loc-in').value = visit.plannedInstallDeviceNotes || dev?.deviceNotes || 'Pomieszczenie klimatyzowane';
-      document.getElementById('proto-inst-loc-out').value = 'Elewacja zewnętrzna / Balkon';
+      document.getElementById('proto-inst-sn-in').value = (existingProto && existingProto.serialIndoor) || dev?.serialNumber || '';
+      document.getElementById('proto-inst-sn-out').value = (existingProto && existingProto.serialOutdoor) || dev?.serialNumberOutdoor || '';
+      document.getElementById('proto-inst-loc-in').value = (existingProto && existingProto.locationIndoor) || visit.plannedInstallDeviceNotes || dev?.deviceNotes || 'Pomieszczenie klimatyzowane';
+      document.getElementById('proto-inst-loc-out').value = (existingProto && existingProto.locationOutdoor) || 'Elewacja zewnętrzna / Balkon';
       if (document.getElementById('proto-univ-inst-loc')) {
-        document.getElementById('proto-univ-inst-loc').value = visit.plannedInstallDeviceNotes || dev?.deviceNotes || 'Zgodnie z dokumentacją techniczną';
+        document.getElementById('proto-univ-inst-loc').value = (existingProto && existingProto.univInstallLocation) || visit.plannedInstallDeviceNotes || dev?.deviceNotes || 'Zgodnie z dokumentacją techniczną';
       }
       if (document.getElementById('proto-insp-materials')) {
-        document.getElementById('proto-insp-materials').value = '';
+        document.getElementById('proto-insp-materials').value = (existingProto && existingProto.usedMaterials) || '';
+      }
+      if (existingProto && existingProto.usedMaterials) {
+        document.getElementById('close-visit-materials-wrap')?.classList.remove('hidden');
       }
       if (document.getElementById('proto-srv-fault')) {
-        document.getElementById('proto-srv-fault').value = visit.notes || '';
+        document.getElementById('proto-srv-fault').value = (existingProto && existingProto.faultDescription) || visit.notes || '';
       }
       if (document.getElementById('proto-srv-diagnosis')) {
-        document.getElementById('proto-srv-diagnosis').value = '';
+        document.getElementById('proto-srv-diagnosis').value = (existingProto && existingProto.diagnosis) || '';
       }
       if (document.getElementById('proto-srv-work-course')) {
-        document.getElementById('proto-srv-work-course').value = visit.notes ? `Weryfikacja zgłoszenia (${visit.notes}), diagnostyka układu i usunięcie usterki.` : '';
+        document.getElementById('proto-srv-work-course').value = (existingProto && existingProto.workCourse) || (visit.notes ? `Weryfikacja zgłoszenia (${visit.notes}), diagnostyka układu i usunięcie usterki.` : '');
+      }
+      if (document.getElementById('proto-srv-status') && existingProto && existingProto.postServiceStatus) {
+        document.getElementById('proto-srv-status').value = existingProto.postServiceStatus;
+      }
+      if (document.getElementById('proto-inst-refrigerant') && existingProto && existingProto.refrigerant) {
+        document.getElementById('proto-inst-refrigerant').value = existingProto.refrigerant;
+      }
+      if (document.getElementById('proto-inst-length') && existingProto && existingProto.installLength) {
+        document.getElementById('proto-inst-length').value = existingProto.installLength;
+      }
+      if (document.getElementById('proto-inst-electric') && existingProto && existingProto.electricConn) {
+        document.getElementById('proto-inst-electric').value = existingProto.electricConn;
+      }
+      if (document.getElementById('proto-inst-condensate') && existingProto && existingProto.condensate) {
+        document.getElementById('proto-inst-condensate').value = existingProto.condensate;
+      }
+      if (document.getElementById('proto-inst-tests') && existingProto && existingProto.testResult) {
+        document.getElementById('proto-inst-tests').value = existingProto.testResult;
+      }
+      if (document.getElementById('proto-insp-fgaz') && existingProto && existingProto.fgazTool) {
+        document.getElementById('proto-insp-fgaz').value = existingProto.fgazTool;
+      }
+      if (document.getElementById('proto-gb-flue') && existingProto && existingProto.flueAnalysis) {
+        document.getElementById('proto-gb-flue').value = existingProto.flueAnalysis;
+      }
+      if (document.getElementById('proto-gb-pressure') && existingProto && existingProto.coPressure) {
+        document.getElementById('proto-gb-pressure').value = existingProto.coPressure;
+      }
+      if (document.getElementById('proto-gb-gas-tight') && existingProto && existingProto.gasTightness) {
+        document.getElementById('proto-gb-gas-tight').value = existingProto.gasTightness;
+      }
+      if (document.getElementById('proto-gb-inst-gas') && existingProto && existingProto.gbGasType) {
+        document.getElementById('proto-gb-inst-gas').value = existingProto.gbGasType;
+      }
+      if (document.getElementById('proto-gb-inst-flue-sys') && existingProto && existingProto.gbFlueSystem) {
+        document.getElementById('proto-gb-inst-flue-sys').value = existingProto.gbFlueSystem;
+      }
+      if (document.getElementById('proto-gb-inst-tight') && existingProto && existingProto.gbTightnessTest) {
+        document.getElementById('proto-gb-inst-tight').value = existingProto.gbTightnessTest;
+      }
+      if (document.getElementById('proto-gb-inst-hydr') && existingProto && existingProto.gbHydraulics) {
+        document.getElementById('proto-gb-inst-hydr').value = existingProto.gbHydraulics;
+      }
+      if (document.getElementById('proto-gb-inst-comb') && existingProto && existingProto.gbCombustionTest) {
+        document.getElementById('proto-gb-inst-comb').value = existingProto.gbCombustionTest;
+      }
+      if (document.getElementById('proto-hp-inst-type') && existingProto && existingProto.hpSystemType) {
+        document.getElementById('proto-hp-inst-type').value = existingProto.hpSystemType;
+      }
+      if (existingProto && Array.isArray(existingProto.customServiceFields)) {
+        existingProto.customServiceFields.forEach((f, idx) => {
+          const inp = document.getElementById(`proto-srv-extra-${idx}`);
+          if (inp && f.value !== undefined) inp.value = f.value;
+        });
+      }
+      if (existingProto && Array.isArray(existingProto.customInstallRows)) {
+        existingProto.customInstallRows.forEach((r, idx) => {
+          const inp = document.getElementById(`proto-dyn-param-${idx}`);
+          if (inp && r.value !== undefined) inp.value = r.value;
+        });
+      }
+      if (existingProto && Array.isArray(existingProto.checklist)) {
+        existingProto.checklist.forEach((item, idx) => {
+          const isDone = Boolean(item.done);
+          const c1 = document.getElementById(`proto-chk-${idx + 1}`);
+          if (c1) c1.checked = isDone;
+          const c2 = document.getElementById(`proto-gb-chk-${idx + 1}`);
+          if (c2) c2.checked = isDone;
+          const c3 = document.getElementById(`proto-hp-chk-${idx + 1}`);
+          if (c3) c3.checked = isDone;
+          const c4 = document.getElementById(`proto-dyn-chk-${idx}`);
+          if (c4) c4.checked = isDone;
+        });
       }
 
-      currentCloseVisitWorkerName = visit.workerName || (window.workersData && window.workersData[0]) || '';
+      currentCloseVisitWorkerName = visit.workerName || (existingProto && existingProto.technician) || (window.workersData && window.workersData[0]) || '';
       const btnLoadSig = document.getElementById('btn-load-worker-sig');
       if (btnLoadSig) {
         btnLoadSig.innerHTML = `<i data-lucide="download" class="w-3 h-3"></i> Wczytaj podpis (${escapeHtml(currentCloseVisitWorkerName || 'serwisanta')})`;
@@ -8336,34 +8563,77 @@ service cloud.firestore {
       setTimeout(() => {
         initSignaturePad('sig-canvas-tech');
         initSignaturePad('sig-canvas-client');
-        clearSignaturePad('sig-canvas-tech');
-        clearSignaturePad('sig-canvas-client');
 
-        const savedWorkerSig = getWorkerSignature(currentCloseVisitWorkerName);
-        if (savedWorkerSig) {
-          loadSignatureDataUrlToPad('sig-canvas-tech', savedWorkerSig, (ok) => {
-            if (ok) {
-              const badge = document.getElementById('sig-tech-loaded-badge');
-              const badgeName = document.getElementById('sig-tech-loaded-worker-name');
-              if (badge) badge.classList.remove('hidden');
-              if (badgeName) badgeName.textContent = currentCloseVisitWorkerName;
-              lucide.createIcons();
-            }
-          });
+        if (currentlyEditingProtocol) {
+          // Edycja istniejącego protokołu: ŁADUJEMY ZAPAMIĘTANE PODPISY
+          const techSig = currentlyEditingProtocol.sigTechDataUrl || getWorkerSignature(currentCloseVisitWorkerName);
+          if (techSig) {
+            loadSignatureDataUrlToPad('sig-canvas-tech', techSig, (ok) => {
+              if (ok) {
+                const badge = document.getElementById('sig-tech-loaded-badge');
+                const badgeName = document.getElementById('sig-tech-loaded-worker-name');
+                if (badge) badge.classList.remove('hidden');
+                if (badgeName) badgeName.textContent = currentlyEditingProtocol.technician || currentCloseVisitWorkerName || 'Serwisant';
+                lucide.createIcons();
+              }
+            });
+          } else {
+            clearSignaturePad('sig-canvas-tech');
+            document.getElementById('sig-tech-loaded-badge')?.classList.add('hidden');
+          }
+
+          if (currentlyEditingProtocol.sigClientDataUrl) {
+            loadSignatureDataUrlToPad('sig-canvas-client', currentlyEditingProtocol.sigClientDataUrl, (ok) => {
+              if (ok) {
+                const badgeClient = document.getElementById('sig-client-loaded-badge');
+                if (badgeClient) badgeClient.classList.remove('hidden');
+                lucide.createIcons();
+              }
+            });
+          } else {
+            clearSignaturePad('sig-canvas-client');
+            document.getElementById('sig-client-loaded-badge')?.classList.add('hidden');
+          }
         } else {
-          document.getElementById('sig-tech-loaded-badge')?.classList.add('hidden');
+          // Nowe zamykanie zlecenia
+          clearSignaturePad('sig-canvas-tech');
+          clearSignaturePad('sig-canvas-client');
+          document.getElementById('sig-client-loaded-badge')?.classList.add('hidden');
+
+          const savedWorkerSig = getWorkerSignature(currentCloseVisitWorkerName);
+          if (savedWorkerSig) {
+            loadSignatureDataUrlToPad('sig-canvas-tech', savedWorkerSig, (ok) => {
+              if (ok) {
+                const badge = document.getElementById('sig-tech-loaded-badge');
+                const badgeName = document.getElementById('sig-tech-loaded-worker-name');
+                if (badge) badge.classList.remove('hidden');
+                if (badgeName) badgeName.textContent = currentCloseVisitWorkerName;
+                lucide.createIcons();
+              }
+            });
+          } else {
+            document.getElementById('sig-tech-loaded-badge')?.classList.add('hidden');
+          }
         }
         lucide.createIcons();
       }, 90);
 
       const devCustomAddr = dev ? formatDeviceInstallAddress(dev) : (visit.clientCity ? `${visit.clientCity}${visit.clientStreet ? ', ' + visit.clientStreet : ''}` : '');
       const clientName = client ? client.name : (visit.clientName || 'Klient');
-      const devName = dev ? dev.deviceModel : (visit.deviceModel || (isMontaz ? (visit.plannedInstallModel || 'Nowe urządzenie') : 'Ogólne urządzenie'));
+      const devName = dev ? dev.deviceModel : (visit.deviceModel || (isMontaz ? ((existingProto && existingProto.deviceModel) || visit.plannedInstallModel || 'Nowe urządzenie') : 'Ogólne urządzenie'));
+
+      const editBannerHtml = currentlyEditingProtocol ? `
+        <div class="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-700/80 text-[11px] font-bold text-amber-800 dark:text-amber-200 flex items-center gap-1.5 mb-1.5">
+          <i data-lucide="edit-3" class="w-3.5 h-3.5 shrink-0 text-amber-600"></i>
+          <span>Tryb edycji protokołu <strong>${escapeHtml(currentlyEditingProtocol.protocolId || '')}</strong>. Podpisy pozostają zachowane z opcją ich wyczyszczenia.</span>
+        </div>` : '';
+
       document.getElementById('close-visit-summary').innerHTML = `
+        ${editBannerHtml}
         <div class="font-extrabold text-zinc-900 dark:text-white">${clientName} • ${visit.serviceType} ${(visit.isAdHoc || !client) ? '<span class="text-[9px] bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 px-1.5 py-0.5 rounded font-extrabold ml-1">Spoza bazy</span>' : ''}</div>
-        <div class="text-zinc-500">${isMontaz ? `🏗️ Planowany montaż: <strong>${visit.plannedInstallModel || 'Nowe urządzenie'}</strong>` : `🔧 Urządzenie: <strong>${devName}</strong> ${dev?.serialNumber ? `(S/N: ${dev.serialNumber}${dev?.serialNumberOutdoor ? ' / JZ: ' + dev.serialNumberOutdoor : ''})` : ''}`}</div>
+        <div class="text-zinc-500">${isMontaz ? `🏗️ Planowany montaż: <strong>${(existingProto && existingProto.deviceModel) || visit.plannedInstallModel || 'Nowe urządzenie'}</strong>` : `🔧 Urządzenie: <strong>${devName}</strong> ${dev?.serialNumber ? `(S/N: ${dev.serialNumber}${dev?.serialNumberOutdoor ? ' / JZ: ' + dev.serialNumberOutdoor : ''})` : ''}`}</div>
         ${devCustomAddr ? `<div class="text-indigo-600 dark:text-indigo-400 font-bold">📍 Adres: ${devCustomAddr}</div>` : ''}
-        <div class="text-zinc-500">👷 Wykonawca: <strong>${visit.workerName || 'Serwis ServiTrak'}</strong> • Data: <strong>${formatDatePL(visit.date)}</strong></div>
+        <div class="text-zinc-500">👷 Wykonawca: <strong>${visit.workerName || (existingProto && existingProto.technician) || 'Serwis ServiTrak'}</strong> • Data: <strong>${formatDatePL(existingProto?.date || visit.date)}</strong></div>
       `;
 
       const isAdHocVisit = Boolean(visit.isAdHoc || !client);
@@ -8415,28 +8685,34 @@ service cloud.firestore {
       );
 
       const protoIdGenerated = `PROT/${(visit.date || toYMD(new Date())).replace(/-/g, '')}/${Math.floor(100 + Math.random() * 900)}`;
+      const protoIdToUse = currentlyEditingProtocol?.protocolId || protoIdGenerated;
+      const dateToUse = currentlyEditingProtocol?.date || visit.date || toYMD(new Date());
       const clientAddrFormatted = client ? `${client.postalCode ? client.postalCode + ' ' : ''}${client.city || ''}, ${client.street || ''}` : (visit.clientAddress || `${visit.clientPostalCode ? visit.clientPostalCode + ' ' : ''}${visit.clientCity || ''}${visit.clientStreet ? ', ' + visit.clientStreet : ''}`.trim() || '—');
-      const sigTechUrl = getSignatureDataUrl('sig-canvas-tech');
-      const sigClientUrl = getSignatureDataUrl('sig-canvas-client');
+      const sigTechUrl = (!signaturePadsState['sig-canvas-tech']?.userDrew && currentlyEditingProtocol?.sigTechDataUrl)
+        ? currentlyEditingProtocol.sigTechDataUrl
+        : (getSignatureDataUrl('sig-canvas-tech') || (currentlyEditingProtocol?.sigTechDataUrl || ''));
+      const sigClientUrl = (!signaturePadsState['sig-canvas-client']?.userDrew && currentlyEditingProtocol?.sigClientDataUrl)
+        ? currentlyEditingProtocol.sigClientDataUrl
+        : (getSignatureDataUrl('sig-canvas-client') || (currentlyEditingProtocol?.sigClientDataUrl || ''));
 
       const base = {
-        protocolId: protoIdGenerated,
+        protocolId: protoIdToUse,
         type: protoKind,
         templateId: tpl?.id || protoKind,
         customTitle: tpl?.title || '',
-        customEditedHtml: null,
-        date: visit.date || toYMD(new Date()),
+        customEditedHtml: currentlyEditingProtocol?.customEditedHtml || null,
+        date: dateToUse,
         companyName: getSavedCompanyName(),
         fgazCert: getSavedFgazCert(),
-        technician: visit.workerName || 'Serwis INSTAL',
-        clientName: client?.name || visit.clientName || 'Klient',
-        clientNip: client?.nip || visit.clientNip || '',
-        clientEmail: client?.email || visit.clientEmail || '',
+        technician: visit.workerName || currentlyEditingProtocol?.technician || 'Serwis INSTAL',
+        clientName: client?.name || visit.clientName || currentlyEditingProtocol?.clientName || 'Klient',
+        clientNip: client?.nip || visit.clientNip || currentlyEditingProtocol?.clientNip || '',
+        clientEmail: client?.email || visit.clientEmail || currentlyEditingProtocol?.clientEmail || '',
         clientAddress: clientAddrFormatted,
-        installAddress: deviceInstallAddress || visit.installAddress || '',
-        clientPhone: client?.phone || visit.clientPhone || '',
-        deviceTypeLabel: devTypeLabel || visit.deviceTypeLabel || 'Urządzenie HVAC',
-        deviceModel: deviceModel || visit.deviceModel || visit.plannedInstallModel || 'Urządzenie HVAC',
+        installAddress: deviceInstallAddress || visit.installAddress || currentlyEditingProtocol?.installAddress || '',
+        clientPhone: client?.phone || visit.clientPhone || currentlyEditingProtocol?.clientPhone || '',
+        deviceTypeLabel: devTypeLabel || visit.deviceTypeLabel || currentlyEditingProtocol?.deviceTypeLabel || 'Urządzenie HVAC',
+        deviceModel: deviceModel || visit.deviceModel || visit.plannedInstallModel || currentlyEditingProtocol?.deviceModel || 'Urządzenie HVAC',
         serialIndoor: (document.getElementById('proto-inst-sn-in')?.value || serialNumber || '').trim(),
         serialOutdoor: (document.getElementById('proto-inst-sn-out')?.value || serialNumberOutdoor || '').trim(),
         usedMaterials: (document.getElementById('proto-insp-materials')?.value || '').trim(),
@@ -8584,9 +8860,10 @@ service cloud.firestore {
         };
       }
 
-      // Jeśli szablon posiada zedytowany arkusz A4 (własne tabele pomiarów, usunięte punkty, zmodyfikowany tekst)
-      if (tpl && tpl.customEditedHtml) {
-        protoObj.customEditedHtml = applyVisitDataToTemplateHtml(tpl.customEditedHtml, protoObj);
+      // Jeśli szablon posiada zedytowany arkusz A4 (własne tabele pomiarów, usunięte punkty, zmodyfikowany tekst) lub protokół był edytowany
+      const sourceHtml = currentlyEditingProtocol?.customEditedHtml || (tpl && tpl.customEditedHtml ? tpl.customEditedHtml : null);
+      if (sourceHtml) {
+        protoObj.customEditedHtml = applyVisitDataToTemplateHtml(sourceHtml, protoObj);
       }
 
       return protoObj;
@@ -8613,7 +8890,7 @@ service cloud.firestore {
           return;
         }
 
-      const isMontaz = (visit.serviceType || '').toLowerCase().includes('monta');
+      const isMontaz = (visit.serviceType || '').toLowerCase().includes('monta') || Boolean(currentlyEditingProtocol && (currentlyEditingProtocol.type || '').includes('install'));
       let client = (window.clientsData || []).find(c => c.id === visit.clientId);
       const installDate = visit.date || toYMD(new Date());
 
@@ -8681,6 +8958,88 @@ service cloud.firestore {
       visit.status = 'completed';
       visit.completionComment = comment;
       visit.savedToDeviceHistory = true;
+
+      if (currentlyEditingProtocol) {
+        const editingProtoId = currentlyEditingProtocol.protocolId;
+        const protoSnIn = (document.getElementById('proto-inst-sn-in')?.value || document.getElementById('close-install-serial')?.value || '').trim();
+        const protoSnOut = (document.getElementById('proto-inst-sn-out')?.value || document.getElementById('close-install-serial-outdoor')?.value || '').trim();
+        const devModel = isMontaz
+          ? ((document.getElementById('close-install-model')?.value || '').trim() || visit.plannedInstallModel || currentlyEditingProtocol.deviceModel || 'Nowe urządzenie')
+          : (currentlyEditingProtocol.deviceModel || visit.deviceModel || 'Urządzenie HVAC');
+        const devNotes = isMontaz ? (document.getElementById('close-install-dev-notes')?.value || '') : (currentlyEditingProtocol.deviceNotes || visit.notes || '');
+        const devType = isMontaz ? (document.getElementById('close-install-type')?.value || visit.plannedInstallType || 'heat_pump') : (currentlyEditingProtocol.type || 'ac');
+        const devTypeInfo = getDeviceInfo(devType);
+        const devCustomAddr = currentlyEditingProtocol.installAddress || (client ? formatDeviceInstallAddress(client.devices?.find(d => d.id === visit.deviceId) || {}) : '');
+
+        savedProtocol = buildProtocolDataFromModal(
+          visit,
+          client,
+          devModel,
+          protoSnIn,
+          protoSnOut,
+          devNotes,
+          comment,
+          devTypeInfo.short,
+          devCustomAddr
+        );
+        if (savedProtocol) {
+          savedProtocol.protocolId = editingProtoId;
+        }
+
+        visit.completionComment = comment;
+        visit.protocolData = savedProtocol;
+
+        if (client && Array.isArray(client.devices)) {
+          let histFound = false;
+          for (const dev of client.devices) {
+            if (Array.isArray(dev.inspectionHistory)) {
+              const hEntry = dev.inspectionHistory.find(h =>
+                h.protocolData?.protocolId === editingProtoId ||
+                h.protocolData === currentlyEditingProtocol
+              );
+              if (hEntry) {
+                hEntry.notes = comment;
+                hEntry.protocolData = savedProtocol;
+                hEntry.technician = visit.workerName || savedProtocol?.technician || hEntry.technician;
+                if (protoSnIn) dev.serialNumber = protoSnIn;
+                if (protoSnOut) dev.serialNumberOutdoor = protoSnOut;
+                if (isMontaz && devModel) dev.deviceModel = devModel;
+                histFound = true;
+                break;
+              }
+            }
+          }
+          if (!histFound && visit.deviceId) {
+            const dev = client.devices.find(d => d.id === visit.deviceId);
+            if (dev) {
+              if (Array.isArray(dev.inspectionHistory)) {
+                const hEntry = dev.inspectionHistory.find(h => h.date === visit.date);
+                if (hEntry) {
+                  hEntry.notes = comment;
+                  hEntry.protocolData = savedProtocol;
+                }
+              }
+              if (protoSnIn) dev.serialNumber = protoSnIn;
+              if (protoSnOut) dev.serialNumberOutdoor = protoSnOut;
+              if (isMontaz && devModel) dev.deviceModel = devModel;
+            }
+          }
+        }
+
+        currentPreviewProtocolObj = savedProtocol;
+        currentlyEditingProtocol = null;
+
+        persistData();
+        closeModal('modal-close-visit');
+        resetCloseVisitModalTitleAndButton();
+        refreshAllViews();
+
+        showToast('Pomyślnie zaktualizowano formularz i dane protokołu!');
+        setTimeout(() => {
+          if (savedProtocol) showProtocolObjectInModal(savedProtocol);
+        }, 120);
+        return;
+      }
 
       if (isMontaz && client) {
         const newType = document.getElementById('close-install-type').value || 'heat_pump';
@@ -8979,8 +9338,10 @@ service cloud.firestore {
       const wrapAddSec = document.getElementById('wrap-add-protocol-section');
       const banner = document.getElementById('protocol-preview-mode-banner');
       const bannerText = document.getElementById('protocol-preview-mode-banner-text');
+      const btnEditForm = document.getElementById('btn-edit-protocol-form');
 
       if (isTemplate) {
+        if (btnEditForm) btnEditForm.classList.add('hidden');
         if (btnSave) btnSave.classList.remove('hidden');
         if (btnReset) btnReset.classList.remove('hidden');
         if (wrapAddSec) wrapAddSec.classList.remove('hidden');
@@ -8994,6 +9355,7 @@ service cloud.firestore {
       } else {
         // Wystawiony protokół zlecenia (naprawy/serwisu/montażu/przeglądu) — dokument oficjalny
         // Edycja szablonów dozwolona jest wyłącznie w module: Wzory protokołów i listy kontrolne
+        if (btnEditForm) btnEditForm.classList.remove('hidden');
         if (btnSave) btnSave.classList.add('hidden');
         if (btnReset) btnReset.classList.add('hidden');
         if (wrapAddSec) wrapAddSec.classList.add('hidden');
@@ -9002,7 +9364,7 @@ service cloud.firestore {
           banner.classList.remove('hidden');
         }
         if (bannerText) {
-          bannerText.innerHTML = '📄 <strong>Wystawiony protokół zlecenia:</strong> Oficjalny dokument gotowy do pobrania PDF, wydruku lub wysyłki e-mail. Edycja wzorów i punktów kontrolnych odbywa się wyłącznie w zakładce „Wzory protokołów i listy kontrolne”.';
+          bannerText.innerHTML = '📄 <strong>Wystawiony protokół zlecenia:</strong> Oficjalny dokument gotowy do pobrania PDF, wydruku lub wysyłki e-mail. Aby poprawić dane formularza (z zachowaniem podpisów), użyj przycisku „Edytuj formularz”.';
         }
       }
 
@@ -9044,6 +9406,7 @@ service cloud.firestore {
         }
       }
       openModal('modal-protocol-preview');
+      lucide.createIcons();
     }
 
     let liveAutoSaveTimeout = null;
