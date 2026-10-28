@@ -651,6 +651,9 @@
               <button onclick="document.getElementById('csv-file-input').click()" class="bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
                 <i data-lucide="upload" class="w-4 h-4"></i> Import CSV
               </button>
+              <button onclick="requestClearClientsDatabase()" class="bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition" title="Wyczyść bazę klientów (akcje i zlecenia zostaną zachowane)">
+                <i data-lucide="trash-2" class="w-4 h-4 text-rose-600 dark:text-rose-400"></i> Wyczyść bazę
+              </button>
             </div>
           </div>
         </div>
@@ -3770,6 +3773,8 @@ service cloud.firestore {
         window.workersData = ['Serwisant 1', 'Serwisant 2', 'Ekipa Montażowa'];
       }
 
+      snapshotAppointmentsClientInfo();
+      relinkAppointmentsToClients();
       saveStateToLocalStorage();
 
       if (!selectedWorkerFilter || !window.workersData.includes(selectedWorkerFilter)) {
@@ -5451,7 +5456,7 @@ service cloud.firestore {
         : periodAppointmentsAllWorkers.filter(a => (a.workerName || 'Serwisant 1') === selectedWorker);
 
       periodAppointmentsAllWorkers.filter(a =>
-        a.status === 'completed' && !a.savedToDeviceHistory
+        a.status === 'completed' && (!a.savedToDeviceHistory || !enriched.some(c => c.id === a.clientId))
       ).forEach(v => {
         const client = enriched.find(c => c.id === v.clientId);
         const dev = client?.devices?.find(d => d.id === v.deviceId);
@@ -5463,9 +5468,9 @@ service cloud.firestore {
           itemId: v.id,
           date: v.date,
           actionType: v.serviceType || 'Serwis',
-          clientName: client ? client.name : 'Klient',
-          clientCity: dev?.installCity || (client ? client.city : ''),
-          deviceModel: dev ? dev.deviceModel : (v.serviceType || 'Wizyta serwisowa'),
+          clientName: client ? client.name : (v.clientName || 'Klient'),
+          clientCity: dev?.installCity || (client ? client.city : (v.clientCity || '')),
+          deviceModel: dev ? dev.deviceModel : (v.deviceModel || v.serviceType || 'Wizyta serwisowa'),
           technician: v.workerName || 'Serwis ServiTrak',
           notes: v.completionComment || `Wykonano: ${v.serviceType || 'Serwis'}${v.notes ? ' • ' + v.notes : ''}`,
           protocolData: v.protocolData || null
@@ -5663,6 +5668,175 @@ service cloud.firestore {
         refreshAllViews();
         showToast('Usunięto klienta z bazy.');
       });
+    }
+
+    function requestClearClientsDatabase() {
+      const clientCount = (window.clientsData || []).length;
+      if (clientCount === 0) {
+        showToast('Baza klientów jest już pusta.');
+        return;
+      }
+      requestAdminPin(
+        'Wyczyszczenie bazy klientów',
+        `Czy na pewno chcesz usunąć wszystkich klientów (${clientCount}) z bazy? Wszystkie utworzone zlecenia i akcje w kalendarzu pozostaną zachowane i przypiszą się automatycznie po ponownym dodaniu lub zaimportowaniu klientów. Podaj hasło autoryzacyjne:`,
+        () => {
+          executeClearClientsDatabase();
+        }
+      );
+    }
+
+    function executeClearClientsDatabase() {
+      // 1. Zabezpiecz i utrwal dane klientów na wszystkich istniejących zleceniach
+      snapshotAppointmentsClientInfo();
+
+      // 2. Wyczyść tablicę klientów (akcje i zlecenia w appointmentsData pozostają nienaruszone)
+      const count = (window.clientsData || []).length;
+      window.clientsData = [];
+
+      // 3. Zapisz w LocalStorage i w chmurze
+      persistData();
+
+      // 4. Odśwież widoki
+      refreshAllViews();
+
+      showToast(`Wyczyszczono bazę klientów (${count} usuniętych). Wszystkie akcje i zlecenia zostały zachowane.`);
+    }
+
+    function snapshotAppointmentsClientInfo() {
+      if (!Array.isArray(window.appointmentsData) || !Array.isArray(window.clientsData) || window.clientsData.length === 0) return;
+      window.appointmentsData.forEach(app => {
+        if (!app.clientId) return;
+        const c = window.clientsData.find(x => x.id === app.clientId);
+        if (!c) return;
+        if (!app.clientName || app.clientName === 'Klient') app.clientName = c.name || '';
+        if (!app.clientPhone || isPhoneEmpty(app.clientPhone)) app.clientPhone = c.phone || '';
+        if (!app.clientCity) app.clientCity = c.city || '';
+        if (!app.clientStreet) app.clientStreet = c.street || '';
+        if (!app.clientPostalCode) app.clientPostalCode = c.postalCode || '';
+        if (!app.clientNip && c.nip) app.clientNip = c.nip;
+        if ((!app.lat || isNaN(app.lat)) && c.lat) app.lat = c.lat;
+        if ((!app.lng || isNaN(app.lng)) && c.lng) app.lng = c.lng;
+
+        if (app.deviceId && !app.deviceModel) {
+          const d = (c.devices || []).find(dev => dev.id === app.deviceId);
+          if (d) {
+            app.deviceModel = d.deviceModel || '';
+            if (d.serialNumber && !app.serialNumber) app.serialNumber = d.serialNumber;
+            if (d.deviceType && !app.plannedInstallType) app.plannedInstallType = d.deviceType;
+          }
+        }
+      });
+    }
+
+    function relinkAppointmentsToClients() {
+      if (!Array.isArray(window.appointmentsData) || !Array.isArray(window.clientsData)) return 0;
+      if (window.appointmentsData.length === 0 || window.clientsData.length === 0) return 0;
+
+      const normStr = s => (s || '').toLowerCase().replace(/[^a-z0-9ąćęłńóśźż]/g, ' ').replace(/\s+/g, ' ').trim();
+      const normDigits = s => (s || '').replace(/\D/g, '');
+      const normPhone9 = s => {
+        const d = normDigits(s);
+        return d.length >= 9 ? d.slice(-9) : d;
+      };
+
+      let reconnectedCount = 0;
+
+      window.appointmentsData.forEach(app => {
+        // 1. Sprawdź, czy clientId już wskazuje na istniejącego klienta
+        let client = window.clientsData.find(c => c.id === app.clientId);
+
+        // 2. Jeśli nie wskazuje na żadnego klienta, szukaj dopasowania po danych klienta
+        if (!client) {
+          const appNip = normDigits(app.clientNip || app.protocolData?.clientNip || '');
+          const appPhone = normPhone9(app.clientPhone || app.protocolData?.clientPhone || '');
+          const appName = normStr(app.clientName || app.protocolData?.clientName || '');
+          const appCity = normStr(app.clientCity || app.protocolData?.clientCity || '');
+          const appStreet = normStr(app.clientStreet || app.protocolData?.clientStreet || '');
+
+          // a) Dopasowanie po NIP (jeśli min 10 cyfr)
+          if (!client && appNip.length >= 10) {
+            client = window.clientsData.find(c => normDigits(c.nip) === appNip);
+          }
+
+          // b) Dopasowanie po telefonie (ostatnie 9 cyfr)
+          if (!client && appPhone.length === 9) {
+            const phoneCandidates = window.clientsData.filter(c => normPhone9(c.phone) === appPhone);
+            if (phoneCandidates.length === 1) {
+              client = phoneCandidates[0];
+            } else if (phoneCandidates.length > 1 && appName) {
+              client = phoneCandidates.find(c => normStr(c.name) === appName) || phoneCandidates[0];
+            }
+          }
+
+          // c) Dopasowanie po imieniu i nazwisku
+          if (!client && appName) {
+            const nameCandidates = window.clientsData.filter(c => normStr(c.name) === appName);
+            if (nameCandidates.length === 1) {
+              client = nameCandidates[0];
+            } else if (nameCandidates.length > 1) {
+              client = nameCandidates.find(c =>
+                (appCity && normStr(c.city) === appCity) ||
+                (appStreet && normStr(c.street).includes(appStreet))
+              ) || nameCandidates[0];
+            }
+          }
+
+          // d) Dopasowanie po dokładnym adresie (miejscowość + ulica), jeśli unikalny
+          if (!client && appCity && appStreet) {
+            const addrCandidates = window.clientsData.filter(c =>
+              normStr(c.city) === appCity && normStr(c.street) === appStreet
+            );
+            if (addrCandidates.length === 1) {
+              client = addrCandidates[0];
+            }
+          }
+
+          if (client) {
+            app.clientId = client.id;
+            app.isAdHoc = false;
+            reconnectedCount++;
+          }
+        }
+
+        // 3. Po znalezieniu klienta, zsynchronizuj lub uzupełnij deviceId i dane
+        if (client) {
+          if (!app.clientName || app.clientName === 'Klient') app.clientName = client.name;
+          if (!app.clientPhone || isPhoneEmpty(app.clientPhone)) app.clientPhone = client.phone;
+          if (!app.clientCity) app.clientCity = client.city;
+          if (!app.clientStreet) app.clientStreet = client.street;
+          if (!app.clientPostalCode) app.clientPostalCode = client.postalCode;
+          if (!app.clientNip && client.nip) app.clientNip = client.nip;
+          if ((!app.lat || isNaN(app.lat)) && client.lat) app.lat = client.lat;
+          if ((!app.lng || isNaN(app.lng)) && client.lng) app.lng = client.lng;
+
+          const devs = client.devices || [];
+          if (devs.length > 0) {
+            const currentDevExists = app.deviceId && devs.some(d => d.id === app.deviceId);
+            if (!currentDevExists) {
+              let matchedDev = findMatchingDevice(devs, {
+                id: app.deviceId,
+                serialNumber: app.serialNumber || app.protocolData?.serialNumber || '',
+                deviceModel: app.deviceModel || app.protocolData?.deviceModel || app.plannedInstallModel || '',
+                deviceType: app.plannedInstallType || app.serviceType || ''
+              });
+
+              if (!matchedDev && devs.length === 1) {
+                matchedDev = devs[0];
+              }
+
+              if (matchedDev) {
+                app.deviceId = matchedDev.id;
+                if (!app.deviceModel) app.deviceModel = matchedDev.deviceModel;
+              } else if (!app.deviceId) {
+                app.deviceId = devs[0].id;
+                if (!app.deviceModel) app.deviceModel = devs[0].deviceModel;
+              }
+            }
+          }
+        }
+      });
+
+      return reconnectedCount;
     }
 
     function openClientModal() {
@@ -6073,6 +6247,7 @@ service cloud.firestore {
         showToast('Dodano nowego klienta.');
       }
 
+      relinkAppointmentsToClients();
       persistData();
       closeModal('modal-client');
       refreshAllViews();
@@ -6500,10 +6675,21 @@ service cloud.firestore {
       const notes = (document.getElementById('quick-map-notes').value || '').trim();
 
       // Blokada usunięta - zezwalamy na wiele zleceń dla serwisanta na tę samą godzinę
+      const targetClient = (window.clientsData || []).find(c => c.id === quickMapSelectedClientId);
+      const targetDev = (targetClient?.devices || []).find(d => d.id === deviceId);
 
       window.appointmentsData.push({
         id: 'v_' + Date.now(),
         clientId: quickMapSelectedClientId,
+        clientName: targetClient ? targetClient.name : '',
+        clientPhone: targetClient ? targetClient.phone : '',
+        clientCity: targetClient ? targetClient.city : '',
+        clientStreet: targetClient ? targetClient.street : '',
+        clientPostalCode: targetClient ? targetClient.postalCode : '',
+        clientNip: targetClient ? (targetClient.nip || '') : '',
+        lat: targetClient ? (targetClient.lat || 52.4064) : 52.4064,
+        lng: targetClient ? (targetClient.lng || 16.9252) : 16.9252,
+        deviceModel: targetDev ? targetDev.deviceModel : (isMontaz ? plannedInstallModel : ''),
         deviceId,
         plannedInstallType,
         plannedInstallCustomType,
@@ -6648,19 +6834,22 @@ service cloud.firestore {
       const notes = (document.getElementById('visit-notes').value || '').trim();
 
       // Blokada usunięta - zezwalamy na wiele zleceń dla jednego serwisanta o tej samej godzinie
+      const targetClient = !isAdHoc ? (window.clientsData || []).find(c => c.id === clientId) : null;
+      const targetDev = targetClient?.devices?.find(d => d.id === deviceId);
 
       window.appointmentsData.push({
         id: 'v_' + Date.now(),
         clientId,
         isAdHoc,
-        clientName: isAdHoc ? adhocClientName : '',
-        clientPhone: isAdHoc ? adhocClientPhone : '',
-        clientCity: isAdHoc ? adhocClientCity : '',
-        clientStreet: isAdHoc ? adhocClientStreet : '',
-        clientPostalCode: isAdHoc ? adhocClientPostal : '',
-        lat: adhocLat,
-        lng: adhocLng,
-        deviceModel: isAdHoc ? (adhocDevice || (isMontaz ? plannedInstallModel : 'Urządzenie HVAC')) : '',
+        clientName: isAdHoc ? adhocClientName : (targetClient ? targetClient.name : ''),
+        clientPhone: isAdHoc ? adhocClientPhone : (targetClient ? targetClient.phone : ''),
+        clientCity: isAdHoc ? adhocClientCity : (targetClient ? targetClient.city : ''),
+        clientStreet: isAdHoc ? adhocClientStreet : (targetClient ? targetClient.street : ''),
+        clientPostalCode: isAdHoc ? adhocClientPostal : (targetClient ? targetClient.postalCode : ''),
+        clientNip: targetClient ? (targetClient.nip || '') : '',
+        lat: isAdHoc ? adhocLat : (targetClient ? (targetClient.lat || 52.4064) : 52.4064),
+        lng: isAdHoc ? adhocLng : (targetClient ? (targetClient.lng || 16.9252) : 16.9252),
+        deviceModel: isAdHoc ? (adhocDevice || (isMontaz ? plannedInstallModel : 'Urządzenie HVAC')) : (targetDev ? targetDev.deviceModel : (isMontaz ? plannedInstallModel : '')),
         deviceId,
         plannedInstallType,
         plannedInstallCustomType,
@@ -11283,6 +11472,7 @@ service cloud.firestore {
                 try { localStorage.setItem(STORAGE_KEYS.COMPANY_FGAZ, parsed.companyFgaz); } catch (e) {}
               }
 
+              relinkAppointmentsToClients();
               persistData();
               closeModal('modal-backup');
               refreshAllViews();
@@ -11956,6 +12146,7 @@ service cloud.firestore {
       if (cancelBtn) cancelBtn.disabled = false;
       progressBox?.classList.add('hidden');
 
+      relinkAppointmentsToClients();
       persistData();
       closeModal('modal-csv-preview');
       refreshAllViews();
