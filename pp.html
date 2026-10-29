@@ -1113,6 +1113,11 @@
               </div>
             </button>
           </div>
+          <div class="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex justify-end">
+            <button type="button" onclick="clearMobileLocalStorageCache()" class="px-3.5 py-2 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 rounded-xl text-xs font-bold border border-amber-200 dark:border-amber-800 transition flex items-center gap-1.5" title="Usuwa zbędne pliki podręczne przeglądarki w telefonie, zachowując konfigurację bazy">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Zwolnij pamięć podręczną telefonu (Zresetuj cache)
+            </button>
+          </div>
         </div>
         <!-- SEKCJA 1: LOGO FIRMY NA PROTOKOŁACH -->
         <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-sm space-y-5">
@@ -2594,7 +2599,12 @@ service cloud.firestore {
       </div>
 
       <div class="flex flex-wrap justify-between items-center gap-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-        <button type="button" onclick="disconnectFirebase()" class="px-3 py-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl text-xs font-bold transition">Rozłącz chmurę</button>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" onclick="disconnectFirebase()" class="px-3 py-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl text-xs font-bold transition">Rozłącz chmurę</button>
+          <button type="button" onclick="clearMobileLocalStorageCache()" class="px-3 py-2 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 rounded-xl text-xs font-bold transition flex items-center gap-1" title="Zwalnia miejsce w telefonie, zachowując konfigurację bazy">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Zwolnij pamięć telefonu
+          </button>
+        </div>
         <div class="flex gap-2">
           <button type="button" onclick="closeModal('modal-firebase')" class="px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">Zamknij</button>
           <button type="button" onclick="saveAndConnectFirebase()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-sm transition">Połącz i Przetestuj</button>
@@ -3776,12 +3786,171 @@ service cloud.firestore {
     /* ==========================================================================
        3. PAMIĘĆ LOKALNA I SYNCHRONIZACJA Z CHMURĄ (FIREBASE)
        ========================================================================== */
+    /* ==========================================================================
+       3. BEZPIECZNY ZAPIS LOKALNY Z OCHRONĄ PRZED LIMITEM QUOTA (5MB W SAFARI/CHROME)
+       ========================================================================== */
+    function pruneAppointmentsForLocalStorage(appts) {
+      if (!Array.isArray(appts)) return [];
+      return appts.map(a => {
+        if (!a) return a;
+        const copy = { ...a };
+        if (copy.protocolData) {
+          copy.protocolData = { ...copy.protocolData };
+          // Zmniejszamy ciężkie podpisy w kopii localStorage (oryginał w RAM i Firestore pozostaje nienaruszony)
+          if (copy.protocolData.sigTechDataUrl && copy.protocolData.sigTechDataUrl.length > 5000) {
+            copy.protocolData.sigTechDataUrl = copy.protocolData.sigTechDataUrl.substring(0, 300) + '...[PRUNED_LOCAL]';
+          }
+          if (copy.protocolData.sigClientDataUrl && copy.protocolData.sigClientDataUrl.length > 5000) {
+            copy.protocolData.sigClientDataUrl = copy.protocolData.sigClientDataUrl.substring(0, 300) + '...[PRUNED_LOCAL]';
+          }
+        }
+        if (Array.isArray(copy.photos) && copy.photos.length > 0) {
+          copy.photos = copy.photos.map(p => {
+            if (typeof p === 'string' && p.length > 5000) return p.substring(0, 200) + '...[PRUNED_LOCAL]';
+            return p;
+          });
+        }
+        return copy;
+      });
+    }
+
+    function cleanupLocalStorageSpace() {
+      try {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (!k) continue;
+
+          // Klucze chronione - NIGDY ich nie usuwamy:
+          if (
+            k === STORAGE_KEYS.FIREBASE_CFG ||
+            k === STORAGE_KEYS.DARK_MODE ||
+            k === STORAGE_KEYS.COMPANY_NAME
+          ) {
+            continue;
+          }
+
+          // Usuwamy stare wersje struktur danych, stare backupy, tymczasowe testy i geocache
+          if (
+            (k.includes('_v1') && k !== STORAGE_KEYS.TEMPLATES && k !== STORAGE_KEYS.WORKER_SIGNATURES) ||
+            k.includes('_v2') ||
+            k.includes('_v3') ||
+            k.startsWith('pp_temp_') ||
+            k.startsWith('pp_backup_') ||
+            k.startsWith('servitrack_company_') ||
+            k.includes('cache')
+          ) {
+            keysToRemove.push(k);
+          }
+        }
+
+        keysToRemove.forEach(k => {
+          try {
+            localStorage.removeItem(k);
+            console.log('[ServiTrack Storage] Usunięto zbędny klucz pamięci:', k);
+          } catch (e) {}
+        });
+      } catch (err) {
+        console.warn('[ServiTrack Storage] Błąd podczas cleanupLocalStorageSpace:', err);
+      }
+    }
+
+    function safeLocalStorageSet(key, value) {
+      if (!key) return false;
+      const strVal = typeof value === 'string' ? value : JSON.stringify(value);
+      try {
+        localStorage.setItem(key, strVal);
+        return true;
+      } catch (e) {
+        const isQuota = e && (
+          e.name === 'QuotaExceededError' ||
+          e.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+          e.code === 22 ||
+          e.code === '22' ||
+          e.code === 1014 ||
+          e.number === -2147024882 ||
+          String(e.message || '').toLowerCase().includes('quota')
+        );
+
+        if (isQuota) {
+          console.warn(`[ServiTrack Storage] Przekroczono limit pamięci przeglądarki (5MB) przy zapisie "${key}". Czyszczenie...`);
+          // 1. Wyczyść stare wersje baz, zbędne kopie i cache
+          cleanupLocalStorageSpace();
+
+          try {
+            localStorage.setItem(key, strVal);
+            return true;
+          } catch (retryErr) {
+            // 2. JeĹ›li nadal brakuje miejsca i to zlecenia: zapisz odchudzone zlecenia w localStorage
+            // (pełne dane z podpisami są zachowane nienaruszone w pamięci RAM window.appointmentsData oraz w chmurze Firestore!)
+            if (key === STORAGE_KEYS.APPOINTMENTS && Array.isArray(window.appointmentsData)) {
+              try {
+                const pruned = pruneAppointmentsForLocalStorage(window.appointmentsData);
+                localStorage.setItem(key, JSON.stringify(pruned));
+                console.log('[ServiTrack Storage] Zapisano odchudzone zlecenia w localStorage (pełne dane w chmurze i RAM).');
+                return true;
+              } catch (e3) {}
+            }
+
+            // 3. Jeśli to szablony protokołów: odchudź szablony
+            if (key === STORAGE_KEYS.TEMPLATES && Array.isArray(window.protocolTemplatesData)) {
+              try {
+                const lightTpl = window.protocolTemplatesData.map(t => ({
+                  id: t.id,
+                  name: t.name,
+                  category: t.category,
+                  sections: t.sections
+                }));
+                localStorage.setItem(key, JSON.stringify(lightTpl));
+                return true;
+              } catch (e4) {}
+            }
+
+            console.warn(`[ServiTrack Storage] Pominięto zapis klucza "${key}" w localStorage z powodu limitu 5MB przeglądarki telefonu. Aplikacja kontynuuje pracę w pamięci RAM i w chmurze.`);
+            return false;
+          }
+        } else {
+          console.warn(`[ServiTrack Storage] Błąd zapisu klucza "${key}":`, e);
+          return false;
+        }
+      }
+    }
+
+    function clearMobileLocalStorageCache() {
+      try {
+        const savedFirebase = localStorage.getItem(STORAGE_KEYS.FIREBASE_CFG);
+        const savedDarkMode = localStorage.getItem(STORAGE_KEYS.DARK_MODE);
+        const savedCompName = localStorage.getItem(STORAGE_KEYS.COMPANY_NAME);
+
+        localStorage.clear();
+
+        if (savedFirebase) safeLocalStorageSet(STORAGE_KEYS.FIREBASE_CFG, savedFirebase);
+        if (savedDarkMode) safeLocalStorageSet(STORAGE_KEYS.DARK_MODE, savedDarkMode);
+        if (savedCompName) safeLocalStorageSet(STORAGE_KEYS.COMPANY_NAME, savedCompName);
+
+        saveStateToLocalStorage();
+        showToast('🧹 Zwolniono pamięć podręczną telefonu! Konfiguracja bazy została zachowana.');
+        if (typeof updateCloudBadge === 'function') {
+          updateCloudBadge(isCloudConnected ? 'online' : 'offline');
+        }
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+          setTimeout(() => lucide.createIcons(), 50);
+        }
+      } catch (e) {
+        showToast('Błąd podczas czyszczenia pamięci.');
+      }
+    }
+
     function saveStateToLocalStorage() {
-      localStorage.setItem(STORAGE_KEYS.CLIENTS, JSON.stringify(window.clientsData));
-      localStorage.setItem(STORAGE_KEYS.APPOINTMENTS, JSON.stringify(window.appointmentsData));
-      localStorage.setItem(STORAGE_KEYS.CATALOG, JSON.stringify(window.catalogData));
-      localStorage.setItem(STORAGE_KEYS.WORKERS, JSON.stringify(window.workersData));
-      localStorage.setItem(STORAGE_KEYS.TEMPLATES, JSON.stringify(window.protocolTemplatesData));
+      try {
+        safeLocalStorageSet(STORAGE_KEYS.CLIENTS, JSON.stringify(window.clientsData || []));
+        safeLocalStorageSet(STORAGE_KEYS.APPOINTMENTS, JSON.stringify(window.appointmentsData || []));
+        safeLocalStorageSet(STORAGE_KEYS.CATALOG, JSON.stringify(window.catalogData || []));
+        safeLocalStorageSet(STORAGE_KEYS.WORKERS, JSON.stringify(window.workersData || []));
+        safeLocalStorageSet(STORAGE_KEYS.TEMPLATES, JSON.stringify(window.protocolTemplatesData || []));
+      } catch (err) {
+        console.warn('[ServiTrack] Ignorowany błąd saveStateToLocalStorage:', err);
+      }
     }
 
     function getMainCloudPayload() {
@@ -3890,7 +4059,7 @@ service cloud.firestore {
       });
 
       window.protocolTemplatesData = Array.from(tplMap.values()).filter(t => !isDummyProtocolTemplate(t));
-      localStorage.setItem(STORAGE_KEYS.TEMPLATES, JSON.stringify(window.protocolTemplatesData));
+      safeLocalStorageSet(STORAGE_KEYS.TEMPLATES, JSON.stringify(window.protocolTemplatesData));
 
       if (needsCloudPush && isCloudConnected && firestoreDb) {
         try {
@@ -4458,7 +4627,7 @@ service cloud.firestore {
           const decodedStr = decodeURIComponent(escape(atob(b64)));
           const cfg = JSON.parse(decodedStr);
           if (cfg && cfg.apiKey && cfg.projectId) {
-            localStorage.setItem(STORAGE_KEYS.FIREBASE_CFG, JSON.stringify(cfg, null, 2));
+            safeLocalStorageSet(STORAGE_KEYS.FIREBASE_CFG, JSON.stringify(cfg, null, 2));
             if (window.history && window.history.replaceState) {
               const cleanUrl = window.location.origin + window.location.pathname;
               window.history.replaceState(null, '', cleanUrl);
@@ -4519,7 +4688,7 @@ service cloud.firestore {
       const keyEl = document.getElementById('fb-quick-api-key');
       if (keyEl) keyEl.value = cfg.apiKey;
 
-      localStorage.setItem(STORAGE_KEYS.FIREBASE_CFG, prettyJson);
+      safeLocalStorageSet(STORAGE_KEYS.FIREBASE_CFG, prettyJson);
       setDiagnosticStatus('wait', 'Testowanie...', `Łączenie z bazą <strong>${cfg.projectId}</strong>...`);
       await initFirebaseConnection(cfg, true);
     }
@@ -4541,6 +4710,9 @@ service cloud.firestore {
     function explainFirestoreError(err, projectId) {
       const code = err?.code || '';
       if (code === 'timeout') return err.message;
+      if (code === 22 || code === '22' || err?.name === 'QuotaExceededError' || String(err?.message || '').toLowerCase().includes('quota')) {
+        return `Pamięć podręczna przeglądarki w telefonie (localStorage) została zapełniona (limit 5 MB w Safari/Chrome na smartfonach). Dane w chmurze są w pełni bezpieczne. Kliknij przycisk „Zwolnij pamięć telefonu” poniżej, aby zwolnić miejsce.`;
+      }
       if (code === 'permission-denied') return `Błąd <strong>permission-denied</strong>. W konsoli Firebase włącz <strong>Firestore Database &rarr; Rules</strong> i ustaw:<br><code class="text-emerald-500 font-mono">allow read, write: if true;</code>`;
       if (code === 'not-found' || (err?.message && err.message.includes('database (default) does not exist'))) return `Baza w projekcie <strong>${projectId || ''}</strong> nie została utworzona! Wejdź w konsolę Firebase &rarr; <strong>Firestore Database</strong> i kliknij <em>Create database</em>.`;
       if (code === 'unavailable') return `Baza danych jest chwilowo niedostępna (błąd sieci lub blokada połączenia WebChannel). Sprawdź dostęp telefonu do internetu.`;
@@ -4668,7 +4840,7 @@ service cloud.firestore {
           mergeProtocolTemplates(mainSnap.data().protocolTemplates);
         }
 
-        saveStateToLocalStorage();
+        try { saveStateToLocalStorage(); } catch (storageErr) { console.warn("[ServiTrack] Ostrzeżenie pamięci podręcznej:", storageErr); }
         refreshAllViews();
 
         isCloudConnected = true;
@@ -4677,8 +4849,7 @@ service cloud.firestore {
         if (isInteractiveTest) showToast('Połączono z chmurą!');
 
         // Optymalizujemy archiwalne podpisy (kompresja) i zapisujemy strukturę podzieloną do chmury
-        await optimizeAllStoredSignatures();
-        persistData();
+        try { await optimizeAllStoredSignatures(); persistData(); } catch (optErr) { console.warn("[ServiTrack] Ostrzeżenie zapisu w chmurze:", optErr); }
 
         // 5. Rejestracja nasłuchiwania w czasie rzeczywistym dla wszystkich 4 dokumentów
         firestoreUnsubscribeMain = mainDocRef.onSnapshot(liveSnap => {
@@ -4887,6 +5058,7 @@ service cloud.firestore {
     }
 
     function loadLocalData() {
+      cleanupLocalStorageSpace();
       try {
         const rawClients = JSON.parse(localStorage.getItem(STORAGE_KEYS.CLIENTS) || '[]');
         window.clientsData = Array.isArray(rawClients) ? rawClients : [];
@@ -4925,7 +5097,7 @@ service cloud.firestore {
           }
         });
       }
-      localStorage.setItem(STORAGE_KEYS.TEMPLATES, JSON.stringify(window.protocolTemplatesData));
+      safeLocalStorageSet(STORAGE_KEYS.TEMPLATES, JSON.stringify(window.protocolTemplatesData));
 
       if (window.catalogData.length === 0) {
         window.catalogData = [
@@ -15423,7 +15595,7 @@ service cloud.firestore {
        16. WYĹÄ„CZENIE I CZYSZCZENIE TRYBU OFFLINE / PWA
        ========================================================================== */
     function cleanupOfflineAndServiceWorkers() {
-      // Wyrejestruj wszelkie aktywne Service Workery z przeglÄ…darki
+      // Wyrejestruj wszelkie aktywne Service Workery z przeglądarki
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(registrations => {
           for (const reg of registrations) {
@@ -15432,12 +15604,12 @@ service cloud.firestore {
           }
         }).catch(() => {});
       }
-      // WyczyĹ›Ä‡ pamiÄ™Ä‡ podrÄ™cznÄ… Cache Storage
+      // Wyczyść pamięć podręczną Cache Storage
       if ('caches' in window) {
         caches.keys().then(keys => {
           keys.forEach(k => {
             caches.delete(k);
-            console.log('ServiTrack: UsuniÄ™to cache PWA:', k);
+            console.log('ServiTrack: Usunięto cache PWA:', k);
           });
         }).catch(() => {});
       }
