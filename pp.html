@@ -4504,6 +4504,132 @@ service cloud.firestore {
       };
     }
 
+    function sanitizeForFirestore(val) {
+      if (val === undefined) return null;
+      if (val === null) return null;
+      if (typeof val === 'function') return null;
+      if (Array.isArray(val)) {
+        return val.map(item => sanitizeForFirestore(item));
+      }
+      if (typeof val === 'object') {
+        const cleaned = {};
+        for (const k of Object.keys(val)) {
+          if (val[k] !== undefined) {
+            cleaned[k] = sanitizeForFirestore(val[k]);
+          }
+        }
+        return cleaned;
+      }
+      return val;
+    }
+
+    function mergeProtocolTemplates(incoming) {
+      if (!Array.isArray(incoming) || incoming.length === 0) return;
+      const tplMap = new Map();
+
+      if (typeof DEFAULT_PROTOCOL_TEMPLATES !== 'undefined' && Array.isArray(DEFAULT_PROTOCOL_TEMPLATES)) {
+        DEFAULT_PROTOCOL_TEMPLATES.forEach(t => {
+          tplMap.set(t.id, JSON.parse(JSON.stringify(t)));
+        });
+      }
+
+      (window.protocolTemplatesData || []).forEach(t => {
+        if (t && t.id) {
+          tplMap.set(t.id, t);
+        }
+      });
+
+      incoming.forEach(t => {
+        if (t && t.id) {
+          const existing = tplMap.get(t.id);
+          if (existing) {
+            tplMap.set(t.id, {
+              ...existing,
+              ...t,
+              checklist: (Array.isArray(t.checklist) && t.checklist.length > 0) ? t.checklist : existing.checklist,
+              installParams: (Array.isArray(t.installParams) && t.installParams.length > 0) ? t.installParams : existing.installParams,
+              serviceFields: (Array.isArray(t.serviceFields) && t.serviceFields.length > 0) ? t.serviceFields : existing.serviceFields,
+              customEditedHtml: t.customEditedHtml || existing.customEditedHtml
+            });
+          } else {
+            tplMap.set(t.id, t);
+          }
+        }
+      });
+
+      window.protocolTemplatesData = Array.from(tplMap.values());
+      try {
+        localStorage.setItem(STORAGE_KEYS.TEMPLATES, JSON.stringify(window.protocolTemplatesData));
+      } catch (e) {}
+    }
+
+    function compressSignatureDataUrl(dataUrl, maxW = 360, maxH = 140, quality = 0.70) {
+      return new Promise((resolve) => {
+        if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image')) {
+          return resolve(dataUrl);
+        }
+        if (dataUrl.startsWith('data:image/jpeg') && dataUrl.length < 20000) {
+          return resolve(dataUrl);
+        }
+        const img = new Image();
+        img.onload = () => {
+          try {
+            let w = img.width || maxW;
+            let h = img.height || maxH;
+            if (w > maxW || h > maxH) {
+              const ratio = Math.min(maxW / w, maxH / h);
+              w = Math.max(1, Math.round(w * ratio));
+              h = Math.max(1, Math.round(h * ratio));
+            }
+            const cvs = document.createElement('canvas');
+            cvs.width = w;
+            cvs.height = h;
+            const ctx = cvs.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+            const compressed = cvs.toDataURL('image/jpeg', quality);
+            resolve(compressed.length < dataUrl.length ? compressed : dataUrl);
+          } catch (e) {
+            resolve(dataUrl);
+          }
+        };
+        img.onerror = () => resolve(dataUrl);
+        img.src = dataUrl;
+      });
+    }
+
+    async function optimizeAllStoredSignatures() {
+      let changed = false;
+      try {
+        if (Array.isArray(window.appointmentsData)) {
+          for (const app of window.appointmentsData) {
+            if (app && app.protocolData) {
+              if (app.protocolData.sigTechDataUrl && (app.protocolData.sigTechDataUrl.length > 20000 || app.protocolData.sigTechDataUrl.startsWith('data:image/png'))) {
+                const comp = await compressSignatureDataUrl(app.protocolData.sigTechDataUrl);
+                if (comp && comp !== app.protocolData.sigTechDataUrl) {
+                  app.protocolData.sigTechDataUrl = comp;
+                  changed = true;
+                }
+              }
+              if (app.protocolData.sigClientDataUrl && (app.protocolData.sigClientDataUrl.length > 20000 || app.protocolData.sigClientDataUrl.startsWith('data:image/png'))) {
+                const comp = await compressSignatureDataUrl(app.protocolData.sigClientDataUrl);
+                if (comp && comp !== app.protocolData.sigClientDataUrl) {
+                  app.protocolData.sigClientDataUrl = comp;
+                  changed = true;
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Kompresja podpisĂłw:', e);
+      }
+      if (changed) {
+        saveStateToLocalStorage();
+      }
+    }
+
     function applyCloudPayload(data) {
       if (Array.isArray(data.clients)) window.clientsData = data.clients;
       if (Array.isArray(data.appointments)) window.appointmentsData = data.appointments;
@@ -4517,7 +4643,7 @@ service cloud.firestore {
     function persistData() {
       saveStateToLocalStorage();
       if (isCloudConnected && firestoreDb) {
-        firestoreDb.collection('pp_state').doc('main').set(getCloudPayload()).catch(err => {
+        firestoreDb.collection('pp_state').doc('main').set(sanitizeForFirestore(getCloudPayload())).catch(err => {
           updateCloudBadge('error', 'Błąd zapisu');
           setDiagnosticStatus('error', 'Zapis odrzucony', explainFirestoreError(err, ''));
         });
@@ -5073,7 +5199,7 @@ service cloud.firestore {
     async function forcePushToCloud() {
       if (!firestoreDb) { openFirebaseModal(); return; }
       try {
-        await firestoreDb.collection('pp_state').doc('main').set(getCloudPayload());
+        await firestoreDb.collection('pp_state').doc('main').set(sanitizeForFirestore(getCloudPayload()));
         showToast('Wysłano dane do chmury!');
       } catch (err) {
         openFirebaseModal();
