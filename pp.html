@@ -7,7 +7,6 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="description" content="ServiTrack - Smart HVAC Service & Protocols Management">
-  <link rel="manifest" href="manifest.webmanifest">
   <title>ServiTrak - System Zarządzania Serwisem HVAC</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -247,7 +246,7 @@
       <div onclick="openFirebaseModal()" id="cloud-status" class="cursor-pointer hover:border-emerald-500 transition flex p-3 rounded-2xl bg-zinc-100 dark:bg-zinc-800/70 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-400 items-center justify-between" title="Konfiguracja i Diagnostyka bazy online">
         <div class="flex items-center gap-2 min-w-0">
           <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" id="cloud-dot"></span>
-          <span id="cloud-txt" class="font-bold truncate">Tryb lokalny (Offline)</span>
+          <span id="cloud-txt" class="font-bold truncate">Tryb lokalny</span>
         </div>
         <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 shrink-0">Chmura ⚙️</span>
       </div>
@@ -276,12 +275,8 @@
           <h1 id="header-title" class="text-sm sm:text-lg font-extrabold text-zinc-900 dark:text-white leading-tight">Pulpit główny</h1>
           <p id="header-date" class="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 font-medium">Dzisiaj</p>
         </div>
-        <!-- STATUS PWA & SZYBKI KALKULATOR F-GAZ -->
+        <!-- SZYBKI KALKULATOR F-GAZ -->
         <div class="flex items-center gap-1.5 sm:gap-2">
-          <div id="connection-status-pill" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 transition shadow-sm" title="Status połączenia sieciowego PWA">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span id="connection-status-text">Online</span>
-          </div>
           <button onclick="openFgazCalculatorModal()" class="px-2.5 py-1 rounded-xl bg-cyan-50 dark:bg-cyan-950/60 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800 text-[11px] sm:text-xs font-bold flex items-center gap-1.5 shadow-sm transition" title="Kalkulator F-GAZ i dopełnienia rurociągów">
             <i data-lucide="calculator" class="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400"></i>
             <span>F-GAZ</span>
@@ -315,7 +310,7 @@
           <div class="flex items-center gap-2.5 min-w-0">
             <span id="mobile-cloud-banner-dot" class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
             <div class="min-w-0">
-              <div id="mobile-cloud-banner-title" class="font-extrabold text-zinc-900 dark:text-zinc-100 truncate">Tryb lokalny (Offline)</div>
+              <div id="mobile-cloud-banner-title" class="font-extrabold text-zinc-900 dark:text-zinc-100 truncate">Tryb lokalny</div>
               <div id="mobile-cloud-banner-desc" class="text-[10.5px] text-zinc-600 dark:text-zinc-400 truncate">Baza danych działa tylko na tym telefonie</div>
             </div>
           </div>
@@ -1089,7 +1084,7 @@
               <h3 class="text-sm sm:text-base font-extrabold text-zinc-900 dark:text-white">Baza Danych w Chmurze (Synchronizacja z Telefonem)</h3>
             </div>
             <span id="settings-cloud-badge" class="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-amber-500"></span> Tryb lokalny (Offline)
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span> Tryb lokalny
             </span>
           </div>
 
@@ -4249,20 +4244,20 @@ service cloud.firestore {
       } else {
         if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0';
         if (dotMob) dotMob.className = 'w-2 h-2 rounded-full bg-amber-500 shrink-0';
-        if (txt) txt.innerText = text || 'Tryb lokalny (Offline)';
+        if (txt) txt.innerText = text || 'Tryb lokalny';
         actions?.classList.add('hidden');
 
         if (mobBanner) {
           mobBanner.className = 'md:hidden p-3 sm:p-3.5 rounded-2xl border transition flex items-center justify-between gap-3 text-xs bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800';
           if (mobDot) mobDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0';
-          if (mobTitle) mobTitle.innerText = text || 'Tryb lokalny (Offline)';
+          if (mobTitle) mobTitle.innerText = text || 'Tryb lokalny';
           if (mobDesc) mobDesc.innerText = 'Baza danych działa tylko na tym telefonie';
           if (mobBtnTxt) mobBtnTxt.innerText = 'Połącz bazę';
         }
 
         if (setBadge) {
           setBadge.className = 'px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 flex items-center gap-1.5';
-          setBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> Tryb lokalny (Offline)';
+          setBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> Tryb lokalny';
         }
       }
       if (window.lucide && typeof lucide.createIcons === 'function') {
@@ -4537,7 +4532,7 @@ service cloud.firestore {
       localStorage.removeItem(STORAGE_KEYS.FIREBASE_CFG);
       isCloudConnected = false;
       firestoreDb = null;
-      updateCloudBadge('offline', 'Tryb lokalny (Offline)');
+      updateCloudBadge('offline', 'Tryb lokalny');
       setDiagnosticStatus('wait', 'Rozłączono', 'Aplikacja działa lokalnie.');
       closeModal('modal-firebase');
       showToast('Rozłączono chmurę.');
@@ -4552,14 +4547,26 @@ service cloud.firestore {
       return `Błąd Firebase (${code || 'błąd'}): ${err?.message || 'Sprawdź wprowadzone klucze.'}`;
     }
 
+    async function waitForFirebaseSdk(maxWaitMs = 6000) {
+      const start = Date.now();
+      while (!window.firebase || !window.firebase.firestore) {
+        if (Date.now() - start > maxWaitMs) return false;
+        await new Promise(r => setTimeout(r, 100));
+      }
+      return true;
+    }
+
     async function initFirebaseConnection(configObj, isInteractiveTest = false) {
-      if (!window.firebase) {
+      if (!window.firebase || !window.firebase.firestore) {
+        const sdkReady = await waitForFirebaseSdk(6000);
+        if (!sdkReady) {
         console.warn('Biblioteka Firebase SDK nie została załadowana.');
         isCloudConnected = false;
         updateCloudBadge('error', 'Brak Firebase SDK');
         setDiagnosticStatus('error', 'Brak biblioteki Firebase', 'Biblioteka Firebase SDK nie została załadowana w przeglądarce. Upewnij się, że masz połączenie z internetem oraz że żaden ad-blocker nie blokuje domen gstatic.com.');
         if (isInteractiveTest) showToast('Błąd: biblioteka Firebase SDK nie jest załadowana.');
         return;
+        }
       }
       try {
         if (firestoreUnsubscribeMain) { firestoreUnsubscribeMain(); firestoreUnsubscribeMain = null; }
@@ -15412,49 +15419,28 @@ service cloud.firestore {
         stopVoiceDictation();
       }
     }
-
     /* ==========================================================================
-       16. MODUĹ: PEĹNY OFFLINE I PWA (SERVICE WORKER & STATUS SIECI)
+       16. WYĹÄ„CZENIE I CZYSZCZENIE TRYBU OFFLINE / PWA
        ========================================================================== */
-    function initOfflineAndPwa() {
+    function cleanupOfflineAndServiceWorkers() {
+      // Wyrejestruj wszelkie aktywne Service Workery z przeglÄ…darki
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js')
-            .then(reg => {
-              console.log('ServiTrack SW zarejestrowany pomyślnie:', reg.scope);
-            })
-            .catch(err => {
-              console.warn('Rejestracja ServiTrack SW nie powiodła się:', err);
-            });
-        });
-      }
-
-      function updateNetworkStatus() {
-        const isOnline = navigator.onLine;
-        const pill = document.getElementById('connection-status-pill');
-        const txt = document.getElementById('connection-status-text');
-        if (pill) {
-          if (isOnline) {
-            pill.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 transition shadow-sm';
-            pill.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span id="connection-status-text">Online</span>';
-            pill.title = 'Aplikacja połączona z siecią (PWA Offline aktywne)';
-          } else {
-            pill.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/90 dark:text-amber-200 border border-amber-300 dark:border-amber-700 transition shadow-sm animate-bounce';
-            pill.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span><span id="connection-status-text">Tryb Offline</span>';
-            pill.title = 'Brak sieci. ServiTrack działa w 100% lokalnie i zapisuje wszystkie zmiany!';
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          for (const reg of registrations) {
+            reg.unregister();
+            console.log('ServiTrack: Wyrejestrowano stary Service Worker:', reg.scope);
           }
-        }
+        }).catch(() => {});
       }
-
-      window.addEventListener('online', () => {
-        updateNetworkStatus();
-        showToast('Przywrócono połączenie z internetem (Online).');
-      });
-      window.addEventListener('offline', () => {
-        updateNetworkStatus();
-        showToast('Przełączono w pełny tryb OFFLINE (Brak sygnału GSM). Dane są w pełni bezpieczne.');
-      });
-      updateNetworkStatus();
+      // WyczyĹ›Ä‡ pamiÄ™Ä‡ podrÄ™cznÄ… Cache Storage
+      if ('caches' in window) {
+        caches.keys().then(keys => {
+          keys.forEach(k => {
+            caches.delete(k);
+            console.log('ServiTrack: UsuniÄ™to cache PWA:', k);
+          });
+        }).catch(() => {});
+      }
     }
 
     /* ==========================================================================
@@ -16245,7 +16231,7 @@ service cloud.firestore {
     window.onload = function () {
       initDarkMode();
       loadLocalData();
-      initOfflineAndPwa();
+      cleanupOfflineAndServiceWorkers();
       lucide.createIcons();
       runSystemSelfTest();
     };
