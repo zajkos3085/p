@@ -726,6 +726,9 @@
             <button type="button" onclick="switchDevicesSubView('quotes')" id="subbtn-dev-quotes" class="px-4 py-2 rounded-xl text-xs font-extrabold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-200 transition flex items-center gap-1.5">
               <i data-lucide="calculator" class="w-4 h-4 text-emerald-600"></i> Moduł Wycen i Ofert (Kalkulator)
             </button>
+            <button type="button" onclick="switchDevicesSubView('templates')" id="subbtn-dev-templates" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/40 transition flex items-center gap-1.5" title="Przejd&#378; do edytora wzor&oacute;w protoko&#322;&oacute;w i list kontrolnych w Ustawieniach">
+              <i data-lucide="file-check-2" class="w-4 h-4 text-sky-600"></i> Wzory Protoko&#322;&oacute;w (Ustawienia)
+            </button>
           </div>
           <span class="text-[11px] text-zinc-500 font-medium">Zarządzaj cennikiem urządzeń, kosztami zakupu i sprzedaży oraz twórz profesjonalne wyceny PDF</span>
         </div>
@@ -5327,7 +5330,7 @@ service cloud.firestore {
           if (liveSnap.metadata && liveSnap.metadata.hasPendingWrites) return;
           if (liveSnap.exists && Array.isArray(liveSnap.data()?.protocolTemplates)) {
             mergeProtocolTemplates(liveSnap.data().protocolTemplates);
-            if (currentTab === 'devices_db') renderProtocolTemplatesManager();
+            renderProtocolTemplatesManager();
             populateProtocolTemplatesSelect();
           }
         }, err => console.warn('BĹ‚Ä…d nasĹ‚uchu templates:', err));
@@ -5453,6 +5456,8 @@ service cloud.firestore {
       initStatsTimeFilters();
       renderDashboard();
       updateSidebarCompanyLogo();
+      renderProtocolTemplatesManager();
+      populateProtocolTemplatesSelect();
 
       const savedCfg = localStorage.getItem(STORAGE_KEYS.FIREBASE_CFG);
       if (HARDCODED_FIREBASE_CONFIG) initFirebaseConnection(HARDCODED_FIREBASE_CONFIG, false);
@@ -5479,7 +5484,7 @@ service cloud.firestore {
         renderProtocolTemplatesManager();
       }
       if (currentTab === 'history') renderHistoryTable();
-      if (currentTab === 'settings') renderSettings();
+      if (currentTab === 'settings') { renderSettings(); renderProtocolTemplatesManager(); }
     }
 
     function switchTab(tabId) {
@@ -5513,7 +5518,6 @@ service cloud.firestore {
       if (tabId === 'devices_db') { renderCatalog(); renderQuotesList(); }
       if (tabId === 'settings') { renderSettings(); renderProtocolTemplatesManager(); }
       if (tabId === 'history') { initStatsTimeFilters(); renderHistoryTable(); }
-      if (tabId === 'settings') renderSettings();
     }
 
     function switchDevicesSubView(subView) {
@@ -13688,6 +13692,7 @@ service cloud.firestore {
       } catch (e) {}
 
       const nip = (localStorage.getItem('pp_company_nip') || localStorage.getItem('servitrack_company_nip') || '').trim();
+      const regon = (localStorage.getItem('pp_company_regon') || localStorage.getItem('servitrack_company_regon') || '').trim();
       const street = (localStorage.getItem('pp_company_street') || localStorage.getItem('servitrack_company_street') || '').trim();
       const postal = (localStorage.getItem('pp_company_postal') || localStorage.getItem('servitrack_company_postal') || '').trim();
       const city = (localStorage.getItem('pp_company_city') || localStorage.getItem('servitrack_company_city') || '').trim();
@@ -13701,12 +13706,13 @@ service cloud.firestore {
       if (postal || city) addrParts.push(`${postal} ${city}`.trim());
       const address = addrParts.join(', ');
 
-      return { name, subtitle, fgaz, nip, street, postal, city, address, phone, email, website, bank };
+      return { name, subtitle, fgaz, nip, regon, street, postal, city, address, phone, email, website, bank };
     }
 
     function getSavedCompanyName() { return getCompanyFullData().name; }
     function getSavedCompanySubtitle() { return getCompanyFullData().subtitle; }
     function getSavedCompanyNip() { return getCompanyFullData().nip; }
+    function getSavedCompanyRegon() { return (getCompanyFullData().regon || localStorage.getItem('pp_company_regon') || localStorage.getItem('servitrack_company_regon') || '').trim(); }
     function getSavedCompanyFullAddress() { return getCompanyFullData().address; }
     function getSavedCompanyPhone() { return getCompanyFullData().phone; }
     function getSavedCompanyEmail() { return getCompanyFullData().email; }
