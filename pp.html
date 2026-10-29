@@ -4024,6 +4024,7 @@ service cloud.firestore {
     let firestoreUnsubscribeClients = null;
     let firestoreUnsubscribeAppts = null;
     let firestoreUnsubscribeTpl = null;
+    let firestoreUnsubscribeQuotes = null;
     let isCloudConnected = false;
 
     window.clientsData = [];
@@ -4492,6 +4493,18 @@ service cloud.firestore {
         safeLocalStorageSet(STORAGE_KEYS.QUOTES, JSON.stringify(window.quotesData || []));
     }
 
+    window.getMainCloudPayload = getMainCloudPayload;
+    window.persistData = persistData;
+    function getMainCloudPayload() {
+      return {
+        catalog: window.catalogData || [],
+        workers: window.workersData || [],
+        workerSignatures: typeof getWorkerSignaturesMap === 'function' ? getWorkerSignaturesMap() : {},
+        companySettings: window.companySettingsData || {},
+        companyLogo: localStorage.getItem(STORAGE_KEYS.COMPANY_LOGO) || '',
+        updatedAt: new Date().toISOString()
+      };
+    }
     function getCloudPayload() {
       return {
         clients: window.clientsData || [],
@@ -4601,6 +4614,32 @@ service cloud.firestore {
 
     async function optimizeAllStoredSignatures() {
       let changed = false;
+
+      // A. Podpisy technikĂłw w localStorage (zmniejszenie z PNG ~250KB do JPEG ~10KB)
+      try {
+        if (typeof getWorkerSignaturesMap === 'function') {
+          const sigsMap = getWorkerSignaturesMap();
+          let sigsChanged = false;
+          for (const key of Object.keys(sigsMap)) {
+            const val = sigsMap[key];
+            if (val && typeof val === 'string' && (val.length > 20000 || val.startsWith('data:image/png'))) {
+              const comp = await compressSignatureDataUrl(val);
+              if (comp && comp !== val) {
+                sigsMap[key] = comp;
+                sigsChanged = true;
+              }
+            }
+          }
+          if (sigsChanged) {
+            localStorage.setItem(STORAGE_KEYS.WORKER_SIGNATURES, JSON.stringify(sigsMap));
+            changed = true;
+          }
+        }
+      } catch (e) {
+        console.warn('BĹ‚Ä…d kompresji podpisĂłw technikĂłw:', e);
+      }
+
+      // B. Podpisy w appointmentsData
       try {
         if (Array.isArray(window.appointmentsData)) {
           for (const app of window.appointmentsData) {
@@ -4623,33 +4662,129 @@ service cloud.firestore {
           }
         }
       } catch (e) {
-        console.warn('Kompresja podpisĂłw:', e);
+        console.warn('BĹ‚Ä…d kompresji podpisĂłw w zleceniach:', e);
       }
+
+      // C. Podpisy w clientsData (historia przeglÄ…dĂłw i napraw urzÄ…dzeĹ„ klientĂłw)
+      try {
+        if (Array.isArray(window.clientsData)) {
+          for (const client of window.clientsData) {
+            if (client && Array.isArray(client.devices)) {
+              for (const dev of client.devices) {
+                if (dev && Array.isArray(dev.inspectionHistory)) {
+                  for (const insp of dev.inspectionHistory) {
+                    if (insp && insp.protocolData) {
+                      if (insp.protocolData.sigTechDataUrl && (insp.protocolData.sigTechDataUrl.length > 20000 || insp.protocolData.sigTechDataUrl.startsWith('data:image/png'))) {
+                        const comp = await compressSignatureDataUrl(insp.protocolData.sigTechDataUrl);
+                        if (comp && comp !== insp.protocolData.sigTechDataUrl) {
+                          insp.protocolData.sigTechDataUrl = comp;
+                          changed = true;
+                        }
+                      }
+                      if (insp.protocolData.sigClientDataUrl && (insp.protocolData.sigClientDataUrl.length > 20000 || insp.protocolData.sigClientDataUrl.startsWith('data:image/png'))) {
+                        const comp = await compressSignatureDataUrl(insp.protocolData.sigClientDataUrl);
+                        if (comp && comp !== insp.protocolData.sigClientDataUrl) {
+                          insp.protocolData.sigClientDataUrl = comp;
+                          changed = true;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('BĹ‚Ä…d kompresji podpisĂłw w kartotekach klientĂłw:', e);
+      }
+
       if (changed) {
         saveStateToLocalStorage();
       }
     }
 
     function applyCloudPayload(data) {
-      if (Array.isArray(data.clients)) window.clientsData = data.clients;
-      if (Array.isArray(data.appointments)) window.appointmentsData = data.appointments;
+      if (!data) return;
+      if (Array.isArray(data.clients) && data.clients.length > 0) window.clientsData = data.clients;
+      if (Array.isArray(data.appointments) && data.appointments.length > 0) window.appointmentsData = data.appointments;
       if (Array.isArray(data.catalog) && data.catalog.length > 0) window.catalogData = data.catalog;
       if (Array.isArray(data.workers) && data.workers.length > 0) window.workersData = data.workers;
-      if (Array.isArray(data.protocolTemplates) && data.protocolTemplates.length > 0) window.protocolTemplatesData = data.protocolTemplates;
+      if (Array.isArray(data.protocolTemplates) && data.protocolTemplates.length > 0) mergeProtocolTemplates(data.protocolTemplates);
+      if (Array.isArray(data.quotes) && data.quotes.length > 0) window.quotesData = data.quotes;
+      if (data.companySettings && typeof data.companySettings === 'object') {
+        window.companySettingsData = Object.assign({}, window.companySettingsData || {}, data.companySettings);
+      }
+      if (data.companyLogo && typeof data.companyLogo === 'string') {
+        localStorage.setItem(STORAGE_KEYS.COMPANY_LOGO, data.companyLogo);
+      }
+      if (data.workerSignatures && typeof data.workerSignatures === 'object') {
+        localStorage.setItem(STORAGE_KEYS.WORKER_SIGNATURES, JSON.stringify(data.workerSignatures));
+      }
       saveStateToLocalStorage();
       refreshAllViews();
     }
 
-    function persistData() {
+    let isPersistingToCloud = false;
+    let hasPendingCloudPersist = false;
+
+    async function persistData() {
       saveStateToLocalStorage();
-      if (isCloudConnected && firestoreDb) {
-        firestoreDb.collection('pp_state').doc('main').set(sanitizeForFirestore(getCloudPayload())).catch(err => {
-          updateCloudBadge('error', 'Błąd zapisu');
-          setDiagnosticStatus('error', 'Zapis odrzucony', explainFirestoreError(err, ''));
+      if (!isCloudConnected || !firestoreDb) return;
+
+      if (isPersistingToCloud) {
+        hasPendingCloudPersist = true;
+        return;
+      }
+      isPersistingToCloud = true;
+
+      try {
+        const updatedAt = new Date().toISOString();
+
+        // 1. main: lekka konfiguracja, pracownicy, katalog, logo (~15 KB zamiast 2.5 MB)
+        const mainPayload = sanitizeForFirestore(getMainCloudPayload());
+        // 2. clients: dedykowany dokument klientĂłw
+        const clientsPayload = sanitizeForFirestore({
+          clients: window.clientsData || [],
+          updatedAt
         });
+        // 3. appointments: dedykowany dokument zleceĹ„
+        const apptsPayload = sanitizeForFirestore({
+          appointments: window.appointmentsData || [],
+          updatedAt
+        });
+        // 4. templates: dedykowany dokument szablonĂłw
+        const templatesPayload = sanitizeForFirestore({
+          protocolTemplates: window.protocolTemplatesData || [],
+          updatedAt
+        });
+        // 5. quotes: dedykowany dokument wycen ofertowych
+        const quotesPayload = sanitizeForFirestore({
+          quotes: window.quotesData || [],
+          updatedAt
+        });
+
+        await Promise.all([
+          firestoreDb.collection('pp_state').doc('main').set(mainPayload),
+          firestoreDb.collection('pp_state').doc('clients').set(clientsPayload),
+          firestoreDb.collection('pp_state').doc('appointments').set(apptsPayload),
+          firestoreDb.collection('pp_state').doc('templates').set(templatesPayload),
+          firestoreDb.collection('pp_state').doc('quotes').set(quotesPayload)
+        ]);
+
+        updateCloudBadge('online', 'Zsynchronizowano');
+      } catch (err) {
+        console.warn('BĹ‚Ä…d zapisu w chmurze:', err);
+        updateCloudBadge('error', 'BĹ‚Ä…d zapisu');
+        setDiagnosticStatus('error', 'Zapis odrzucony', explainFirestoreError(err, ''));
+      } finally {
+        isPersistingToCloud = false;
+        if (hasPendingCloudPersist) {
+          hasPendingCloudPersist = false;
+          persistData();
+        }
       }
     }
-
     function setDiagnosticStatus(state, title, message) {
       const badge = document.getElementById('fb-diag-badge');
       const msg = document.getElementById('fb-diag-message');
@@ -5008,15 +5143,15 @@ service cloud.firestore {
       if (firestoreUnsubscribeClients) { firestoreUnsubscribeClients(); firestoreUnsubscribeClients = null; }
       if (firestoreUnsubscribeAppts) { firestoreUnsubscribeAppts(); firestoreUnsubscribeAppts = null; }
       if (firestoreUnsubscribeTpl) { firestoreUnsubscribeTpl(); firestoreUnsubscribeTpl = null; }
+      if (firestoreUnsubscribeQuotes) { firestoreUnsubscribeQuotes(); firestoreUnsubscribeQuotes = null; }
       localStorage.removeItem(STORAGE_KEYS.FIREBASE_CFG);
       isCloudConnected = false;
       firestoreDb = null;
       updateCloudBadge('offline', 'Tryb lokalny (Offline)');
-      setDiagnosticStatus('wait', 'Rozłączono', 'Aplikacja działa lokalnie.');
+      setDiagnosticStatus('wait', 'RozĹ‚Ä…czono', 'Aplikacja dziaĹ‚a lokalnie.');
       closeModal('modal-firebase');
-      showToast('Rozłączono chmurę.');
+      showToast('RozĹ‚Ä…czono chmurÄ™.');
     }
-
     function explainFirestoreError(err, projectId) {
       const code = err?.code || '';
       if (code === 'timeout') return err.message;
@@ -5028,11 +5163,11 @@ service cloud.firestore {
 
     async function initFirebaseConnection(configObj, isInteractiveTest = false) {
       if (!window.firebase) {
-        console.warn('Biblioteka Firebase SDK nie została załadowana.');
+        console.warn('Biblioteka Firebase SDK nie zostaĹ‚a zaĹ‚adowana.');
         isCloudConnected = false;
         updateCloudBadge('error', 'Brak Firebase SDK');
-        setDiagnosticStatus('error', 'Brak biblioteki Firebase', 'Biblioteka Firebase SDK nie została załadowana w przeglądarce. Upewnij się, że masz połączenie z internetem oraz że żaden ad-blocker nie blokuje domen gstatic.com.');
-        if (isInteractiveTest) showToast('Błąd: biblioteka Firebase SDK nie jest załadowana.');
+        setDiagnosticStatus('error', 'Brak biblioteki Firebase', 'Biblioteka Firebase SDK nie zostaĹ‚a zaĹ‚adowana w przeglÄ…darce. Upewnij siÄ™, ĹĽe masz poĹ‚Ä…czenie z internetem oraz ĹĽe ĹĽaden ad-blocker nie blokuje domen gstatic.com.');
+        if (isInteractiveTest) showToast('BĹ‚Ä…d: biblioteka Firebase SDK nie jest zaĹ‚adowana.');
         return;
       }
       try {
@@ -5040,27 +5175,29 @@ service cloud.firestore {
         if (firestoreUnsubscribeClients) { firestoreUnsubscribeClients(); firestoreUnsubscribeClients = null; }
         if (firestoreUnsubscribeAppts) { firestoreUnsubscribeAppts(); firestoreUnsubscribeAppts = null; }
         if (firestoreUnsubscribeTpl) { firestoreUnsubscribeTpl(); firestoreUnsubscribeTpl = null; }
+        if (firestoreUnsubscribeQuotes) { firestoreUnsubscribeQuotes(); firestoreUnsubscribeQuotes = null; }
 
         const appName = 'pp_app_' + (configObj.projectId || 'default').replace(/[^a-zA-Z0-9_]/g, '_');
         let fbApp = firebase.apps.find(a => a.name === appName) || firebase.initializeApp(configObj, appName);
 
         firestoreDb = fbApp.firestore();
 
-        // Kluczowe dla urządzeń mobilnych (LTE/5G i wolne łącza):
-        // Wymusza automatyczne wykrywanie long-polling, gdy persistent WebChannel streaming jest zrywany przez sieć komórkową
+        // Kluczowe dla urzÄ…dzeĹ„ mobilnych (LTE/5G i wolne Ĺ‚Ä…cza):
+        // Wymusza automatyczne wykrywanie long-polling, gdy persistent WebChannel streaming jest zrywany przez sieÄ‡ komĂłrkowÄ…
         try {
           firestoreDb.settings({
             experimentalAutoDetectLongPolling: true,
             merge: true
           });
         } catch (settingsErr) {
-          // settings można wywołać tylko raz przed zapytaniami; ignorujemy jeśli już ustawiono
+          // settings moĹĽna wywoĹ‚aÄ‡ tylko raz przed zapytaniami; ignorujemy jeĹ›li juĹĽ ustawiono
         }
 
         const mainDocRef = firestoreDb.collection('pp_state').doc('main');
         const clientsDocRef = firestoreDb.collection('pp_state').doc('clients');
         const apptsDocRef = firestoreDb.collection('pp_state').doc('appointments');
         const tplDocRef = firestoreDb.collection('pp_state').doc('templates');
+        const quotesDocRef = firestoreDb.collection('pp_state').doc('quotes');
 
         const getDocSafe = async (doc) => {
           try {
@@ -5070,10 +5207,10 @@ service cloud.firestore {
           }
         };
 
-        // Timeout 14 sekund zapobiega wiecznemu zawieszeniu w przypadku braku odpowiedzi sieci komórkowej
+        // Timeout 14 sekund zapobiega wiecznemu zawieszeniu w przypadku braku odpowiedzi sieci komĂłrkowej
         const timeoutPromise = new Promise((_, reject) => {
           setTimeout(() => {
-            const err = new Error('Przekroczono limit czasu połączenia (14s). Sprawdź czy telefon ma stabilny internet oraz czy w Firebase utworzono Firestore Database.');
+            const err = new Error('Przekroczono limit czasu poĹ‚Ä…czenia (14s). SprawdĹş czy telefon ma stabilny internet oraz czy w Firebase utworzono Firestore Database.');
             err.code = 'timeout';
             reject(err);
           }, 14000);
@@ -5083,13 +5220,14 @@ service cloud.firestore {
           getDocSafe(mainDocRef).catch(err => ({ exists: false, error: err })),
           getDocSafe(clientsDocRef).catch(err => ({ exists: false, error: err })),
           getDocSafe(apptsDocRef).catch(err => ({ exists: false, error: err })),
-          getDocSafe(tplDocRef).catch(err => ({ exists: false, error: err }))
+          getDocSafe(tplDocRef).catch(err => ({ exists: false, error: err })),
+          getDocSafe(quotesDocRef).catch(err => ({ exists: false, error: err }))
         ]);
 
-        const [mainSnap, clientsSnap, apptsSnap, tplSnap] = await Promise.race([fetchDocsPromise, timeoutPromise]);
+        const [mainSnap, clientsSnap, apptsSnap, tplSnap, quotesSnap] = await Promise.race([fetchDocsPromise, timeoutPromise]);
 
-        // Sprawdź czy którekolwiek zapytanie zwróciło błąd uprawnień lub braku bazy
-        const snaps = [mainSnap, clientsSnap, apptsSnap, tplSnap];
+        // SprawdĹş czy ktĂłrekolwiek zapytanie zwrĂłciĹ‚o bĹ‚Ä…d uprawnieĹ„ lub braku bazy
+        const snaps = [mainSnap, clientsSnap, apptsSnap, tplSnap, quotesSnap];
         for (const s of snaps) {
           if (s && s.error) {
             const code = s.error.code || '';
@@ -5123,41 +5261,48 @@ service cloud.firestore {
           }
         }
 
-        // 3. Konfiguracja główna (katalog, pracownicy, logo itp.)
+        // 3. Konfiguracja gĹ‚Ăłwna (katalog, pracownicy, logo itp.)
         if (mainSnap.exists) {
           applyCloudPayload(mainSnap.data());
         }
 
-        // 4. Szablony protokołów
+        // 4. Szablony protokoĹ‚Ăłw
         if (tplSnap.exists && Array.isArray(tplSnap.data()?.protocolTemplates)) {
           mergeProtocolTemplates(tplSnap.data().protocolTemplates);
         } else if (mainSnap.exists && Array.isArray(mainSnap.data()?.protocolTemplates)) {
           mergeProtocolTemplates(mainSnap.data().protocolTemplates);
         }
 
+        // 5. Wyceny ofertowe
+        if (quotesSnap.exists && Array.isArray(quotesSnap.data()?.quotes)) {
+          window.quotesData = quotesSnap.data().quotes;
+        } else if (mainSnap.exists && Array.isArray(mainSnap.data()?.quotes) && mainSnap.data().quotes.length > 0) {
+          window.quotesData = mainSnap.data().quotes;
+        }
+
         saveStateToLocalStorage();
         refreshAllViews();
 
-        isCloudConnected = true;
-        updateCloudBadge('online', `Online: ${configObj.projectId}`);
-        setDiagnosticStatus('ok', 'Połączono!', `Pomyślnie połączono z <strong>${configObj.projectId}</strong>. Klienci: <strong>${(window.clientsData || []).length}</strong>, Zlecenia: <strong>${(window.appointmentsData || []).length}</strong>.`);
-        if (isInteractiveTest) showToast('Połączono z chmurą!');
+                isCloudConnected = true;
+        updateCloudBadge('online', 'Online: ' + (configObj.projectId || ''));
+        setDiagnosticStatus('ok', 'PoĹ‚Ä…czono!', 'PomyĹ›lnie poĹ‚Ä…czono z <strong>' + (configObj.projectId || '') + '</strong>. Klienci: <strong>' + ((window.clientsData || []).length) + '</strong>, Zlecenia: <strong>' + ((window.appointmentsData || []).length) + '</strong>, Wyceny: <strong>' + ((window.quotesData || []).length) + '</strong>.');
+        if (isInteractiveTest) showToast('PoĹ‚Ä…czono z chmurÄ…!');
 
-        // Optymalizujemy archiwalne podpisy (kompresja) i zapisujemy strukturę podzieloną do chmury
+        // Optymalizujemy archiwalne podpisy (kompresja) i zapisujemy strukturÄ™ podzielonÄ… do chmury
         await optimizeAllStoredSignatures();
         persistData();
 
-        // 5. Rejestracja nasłuchiwania w czasie rzeczywistym dla wszystkich 4 dokumentów
+        // 6. Rejestracja nasĹ‚uchiwania w czasie rzeczywistym dla wszystkich 5 dokumentĂłw
         firestoreUnsubscribeMain = mainDocRef.onSnapshot(liveSnap => {
           if (liveSnap.metadata && liveSnap.metadata.hasPendingWrites) return;
           if (liveSnap.exists) {
             applyCloudPayload(liveSnap.data());
           }
         }, err => {
-          console.warn('Błąd nasłuchu main:', err);
+          console.warn('BĹ‚Ä…d nasĹ‚uchu main:', err);
           isCloudConnected = false;
-          updateCloudBadge('error', 'Błąd synchro');
-          setDiagnosticStatus('error', 'Błąd autoryzacji', explainFirestoreError(err, configObj.projectId));
+          updateCloudBadge('error', 'BĹ‚Ä…d synchro');
+          setDiagnosticStatus('error', 'BĹ‚Ä…d autoryzacji', explainFirestoreError(err, configObj.projectId));
         });
 
         firestoreUnsubscribeClients = clientsDocRef.onSnapshot(liveSnap => {
@@ -5167,7 +5312,7 @@ service cloud.firestore {
             saveStateToLocalStorage();
             refreshAllViews();
           }
-        }, err => console.warn('Błąd nasłuchu clients:', err));
+        }, err => console.warn('BĹ‚Ä…d nasĹ‚uchu clients:', err));
 
         firestoreUnsubscribeAppts = apptsDocRef.onSnapshot(liveSnap => {
           if (liveSnap.metadata && liveSnap.metadata.hasPendingWrites) return;
@@ -5176,7 +5321,7 @@ service cloud.firestore {
             saveStateToLocalStorage();
             refreshAllViews();
           }
-        }, err => console.warn('Błąd nasłuchu appointments:', err));
+        }, err => console.warn('BĹ‚Ä…d nasĹ‚uchu appointments:', err));
 
         firestoreUnsubscribeTpl = tplDocRef.onSnapshot(liveSnap => {
           if (liveSnap.metadata && liveSnap.metadata.hasPendingWrites) return;
@@ -5185,42 +5330,61 @@ service cloud.firestore {
             if (currentTab === 'devices_db') renderProtocolTemplatesManager();
             populateProtocolTemplatesSelect();
           }
-        }, err => console.warn('Błąd nasłuchu templates:', err));
+        }, err => console.warn('BĹ‚Ä…d nasĹ‚uchu templates:', err));
+
+        firestoreUnsubscribeQuotes = quotesDocRef.onSnapshot(liveSnap => {
+          if (liveSnap.metadata && liveSnap.metadata.hasPendingWrites) return;
+          if (liveSnap.exists && Array.isArray(liveSnap.data()?.quotes)) {
+            window.quotesData = liveSnap.data().quotes;
+            saveStateToLocalStorage();
+            if (currentTab === 'quotes' && typeof renderQuotesList === 'function') renderQuotesList();
+            if (currentTab === 'history' && typeof renderHistoryTable === 'function') renderHistoryTable();
+          }
+        }, err => console.warn('BĹ‚Ä…d nasĹ‚uchu quotes:', err));
 
       } catch (err) {
         isCloudConnected = false;
-        updateCloudBadge('error', 'Błąd chmury');
-        setDiagnosticStatus('error', 'Odrzucono połączenie', explainFirestoreError(err, configObj.projectId));
-        if (isInteractiveTest) showToast('Błąd połączenia z chmurą!');
+        updateCloudBadge('error', 'BĹ‚Ä…d chmury');
+        setDiagnosticStatus('error', 'Odrzucono poĹ‚Ä…czenie', explainFirestoreError(err, configObj.projectId));
+        if (isInteractiveTest) showToast('BĹ‚Ä…d poĹ‚Ä…czenia z chmurÄ…!');
       }
     }
-
-
     async function forcePushToCloud() {
       if (!firestoreDb) { openFirebaseModal(); return; }
       try {
-        await firestoreDb.collection('pp_state').doc('main').set(sanitizeForFirestore(getCloudPayload()));
-        showToast('Wysłano dane do chmury!');
+        await persistData();
+        showToast('WysĹ‚ano dane do chmury (zoptymalizowana struktura 5 dokumentĂłw)!');
       } catch (err) {
         openFirebaseModal();
-        setDiagnosticStatus('error', 'Błąd wysyłania', explainFirestoreError(err, ''));
+        setDiagnosticStatus('error', 'BĹ‚Ä…d wysyĹ‚ania', explainFirestoreError(err, ''));
       }
     }
 
     async function forcePullFromCloud() {
       if (!firestoreDb) { openFirebaseModal(); return; }
       try {
-        const snap = await firestoreDb.collection('pp_state').doc('main').get({ source: 'server' });
-        if (snap.exists) {
-          applyCloudPayload(snap.data());
-          showToast('Pobrano dane z chmury!');
-        }
+        const [mainSnap, clientsSnap, apptsSnap, tplSnap, quotesSnap] = await Promise.all([
+          firestoreDb.collection('pp_state').doc('main').get({ source: 'server' }),
+          firestoreDb.collection('pp_state').doc('clients').get({ source: 'server' }),
+          firestoreDb.collection('pp_state').doc('appointments').get({ source: 'server' }),
+          firestoreDb.collection('pp_state').doc('templates').get({ source: 'server' }),
+          firestoreDb.collection('pp_state').doc('quotes').get({ source: 'server' })
+        ]);
+
+        if (mainSnap.exists) applyCloudPayload(mainSnap.data());
+        if (clientsSnap.exists && Array.isArray(clientsSnap.data()?.clients)) window.clientsData = clientsSnap.data().clients;
+        if (apptsSnap.exists && Array.isArray(apptsSnap.data()?.appointments)) window.appointmentsData = apptsSnap.data().appointments;
+        if (tplSnap.exists && Array.isArray(tplSnap.data()?.protocolTemplates)) mergeProtocolTemplates(tplSnap.data().protocolTemplates);
+        if (quotesSnap.exists && Array.isArray(quotesSnap.data()?.quotes)) window.quotesData = quotesSnap.data().quotes;
+
+        saveStateToLocalStorage();
+        refreshAllViews();
+        showToast('Pobrano wszystkie dane z chmury!');
       } catch (err) {
         openFirebaseModal();
-        setDiagnosticStatus('error', 'Błąd pobierania', explainFirestoreError(err, ''));
+        setDiagnosticStatus('error', 'BĹ‚Ä…d pobierania', explainFirestoreError(err, ''));
       }
     }
-
     function loadLocalData() {
       try {
         const rawClients = JSON.parse(localStorage.getItem(STORAGE_KEYS.CLIENTS) || '[]');
@@ -5337,7 +5501,7 @@ service cloud.firestore {
         dashboard: 'Pulpit główny',
         map_planner: 'Mapa i Planer Dnia',
         clients: 'Baza Klientów',
-        devices_db: 'UrzÄ…dzenia i Wyceny',
+        devices_db: 'Urz\u0105dzenia i Wyceny',
         history: 'Historia i Statystyki',
         settings: 'Ustawienia i Logo Firmy'
       };
