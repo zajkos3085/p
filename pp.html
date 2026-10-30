@@ -6,8 +6,11 @@
   <meta name="theme-color" content="#059669">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="description" content="ServiTrack - Smart HVAC Service & Protocols Management">
-  <title>ServiTrak - System Zarządzania Serwisem HVAC</title>
+  <title>ServiTrak (v2.5.2) - System ZarzÄ…dzania Serwisem HVAC</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script>
@@ -164,7 +167,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-base sm:text-lg font-black tracking-tight text-zinc-900 dark:text-white">Servi<span class="text-emerald-600 dark:text-emerald-400">Trak</span></span>
-              <span class="text-[9px] font-extrabold uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-teal-100 dark:bg-teal-950/80 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800">Planer</span>
+              <span class="text-[9px] font-extrabold uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-teal-100 dark:bg-teal-950/80 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800">Planer</span><span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">v2.5.2</span>
             </div>
             <p class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400 font-semibold leading-none mt-0.5">Smart HVAC Service</p>
           </div>
@@ -3106,6 +3109,22 @@
         <button type="button" onclick="closeModal('modal-firebase')"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
 
+      <!-- WERSJA SILNIKA I RESET PAMIÄCI PODRÄCZNEJ TELEFONU -->
+      <div class="p-3 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="px-2 py-0.5 rounded bg-sky-600 text-white font-extrabold text-[11px]">Wersja v2.5.2</span>
+          <span class="text-sky-900 dark:text-sky-200 font-semibold text-[11px]">Silnik zoptymalizowany dla iOS / Safari / LTE (Long-Polling)</span>
+        </div>
+        <button type="button" onclick="clearMobileLocalStorageCache()" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 transition shadow-sm">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Wymuś odświeżenie (Reset PWA)
+        </button>
+      </div>
+
+      <div class="p-2.5 rounded-xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-[11px] text-amber-900 dark:text-amber-300 space-y-1">
+        <div class="font-bold flex items-center gap-1.5"><i data-lucide="info" class="w-3.5 h-3.5 text-amber-600 shrink-0"></i> Instrukcja dla iPhone / Safari:</div>
+        <div>Jeśli na telefonie widzisz jeszcze komunikat "(14s)", telefon uruchamia stary zapis z pamięci Safari. Użyj przycisku <strong>Wymuś odświeżenie</strong> lub w ustawieniach iPhone wejdź w: <em>Ustawienia &rarr; Safari &rarr; Zaawansowane &rarr; Dane witryn &rarr; Usuń dane witryny</em>.</div>
+      </div>
+
       <div id="fb-diagnostic-box" class="p-3.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-xs space-y-1.5">
         <div class="font-extrabold flex items-center justify-between">
           <span>Status połączenia:</span>
@@ -4005,12 +4024,31 @@ service cloud.firestore {
     }
 
     function clearMobileLocalStorageCache() {
-      try {
-        cleanupLocalStorageSpace();
-        showToast('Wyczyszczono pamiÄ™Ä‡ podrÄ™cznÄ… telefonu!');
-      } catch (e) {
-        showToast('BĹ‚Ä…d podczas czyszczenia pamiÄ™ci');
-      }
+      cleanupLocalStorageSpace();
+      const purge = async () => {
+        if ('serviceWorker' in navigator) {
+          try {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            for (const r of regs) { await r.unregister(); }
+          } catch (e) {}
+        }
+        if ('caches' in window) {
+          try {
+            const names = await caches.keys();
+            for (const n of names) { await caches.delete(n); }
+          } catch (e) {}
+        }
+        try { sessionStorage.clear(); } catch (e) {}
+      };
+      purge().then(() => {
+        showToast('Wyczyszczono pamiÄ™Ä‡ podrÄ™cznÄ…! PrzeĹ‚adowujÄ™...');
+        setTimeout(() => {
+          const cleanUrl = window.location.origin && window.location.origin !== 'null' ? (window.location.origin + window.location.pathname) : window.location.pathname;
+          window.location.href = cleanUrl + '?v=' + Date.now() + (window.location.hash || '');
+        }, 600);
+      }).catch(() => {
+        showToast('Wyczyszczono pamiÄ™Ä‡ podrÄ™cznÄ…!');
+      });
     }
 
     const TILE_URLS = {
@@ -5169,7 +5207,7 @@ service cloud.firestore {
         console.warn('Biblioteka Firebase SDK nie zostaĹ‚a zaĹ‚adowana.');
         isCloudConnected = false;
         updateCloudBadge('error', 'Brak Firebase SDK');
-        setDiagnosticStatus('error', 'Brak biblioteki Firebase', 'Biblioteka Firebase SDK nie zostaĹ‚a zaĹ‚adowana w przeglÄ…darce. Upewnij siÄ™, ĹĽe masz poĹ‚Ä…czenie z internetem oraz ĹĽe ĹĽaden ad-blocker nie blokuje domen gstatic.com.');
+        setDiagnosticStatus('error', 'Brak biblioteki Firebase', 'Biblioteka Firebase SDK nie zostaĹ‚a zaĹ‚adowana w przeglÄ…darce. Upewnij siÄ™, ĹĽe masz stabilny internet oraz ĹĽe ĹĽaden ad-blocker nie blokuje gstatic.com.');
         if (isInteractiveTest) showToast('BĹ‚Ä…d: biblioteka Firebase SDK nie jest zaĹ‚adowana.');
         return;
       }
@@ -5181,25 +5219,26 @@ service cloud.firestore {
         if (firestoreUnsubscribeQuotes) { firestoreUnsubscribeQuotes(); firestoreUnsubscribeQuotes = null; }
 
         const appName = 'pp_app_' + (configObj.projectId || 'default').replace(/[^a-zA-Z0-9_]/g, '_');
-        let fbApp = firebase.apps.find(a => a.name === appName) || firebase.initializeApp(configObj, appName);
+        
+        // Zawsze usuwamy starÄ… instancjÄ™ aplikacji, aby mĂłc na czysto ustawiÄ‡ opcje (np. long polling)
+        const existingApp = firebase.apps.find(a => a.name === appName);
+        if (existingApp) {
+          try {
+            await existingApp.delete();
+          } catch (delErr) {
+            console.warn('UsuniÄ™cie starej instancji app:', delErr);
+          }
+        }
 
+        const fbApp = firebase.initializeApp(configObj, appName);
         firestoreDb = fbApp.firestore();
 
         // Kluczowe dla urzÄ…dzeĹ„ mobilnych (iOS Safari, Android, LTE/5G):
-        // Wymuszamy experimentalForceLongPolling na telefonach, aby wyeliminowaÄ‡ zawieszanie WebChannel streaming w Safari.
-        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '');
+        // experimentalForceLongPolling eliminuje zawieszanie WebChannel streaming w Safari i na sieciach komĂłrkowych
         try {
-          if (isMobileDevice) {
-            firestoreDb.settings({
-              experimentalForceLongPolling: true,
-              merge: true
-            });
-          } else {
-            firestoreDb.settings({
-              experimentalAutoDetectLongPolling: true,
-              merge: true
-            });
-          }
+          firestoreDb.settings({
+            experimentalForceLongPolling: true
+          });
         } catch (settingsErr) {
           console.warn('firestore settings info:', settingsErr);
         }
@@ -5218,13 +5257,13 @@ service cloud.firestore {
           }
         };
 
-        // Timeout 25 sekund zapobiega wiecznemu zawieszeniu w przypadku braku odpowiedzi sieci komĂłrkowej
+        // Timeout 30 sekund zapobiega zawieszeniu w przypadku braku odpowiedzi sieci komĂłrkowej
         const timeoutPromise = new Promise((_, reject) => {
           setTimeout(() => {
-            const err = new Error('Przekroczono limit czasu poĹ‚Ä…czenia (25s). SprawdĹş czy telefon ma stabilny internet oraz czy w Firebase utworzono Firestore Database.');
+            const err = new Error('Przekroczono limit czasu poĹ‚Ä…czenia (30s). SprawdĹş czy telefon ma stabilny internet oraz czy w Firebase utworzono Firestore Database.');
             err.code = 'timeout';
             reject(err);
-          }, 25000);
+          }, 30000);
         });
 
         const fetchDocsPromise = Promise.all([
@@ -5274,7 +5313,11 @@ service cloud.firestore {
 
         // 3. Konfiguracja gĹ‚Ăłwna (katalog, pracownicy, logo itp.)
         if (mainSnap.exists) {
-          applyCloudPayload(mainSnap.data());
+          try {
+            applyCloudPayload(mainSnap.data());
+          } catch(e) {
+            console.warn('BĹ‚Ä…d w applyCloudPayload:', e);
+          }
         }
 
         // 4. Szablony protokoĹ‚Ăłw
@@ -5294,7 +5337,7 @@ service cloud.firestore {
         saveStateToLocalStorage();
         refreshAllViews();
 
-                isCloudConnected = true;
+        isCloudConnected = true;
         updateCloudBadge('online', 'Online: ' + (configObj.projectId || ''));
         setDiagnosticStatus('ok', 'PoĹ‚Ä…czono!', 'PomyĹ›lnie poĹ‚Ä…czono z <strong>' + (configObj.projectId || '') + '</strong>. Klienci: <strong>' + ((window.clientsData || []).length) + '</strong>, Zlecenia: <strong>' + ((window.appointmentsData || []).length) + '</strong>, Wyceny: <strong>' + ((window.quotesData || []).length) + '</strong>.');
         if (isInteractiveTest) showToast('PoĹ‚Ä…czono z chmurÄ…!');
@@ -5303,61 +5346,67 @@ service cloud.firestore {
         await optimizeAllStoredSignatures();
         persistData();
 
-        // 6. Rejestracja nasĹ‚uchiwania w czasie rzeczywistym dla wszystkich 5 dokumentĂłw
+        // 6. NasĹ‚uch zmian w czasie rzeczywistym (Real-time Sync)
         firestoreUnsubscribeMain = mainDocRef.onSnapshot(liveSnap => {
-          if (liveSnap.metadata && liveSnap.metadata.hasPendingWrites) return;
-          if (liveSnap.exists) {
-            applyCloudPayload(liveSnap.data());
-          }
-        }, err => {
-          console.warn('BĹ‚Ä…d nasĹ‚uchu main:', err);
-          isCloudConnected = false;
-          updateCloudBadge('error', 'BĹ‚Ä…d synchro');
-          setDiagnosticStatus('error', 'BĹ‚Ä…d autoryzacji', explainFirestoreError(err, configObj.projectId));
-        });
+          try {
+            if (liveSnap.metadata && liveSnap.metadata.hasPendingWrites) return;
+            if (liveSnap.exists) {
+              applyCloudPayload(liveSnap.data());
+            }
+          } catch(e) { console.warn('BĹ‚Ä…d nasĹ‚uchu main:', e); }
+        }, err => console.warn('BĹ‚Ä…d nasĹ‚uchu main:', err));
 
         firestoreUnsubscribeClients = clientsDocRef.onSnapshot(liveSnap => {
-          if (liveSnap.metadata && liveSnap.metadata.hasPendingWrites) return;
-          if (liveSnap.exists && Array.isArray(liveSnap.data()?.clients)) {
-            window.clientsData = liveSnap.data().clients;
-            saveStateToLocalStorage();
-            refreshAllViews();
-          }
+          try {
+            if (liveSnap.metadata && liveSnap.metadata.hasPendingWrites) return;
+            if (liveSnap.exists && Array.isArray(liveSnap.data()?.clients)) {
+              window.clientsData = liveSnap.data().clients;
+              saveStateToLocalStorage();
+              refreshAllViews();
+            }
+          } catch(e) { console.warn('BĹ‚Ä…d nasĹ‚uchu clients:', e); }
         }, err => console.warn('BĹ‚Ä…d nasĹ‚uchu clients:', err));
 
         firestoreUnsubscribeAppts = apptsDocRef.onSnapshot(liveSnap => {
-          if (liveSnap.metadata && liveSnap.metadata.hasPendingWrites) return;
-          if (liveSnap.exists && Array.isArray(liveSnap.data()?.appointments)) {
-            window.appointmentsData = liveSnap.data().appointments;
-            saveStateToLocalStorage();
-            refreshAllViews();
-          }
+          try {
+            if (liveSnap.metadata && liveSnap.metadata.hasPendingWrites) return;
+            if (liveSnap.exists && Array.isArray(liveSnap.data()?.appointments)) {
+              window.appointmentsData = liveSnap.data().appointments;
+              saveStateToLocalStorage();
+              refreshAllViews();
+            }
+          } catch(e) { console.warn('BĹ‚Ä…d nasĹ‚uchu appointments:', e); }
         }, err => console.warn('BĹ‚Ä…d nasĹ‚uchu appointments:', err));
 
         firestoreUnsubscribeTpl = tplDocRef.onSnapshot(liveSnap => {
-          if (liveSnap.metadata && liveSnap.metadata.hasPendingWrites) return;
-          if (liveSnap.exists && Array.isArray(liveSnap.data()?.protocolTemplates)) {
-            mergeProtocolTemplates(liveSnap.data().protocolTemplates);
-            renderProtocolTemplatesManager();
-            populateProtocolTemplatesSelect();
-          }
+          try {
+            if (liveSnap.metadata && liveSnap.metadata.hasPendingWrites) return;
+            if (liveSnap.exists && Array.isArray(liveSnap.data()?.protocolTemplates)) {
+              mergeProtocolTemplates(liveSnap.data().protocolTemplates);
+              renderProtocolTemplatesManager();
+              populateProtocolTemplatesSelect();
+            }
+          } catch(e) { console.warn('BĹ‚Ä…d nasĹ‚uchu templates:', e); }
         }, err => console.warn('BĹ‚Ä…d nasĹ‚uchu templates:', err));
 
         firestoreUnsubscribeQuotes = quotesDocRef.onSnapshot(liveSnap => {
-          if (liveSnap.metadata && liveSnap.metadata.hasPendingWrites) return;
-          if (liveSnap.exists && Array.isArray(liveSnap.data()?.quotes)) {
-            window.quotesData = liveSnap.data().quotes;
-            saveStateToLocalStorage();
-            if (currentTab === 'quotes' && typeof renderQuotesList === 'function') renderQuotesList();
-            if (currentTab === 'history' && typeof renderHistoryTable === 'function') renderHistoryTable();
-          }
+          try {
+            if (liveSnap.metadata && liveSnap.metadata.hasPendingWrites) return;
+            if (liveSnap.exists && Array.isArray(liveSnap.data()?.quotes)) {
+              window.quotesData = liveSnap.data().quotes;
+              saveStateToLocalStorage();
+              if (typeof renderQuotesList === 'function') renderQuotesList();
+              if (typeof renderHistoryTable === 'function') renderHistoryTable();
+            }
+          } catch(e) { console.warn('BĹ‚Ä…d nasĹ‚uchu quotes:', e); }
         }, err => console.warn('BĹ‚Ä…d nasĹ‚uchu quotes:', err));
 
       } catch (err) {
+        console.error('Firebase connection error:', err);
         isCloudConnected = false;
         updateCloudBadge('error', 'BĹ‚Ä…d chmury');
-        setDiagnosticStatus('error', 'Odrzucono poĹ‚Ä…czenie', explainFirestoreError(err, configObj.projectId));
-        if (isInteractiveTest) showToast('BĹ‚Ä…d poĹ‚Ä…czenia z chmurÄ…!');
+        setDiagnosticStatus('error', 'Odrzucono poĹ‚Ä…czenie', explainFirestoreError(err, (configObj.projectId || '')));
+        if (isInteractiveTest) showToast('BĹ‚Ä…d poĹ‚Ä…czenia z Firebase!');
       }
     }
     async function forcePushToCloud() {
