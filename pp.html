@@ -3171,7 +3171,13 @@ service cloud.firestore {
       </details>
 
       <div class="p-3.5 rounded-xl bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 space-y-2.5">
-        <div class="text-xs font-extrabold text-zinc-800 dark:text-zinc-200">Szybki kreator (Wpisz 2 pola z konsoli Firebase):</div>
+        <!-- PRZYCISK 1-KLIK DO OFICJALNEJ BAZY -->
+      <button type="button" onclick="restoreDefaultFirebaseConfig()" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-md group">
+        <i data-lucide="zap" class="w-4 h-4 text-amber-300 group-hover:scale-110 transition-transform"></i>
+        <span>Połącz z oficjalną bazą pp-planer (1 kliknięcie)</span>
+      </button>
+
+      <div class="text-xs font-extrabold text-zinc-800 dark:text-zinc-200">Szybki kreator (Wpisz 2 pola z konsoli Firebase):</div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <div>
             <label class="block text-[11px] font-bold text-zinc-500 mb-1">Identyfikator projektu (Project ID)</label>
@@ -3950,7 +3956,14 @@ service cloud.firestore {
     /* ==========================================================================
        1. KONFIGURACJA, STAŁE I STAN GLOBALNY
        ========================================================================== */
-    const HARDCODED_FIREBASE_CONFIG = null;
+    const HARDCODED_FIREBASE_CONFIG = {
+      apiKey: "AIzaSyDaPZQiL7ph3A9VNXrFqCJ8DfORjKjnupQ",
+      authDomain: "pp-planer.firebaseapp.com",
+      projectId: "pp-planer",
+      storageBucket: "pp-planer.appspot.com",
+      messagingSenderId: "767448947778",
+      appId: "1:767448947778:web:783d8dbd577d2941e1e1db"
+    };
     const ADMIN_PIN = '456852';
 
     const STORAGE_KEYS = {
@@ -4920,8 +4933,24 @@ service cloud.firestore {
       }
     }
 
+    function restoreDefaultFirebaseConfig() {
+      if (!HARDCODED_FIREBASE_CONFIG) return;
+      localStorage.setItem(STORAGE_KEYS.FIREBASE_CFG, JSON.stringify(HARDCODED_FIREBASE_CONFIG, null, 2));
+      const pidEl = document.getElementById('fb-quick-project-id');
+      if (pidEl) pidEl.value = HARDCODED_FIREBASE_CONFIG.projectId;
+      const keyEl = document.getElementById('fb-quick-api-key');
+      if (keyEl) keyEl.value = HARDCODED_FIREBASE_CONFIG.apiKey;
+      const inputEl = document.getElementById('firebase-config-input');
+      if (inputEl) inputEl.value = JSON.stringify(HARDCODED_FIREBASE_CONFIG, null, 2);
+      showToast('Wczytano oficjalne dane bazy pp-planer!');
+      saveAndConnectFirebase();
+    }
+
     function openFirebaseModal() {
-      const saved = localStorage.getItem(STORAGE_KEYS.FIREBASE_CFG) || '';
+      let saved = localStorage.getItem(STORAGE_KEYS.FIREBASE_CFG) || '';
+      if (!saved && HARDCODED_FIREBASE_CONFIG) {
+        saved = JSON.stringify(HARDCODED_FIREBASE_CONFIG, null, 2);
+      }
       const inputEl = document.getElementById('firebase-config-input');
       if (inputEl) inputEl.value = saved;
       try {
