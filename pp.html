@@ -10,7 +10,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="description" content="ServiTrack - Smart HVAC Service & Protocols Management">
-  <title>ServiTrak (v2.5.2) - System ZarzÄ…dzania Serwisem HVAC</title>
+  <title>ServiTrak - System Zarządzania Serwisem HVAC</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script>
@@ -167,7 +167,7 @@
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-base sm:text-lg font-black tracking-tight text-zinc-900 dark:text-white">Servi<span class="text-emerald-600 dark:text-emerald-400">Trak</span></span>
-              <span class="text-[9px] font-extrabold uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-teal-100 dark:bg-teal-950/80 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800">Planer</span><span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">v2.5.2</span>
+              <span class="text-[9px] font-extrabold uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-teal-100 dark:bg-teal-950/80 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800">Planer</span>
             </div>
             <p class="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400 font-semibold leading-none mt-0.5">Smart HVAC Service</p>
           </div>
@@ -262,9 +262,8 @@
         </button>
       </div>
       <button onclick="openFgazCalculatorModal()" class="w-full py-2 px-3 rounded-2xl bg-cyan-50 dark:bg-cyan-950/40 hover:bg-cyan-100 dark:hover:bg-cyan-900/50 border border-cyan-200 dark:border-cyan-800 text-xs font-extrabold text-cyan-800 dark:text-cyan-300 flex items-center justify-center gap-2 transition mb-1.5">
-        <i data-lucide="calculator" class="w-4 h-4 text-cyan-600"></i> Kalkulator F-GAZ i Dopełnień
+        <i data-lucide="calculator" class="w-4 h-4 text-cyan-600"></i> Kalkulator HVAC / F-GAZ
       </button>
-      <button onclick="openRefrigerantSliderModal()" class="w-full py-2 px-3 rounded-2xl bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/50 border border-sky-200 dark:border-sky-800 text-xs font-extrabold text-sky-800 dark:text-sky-300 flex items-center justify-center gap-2 transition mb-1.5"><i data-lucide="gauge" class="w-4 h-4 text-sky-600"></i> Suwak Chłodniczy (P-T)</button>
       <button onclick="openBackupModal()" class="w-full py-2 px-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800 text-xs font-extrabold text-emerald-800 dark:text-emerald-300 flex items-center justify-center gap-2 transition">
         <i data-lucide="hard-drive-download" class="w-4 h-4 text-emerald-600"></i> Pełny Backup Bazy (JSON)
       </button>
@@ -274,19 +273,9 @@
   <!-- MAIN AREA -->
   <div class="flex-1 flex flex-col min-w-0 pb-24 md:pb-0">
     <header class="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 px-3 sm:px-6 py-2.5 sm:py-3.5 sticky top-0 z-30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 id="header-title" class="text-sm sm:text-lg font-extrabold text-zinc-900 dark:text-white leading-tight">Pulpit główny</h1>
-          <p id="header-date" class="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 font-medium">Dzisiaj</p>
-        </div>
-        <!-- SZYBKI KALKULATOR F-GAZ -->
-        <div class="flex items-center gap-1.5 sm:gap-2">
-          <button onclick="openFgazCalculatorModal()" class="px-2.5 py-1 rounded-xl bg-cyan-50 dark:bg-cyan-950/60 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 text-cyan-800 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800 text-[11px] sm:text-xs font-bold flex items-center gap-1.5 shadow-sm transition" title="Kalkulator F-GAZ i dopełnienia rurociągów">
-            <i data-lucide="calculator" class="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400"></i>
-            <span>F-GAZ</span>
-          </button>
-        </div>
-          <button onclick="openRefrigerantSliderModal()" class="px-2.5 py-1 rounded-xl bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 dark:hover:bg-sky-900/60 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800 text-[11px] sm:text-xs font-bold flex items-center gap-1.5 shadow-sm transition" title="Suwak chłodniczy ciśnienie-temperatura i tabele odparowania"><i data-lucide="gauge" class="w-3.5 h-3.5 text-sky-600 dark:text-sky-400"></i><span>Suwak P-T</span></button>
+      <div>
+        <h1 id="header-title" class="text-sm sm:text-lg font-extrabold text-zinc-900 dark:text-white leading-tight">Pulpit główny</h1>
+        <p id="header-date" class="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 font-medium">Dzisiaj</p>
       </div>
       <div class="grid grid-cols-3 sm:flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
         <button onclick="openScheduleModal()" class="bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 px-2 sm:px-3.5 py-2 rounded-xl text-[11px] sm:text-xs font-extrabold flex items-center justify-center gap-1.5 transition">
@@ -1668,8 +1657,29 @@
               </div>
             </div>
 
-            <div id="quote-client-db-wrap" class="space-y-1">
-              <select id="quote-client-select" onchange="onQuoteClientSelectChange(this.value)" class="w-full px-3 py-2 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-semibold outline-none focus:border-emerald-500 text-zinc-800 dark:text-zinc-200"></select>
+            <div id="quote-client-db-wrap" class="space-y-1.5">
+              <div class="relative">
+                <i data-lucide="search" class="w-4 h-4 text-emerald-600 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                <input
+                  type="text"
+                  id="quote-client-search"
+                  onfocus="openQuoteClientDropdown()"
+                  oninput="renderQuoteClientDropdown(this.value)"
+                  placeholder="🔍 Wyszukaj klienta z bazy (imię, nazwisko, miasto, tel, NIP)..."
+                  autocomplete="off"
+                  class="w-full pl-9 pr-9 py-2 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 focus:border-emerald-500 rounded-xl text-xs font-semibold outline-none text-zinc-900 dark:text-white transition">
+                <button
+                  type="button"
+                  onclick="clearQuoteClientSearch()"
+                  class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-1"
+                  title="Wyczyść wyszukiwanie">
+                  <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+              <div id="quote-client-dd" class="hidden mt-1 p-1 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl shadow-xl z-30 relative">
+                <div id="quote-client-dd-list" class="max-h-48 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-700/60 text-xs"></div>
+              </div>
+              <select id="quote-client-select" onchange="onQuoteClientSelectChange(this.value)" class="w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-[11px] font-medium outline-none text-zinc-700 dark:text-zinc-300 focus:border-emerald-500"></select>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -3112,7 +3122,7 @@
       <!-- WERSJA SILNIKA I RESET PAMIÄCI PODRÄCZNEJ TELEFONU -->
       <div class="p-3 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
         <div class="flex items-center gap-2">
-          <span class="px-2 py-0.5 rounded bg-sky-600 text-white font-extrabold text-[11px]">Wersja v2.5.2</span>
+          
           <span class="text-sky-900 dark:text-sky-200 font-semibold text-[11px]">Silnik zoptymalizowany dla iOS / Safari / LTE (Long-Polling)</span>
         </div>
         <button type="button" onclick="clearMobileLocalStorageCache()" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 transition shadow-sm">
@@ -3982,6 +3992,8 @@ service cloud.firestore {
       COMPANY_FGAZ: 'pp_company_fgaz',
       COMPANY_LAT: 'pp_company_lat',
       COMPANY_LNG: 'pp_company_lng',
+      COMPANY_SETTINGS: 'pp_company_settings_v1',
+      WORKER_SIGNATURES: 'pp_hvac_worker_signatures_v1',
       QUOTES: 'pp_hvac_quotes_v1'
     };
 
@@ -4054,13 +4066,13 @@ service cloud.firestore {
         try { sessionStorage.clear(); } catch (e) {}
       };
       purge().then(() => {
-        showToast('Wyczyszczono pamiÄ™Ä‡ podrÄ™cznÄ…! PrzeĹ‚adowujÄ™...');
+        showToast('Wyczyszczono pamięć podręczną! Przeładowuję...');
         setTimeout(() => {
           const cleanUrl = window.location.origin && window.location.origin !== 'null' ? (window.location.origin + window.location.pathname) : window.location.pathname;
           window.location.href = cleanUrl + '?v=' + Date.now() + (window.location.hash || '');
         }, 600);
       }).catch(() => {
-        showToast('Wyczyszczono pamiÄ™Ä‡ podrÄ™cznÄ…!');
+        showToast('Wyczyszczono pamięć podręczną!');
       });
     }
 
@@ -4544,7 +4556,8 @@ service cloud.firestore {
       localStorage.setItem(STORAGE_KEYS.CATALOG, JSON.stringify(window.catalogData));
       localStorage.setItem(STORAGE_KEYS.WORKERS, JSON.stringify(window.workersData));
       localStorage.setItem(STORAGE_KEYS.TEMPLATES, JSON.stringify(window.protocolTemplatesData));
-        safeLocalStorageSet(STORAGE_KEYS.QUOTES, JSON.stringify(window.quotesData || []));
+      safeLocalStorageSet(STORAGE_KEYS.QUOTES, JSON.stringify(window.quotesData || []));
+      safeLocalStorageSet(STORAGE_KEYS.COMPANY_SETTINGS, JSON.stringify(window.companySettingsData || (typeof getCompanyFullData === 'function' ? getCompanyFullData() : {})));
     }
 
     window.getMainCloudPayload = getMainCloudPayload;
@@ -4669,7 +4682,7 @@ service cloud.firestore {
     async function optimizeAllStoredSignatures() {
       let changed = false;
 
-      // A. Podpisy technikĂłw w localStorage (zmniejszenie z PNG ~250KB do JPEG ~10KB)
+      // A. Podpisy techników w localStorage (zmniejszenie z PNG ~250KB do JPEG ~10KB)
       try {
         if (typeof getWorkerSignaturesMap === 'function') {
           const sigsMap = getWorkerSignaturesMap();
@@ -4690,7 +4703,7 @@ service cloud.firestore {
           }
         }
       } catch (e) {
-        console.warn('BĹ‚Ä…d kompresji podpisĂłw technikĂłw:', e);
+        console.warn('Błąd kompresji podpisów techników:', e);
       }
 
       // B. Podpisy w appointmentsData
@@ -4716,10 +4729,10 @@ service cloud.firestore {
           }
         }
       } catch (e) {
-        console.warn('BĹ‚Ä…d kompresji podpisĂłw w zleceniach:', e);
+        console.warn('Błąd kompresji podpisów w zleceniach:', e);
       }
 
-      // C. Podpisy w clientsData (historia przeglÄ…dĂłw i napraw urzÄ…dzeĹ„ klientĂłw)
+      // C. Podpisy w clientsData (historia przeglądów i napraw urządzeń klientów)
       try {
         if (Array.isArray(window.clientsData)) {
           for (const client of window.clientsData) {
@@ -4750,7 +4763,7 @@ service cloud.firestore {
           }
         }
       } catch (e) {
-        console.warn('BĹ‚Ä…d kompresji podpisĂłw w kartotekach klientĂłw:', e);
+        console.warn('Błąd kompresji podpisów w kartotekach klientów:', e);
       }
 
       if (changed) {
@@ -4768,6 +4781,9 @@ service cloud.firestore {
       if (Array.isArray(data.quotes) && data.quotes.length > 0) window.quotesData = data.quotes;
       if (data.companySettings && typeof data.companySettings === 'object') {
         window.companySettingsData = Object.assign({}, window.companySettingsData || {}, data.companySettings);
+        if (typeof syncCompanyDataToLocalStorage === 'function') {
+          syncCompanyDataToLocalStorage(window.companySettingsData);
+        }
       }
       if (data.companyLogo && typeof data.companyLogo === 'string') {
         localStorage.setItem(STORAGE_KEYS.COMPANY_LOGO, data.companyLogo);
@@ -4797,17 +4813,17 @@ service cloud.firestore {
 
         // 1. main: lekka konfiguracja, pracownicy, katalog, logo (~15 KB zamiast 2.5 MB)
         const mainPayload = sanitizeForFirestore(getMainCloudPayload());
-        // 2. clients: dedykowany dokument klientĂłw
+        // 2. clients: dedykowany dokument klientów
         const clientsPayload = sanitizeForFirestore({
           clients: window.clientsData || [],
           updatedAt
         });
-        // 3. appointments: dedykowany dokument zleceĹ„
+        // 3. appointments: dedykowany dokument zleceń
         const apptsPayload = sanitizeForFirestore({
           appointments: window.appointmentsData || [],
           updatedAt
         });
-        // 4. templates: dedykowany dokument szablonĂłw
+        // 4. templates: dedykowany dokument szablonów
         const templatesPayload = sanitizeForFirestore({
           protocolTemplates: window.protocolTemplatesData || [],
           updatedAt
@@ -4828,8 +4844,8 @@ service cloud.firestore {
 
         updateCloudBadge('online', 'Zsynchronizowano');
       } catch (err) {
-        console.warn('BĹ‚Ä…d zapisu w chmurze:', err);
-        updateCloudBadge('error', 'BĹ‚Ä…d zapisu');
+        console.warn('Błąd zapisu w chmurze:', err);
+        updateCloudBadge('error', 'Błąd zapisu');
         setDiagnosticStatus('error', 'Zapis odrzucony', explainFirestoreError(err, ''));
       } finally {
         isPersistingToCloud = false;
@@ -5218,9 +5234,9 @@ service cloud.firestore {
       isCloudConnected = false;
       firestoreDb = null;
       updateCloudBadge('offline', 'Tryb lokalny (Offline)');
-      setDiagnosticStatus('wait', 'RozĹ‚Ä…czono', 'Aplikacja dziaĹ‚a lokalnie.');
+      setDiagnosticStatus('wait', 'Rozłączono', 'Aplikacja działa lokalnie.');
       closeModal('modal-firebase');
-      showToast('RozĹ‚Ä…czono chmurÄ™.');
+      showToast('Rozłączono chmurę.');
     }
     function explainFirestoreError(err, projectId) {
       const code = err?.code || '';
@@ -5233,11 +5249,11 @@ service cloud.firestore {
 
     async function initFirebaseConnection(configObj, isInteractiveTest = false) {
       if (!window.firebase) {
-        console.warn('Biblioteka Firebase SDK nie zostaĹ‚a zaĹ‚adowana.');
+        console.warn('Biblioteka Firebase SDK nie została załadowana.');
         isCloudConnected = false;
         updateCloudBadge('error', 'Brak Firebase SDK');
-        setDiagnosticStatus('error', 'Brak biblioteki Firebase', 'Biblioteka Firebase SDK nie zostaĹ‚a zaĹ‚adowana w przeglÄ…darce. Upewnij siÄ™, ĹĽe masz stabilny internet oraz ĹĽe ĹĽaden ad-blocker nie blokuje gstatic.com.');
-        if (isInteractiveTest) showToast('BĹ‚Ä…d: biblioteka Firebase SDK nie jest zaĹ‚adowana.');
+        setDiagnosticStatus('error', 'Brak biblioteki Firebase', 'Biblioteka Firebase SDK nie została załadowana w przeglądarce. Upewnij się, że masz stabilny internet oraz że żaden ad-blocker nie blokuje gstatic.com.');
+        if (isInteractiveTest) showToast('Błąd: biblioteka Firebase SDK nie jest załadowana.');
         return;
       }
       try {
@@ -5249,7 +5265,7 @@ service cloud.firestore {
 
         const appName = 'pp_app_' + (configObj.projectId || 'default').replace(/[^a-zA-Z0-9_]/g, '_');
         
-        // Zawsze usuwamy starÄ… instancjÄ™ aplikacji, aby mĂłc na czysto ustawiÄ‡ opcje (np. long polling)
+        // Zawsze usuwamy starą instancję aplikacji, aby móc na czysto ustawiÄ‡ opcje (np. long polling)
         const existingApp = firebase.apps.find(a => a.name === appName);
         if (existingApp) {
           try {
@@ -5262,8 +5278,8 @@ service cloud.firestore {
         const fbApp = firebase.initializeApp(configObj, appName);
         firestoreDb = fbApp.firestore();
 
-        // Kluczowe dla urzÄ…dzeĹ„ mobilnych (iOS Safari, Android, LTE/5G):
-        // experimentalForceLongPolling eliminuje zawieszanie WebChannel streaming w Safari i na sieciach komĂłrkowych
+        // Kluczowe dla urządzeń mobilnych (iOS Safari, Android, LTE/5G):
+        // experimentalForceLongPolling eliminuje zawieszanie WebChannel streaming w Safari i na sieciach komórkowych
         try {
           firestoreDb.settings({
             experimentalForceLongPolling: true
@@ -5286,10 +5302,10 @@ service cloud.firestore {
           }
         };
 
-        // Timeout 30 sekund zapobiega zawieszeniu w przypadku braku odpowiedzi sieci komĂłrkowej
+        // Timeout 30 sekund zapobiega zawieszeniu w przypadku braku odpowiedzi sieci komórkowej
         const timeoutPromise = new Promise((_, reject) => {
           setTimeout(() => {
-            const err = new Error('Przekroczono limit czasu poĹ‚Ä…czenia (30s). SprawdĹş czy telefon ma stabilny internet oraz czy w Firebase utworzono Firestore Database.');
+            const err = new Error('Przekroczono limit czasu połączenia (30s). Sprawdź czy telefon ma stabilny internet oraz czy w Firebase utworzono Firestore Database.');
             err.code = 'timeout';
             reject(err);
           }, 30000);
@@ -5305,7 +5321,7 @@ service cloud.firestore {
 
         const [mainSnap, clientsSnap, apptsSnap, tplSnap, quotesSnap] = await Promise.race([fetchDocsPromise, timeoutPromise]);
 
-        // SprawdĹş czy ktĂłrekolwiek zapytanie zwrĂłciĹ‚o bĹ‚Ä…d uprawnieĹ„ lub braku bazy
+        // Sprawdź czy którekolwiek zapytanie zwróciło błąd uprawnień lub braku bazy
         const snaps = [mainSnap, clientsSnap, apptsSnap, tplSnap, quotesSnap];
         for (const s of snaps) {
           if (s && s.error) {
@@ -5340,16 +5356,16 @@ service cloud.firestore {
           }
         }
 
-        // 3. Konfiguracja gĹ‚Ăłwna (katalog, pracownicy, logo itp.)
+        // 3. Konfiguracja główna (katalog, pracownicy, logo itp.)
         if (mainSnap.exists) {
           try {
             applyCloudPayload(mainSnap.data());
           } catch(e) {
-            console.warn('BĹ‚Ä…d w applyCloudPayload:', e);
+            console.warn('Błąd w applyCloudPayload:', e);
           }
         }
 
-        // 4. Szablony protokoĹ‚Ăłw
+        // 4. Szablony protokołów
         if (tplSnap.exists && Array.isArray(tplSnap.data()?.protocolTemplates)) {
           mergeProtocolTemplates(tplSnap.data().protocolTemplates);
         } else if (mainSnap.exists && Array.isArray(mainSnap.data()?.protocolTemplates)) {
@@ -5368,8 +5384,8 @@ service cloud.firestore {
 
         isCloudConnected = true;
         updateCloudBadge('online', 'Online: ' + (configObj.projectId || ''));
-        setDiagnosticStatus('ok', 'PoĹ‚Ä…czono!', 'PomyĹ›lnie poĹ‚Ä…czono z <strong>' + (configObj.projectId || '') + '</strong>. Klienci: <strong>' + ((window.clientsData || []).length) + '</strong>, Zlecenia: <strong>' + ((window.appointmentsData || []).length) + '</strong>, Wyceny: <strong>' + ((window.quotesData || []).length) + '</strong>.');
-        if (isInteractiveTest) showToast('PoĹ‚Ä…czono z chmurÄ…!');
+        setDiagnosticStatus('ok', 'Połączono!', 'Pomyślnie połączono z <strong>' + (configObj.projectId || '') + '</strong>. Klienci: <strong>' + ((window.clientsData || []).length) + '</strong>, Zlecenia: <strong>' + ((window.appointmentsData || []).length) + '</strong>, Wyceny: <strong>' + ((window.quotesData || []).length) + '</strong>.');
+        if (isInteractiveTest) showToast('Połączono z chmurÄ…!');
 
         // Optymalizujemy archiwalne podpisy (kompresja) i zapisujemy strukturÄ™ podzielonÄ… do chmury
         await optimizeAllStoredSignatures();
@@ -5382,8 +5398,8 @@ service cloud.firestore {
             if (liveSnap.exists) {
               applyCloudPayload(liveSnap.data());
             }
-          } catch(e) { console.warn('BĹ‚Ä…d nasĹ‚uchu main:', e); }
-        }, err => console.warn('BĹ‚Ä…d nasĹ‚uchu main:', err));
+          } catch(e) { console.warn('Błąd nasĹ‚uchu main:', e); }
+        }, err => console.warn('Błąd nasĹ‚uchu main:', err));
 
         firestoreUnsubscribeClients = clientsDocRef.onSnapshot(liveSnap => {
           try {
@@ -5393,8 +5409,8 @@ service cloud.firestore {
               saveStateToLocalStorage();
               refreshAllViews();
             }
-          } catch(e) { console.warn('BĹ‚Ä…d nasĹ‚uchu clients:', e); }
-        }, err => console.warn('BĹ‚Ä…d nasĹ‚uchu clients:', err));
+          } catch(e) { console.warn('Błąd nasĹ‚uchu clients:', e); }
+        }, err => console.warn('Błąd nasĹ‚uchu clients:', err));
 
         firestoreUnsubscribeAppts = apptsDocRef.onSnapshot(liveSnap => {
           try {
@@ -5404,8 +5420,8 @@ service cloud.firestore {
               saveStateToLocalStorage();
               refreshAllViews();
             }
-          } catch(e) { console.warn('BĹ‚Ä…d nasĹ‚uchu appointments:', e); }
-        }, err => console.warn('BĹ‚Ä…d nasĹ‚uchu appointments:', err));
+          } catch(e) { console.warn('Błąd nasĹ‚uchu appointments:', e); }
+        }, err => console.warn('Błąd nasĹ‚uchu appointments:', err));
 
         firestoreUnsubscribeTpl = tplDocRef.onSnapshot(liveSnap => {
           try {
@@ -5415,8 +5431,8 @@ service cloud.firestore {
               renderProtocolTemplatesManager();
               populateProtocolTemplatesSelect();
             }
-          } catch(e) { console.warn('BĹ‚Ä…d nasĹ‚uchu templates:', e); }
-        }, err => console.warn('BĹ‚Ä…d nasĹ‚uchu templates:', err));
+          } catch(e) { console.warn('Błąd nasĹ‚uchu templates:', e); }
+        }, err => console.warn('Błąd nasĹ‚uchu templates:', err));
 
         firestoreUnsubscribeQuotes = quotesDocRef.onSnapshot(liveSnap => {
           try {
@@ -5427,15 +5443,15 @@ service cloud.firestore {
               if (typeof renderQuotesList === 'function') renderQuotesList();
               if (typeof renderHistoryTable === 'function') renderHistoryTable();
             }
-          } catch(e) { console.warn('BĹ‚Ä…d nasĹ‚uchu quotes:', e); }
-        }, err => console.warn('BĹ‚Ä…d nasĹ‚uchu quotes:', err));
+          } catch(e) { console.warn('Błąd nasĹ‚uchu quotes:', e); }
+        }, err => console.warn('Błąd nasĹ‚uchu quotes:', err));
 
       } catch (err) {
         console.error('Firebase connection error:', err);
         isCloudConnected = false;
-        updateCloudBadge('error', 'BĹ‚Ä…d chmury');
-        setDiagnosticStatus('error', 'Odrzucono poĹ‚Ä…czenie', explainFirestoreError(err, (configObj.projectId || '')));
-        if (isInteractiveTest) showToast('BĹ‚Ä…d poĹ‚Ä…czenia z Firebase!');
+        updateCloudBadge('error', 'Błąd chmury');
+        setDiagnosticStatus('error', 'Odrzucono połączenie', explainFirestoreError(err, (configObj.projectId || '')));
+        if (isInteractiveTest) showToast('Błąd połączenia z Firebase!');
       }
     }
     async function forcePushToCloud() {
@@ -5445,7 +5461,7 @@ service cloud.firestore {
         showToast('WysĹ‚ano dane do chmury (zoptymalizowana struktura 5 dokumentĂłw)!');
       } catch (err) {
         openFirebaseModal();
-        setDiagnosticStatus('error', 'BĹ‚Ä…d wysyĹ‚ania', explainFirestoreError(err, ''));
+        setDiagnosticStatus('error', 'Błąd wysyĹ‚ania', explainFirestoreError(err, ''));
       }
     }
 
@@ -5471,7 +5487,7 @@ service cloud.firestore {
         showToast('Pobrano wszystkie dane z chmury!');
       } catch (err) {
         openFirebaseModal();
-        setDiagnosticStatus('error', 'BĹ‚Ä…d pobierania', explainFirestoreError(err, ''));
+        setDiagnosticStatus('error', 'Błąd pobierania', explainFirestoreError(err, ''));
       }
     }
     function loadLocalData() {
@@ -5504,6 +5520,15 @@ service cloud.firestore {
         window.protocolTemplatesData = Array.isArray(rawTpl) ? rawTpl : [];
       } catch (e) { window.protocolTemplatesData = []; }
       try { const rawQuotes = JSON.parse(localStorage.getItem(STORAGE_KEYS.QUOTES) || '[]'); window.quotesData = Array.isArray(rawQuotes) ? rawQuotes : []; } catch (e) { window.quotesData = []; }
+      try {
+        const rawComp = JSON.parse(localStorage.getItem(STORAGE_KEYS.COMPANY_SETTINGS) || '{}');
+        window.companySettingsData = (rawComp && typeof rawComp === 'object' && Object.keys(rawComp).length > 0) ? rawComp : (typeof getCompanyFullData === 'function' ? getCompanyFullData() : {});
+        if (typeof syncCompanyDataToLocalStorage === 'function') {
+          syncCompanyDataToLocalStorage(window.companySettingsData);
+        }
+      } catch (e) {
+        window.companySettingsData = typeof getCompanyFullData === 'function' ? getCompanyFullData() : {};
+      }
 
       if (!Array.isArray(window.protocolTemplatesData) || window.protocolTemplatesData.length === 0) {
         window.protocolTemplatesData = JSON.parse(JSON.stringify(DEFAULT_PROTOCOL_TEMPLATES));
@@ -5703,6 +5728,175 @@ service cloud.firestore {
       }
     }
 
+    /* ==========================================================================
+       PODPISY SERWISANTÓW (PRZYPISANIE W USTAWIENIACH I WCZYTYWANIE W PROTOKOŁACH)
+       ========================================================================== */
+    function getWorkerSignaturesMap() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEYS.WORKER_SIGNATURES);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return (parsed && typeof parsed === 'object') ? parsed : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function getWorkerSignature(workerName) {
+      if (!workerName) return '';
+      const map = getWorkerSignaturesMap();
+      return map[String(workerName).trim()] || '';
+    }
+
+    function saveWorkerSignature(workerName, dataUrl) {
+      if (!workerName) return false;
+      try {
+        const map = getWorkerSignaturesMap();
+        const key = String(workerName).trim();
+        if (dataUrl) {
+          map[key] = dataUrl;
+        } else {
+          delete map[key];
+        }
+        localStorage.setItem(STORAGE_KEYS.WORKER_SIGNATURES, JSON.stringify(map));
+        return true;
+      } catch (e) {
+        console.error('Błąd zapisu podpisu serwisanta:', e);
+        return false;
+      }
+    }
+
+    let currentWorkerSigTarget = '';
+
+    function openWorkerSignatureModal(workerIndexOrName) {
+      let workerName = '';
+      if (typeof workerIndexOrName === 'number') {
+        workerName = (window.workersData || [])[workerIndexOrName] || '';
+      } else {
+        workerName = String(workerIndexOrName || '').trim();
+      }
+      if (!workerName) return;
+
+      currentWorkerSigTarget = workerName;
+      const targetInput = document.getElementById('worker-sig-current-worker-name');
+      if (targetInput) targetInput.value = workerName;
+      const labelEl = document.getElementById('worker-sig-modal-worker-name');
+      if (labelEl) labelEl.textContent = `Serwisant: ${workerName}`;
+
+      openModal('modal-worker-signature');
+
+      setTimeout(() => {
+        initSignaturePad('worker-sig-canvas');
+        clearSignaturePad('worker-sig-canvas');
+        const existingSig = getWorkerSignature(workerName);
+        if (existingSig) {
+          loadSignatureDataUrlToPad('worker-sig-canvas', existingSig);
+        }
+      }, 70);
+    }
+
+    function handleSaveWorkerSignatureFromModal() {
+      const workerName = currentWorkerSigTarget || document.getElementById('worker-sig-current-worker-name')?.value;
+      if (!workerName) {
+        showToast('Nie wybrano serwisanta!');
+        return;
+      }
+      const sigDataUrl = getSignatureDataUrl('worker-sig-canvas');
+      if (!sigDataUrl) {
+        showToast('Podpis jest pusty! Złóż podpis lub wczytaj plik graficzny.');
+        return;
+      }
+      saveWorkerSignature(workerName, sigDataUrl);
+      persistData();
+      closeModal('modal-worker-signature');
+      renderWorkersList();
+      showToast(`Zapisano podpis dla serwisanta: ${workerName}`);
+    }
+
+    function handleWorkerSignatureFileUpload(event) {
+      const file = event.target?.files?.[0];
+      if (!file) return;
+      event.target.value = '';
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const dataUrl = e.target?.result;
+        if (dataUrl) {
+          initSignaturePad('worker-sig-canvas');
+          loadSignatureDataUrlToPad('worker-sig-canvas', dataUrl, (ok) => {
+            if (ok) {
+              showToast('Wczytano plik podpisu. Kliknij „Zapisz podpis”, aby zapisać.');
+            } else {
+              showToast('Nie udało się wczytać pliku podpisu.');
+            }
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function deleteWorkerSignatureByIdx(idx) {
+      const worker = (window.workersData || [])[idx];
+      if (!worker) return;
+      askConfirmation('Usuwanie podpisu', `Czy na pewno chcesz usunąć zapisany podpis dla "${worker}"?`, () => {
+        saveWorkerSignature(worker, '');
+        persistData();
+        renderWorkersList();
+        showToast(`Usunięto przypisany podpis dla: ${worker}`);
+      });
+    }
+
+    function loadSignatureDataUrlToPad(canvasId, dataUrl, callback) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas || !dataUrl) {
+        if (typeof callback === 'function') callback(false);
+        return;
+      }
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.onload = function() {
+        prepareSignatureCanvasBackground(canvas);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        if (!signaturePadsState[canvasId]) {
+          signaturePadsState[canvasId] = { drawing: false, hasInk: true, initialized: true };
+        } else {
+          signaturePadsState[canvasId].hasInk = true;
+        }
+        if (typeof callback === 'function') callback(true);
+      };
+      img.onerror = function() {
+        if (typeof callback === 'function') callback(false);
+      };
+      img.src = dataUrl;
+    }
+
+    let currentCloseVisitWorkerName = '';
+
+    function loadAssignedWorkerSignature() {
+      const worker = currentCloseVisitWorkerName || (window.workersData && window.workersData[0]) || '';
+      if (!worker) {
+        showToast('Brak przypisanego serwisanta do tego zlecenia.');
+        return;
+      }
+      const sig = getWorkerSignature(worker);
+      if (!sig) {
+        showToast(`Serwisant "${worker}" nie ma jeszcze zapisanego podpisu w Ustawieniach.`);
+        return;
+      }
+      initSignaturePad('sig-canvas-tech');
+      loadSignatureDataUrlToPad('sig-canvas-tech', sig, (ok) => {
+        if (ok) {
+          const badge = document.getElementById('sig-tech-loaded-badge');
+          const badgeName = document.getElementById('sig-tech-loaded-worker-name');
+          if (badge) badge.classList.remove('hidden');
+          if (badgeName) badgeName.textContent = worker;
+          lucide.createIcons();
+          showToast(`Wczytano podpis serwisanta: ${worker}`);
+        } else {
+          showToast('Błąd podczas wczytywania podpisu.');
+        }
+      });
+    }
+
     function openWorkersModal() {
       renderWorkersList();
       openModal('modal-workers');
@@ -5713,21 +5907,43 @@ service cloud.firestore {
       const containerModal = document.getElementById('workers-list-container');
       const workers = window.workersData || [];
 
-      const html = workers.map((w, idx) => `
-        <div class="py-2.5 px-1 flex justify-between items-center text-xs sm:text-sm">
-          <div class="flex items-center gap-2">
+      const html = workers.map((w, idx) => {
+        const hasSig = Boolean(getWorkerSignature(w));
+        return `
+        <div class="py-2.5 px-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs sm:text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800/40 rounded-xl transition">
+          <div class="flex items-center gap-2 flex-wrap">
             <span class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-sm font-bold shrink-0">👷</span>
             <span class="font-extrabold text-zinc-800 dark:text-zinc-100">${escapeHtml(w)}</span>
+            ${hasSig ? `
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
+                <i data-lucide="check" class="w-3 h-3"></i> Podpis zapisany
+              </span>
+            ` : `
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                Brak podpisu
+              </span>
+            `}
           </div>
-          ${workers.length > 1 ? `
-            <button type="button" onclick="confirmRemoveWorker(${idx})" class="text-xs font-bold text-rose-600 hover:text-rose-700 dark:hover:text-rose-400 hover:underline px-2 py-1 rounded transition">
-              Usuń
+          <div class="flex items-center gap-1.5 self-end sm:self-auto shrink-0 flex-wrap">
+            <button type="button" onclick="openWorkerSignatureModal(${idx})" class="px-2.5 py-1 text-xs font-bold rounded-lg border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition flex items-center gap-1 shadow-sm">
+              <i data-lucide="pen-tool" class="w-3 h-3"></i> ${hasSig ? 'Zmień podpis' : 'Przypisz podpis'}
             </button>
-          ` : `
-            <span class="text-[10px] text-zinc-400 italic">Domyślny pracownik</span>
-          `}
+            ${hasSig ? `
+              <button type="button" onclick="deleteWorkerSignatureByIdx(${idx})" title="Usuń podpis serwisanta" class="p-1.5 rounded-lg text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            ` : ''}
+            ${workers.length > 1 ? `
+              <button type="button" onclick="confirmRemoveWorker(${idx})" class="text-xs font-bold text-rose-600 hover:text-rose-700 dark:hover:text-rose-400 hover:underline px-2 py-1 rounded transition">
+                Usuń ekipę
+              </button>
+            ` : `
+              <span class="text-[10px] text-zinc-400 italic px-1">Domyślny</span>
+            `}
+          </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
 
       if (containerSettings) containerSettings.innerHTML = html;
       if (containerModal) containerModal.innerHTML = html;
@@ -5802,24 +6018,25 @@ service cloud.firestore {
                 const customDevAddr = dev ? formatDeviceInstallAddress(dev) : '';
 
                 return `
-                  <div class="p-3 rounded-xl border ${isCanceled ? 'border-rose-200 dark:border-rose-900/50 bg-rose-50/40 dark:bg-rose-950/20' : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900'} flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                  <div class="p-3 rounded-xl border ${isCanceled ? 'border-rose-200 dark:border-rose-900/50 bg-rose-50/40 dark:bg-rose-950/20' : (isDone ? 'border-zinc-200/70 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/30 opacity-75' : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900')} flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                     <div class="min-w-0">
                       <div class="flex items-center gap-2 flex-wrap">
-                        <span class="text-xs font-extrabold ${isCanceled ? 'text-rose-700 bg-rose-100 dark:bg-rose-950 dark:text-rose-300 line-through' : 'text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950'} px-2 py-0.5 rounded-md">${v.time}</span>
-                        <span class="font-bold text-sm text-zinc-900 dark:text-white ${(isDone || isCanceled) ? 'line-through opacity-60' : ''}">
-                          ${client ? `<button type="button" onclick="openClientInDatabase('${client.id}', '${escapeHtml(client.name)}')" class="font-bold text-sm text-zinc-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition text-left cursor-pointer inline-flex items-center gap-1" title="OtwĂłrz kartotekÄ™ klienta w bazie">${escapeHtml(client.name)}</button>` : `<span class="font-bold text-zinc-900 dark:text-white">${escapeHtml(v.clientName || "Klient")}</span>`}
+                        <span class="text-xs font-extrabold ${isCanceled ? 'text-rose-700 bg-rose-100 dark:bg-rose-950 dark:text-rose-300 line-through' : (isDone ? 'text-zinc-600 dark:text-zinc-400 bg-zinc-200 dark:bg-zinc-800 line-through' : 'text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950')} px-2 py-0.5 rounded-md">${v.time}</span>
+                        <span class="font-bold text-sm ${(isDone || isCanceled) ? 'line-through text-zinc-500 dark:text-zinc-400 opacity-75' : 'text-zinc-900 dark:text-white'}">
+                          ${client ? `<button type="button" onclick="openClientInDatabase('${client.id}', '${escapeHtml(client.name)}')" class="font-bold text-sm ${(isDone || isCanceled) ? 'line-through text-zinc-500 dark:text-zinc-400 opacity-75' : 'text-zinc-900 dark:text-white'} hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition text-left cursor-pointer inline-flex items-center gap-1" title="Otwórz kartotekę klienta w bazie">${escapeHtml(client.name)}</button>` : `<span class="font-bold ${(isDone || isCanceled) ? 'line-through text-zinc-500 dark:text-zinc-400 opacity-75' : 'text-zinc-900 dark:text-white'}">${escapeHtml(v.clientName || "Klient")}</span>`}
                           ${(v.isAdHoc || !client) ? '<span class="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 ml-1">Spoza bazy</span>' : ''}
                         </span>
-                        <span class="text-[11px] font-bold ${isMontaz ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200'} px-2 py-0.5 rounded">${v.serviceType}</span>
+                        <span class="text-[11px] font-bold ${(isDone || isCanceled) ? 'line-through opacity-70 ' : ''}${isMontaz ? 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200'} px-2 py-0.5 rounded">${v.serviceType}</span>
                         <button type="button" onclick="openReassignWorkerModal('${v.id}')" class="px-2.5 py-0.5 rounded-lg bg-sky-50 dark:bg-sky-950/70 hover:bg-sky-100 dark:hover:bg-sky-900 border border-sky-300 dark:border-sky-800 text-[11px] font-extrabold text-sky-800 dark:text-sky-300 inline-flex items-center gap-1 transition" title="Przenieś zlecenie (zmień dzień, godzinę lub serwisanta)">
                           👷 ${v.workerName || 'Serwisant 1'} • 📅 Przenieś <i data-lucide="calendar-clock" class="w-3 h-3"></i>
                         </button>
+                        ${isDone ? '<span class="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-extrabold uppercase">Zakończone</span>' : ''}
                         ${isCanceled ? '<span class="px-2 py-0.5 rounded bg-rose-600 text-white text-[10px] font-extrabold uppercase">Anulowane</span>' : ''}
                       </div>
-                      ${isMontaz && v.plannedInstallModel && !dev ? `<div class="text-[11px] font-extrabold text-amber-700 dark:text-amber-300 mt-0.5">🏗️ Do zamontowania: ${getDeviceInfo(v.plannedInstallType).short} — ${v.plannedInstallModel}</div>` : ''}
-                      ${dev ? `<div class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5">🔧 ${dev.deviceModel} ${dev.serialNumber ? `<span class="font-mono text-zinc-500">(S/N: ${dev.serialNumber}${dev.serialNumberOutdoor ? ' / JZ: ' + dev.serialNumberOutdoor : ''})</span>` : ''}</div>` : (v.deviceModel ? `<div class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5">🔧 ${v.deviceModel}</div>` : '')}
-                      ${customDevAddr ? `<div class="text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300 mt-0.5">📍 Miejsce montażu urządzenia: ${customDevAddr}</div>` : ''}
-                      ${v.notes ? `<div class="text-[11px] text-amber-700 dark:text-amber-400 font-medium mt-0.5">📝 Notatka: ${v.notes}</div>` : ''}
+                      ${isMontaz && v.plannedInstallModel && !dev ? `<div class="text-[11px] font-extrabold text-amber-700 dark:text-amber-300 mt-0.5 ${(isDone || isCanceled) ? 'line-through opacity-70' : ''}">🏗️ Do zamontowania: ${getDeviceInfo(v.plannedInstallType).short} — ${v.plannedInstallModel}</div>` : ''}
+                      ${dev ? `<div class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5 ${(isDone || isCanceled) ? 'line-through opacity-70' : ''}">🔧 ${dev.deviceModel} ${dev.serialNumber ? `<span class="font-mono text-zinc-500">(S/N: ${dev.serialNumber}${dev.serialNumberOutdoor ? ' / JZ: ' + dev.serialNumberOutdoor : ''})</span>` : ''}</div>` : (v.deviceModel ? `<div class="text-[11px] font-bold text-teal-700 dark:text-teal-300 mt-0.5 ${(isDone || isCanceled) ? 'line-through opacity-70' : ''}">🔧 ${v.deviceModel}</div>` : '')}
+                      ${customDevAddr ? `<div class="text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300 mt-0.5 ${(isDone || isCanceled) ? 'line-through opacity-70' : ''}">📍 Miejsce montażu urządzenia: ${customDevAddr}</div>` : ''}
+                      ${v.notes ? `<div class="text-[11px] text-amber-700 dark:text-amber-400 font-medium mt-0.5 ${(isDone || isCanceled) ? 'line-through opacity-70' : ''}">📝 Notatka: ${v.notes}</div>` : ''}
                       ${v.completionComment ? `<div class="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold mt-0.5">✅ Wykonano: ${v.completionComment}</div>` : ''}
                       ${v.protocolData ? `<div class="mt-1"><button onclick="openProtocolPreviewByVisit('${v.id}')" class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-extrabold inline-flex items-center gap-1 shadow-sm"><i data-lucide="file-text" class="w-3 h-3"></i> Podgląd protokołu / PDF</button></div>` : ''}
                       ${v.cancelReason ? `<div class="text-[11px] text-rose-600 dark:text-rose-400 font-bold mt-0.5">❌ Powód anulowania: ${v.cancelReason}</div>` : ''}
@@ -5943,7 +6160,7 @@ service cloud.firestore {
               <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                 <div>
                   <div class="flex items-center gap-2 flex-wrap">
-                    <button type="button" onclick="openClientInDatabase('${client.id}', '${escapeHtml(client.name)}')" class="font-bold text-sm text-zinc-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition text-left cursor-pointer" title="OtwĂłrz kartotekÄ™ klienta w bazie">${escapeHtml(client.name)}</button>
+                    <button type="button" onclick="openClientInDatabase('${client.id}', '${escapeHtml(client.name)}')" class="font-bold text-sm text-zinc-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition text-left cursor-pointer" title="Otwórz kartotekę klienta w bazie">${escapeHtml(client.name)}</button>
                     <span class="text-xs font-semibold text-zinc-500">(${device.deviceModel}${device.serialNumber ? ` • S/N: ${device.serialNumber}` : ''})</span>
                     ${getWarrantyBadgeHtml(status)}
                   </div>
@@ -5979,7 +6196,7 @@ service cloud.firestore {
                     <button type="button" onclick="openReassignWorkerModal('${scheduledVisit.id}')" class="px-2.5 py-0.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-extrabold inline-flex items-center gap-1 shadow-sm transition" title="Przenieś zlecenie na inny dzień, godzinę lub zmień serwisanta">
                       👷 ${scheduledVisit.workerName || 'Serwisant 1'} • Przenieś <i data-lucide="calendar-clock" class="w-3 h-3"></i>
                     </button>
-                    <button type="button" onclick="openClientInDatabase('${client.id}', '${escapeHtml(client.name)}')" class="font-extrabold text-sm text-zinc-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition text-left cursor-pointer" title="OtwĂłrz kartotekÄ™ klienta w bazie">${escapeHtml(client.name)}</button>
+                    <button type="button" onclick="openClientInDatabase('${client.id}', '${escapeHtml(client.name)}')" class="font-extrabold text-sm text-zinc-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition text-left cursor-pointer" title="Otwórz kartotekę klienta w bazie">${escapeHtml(client.name)}</button>
                     ${getWarrantyBadgeHtml(status)}
                   </div>
                   <div class="text-xs font-bold text-teal-800 dark:text-teal-300">
@@ -6205,7 +6422,7 @@ service cloud.firestore {
       if (sel) sel.value = 'near_route';
       updateRouteCorridorButtonState(true);
       renderMapMarkers();
-      showToast('WyĹ›wietlono na mapie klientĂłw przy trasie (korytarz 10 km)');
+      showToast('WyĹ›wietlono na mapie klientów przy trasie (korytarz 10 km)');
     }
 
     function renderMapMarkers() {
@@ -6629,22 +6846,23 @@ service cloud.firestore {
                 const isCanceled = v.status === 'canceled';
                 const isDone = v.status === 'completed';
                 return `
-                  <div class="p-2.5 ${isCanceled ? 'bg-rose-50/50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/50' : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200/60 dark:border-zinc-700'} rounded-xl text-xs space-y-1 border">
+                  <div class="p-2.5 ${isCanceled ? 'bg-rose-50/50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/50' : (isDone ? 'bg-zinc-100/70 dark:bg-zinc-800/40 border-zinc-200/70 dark:border-zinc-800 opacity-75' : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200/60 dark:border-zinc-700')} rounded-xl text-xs space-y-1 border">
                     <div class="flex justify-between items-center gap-1">
-                      <span class="font-extrabold ${isCanceled ? 'text-rose-600 line-through' : 'text-emerald-700 dark:text-emerald-300'}">${v.time} • ${v.serviceType || 'Wizyta'}</span>
+                      <span class="font-extrabold ${isCanceled ? 'text-rose-600 line-through' : (isDone ? 'text-zinc-500 dark:text-zinc-400 line-through' : 'text-emerald-700 dark:text-emerald-300')}">${v.time} • ${v.serviceType || 'Wizyta'}</span>
                       <div class="flex items-center gap-0.5">
                         ${!isDone ? `<button onclick="cancelOrRestoreVisit('${v.id}')" class="text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-950 p-1 rounded" title="${isCanceled ? 'Przywróć zlecenie' : 'Anuluj zlecenie'}"><i data-lucide="ban" class="w-3.5 h-3.5"></i></button>` : ''}
                         <button onclick="deleteVisit('${v.id}')" class="text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950 p-1 rounded inline-flex items-center" title="Usuń całkowicie zlecenie (wymaga hasła)"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                       </div>
                     </div>
-                    <div class="font-bold text-zinc-900 dark:text-white truncate ${(isCanceled || isDone) ? 'line-through opacity-60' : ''}">
-                      ${client ? `<button type="button" onclick="openClientInDatabase('${client.id}', '${escapeHtml(client.name)}')" class="font-bold text-zinc-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition text-left truncate cursor-pointer" title="OtwĂłrz w bazie klientĂłw">${escapeHtml(client.name)}</button>` : `<span>${escapeHtml(clientName)}</span>`}
+                    <div class="font-bold text-zinc-900 dark:text-white truncate">
+                      ${client ? `<button type="button" onclick="openClientInDatabase('${client.id}', '${escapeHtml(client.name)}')" class="font-bold ${(isCanceled || isDone) ? 'line-through text-zinc-500 dark:text-zinc-400 opacity-75' : 'text-zinc-900 dark:text-white'} hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition text-left truncate cursor-pointer" title="Otwórz w bazie klientów">${escapeHtml(client.name)}</button>` : `<span class="${(isCanceled || isDone) ? 'line-through text-zinc-500 dark:text-zinc-400 opacity-75' : ''}">${escapeHtml(clientName)}</span>`}
                       ${isAdHoc ? '<span class="text-[9px] bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 px-1 py-0.5 rounded font-extrabold ml-1">Spoza bazy</span>' : ''}
                     </div>
+                    ${isDone ? '<div class="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 uppercase">✓ Zakończone</div>' : ''}
                     ${isCanceled ? '<div class="text-[10px] font-extrabold text-rose-600 uppercase">Anulowane</div>' : ''}
-                    ${dev ? `<div class="text-[10px] text-teal-600 dark:text-teal-400 font-semibold truncate">🔧 ${dev.deviceModel}</div>` : (v.deviceModel ? `<div class="text-[10px] text-teal-600 dark:text-teal-400 font-semibold truncate">🔧 ${v.deviceModel}</div>` : '')}
-                    ${devAddr ? `<div class="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold truncate">📍 ${devAddr}</div>` : ''}
-                    ${v.notes ? `<div class="text-[10px] text-amber-600 dark:text-amber-400 font-medium truncate">📝 ${v.notes}</div>` : ''}
+                    ${dev ? `<div class="text-[10px] text-teal-600 dark:text-teal-400 font-semibold truncate ${(isDone || isCanceled) ? 'line-through opacity-70' : ''}">🔧 ${dev.deviceModel}</div>` : (v.deviceModel ? `<div class="text-[10px] text-teal-600 dark:text-teal-400 font-semibold truncate ${(isDone || isCanceled) ? 'line-through opacity-70' : ''}">🔧 ${v.deviceModel}</div>` : '')}
+                    ${devAddr ? `<div class="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold truncate ${(isDone || isCanceled) ? 'line-through opacity-70' : ''}">📍 ${devAddr}</div>` : ''}
+                    ${v.notes ? `<div class="text-[10px] text-amber-600 dark:text-amber-400 font-medium truncate ${(isDone || isCanceled) ? 'line-through opacity-70' : ''}">📝 ${v.notes}</div>` : ''}
                     ${v.protocolData ? `<button type="button" onclick="openProtocolPreviewByVisit('${v.id}')" class="w-full mt-1 px-2 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-extrabold flex items-center justify-center gap-1 shadow-sm"><i data-lucide="file-text" class="w-3 h-3"></i> Protokół PDF</button>` : ''}
                     <button type="button" onclick="openReassignWorkerModal('${v.id}')" class="w-full mt-1 px-2 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 border border-sky-200 dark:border-sky-800 text-[10px] font-extrabold text-sky-700 dark:text-sky-300 flex items-center justify-between transition" title="Przenieś zlecenie (zmień dzień, godzinę lub serwisanta)">
                       <span class="truncate">👷 ${v.workerName || 'Serwisant 1'}</span>
@@ -7379,7 +7597,7 @@ service cloud.firestore {
           return `
         <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
           <td class="py-3 px-4 font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">${formatDatePL(h.date)}</td>
-          <td class="py-3 px-4 font-bold text-zinc-900 dark:text-white"><button type="button" onclick="openClientInDatabase('${h.clientId || ""}', '${escapeHtml(h.clientName)}')" class="font-bold text-zinc-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition text-left cursor-pointer" title="OtwĂłrz klienta w bazie">${escapeHtml(h.clientName)}</button> <span class="text-xs text-zinc-400 font-normal">(${h.clientCity || "brak"})</span></td>
+          <td class="py-3 px-4 font-bold text-zinc-900 dark:text-white"><button type="button" onclick="openClientInDatabase('${h.clientId || ""}', '${escapeHtml(h.clientName)}')" class="font-bold text-zinc-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition text-left cursor-pointer" title="Otwórz klienta w bazie">${escapeHtml(h.clientName)}</button> <span class="text-xs text-zinc-400 font-normal">(${h.clientCity || "brak"})</span></td>
           <td class="py-3 px-4 text-zinc-700 dark:text-zinc-300 font-medium">
             <div class="flex flex-col gap-1">
               <span>${h.deviceModel}</span>
@@ -7408,7 +7626,7 @@ service cloud.firestore {
         return `
         <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
           <td class="py-3 px-4 font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">${formatDatePL(h.date)}</td>
-          <td class="py-3 px-4 font-bold text-zinc-900 dark:text-white"><button type="button" onclick="openClientInDatabase('${h.clientId || ""}', '${escapeHtml(h.clientName)}')" class="font-bold text-zinc-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition text-left cursor-pointer" title="OtwĂłrz klienta w bazie">${escapeHtml(h.clientName)}</button> <span class="text-xs text-zinc-400 font-normal">(${h.clientCity})</span></td>
+          <td class="py-3 px-4 font-bold text-zinc-900 dark:text-white"><button type="button" onclick="openClientInDatabase('${h.clientId || ""}', '${escapeHtml(h.clientName)}')" class="font-bold text-zinc-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition text-left cursor-pointer" title="Otwórz klienta w bazie">${escapeHtml(h.clientName)}</button> <span class="text-xs text-zinc-400 font-normal">(${h.clientCity})</span></td>
           <td class="py-3 px-4 text-zinc-700 dark:text-zinc-300 font-medium">
             <div class="flex flex-col gap-1">
               <span>${h.deviceModel}</span>
@@ -8434,7 +8652,7 @@ service cloud.firestore {
       const preset = document.getElementById('visit-type-preset').value;
       const customVal = (document.getElementById('visit-type-custom').value || '').trim();
       const serviceType = preset === 'custom' ? (customVal || 'Serwis') : preset;
-      const isMontaz = preset === 'Montaż';
+      const isMontaz = preset === 'Montaż' || serviceType.toLowerCase().includes('monta');
       const deviceId = isMontaz ? '' : (isAdHoc ? '' : (document.getElementById('visit-device-select').value || ''));
       const plannedInstallType = isMontaz ? (document.getElementById('visit-new-dev-type')?.value || 'heat_pump') : '';
       const plannedInstallCustomType = (isMontaz && plannedInstallType === 'custom') ? (document.getElementById('visit-new-dev-custom-type')?.value || '').trim() : '';
@@ -9042,6 +9260,7 @@ service cloud.firestore {
       const isAc = devType === 'ac';
 
       document.getElementById('close-visit-id').value = visit.id;
+      currentCloseVisitWorkerName = visit.workerName || '';
       document.getElementById('close-visit-comment').value = isMontaz
         ? `Zamontowano i uruchomiono urządzenie: ${visit.plannedInstallModel || 'HVAC'}.${visit.notes ? ' (' + visit.notes + ')' : ''}`
         : (visit.notes ? `Wykonano: ${visit.serviceType}. (${visit.notes})` : `Wykonano: ${visit.serviceType} — urządzenie sprawne.`);
@@ -9483,40 +9702,78 @@ service cloud.firestore {
         const devTypeInfo = getDeviceInfo(newType, newCustomType);
         savedProtocol = buildProtocolDataFromModal(visit, client, newModel, newSerial, newSerialOutdoor, newDevNotes, comment, devTypeInfo.short, formattedCustomInstallAddr);
 
-        const createdDevId = `dev_${Date.now()}`;
         const histId = `h_install_${Date.now()}`;
-        targetHistoryDeviceId = createdDevId;
         targetHistoryItemId = histId;
 
-        client.devices = [...(client.devices || []), {
-          id: createdDevId,
-          deviceType: newType,
-          customTypeLabel: newCustomType,
-          deviceModel: newModel,
-          serialNumber: newSerial,
-          serialNumberOutdoor: newSerialOutdoor,
-          deviceNotes: newDevNotes,
-          ...newDevObj,
-          ourUnknownDate: false,
-          noInstallDate: false,
-          installDate,
-          warrantyMonths: newWarranty,
-          lastInspectionDate: installDate,
-          nextInspectionDate: addMonths(installDate, 12),
-          inspectionIntervalMonths: 12,
-          remindersCanceled: false,
-          inspectionHistory: [
-            {
-              id: histId,
-              date: installDate,
-              actionType: 'Montaż i uruchomienie',
-              technician: visit.workerName || 'Ekipa Montażowa',
-              notes: comment,
-              protocolData: savedProtocol
+        // Jeśli urządzenie zostało już wcześniej przypisane/utworzone dla tej wizyty, aktualizujemy je zamiast duplikować
+        if (visit.deviceId && Array.isArray(client.devices) && client.devices.some(d => d.id === visit.deviceId)) {
+          const devId = visit.deviceId;
+          targetHistoryDeviceId = devId;
+          client.devices = client.devices.map(d => {
+            if (d.id === devId) {
+              const existingHist = Array.isArray(d.inspectionHistory) ? d.inspectionHistory : [];
+              return {
+                ...d,
+                deviceType: newType,
+                customTypeLabel: newCustomType,
+                deviceModel: newModel,
+                serialNumber: newSerial,
+                serialNumberOutdoor: newSerialOutdoor,
+                deviceNotes: newDevNotes,
+                ...newDevObj,
+                installDate,
+                warrantyMonths: newWarranty,
+                lastInspectionDate: installDate,
+                nextInspectionDate: addMonths(installDate, 12),
+                inspectionHistory: [
+                  ...existingHist,
+                  {
+                    id: histId,
+                    date: installDate,
+                    actionType: 'Montaż i uruchomienie',
+                    technician: visit.workerName || 'Ekipa Montażowa',
+                    notes: comment,
+                    protocolData: savedProtocol
+                  }
+                ]
+              };
             }
-          ]
-        }];
-        visit.deviceId = createdDevId;
+            return d;
+          });
+        } else {
+          // Pierwsze zamknięcie zlecenia montażu: tworzymy nowe urządzenie w bazie klienta
+          const createdDevId = `dev_${Date.now()}`;
+          targetHistoryDeviceId = createdDevId;
+          client.devices = [...(client.devices || []), {
+            id: createdDevId,
+            deviceType: newType,
+            customTypeLabel: newCustomType,
+            deviceModel: newModel,
+            serialNumber: newSerial,
+            serialNumberOutdoor: newSerialOutdoor,
+            deviceNotes: newDevNotes,
+            ...newDevObj,
+            ourUnknownDate: false,
+            noInstallDate: false,
+            installDate,
+            warrantyMonths: newWarranty,
+            lastInspectionDate: installDate,
+            nextInspectionDate: addMonths(installDate, 12),
+            inspectionIntervalMonths: 12,
+            remindersCanceled: false,
+            inspectionHistory: [
+              {
+                id: histId,
+                date: installDate,
+                actionType: 'Montaż i uruchomienie',
+                technician: visit.workerName || 'Ekipa Montażowa',
+                notes: comment,
+                protocolData: savedProtocol
+              }
+            ]
+          }];
+          visit.deviceId = createdDevId;
+        }
         visit.protocolData = savedProtocol;
       } else if (client) {
         const protoSnIn = (document.getElementById('proto-inst-sn-in')?.value || '').trim();
@@ -10370,7 +10627,7 @@ service cloud.firestore {
       const phoneIn = document.getElementById('settings-company-phone'); if (phoneIn) phoneIn.value = getSavedCompanyPhone();
       const emailIn = document.getElementById('settings-company-email'); if (emailIn) emailIn.value = getSavedCompanyEmail();
       const webIn = document.getElementById('settings-company-website'); if (webIn) webIn.value = getSavedCompanyWebsite();
-      const bankIn = document.getElementById('settings-company-bank'); if (bankIn) bankIn.value = getSavedCompanyBankAccount();
+      const bankIn = document.getElementById('settings-company-bank-account') || document.getElementById('settings-company-bank'); if (bankIn) bankIn.value = getSavedCompanyBankAccount();
 
       const latInput = document.getElementById("settings-company-lat"); if (latInput) latInput.value = getSavedCompanyLat() || "";
       const lngInput = document.getElementById("settings-company-lng"); if (lngInput) lngInput.value = getSavedCompanyLng() || "";
@@ -10516,15 +10773,35 @@ service cloud.firestore {
       }
     }
 
+    function syncCompanyDataToLocalStorage(compObj) {
+      if (!compObj || typeof compObj !== 'object') return;
+      window.companySettingsData = compObj;
+      safeLocalStorageSet(STORAGE_KEYS.COMPANY_SETTINGS, JSON.stringify(compObj));
+      if (compObj.name) { localStorage.setItem(STORAGE_KEYS.COMPANY_NAME, compObj.name); localStorage.setItem('pp_company_name', compObj.name); }
+      if (compObj.subtitle) { localStorage.setItem(STORAGE_KEYS.COMPANY_SUBTITLE, compObj.subtitle); localStorage.setItem('pp_company_subtitle', compObj.subtitle); }
+      if (compObj.fgaz) { localStorage.setItem(STORAGE_KEYS.COMPANY_FGAZ, compObj.fgaz); localStorage.setItem('pp_company_fgaz', compObj.fgaz); }
+      if (compObj.nip) { localStorage.setItem('pp_company_nip', compObj.nip); localStorage.setItem('servitrack_company_nip', compObj.nip); }
+      if (compObj.regon) { localStorage.setItem('pp_company_regon', compObj.regon); localStorage.setItem('servitrack_company_regon', compObj.regon); }
+      if (compObj.street) { localStorage.setItem('pp_company_street', compObj.street); localStorage.setItem('servitrack_company_street', compObj.street); }
+      if (compObj.postal) { localStorage.setItem('pp_company_postal', compObj.postal); localStorage.setItem('servitrack_company_postal', compObj.postal); }
+      if (compObj.city) { localStorage.setItem('pp_company_city', compObj.city); localStorage.setItem('servitrack_company_city', compObj.city); }
+      if (compObj.phone) { localStorage.setItem('pp_company_phone', compObj.phone); localStorage.setItem('servitrack_company_phone', compObj.phone); }
+      if (compObj.email) { localStorage.setItem('pp_company_email', compObj.email); localStorage.setItem('servitrack_company_email', compObj.email); }
+      if (compObj.website) { localStorage.setItem('pp_company_website', compObj.website); localStorage.setItem('servitrack_company_website', compObj.website); }
+      if (compObj.bank) { localStorage.setItem('pp_company_bank', compObj.bank); localStorage.setItem('servitrack_company_bank', compObj.bank); }
+      if (compObj.lat && compObj.lng) {
+        localStorage.setItem(STORAGE_KEYS.COMPANY_LAT, String(compObj.lat));
+        localStorage.setItem(STORAGE_KEYS.COMPANY_LNG, String(compObj.lng));
+        localStorage.setItem('servitrack_company_lat', String(compObj.lat));
+        localStorage.setItem('servitrack_company_lng', String(compObj.lng));
+      }
+    }
+
     function handleSaveCompanySettings(e) {
       if (e) e.preventDefault();
       const name = (document.getElementById('settings-company-name')?.value || '').trim() || 'INSTAL';
       const fgaz = (document.getElementById('settings-company-fgaz')?.value || '').trim() || 'FGAZ-P/27/0109/22';
       const sub = (document.getElementById('settings-company-subtitle')?.value || '').trim() || 'Systemy Klimatyzacji, Pomp Ciepła i Kotłów Gazowych';
-
-      localStorage.setItem(STORAGE_KEYS.COMPANY_NAME, name);
-      localStorage.setItem(STORAGE_KEYS.COMPANY_FGAZ, fgaz);
-      localStorage.setItem(STORAGE_KEYS.COMPANY_SUBTITLE, sub);
       const nip = (document.getElementById('settings-company-nip')?.value || '').trim();
       const regon = (document.getElementById('settings-company-regon')?.value || '').trim();
       const street = (document.getElementById('settings-company-street')?.value || '').trim();
@@ -10533,27 +10810,31 @@ service cloud.firestore {
       const phone = (document.getElementById('settings-company-phone')?.value || '').trim();
       const email = (document.getElementById('settings-company-email')?.value || '').trim();
       const website = (document.getElementById('settings-company-website')?.value || '').trim();
-      const bank = (document.getElementById('settings-company-bank')?.value || '').trim();
-
-      if (nip) { localStorage.setItem('pp_company_nip', nip); localStorage.setItem('servitrack_company_nip', nip); }
-      if (regon) { localStorage.setItem('pp_company_regon', regon); localStorage.setItem('servitrack_company_regon', regon); }
-      if (street) { localStorage.setItem('pp_company_street', street); localStorage.setItem('servitrack_company_street', street); }
-      if (postal) { localStorage.setItem('pp_company_postal', postal); localStorage.setItem('servitrack_company_postal', postal); }
-      if (city) { localStorage.setItem('pp_company_city', city); localStorage.setItem('servitrack_company_city', city); }
-      if (phone) { localStorage.setItem('pp_company_phone', phone); localStorage.setItem('servitrack_company_phone', phone); }
-      if (email) { localStorage.setItem('pp_company_email', email); localStorage.setItem('servitrack_company_email', email); }
-      if (website) { localStorage.setItem('pp_company_website', website); localStorage.setItem('servitrack_company_website', website); }
-      if (bank) { localStorage.setItem('pp_company_bank', bank); localStorage.setItem('servitrack_company_bank', bank); }
+      const bank = (document.getElementById('settings-company-bank-account')?.value || document.getElementById('settings-company-bank')?.value || '').trim();
 
       const latVal = parseFloat(document.getElementById('settings-company-lat')?.value);
       const lngVal = parseFloat(document.getElementById('settings-company-lng')?.value);
-      if (!isNaN(latVal) && !isNaN(lngVal) && latVal > 40 && latVal < 60) {
-        localStorage.setItem(STORAGE_KEYS.COMPANY_LAT, String(latVal));
-        localStorage.setItem(STORAGE_KEYS.COMPANY_LNG, String(lngVal));
-        localStorage.setItem('servitrack_company_lat', String(latVal));
-        localStorage.setItem('servitrack_company_lng', String(lngVal));
-      }
+      const validCoords = (!isNaN(latVal) && !isNaN(lngVal) && latVal > 40 && latVal < 60);
 
+      const compObj = {
+        name,
+        fgaz,
+        subtitle: sub,
+        nip,
+        regon,
+        street,
+        postal,
+        city,
+        phone,
+        email,
+        website,
+        bank,
+        lat: validCoords ? latVal : (parseFloat(getSavedCompanyLat()) || 52.4064),
+        lng: validCoords ? lngVal : (parseFloat(getSavedCompanyLng()) || 16.9252)
+      };
+
+      syncCompanyDataToLocalStorage(compObj);
+      persistData();
       renderSettings();
       showToast('Dane firmy zostały pomyślnie zaktualizowane!');
     }
@@ -12974,17 +13255,7 @@ service cloud.firestore {
        16. MODUŁ: PEŁNY OFFLINE I PWA (SERVICE WORKER & STATUS SIECI)
        ========================================================================== */
     function initOfflineAndPwa() {
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js')
-            .then(reg => {
-              console.log('ServiTrack SW zarejestrowany pomyślnie:', reg.scope);
-            })
-            .catch(err => {
-              console.warn('Rejestracja ServiTrack SW nie powiodła się:', err);
-            });
-        });
-      }
+      // Service Worker registration disabled to guarantee fresh updates on mobile devices
 
       function updateNetworkStatus() {
         const isOnline = navigator.onLine;
@@ -13284,7 +13555,7 @@ service cloud.firestore {
 
       runRouteOptimization();
 
-      // Podliczamy klientĂłw w korytarzu trasy (do 10 km)
+      // Podliczamy klientów w korytarzu trasy (do 10 km)
       const nearCountEl = document.getElementById('route-opt-near-clients-count');
       const nearDescEl = document.getElementById('route-opt-corridor-desc');
       if (nearCountEl) {
@@ -13309,8 +13580,8 @@ service cloud.firestore {
         nearCountEl.innerText = nearCount;
         if (nearDescEl) {
           nearDescEl.innerText = nearCount > 0
-            ? `W korytarzu trasy (do 10 km) znaleziono ${nearCount} klientĂłw z bazy${overdueCount > 0 ? ` (w tym ${overdueCount} z zalegĹ‚ym przeglÄ…dem)` : ''}.`
-            : `Brak innych klientĂłw z bazy w promieniu 10 km od tej trasy.`;
+            ? `W korytarzu trasy (do 10 km) znaleziono ${nearCount} klientów z bazy${overdueCount > 0 ? ` (w tym ${overdueCount} z zalegĹ‚ym przeglÄ…dem)` : ''}.`
+            : `Brak innych klientów z bazy w promieniu 10 km od tej trasy.`;
         }
       }
 
@@ -13887,7 +14158,7 @@ service cloud.firestore {
         caches.keys().then(keys => {
           keys.forEach(k => {
             caches.delete(k);
-            console.log('ServiTrack: UsuniÄ™to cache PWA:', k);
+            console.log('ServiTrack: Usunięto cache PWA:', k);
           });
         }).catch(() => {});
       }
@@ -13905,6 +14176,28 @@ service cloud.firestore {
 
     // 1. Pobieranie danych firmy z Ustawień (Dynamiczne, brak hardcodowanych danych)
     function getCompanyFullData() {
+      if (window.companySettingsData && typeof window.companySettingsData === 'object' && window.companySettingsData.name) {
+        const d = window.companySettingsData;
+        const addrParts = [];
+        if (d.street) addrParts.push(d.street);
+        if (d.postal || d.city) addrParts.push(`${d.postal || ''} ${d.city || ''}`.trim());
+        return {
+          name: d.name || 'Twoja Firma',
+          subtitle: d.subtitle || 'Systemy Klimatyzacji, Pomp Ciepła i Kotłów Gazowych',
+          fgaz: d.fgaz || '',
+          nip: d.nip || '',
+          regon: d.regon || '',
+          street: d.street || '',
+          postal: d.postal || '',
+          city: d.city || '',
+          address: addrParts.join(', '),
+          phone: d.phone || '',
+          email: d.email || '',
+          website: d.website || '',
+          bank: d.bank || ''
+        };
+      }
+
       let name = 'Twoja Firma';
       let subtitle = 'Systemy Klimatyzacji, Pomp Ciepła i Kotłów Gazowych';
       let fgaz = '';
@@ -14062,6 +14355,138 @@ service cloud.firestore {
     }
 
     // 2. Gotowe szablony wycen — BEZ CEN (ceny puste do wpisania przez instalatora)
+        let currentQuoteRows = [
+      { name: '', qty: 1, unit: 'szt.', salePrice: '' }
+    ];
+
+    function addQuoteRow(initialData = { name: '', qty: 1, unit: 'szt.', salePrice: '' }) {
+      currentQuoteRows.push({ ...initialData });
+      renderQuoteRows();
+      recalcQuoteTotals();
+    }
+
+    function removeQuoteRow(index) {
+      if (currentQuoteRows.length <= 1) {
+        currentQuoteRows = [{ name: '', qty: 1, unit: 'szt.', salePrice: '' }];
+      } else {
+        currentQuoteRows.splice(index, 1);
+      }
+      renderQuoteRows();
+      recalcQuoteTotals();
+    }
+
+    function renderQuoteRows() {
+      const tbody = document.getElementById('quote-items-tbody');
+      if (!tbody) return;
+
+      tbody.innerHTML = currentQuoteRows.map((row, idx) => `
+        <tr class="border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/40 transition">
+          <td class="p-2.5 text-center font-bold text-xs text-zinc-400 dark:text-zinc-500">${idx + 1}.</td>
+          <td class="p-2.5">
+            <textarea
+              rows="2"
+              placeholder="Wpisz opis pozycji lub zakres prac..."
+              oninput="currentQuoteRows[${idx}].name = this.value"
+              class="quote-item-name w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs outline-none leading-relaxed text-zinc-900 dark:text-zinc-100 resize-y">${escapeHtml(row.name || '')}</textarea>
+          </td>
+          <td class="p-2.5 w-36">
+            <div class="flex items-center gap-1">
+              <input
+                type="number"
+                step="any"
+                min="0.01"
+                value="${row.qty !== undefined && row.qty !== '' ? row.qty : 1}"
+                oninput="currentQuoteRows[${idx}].qty = parseFloat(this.value) || 0; recalcQuoteTotals()"
+                class="quote-item-qty w-16 px-2 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs font-mono font-bold text-center outline-none text-zinc-900 dark:text-zinc-100">
+              <select
+                onchange="currentQuoteRows[${idx}].unit = this.value"
+                class="w-16 px-1 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-[11px] font-bold outline-none text-zinc-700 dark:text-zinc-300">
+                <option value="szt." ${(row.unit || 'szt.') === 'szt.' ? 'selected' : ''}>szt.</option>
+                <option value="kpl." ${row.unit === 'kpl.' ? 'selected' : ''}>kpl.</option>
+                <option value="m.b." ${row.unit === 'm.b.' ? 'selected' : ''}>m.b.</option>
+                <option value="godz." ${row.unit === 'godz.' ? 'selected' : ''}>godz.</option>
+                <option value="usł." ${row.unit === 'usł.' ? 'selected' : ''}>usł.</option>
+              </select>
+            </div>
+          </td>
+          <td class="p-2.5 w-36 text-right">
+            <div class="relative">
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                value="${row.salePrice !== undefined && row.salePrice !== '' ? row.salePrice : ''}"
+                oninput="currentQuoteRows[${idx}].salePrice = this.value === '' ? '' : parseFloat(this.value); recalcQuoteTotals()"
+                class="quote-item-price w-full pl-2 pr-6 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs font-mono font-bold text-right outline-none text-emerald-600 dark:text-emerald-400">
+              <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-zinc-400 pointer-events-none">zł</span>
+            </div>
+          </td>
+          <td class="p-2.5 w-10 text-center">
+            <button
+              type="button"
+              onclick="removeQuoteRow(${idx})"
+              class="p-1 text-zinc-400 hover:text-rose-500 rounded transition"
+              title="Usuń pozycję">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+
+      if (window.lucide && typeof lucide.createIcons === 'function') {
+        lucide.createIcons();
+      }
+    }
+
+    function recalcQuoteTotals() {
+      let sumBrutto = 0;
+      (currentQuoteRows || []).forEach(r => {
+        const q = parseFloat(r.qty) || 0;
+        const p = parseFloat(r.salePrice) || 0;
+        sumBrutto += (q * p);
+      });
+
+      const vatRateInp = document.getElementById('quote-vat-rate');
+      let vatRate = vatRateInp ? parseFloat(vatRateInp.value) : 8;
+      if (isNaN(vatRate) || vatRate < 0) vatRate = 0;
+
+      const sumNetto = sumBrutto / (1 + (vatRate / 100));
+      const sumVat = sumBrutto - sumNetto;
+
+      const elBrutto = document.getElementById('quote-sum-brutto');
+      const elNetto = document.getElementById('quote-sum-netto');
+      const elVat = document.getElementById('quote-sum-vat');
+      const elVatLabel = document.getElementById('quote-vat-label');
+      const elSlownie = document.getElementById('quote-sum-slownie');
+
+      if (elBrutto) elBrutto.innerText = `${sumBrutto.toFixed(2)} zł`;
+      if (elNetto) elNetto.innerText = `${sumNetto.toFixed(2)} zł`;
+      if (elVat) elVat.innerText = `${sumVat.toFixed(2)} zł`;
+      if (elVatLabel) elVatLabel.innerText = `${vatRate}%`;
+      if (elSlownie) elSlownie.innerText = slowniePL(sumBrutto);
+
+      return {
+        sumBrutto: Math.round(sumBrutto * 100) / 100,
+        sumNetto: Math.round(sumNetto * 100) / 100,
+        sumVat: Math.round(sumVat * 100) / 100,
+        vatRate: vatRate
+      };
+    }
+
+    function setQuoteVatRate(rate) {
+      const vatRateInp = document.getElementById('quote-vat-rate');
+      if (vatRateInp) {
+        vatRateInp.value = rate;
+        recalcQuoteTotals();
+      }
+    }
+    window.addQuoteRow = addQuoteRow;
+    window.removeQuoteRow = removeQuoteRow;
+    window.renderQuoteRows = renderQuoteRows;
+    window.recalcQuoteTotals = recalcQuoteTotals;
+    window.setQuoteVatRate = setQuoteVatRate;
+
     const QUOTE_PRESETS = {
       manual_blank: {
         title: 'Wycena prac instalacyjnych HVAC',
@@ -14138,192 +14563,262 @@ service cloud.firestore {
           { name: 'Montaż pompa i kotłownia + pierwsze uruchomienie', qty: 1, unit: 'kpl.', salePrice: '' },
           { name: 'Materiał hydraulika + elektryka + chłodnictwo (stelaż, armatura, separator, zawór 3-dr)', qty: 1, unit: 'kpl.', salePrice: '' }
         ],
+        powerVariants: [
+          { power: '4 kW', price: '', note: '70-90 m²' },
+          { power: '6 kW', price: '', note: '90-110 m²' },
+          { power: '8 kW', price: '', note: '110-150 m²' },
+          { power: '10 kW', price: '', note: '150-180 m²' },
+          { power: '12 kW', price: '', note: '180-250 m²' }
+        ],
         features: [
           'Zintegrowany zbiornik CWU 220L ze stali nierdzewnej INOX',
-          'Sterowanie przez aplikację mobilną ViCare (wbudowany moduł WiFi)',
-          'Wyjątkowo cicha praca jednostki zewnętrznej Advanced Acoustic Design',
-          'Klasa energetyczna A+++'
+          'Cicha praca jednostki zewnętrznej i kompaktowe wymiary',
+          'Sterowanie ze smartfona przez aplikację ViCare'
         ],
         warranty: '5 lat gwarancji producenta Viessmann',
         validityDays: 30,
-        notes: '- Zestawienie orientacyjne, może ulec zmianie.\n- Inwestor zobowiązuje się do dostarczenia przewodu zasilającego 400V do pomieszczenia kotłowni.\n- Wykonanie postumentu pod stelaż zewnętrzny NIE wchodzi w skład oferty.\n- Długość rurociągu chłodniczego zawarta w ofercie - do 5mb.'
+        notes: '- Zestawienie orientacyjne, może ulec zmianie.\n- Inwestor zobowiązuje się do dostarczenia przewodu zasilającego do pomieszczenia kotłowni.\n- Wykonanie postumentu pod stelaż zewnętrzny NIE wchodzi w skład oferty.'
       },
-      gas_boiler_pack: {
-        title: 'Kompleksowy montaż kotła gazowego kondensacyjnego z wkładem kominowym',
+      daikin_altherma: {
+        title: 'Montaż pompy ciepła DAIKIN Altherma 3 ze zintegrowanym zbiornikiem CWU',
+        installationType: 'Ogrzewanie bezpośrednie podłogowe',
+        vatRate: 8,
+        preparedBy: '',
+        items: [
+          { name: 'Pompa ciepła DAIKIN Altherma 3 R F 8kW z wbudowanym zasobnikiem CWU 180L/230L ze stali nierdzewnej', qty: 1, unit: 'szt.', salePrice: '' },
+          { name: 'Montaż jednostki zewnętrznej i wewnętrznej, montaż instalacji chłodniczej i kotłowni', qty: 1, unit: 'kpl.', salePrice: '' },
+          { name: 'Armatura hydrauliczna, naczynia wzbiorcze, grupa bezpieczeństwa, magnetyczny filtr C.O.', qty: 1, unit: 'kpl.', salePrice: '' }
+        ],
+        powerVariants: [
+          { power: '4 kW', price: '', note: '70-90 m²' },
+          { power: '6 kW', price: '', note: '90-110 m²' },
+          { power: '8 kW', price: '', note: '110-150 m²' },
+          { power: '11 kW', price: '', note: '150-190 m²' },
+          { power: '14 kW', price: '', note: '190-260 m²' }
+        ],
+        features: [
+          'Japońska technologia Daikin Bluevolution (ekologiczny czynnik R32)',
+          'Wbudowany zbiornik c.w.u. ze stali kwasoodpornej',
+          'Zdalne sterowanie przez chmurę Daikin Onecta z podglądem zużycia energii',
+          'Najwyższa klasa efektywności energetycznej A+++'
+        ],
+        warranty: '5 lat gwarancji producenta Daikin (przy przeglądach corocznych)',
+        validityDays: 30,
+        notes: '- Zestawienie orientacyjne, może ulec zmianie po wizji lokalnej.\n- Inwestor zapewnia doprowadzenie zasilania elektrycznego do kotłowni.\n- Wykonanie fundamentu lub wylewki pod jednostkę zewnętrzną leży po stronie Inwestora.\n- Rurociąg chłodniczy w cenie do 5 mb.'
+      },
+      york_split: {
+        title: 'Montaż pompy ciepła YORK YKF 8kW Split (ogrzewanie + CWU)',
+        installationType: 'Ogrzewanie pośrednie',
+        vatRate: 8,
+        preparedBy: '',
+        items: [
+          { name: 'Pompa ciepła split YORK YKF 8kW (jednostka zewnętrzna + moduł hydrauliczny hydrobox)', qty: 1, unit: 'szt.', salePrice: '' },
+          { name: 'Zbiornik C.W.U. dedykowany do pomp ciepła 200L z dużą wężownicą spiralną', qty: 1, unit: 'szt.', salePrice: '' },
+          { name: 'Montaż układu split, rurociąg chłodniczy do 5mb, próba ciśnieniowa azotem, próżnia, montaż hydrauliczny', qty: 1, unit: 'kpl.', salePrice: '' },
+          { name: 'Materiał instalacyjny kotłowni (zawór 3-drogowy, separator zanieczyszczeń, stelaż antywibracyjny)', qty: 1, unit: 'kpl.', salePrice: '' }
+        ],
+        powerVariants: [
+          { power: '6 kW', price: '', note: '80-110 m²' },
+          { power: '8 kW', price: '', note: '110-150 m²' },
+          { power: '10 kW', price: '', note: '150-180 m²' },
+          { power: '12 kW', price: '', note: '180-220 m²' },
+          { power: '14 kW', price: '', note: '220-270 m²' }
+        ],
+        features: [
+          'Stabilna praca i wysoki współczynnik COP nawet przy -25°C',
+          'Ekologiczny czynnik R32 oraz podwójna rotacyjna sprężarka inwerterowa DC',
+          'Możliwość chłodzenia pomieszczeń w okresie letnim',
+          'Kolorowy sterownik dotykowy z polskim menu'
+        ],
+        warranty: '5 lat gwarancji fabrycznej YORK',
+        validityDays: 30,
+        notes: '- Oferta orientacyjna, ostateczny kosztorys po weryfikacji warunków montażu.\n- Inwestor zapewnia doprowadzenie linii zasilającej do rozdzielnicy kotłowni.\n- Montaż na stelażu naziemnym lub ściennym z wibroizolatorami.'
+      },
+      viessmann_boiler_100w: {
+        title: 'Wymiana / Montaż kotła gazowego kondensacyjnego VIESSMANN Vitodens 100-W z zasobnikiem CWU',
         installationType: 'Kotłownia gazowa',
         vatRate: 8,
         preparedBy: '',
         items: [
-          { name: 'Kocioł gazowy kondensacyjny dwufunkcyjny lub jednofunkcyjny z zasobnikiem (np. Viessmann / Junkers / De Dietrich)', qty: 1, unit: 'szt.', salePrice: '' },
-          { name: 'Wkład kominowy koncentryczny w szacht kominowy lub wyrzut boczny przez ścianę', qty: 1, unit: 'kpl.', salePrice: '' },
-          { name: 'Montaż kotła, demontaż starego źródła, podłączenie instalacji gazowej i hydraulicznej', qty: 1, unit: 'kpl.', salePrice: '' },
-          { name: 'Armatura kotłowni, zawory, filtr magnetyczny, próba szczelności gazu i uruchomienie zerowe', qty: 1, unit: 'kpl.', salePrice: '' }
+          { name: 'Kocioł gazowy kondensacyjny 1-funkcyjny VIESSMANN Vitodens 100-W (B1HF) z regulatorem z ekranem dotykowym', qty: 1, unit: 'szt.', salePrice: '' },
+          { name: 'Zasobnik ciepłej wody użytkowej Viessmann Vitocell 100-W 120L ze stojakiem i czujnikiem temperatury', qty: 1, unit: 'szt.', salePrice: '' },
+          { name: 'System spalinowo-powietrzny koncentryczny 80/125 (komin przez ścianę lub wkład szachtowy)', qty: 1, unit: 'kpl.', salePrice: '' },
+          { name: 'Demontaż starego źródła ciepła, montaż kotła, podłączenie instalacji gazowej, wodnej i C.O., próba szczelności', qty: 1, unit: 'kpl.', salePrice: '' }
         ],
-        warranty: '5 lat gwarancji producenta (pod warunkiem corocznych przeglądów)',
+        powerVariants: [],
+        features: [
+          'Palnik cylindryczny Matrix-Plus ze stali szlachetnej odpornej na korozję',
+          'Wysoka sprawność znormalizowana do 98% (Hs)',
+          'Zintegrowany moduł WLAN do bezpośredniego połączenia z aplikacją ViCare',
+          'Bardzo cicha praca (poniżej 39 dB)'
+        ],
+        warranty: '5 lat gwarancji producenta Viessmann',
         validityDays: 30,
-        notes: '- W cenie zawarta próba szczelności instalacji gazowej oraz protokół uruchomienia.\n- Podłączenie do istniejącego podejścia gazowego i instalacji c.o.\n- Do oferty wliczony filtr magnetyczny chroniący wymiennik kotła.'
+        notes: '- Oferta zawiera montaż oraz pierwsze uruchomienie zerowe z analizą spalin.\n- Oferta nie obejmuje budowy nowej wewnętrznej instalacji gazowej (tylko podłączenie do istniejącego punktu).\n- Odbiór kominiarski po stronie Inwestora.'
       },
-      ac_rotenso: {
-        title: 'Montaż klimatyzacji split z funkcją pompy ciepła (chłodzenie / grzanie)',
-        installationType: 'Klimatyzacja split',
+      viessmann_boiler_050w: {
+        title: 'Montaż kotła gazowego kondensacyjnego 2-funkcyjnego VIESSMANN Vitodens 050-W',
+        installationType: 'Kotłownia gazowa',
         vatRate: 8,
         preparedBy: '',
         items: [
-          { name: 'Klimatyzator ścienny split 3.5 kW (np. Rotenso / Sevra / Kaisai / Panasonic) z modułem WiFi', qty: 1, unit: 'szt.', salePrice: '' },
-          { name: 'Montaż jednostki wewnętrznej i zewnętrznej na stelażu antywibracyjnym', qty: 1, unit: 'kpl.', salePrice: '' },
-          { name: 'Instalacja chłodnicza miedziana w izolacji do 3mb + odprowadzenie skroplin', qty: 1, unit: 'kpl.', salePrice: '' },
-          { name: 'Próba ciśnieniowa azotem, próżnia, próba szczelności i uruchomienie z przeszkoleniem', qty: 1, unit: 'kpl.', salePrice: '' }
+          { name: 'Kocioł gazowy 2-funkcyjny VIESSMANN Vitodens 050-W (B0KA) z przepływowym podgrzewem c.w.u.', qty: 1, unit: 'szt.', salePrice: '' },
+          { name: 'System spalinowo-powietrzny koncentryczny 60/100 lub 80/125 (kolano + rura z wyrzutem)', qty: 1, unit: 'kpl.', salePrice: '' },
+          { name: 'Montaż kotła na ścianie, podłączenie instalacji gazowej, hydraulicznej i elektrycznej z filtrem magnetycznym', qty: 1, unit: 'kpl.', salePrice: '' },
+          { name: 'Uruchomienie zerowe kotła z wpisem do bazy Viessmann i protokołem analizy spalin', qty: 1, unit: 'kpl.', salePrice: '' }
         ],
-        warranty: '5 lat gwarancji na urządzenie (pod warunkiem przeglądów co 6/12 msc)',
+        powerVariants: [],
+        features: [
+          'Kompaktowe wymiary - idealny do zabudowy kuchennej lub małej łazienki',
+          'Komfortowy przepływowy podgrzew wody użytkowej',
+          'Wbudowane złącze WiFi do sterowania telefonem',
+          'Wysoka efektywność energetyczna A'
+        ],
+        warranty: '5 lat gwarancji Viessmann',
+        validityDays: 30,
+        notes: '- Oferta nie zawiera kosztów wykonania przyłącza gazowego do budynku.\n- Sprawdzenie szczelności detektorem gazu w cenie montażu.'
+      },
+      aquastilla: {
+        title: 'Dostawa i montaż zmiękczacza wody Viessmann Aquastilla 25',
+        installationType: 'Uzdatnianie wody',
+        vatRate: 8,
+        preparedBy: '',
+        items: [
+          { name: 'Zmiękczacz wody Viessmann Aquastilla 25 (złożowy filtr objętościowy ze sterownikiem mikroprocesorowym)', qty: 1, unit: 'szt.', salePrice: '' },
+          { name: 'Filtr wstępny mechaniczny narurowy z wkładem siatkowym płukanym i by-passem montażowym', qty: 1, unit: 'kpl.', salePrice: '' },
+          { name: 'Montaż zmiękczacza na głównym zasilaniu wody w budynku, podłączenie odpływu popłuczyn i przelewu', qty: 1, unit: 'kpl.', salePrice: '' },
+          { name: 'Sól tabletkowana do regeneracji złoża (worek 25kg) + kropelkowy tester twardości wody Titrant', qty: 1, unit: 'kpl.', salePrice: '' }
+        ],
+        powerVariants: [],
+        features: [
+          'Pełna ochrona armatury, kotłów, pomp ciepła i AGD przed osadzaniem się kamienia kotłowego',
+          'Inteligentne sterowanie objętościowe z proporcjonalną regeneracją złoża (niskie zużycie soli i wody)',
+          'Podświetlany wyświetlacz z menu w języku polskim',
+          'Atest Państwowego Zakładu Higieny (PZH) dla wody pitnej'
+        ],
+        warranty: '3 lata gwarancji na urządzenie / 5 lat na butlę ciśnieniową',
+        validityDays: 30,
+        notes: '- Inwestor zapewnia w pobliżu montażu gniazdo 230V oraz odpływ do kanalizacji fi 32/50mm.\n- Uruchomienie z pomiarem twardości wody i przeszkoleniem użytkownika w cenie.'
+      },
+      package_single: {
+        title: 'Kompleksowe wykonanie instalacji kotłowni / HVAC według projektu',
+        installationType: 'Pakiet kompleksowy',
+        vatRate: 8,
+        preparedBy: '',
+        items: [
+          { name: 'Kompleksowa dostawa urządzeń, armatury hydraulicznej, montaż i uruchomienie instalacji zgodnie z ustaleniami z Inwestorem', qty: 1, unit: 'kpl.', salePrice: '' }
+        ],
+        powerVariants: [],
+        features: [
+          'Kompleksowa usługa od projektu do uruchomienia',
+          'Wszystkie niezbędne materiały, rury i armatura w cenie',
+          'Gwarancja i serwis door-to-door autoryzowanego instalatora'
+        ],
+        warranty: 'Gwarancja wykonawcza 36 miesięcy',
         validityDays: 14,
-        notes: '- W cenie standardowy montaż do 3m wysokości.\n- Podłączenie elektryczne do najbliższego gniazdka/punktu zasilającego.\n- Przewiert przez ścianę zewnętrzną z uszczelnieniem w cenie.'
+        notes: '- Zakres prac szczegółowo opisany w załączniku technicznym do oferty.\n- Płatność zgodnie z harmonogramem postępu prac.'
+      },
+      gas_boiler_pack: {
+        title: 'Wymiana kotła gazowego na kondensacyjny z zasobnikiem CWU',
+        installationType: 'Kotłownia gazowa',
+        vatRate: 8,
+        preparedBy: '',
+        items: [
+          { name: 'Kocioł gazowy kondensacyjny 1-funkcyjny 24kW', qty: 1, unit: 'szt.', salePrice: '' },
+          { name: 'Zasobnik c.w.u. 120L z wężownicą spiralną', qty: 1, unit: 'szt.', salePrice: '' },
+          { name: 'System spalinowo-powietrzny 80/125 (wkład szachtowy lub wyrzut ścienny)', qty: 1, unit: 'kpl.', salePrice: '' },
+          { name: 'Montaż kotła, armatura, podłączenie gaz/woda/CO, uruchomienie z analizą spalin', qty: 1, unit: 'kpl.', salePrice: '' }
+        ],
+        powerVariants: [],
+        features: [],
+        warranty: '5 lat gwarancji producenta',
+        validityDays: 30,
+        notes: '- W cenie próba szczelności instalacji gazowej i protokół uruchomienia.\n- Inwestor zapewnia drożny szacht kominowy.'
+      },
+      ac_rotenso: {
+        title: 'Montaż klimatyzacji Rotenso / Kaisai 3.5kW Split',
+        installationType: 'Klimatyzacja',
+        vatRate: 8,
+        preparedBy: '',
+        items: [
+          { name: 'Klimatyzator ścienny Split 3.5kW (jednostka wewnętrzna + agregat zewnętrzny)', qty: 1, unit: 'kpl.', salePrice: '' },
+          { name: 'Montaż instalacji freonowej do 4 mb, grawitacyjny odpływ skroplin, stelaż ścienny/naziemny', qty: 1, unit: 'kpl.', salePrice: '' },
+          { name: 'Próba szczelności azotem, próżnia, pierwsze uruchomienie i przeszkolenie', qty: 1, unit: 'kpl.', salePrice: '' }
+        ],
+        powerVariants: [],
+        features: [
+          'Funkcja chłodzenia i wydajnego grzania w zimie',
+          'Wbudowany moduł WiFi do aplikacji mobilnej',
+          'Jonizator powietrza i filtry antyalergiczne'
+        ],
+        warranty: '5 lat gwarancji przy corocznym serwisie',
+        validityDays: 30,
+        notes: '- Montaż podstawowy do 4 mb rurociągu freonowego.\n- Zasilanie 230V doprowadzone w pobliże jednostki po stronie Inwestora.'
       }
     };
 
-    // 3. Stan bieżącej wyceny (wiersze 4-kolumnowe)
-    let currentQuoteRows = [];
-    let currentPreviewQuoteObj = null;
+    function applyQuotePreset(presetKey) {
+      const preset = QUOTE_PRESETS[presetKey] || QUOTE_PRESETS.manual_blank;
+      if (!preset) return;
 
-    function addQuoteRow(initialData = null) {
-      const row = initialData || {
-        name: '',
-        qty: 1,
-        unit: 'szt.',
-        salePrice: ''
-      };
-      currentQuoteRows.push(row);
-      renderQuoteRows();
-      recalcQuoteTotals();
-    }
-
-    function removeQuoteRow(index) {
-      if (currentQuoteRows.length <= 1) {
-        currentQuoteRows[0] = { name: '', qty: 1, unit: 'szt.', salePrice: '' };
-      } else {
-        currentQuoteRows.splice(index, 1);
-      }
-      renderQuoteRows();
-      recalcQuoteTotals();
-    }
-
-    function renderQuoteRows() {
-      const tbody = document.getElementById('quote-items-tbody');
-      if (!tbody) return;
-
-      tbody.innerHTML = currentQuoteRows.map((row, idx) => `
-        <tr class="border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/40 text-xs">
-          <!-- Kolumna 1: Lp. -->
-          <td class="p-2.5 text-center font-bold text-zinc-500 w-12">${idx + 1}.</td>
-
-          <!-- Kolumna 2: Opis pozycji -->
-          <td class="p-2.5 min-w-[280px] w-full">
-            <textarea
-              rows="2"
-              placeholder="Wpisz opis urządzenia, robocizny lub materiału..."
-              oninput="currentQuoteRows[${idx}].name = this.value"
-              class="quote-item-name w-full px-2.5 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs outline-none leading-relaxed text-zinc-900 dark:text-zinc-100 resize-y">${escapeHtml(row.name || '')}</textarea>
-          </td>
-
-          <!-- Kolumna 3: Ilość -->
-          <td class="p-2.5 w-36">
-            <div class="flex items-center gap-1">
-              <input
-                type="number"
-                step="any"
-                min="0.01"
-                value="${row.qty !== undefined && row.qty !== '' ? row.qty : 1}"
-                oninput="currentQuoteRows[${idx}].qty = parseFloat(this.value) || 0; recalcQuoteTotals()"
-                class="quote-item-qty w-16 px-2 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs font-mono font-bold text-center outline-none text-zinc-900 dark:text-zinc-100">
-              <select
-                onchange="currentQuoteRows[${idx}].unit = this.value"
-                class="w-16 px-1 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-[11px] font-bold outline-none text-zinc-700 dark:text-zinc-300">
-                <option value="szt." ${(row.unit || 'szt.') === 'szt.' ? 'selected' : ''}>szt.</option>
-                <option value="kpl." ${row.unit === 'kpl.' ? 'selected' : ''}>kpl.</option>
-                <option value="m.b." ${row.unit === 'm.b.' ? 'selected' : ''}>m.b.</option>
-                <option value="godz." ${row.unit === 'godz.' ? 'selected' : ''}>godz.</option>
-                <option value="usł." ${row.unit === 'usł.' ? 'selected' : ''}>usł.</option>
-              </select>
-            </div>
-          </td>
-
-          <!-- Kolumna 4: Cena brutto [zł] -->
-          <td class="p-2.5 w-36 text-right">
-            <div class="relative">
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                value="${row.salePrice !== undefined && row.salePrice !== '' ? row.salePrice : ''}"
-                oninput="currentQuoteRows[${idx}].salePrice = this.value === '' ? '' : parseFloat(this.value); recalcQuoteTotals()"
-                class="quote-item-price w-full pl-2 pr-6 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs font-mono font-bold text-right outline-none text-emerald-600 dark:text-emerald-400">
-              <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-zinc-400 pointer-events-none">zł</span>
-            </div>
-          </td>
-
-          <!-- Akcje (Usuń) -->
-          <td class="p-2.5 w-10 text-center">
-            <button
-              type="button"
-              onclick="removeQuoteRow(${idx})"
-              class="p-1 text-zinc-400 hover:text-rose-500 rounded transition"
-              title="Usuń pozycję">
-              <i data-lucide="trash-2" class="w-4 h-4"></i>
-            </button>
-          </td>
-        </tr>
-      `).join('');
-
-      if (window.lucide && typeof lucide.createIcons === 'function') {
-        lucide.createIcons();
-      }
-    }
-
-    // 4. Podliczanie całej kwoty oraz kalkulacja podatku VAT
-    function recalcQuoteTotals() {
-      let sumBrutto = 0;
-      currentQuoteRows.forEach(r => {
-        const q = parseFloat(r.qty) || 0;
-        const p = parseFloat(r.salePrice) || 0;
-        sumBrutto += (q * p);
+      // Zaktualizuj stan aktywności przycisków szablonów
+      const allBtns = document.querySelectorAll('[id^="preset-btn-"]');
+      allBtns.forEach(b => {
+        b.className = 'p-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-emerald-500 text-left transition';
       });
-
-      const vatRateInp = document.getElementById('quote-vat-rate');
-      let vatRate = vatRateInp ? parseFloat(vatRateInp.value) : 8;
-      if (isNaN(vatRate) || vatRate < 0) vatRate = 0;
-
-      const sumNetto = sumBrutto / (1 + (vatRate / 100));
-      const sumVat = sumBrutto - sumNetto;
-
-      const elBrutto = document.getElementById('quote-sum-brutto');
-      const elNetto = document.getElementById('quote-sum-netto');
-      const elVat = document.getElementById('quote-sum-vat');
-      const elVatLabel = document.getElementById('quote-vat-label');
-      const elSlownie = document.getElementById('quote-sum-slownie');
-
-      if (elBrutto) elBrutto.innerText = `${sumBrutto.toFixed(2)} zł`;
-      if (elNetto) elNetto.innerText = `${sumNetto.toFixed(2)} zł`;
-      if (elVat) elVat.innerText = `${sumVat.toFixed(2)} zł`;
-      if (elVatLabel) elVatLabel.innerText = `${vatRate}%`;
-      if (elSlownie) elSlownie.innerText = slowniePL(sumBrutto);
-
-      return {
-        sumBrutto: Math.round(sumBrutto * 100) / 100,
-        sumNetto: Math.round(sumNetto * 100) / 100,
-        sumVat: Math.round(sumVat * 100) / 100,
-        vatRate: vatRate
-      };
-    }
-
-    function setQuoteVatRate(rate) {
-      const vatRateInp = document.getElementById('quote-vat-rate');
-      if (vatRateInp) {
-        vatRateInp.value = rate;
-        recalcQuoteTotals();
+      const activeBtn = document.getElementById(`preset-btn-${presetKey}`);
+      if (activeBtn) {
+        activeBtn.className = 'p-2 rounded-xl border-2 border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/40 text-left transition shadow-xs';
       }
-    }
 
-    // 5. Otwieranie kreatora wyceny
+      // Podstaw pola formularza
+      if (preset.title) {
+        const el = document.getElementById('quote-title');
+        if (el) el.value = preset.title;
+      }
+      if (preset.installationType) {
+        const el = document.getElementById('quote-installation-type');
+        if (el) el.value = preset.installationType;
+      }
+      if (preset.vatRate !== undefined) {
+        setQuoteVatRate(preset.vatRate);
+      }
+      if (preset.validityDays) {
+        const el = document.getElementById('quote-validity-days');
+        if (el) el.value = preset.validityDays;
+      }
+      if (preset.warranty) {
+        const el = document.getElementById('quote-warranty-terms');
+        if (el) el.value = preset.warranty;
+      }
+      if (preset.notes !== undefined) {
+        const el = document.getElementById('quote-notes-area') || document.getElementById('quote-notes');
+        if (el) el.value = preset.notes;
+      }
+
+      // Cechy urządzenia
+      const featEl = document.getElementById('quote-device-features');
+      if (featEl) {
+        featEl.value = (preset.features || []).join('\n');
+      }
+
+      // Warianty mocy
+      const pWrap = document.getElementById('quote-power-variants-wrap');
+      const pCheck = document.getElementById('quote-include-power-variants');
+      const hasVariants = Boolean(preset.powerVariants && preset.powerVariants.length > 0);
+      if (pCheck) {
+        pCheck.checked = hasVariants;
+        if (pWrap) pWrap.classList.toggle('hidden', !hasVariants);
+      }
+      renderQuotePowerVariantsInputs(preset.powerVariants || []);
+
+      // Pozycje kosztorysu
+      currentQuoteRows = JSON.parse(JSON.stringify(preset.items || [{ name: '', qty: 1, unit: 'szt.', salePrice: '' }]));
+      renderQuoteRows();
+      recalcQuoteTotals();
+    }
+    window.applyQuotePreset = applyQuotePreset;
+
     function openNewQuoteModal(presetKey = 'manual_blank') {
       const preset = QUOTE_PRESETS[presetKey] || QUOTE_PRESETS.manual_blank;
 
@@ -14450,6 +14945,74 @@ service cloud.firestore {
         clients.map(c => `<option value="${c.id}">${escapeHtml(c.name)} (${escapeHtml(c.city || c.address || 'Brak adresu')})</option>`).join('');
     }
 
+    
+    function openQuoteClientDropdown() {
+      const dd = document.getElementById('quote-client-dd');
+      if (dd) dd.classList.remove('hidden');
+      renderQuoteClientDropdown(document.getElementById('quote-client-search')?.value || '');
+    }
+
+    function closeQuoteClientDropdown() {
+      const dd = document.getElementById('quote-client-dd');
+      if (dd) dd.classList.add('hidden');
+    }
+
+    function clearQuoteClientSearch() {
+      const searchInp = document.getElementById('quote-client-search');
+      if (searchInp) searchInp.value = '';
+      const sel = document.getElementById('quote-client-select');
+      if (sel) sel.value = '';
+      closeQuoteClientDropdown();
+    }
+
+    function selectQuoteClient(clientId) {
+      onQuoteClientSelectChange(clientId);
+      const c = (window.clientsData || []).find(x => x.id === clientId);
+      const searchInp = document.getElementById('quote-client-search');
+      if (searchInp && c) {
+        searchInp.value = `${c.name}${c.city ? ' (' + c.city + ')' : ''}`;
+      }
+      const sel = document.getElementById('quote-client-select');
+      if (sel) sel.value = clientId;
+      closeQuoteClientDropdown();
+    }
+
+    function renderQuoteClientDropdown(query = '') {
+      const listEl = document.getElementById('quote-client-dd-list');
+      if (!listEl) return;
+      const q = (query || '').toLowerCase().trim();
+      const clients = window.clientsData || [];
+      const filtered = clients.filter(c => {
+        if (!q) return true;
+        const name = (c.name || '').toLowerCase();
+        const city = (c.city || '').toLowerCase();
+        const addr = (c.address || '').toLowerCase();
+        const phone = (c.phone || '').toLowerCase();
+        const nip = (c.nip || '').toLowerCase();
+        return name.includes(q) || city.includes(q) || addr.includes(q) || phone.includes(q) || nip.includes(q);
+      }).slice(0, 40);
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<div class="p-3 text-center text-xs text-zinc-400">Brak klientów pasujących do "${escapeHtml(query)}"</div>`;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(c => `
+        <div onclick="selectQuoteClient('${c.id}')" class="p-2 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 cursor-pointer rounded-lg transition flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <div class="font-bold text-zinc-900 dark:text-white truncate">${escapeHtml(c.name)}</div>
+            <div class="text-[10px] text-zinc-500 truncate">📍 ${escapeHtml(c.address || c.city || 'Brak adresu')}${c.phone ? ' • 📞 ' + escapeHtml(c.phone) : ''}</div>
+          </div>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-extrabold shrink-0">Wybierz</span>
+        </div>
+      `).join('');
+    }
+    window.openQuoteClientDropdown = openQuoteClientDropdown;
+    window.closeQuoteClientDropdown = closeQuoteClientDropdown;
+    window.clearQuoteClientSearch = clearQuoteClientSearch;
+    window.selectQuoteClient = selectQuoteClient;
+    window.renderQuoteClientDropdown = renderQuoteClientDropdown;
+
     function onQuoteClientSelectChange(clientId) {
       if (!clientId) return;
       const c = (window.clientsData || []).find(x => x.id === clientId);
@@ -14466,13 +15029,18 @@ service cloud.firestore {
       const area = document.getElementById('quote-notes-area') || document.getElementById('quote-notes');
       if (!area) return;
       const current = area.value.trim();
-      const line = `- ${text}`;
+      const cleanSnippet = text.trim();
+      const line = `- ${cleanSnippet}`;
       if (current.includes(line)) {
-        area.value = current.replace(line, '').replace(/\n\s*\n/g, '\n').trim();
+        const remaining = current.split('\n').filter(l => l.trim() !== line).join('\n').trim();
+        area.value = remaining;
       } else {
         area.value = current ? `${current}\n${line}` : line;
       }
     }
+    window.appendQuoteNoteSnippet = appendQuoteNoteSnippet;
+    function appendNoteTag(text) { return appendQuoteNoteSnippet(text); }
+    window.appendNoteTag = appendNoteTag;
 
     // 6. Zapisywanie wyceny
     function handleSaveQuote(e) {
@@ -14520,13 +15088,23 @@ service cloud.firestore {
           const pEl = document.getElementById(`pv-power-${i}`);
           const prEl = document.getElementById(`pv-price-${i}`);
           const nEl = document.getElementById(`pv-note-${i}`);
-          if (pEl && prEl) {
+          if (pEl) {
             const pVal = pEl.value.trim();
-            const prVal = parseFloat(prEl.value) || 0;
-            if (pVal && prVal > 0) {
-              powerVariants.push({ power: pVal, price: prVal, note: nEl ? nEl.value.trim() : '' });
+            const prVal = parseFloat(prEl?.value) || 0;
+            const nVal = nEl ? nEl.value.trim() : '';
+            if (pVal || nVal || prVal > 0) {
+              powerVariants.push({ power: pVal || `Wariant ${i + 1}`, price: prVal, note: nVal });
             }
           }
+        }
+        if (powerVariants.length === 0) {
+          powerVariants.push(
+            { power: '4 kW', price: 0, note: '70-90 m²' },
+            { power: '6 kW', price: 0, note: '90-110 m²' },
+            { power: '8 kW', price: 0, note: '110-150 m²' },
+            { power: '10 kW', price: 0, note: '150-180 m²' },
+            { power: '12 kW', price: 0, note: '180-250 m²' }
+          );
         }
       }
 
@@ -14654,7 +15232,7 @@ service cloud.firestore {
               <div class="text-[11px] text-zinc-400">${item.installationType ? escapeHtml(item.installationType) + ' &bull; ' : ''}Pozycji: ${(item.items || []).length} &bull; ${formatDatePL(item.date)}</div>
             </td>
             <td class="p-3">
-              <div class="font-bold text-zinc-800 dark:text-zinc-200"><button type="button" onclick="openClientInDatabase('${item.client?.id || ""}', '${escapeHtml(item.client?.name || "")}')" class="font-bold text-zinc-800 dark:text-zinc-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition text-left cursor-pointer" title="OtwĂłrz klienta w bazie">${escapeHtml(item.client?.name || "Klient")}</button></div>
+              <div class="font-bold text-zinc-800 dark:text-zinc-200"><button type="button" onclick="openClientInDatabase('${item.client?.id || ""}', '${escapeHtml(item.client?.name || "")}')" class="font-bold text-zinc-800 dark:text-zinc-200 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline transition text-left cursor-pointer" title="Otwórz klienta w bazie">${escapeHtml(item.client?.name || "Klient")}</button></div>
               <div class="text-[10px] text-zinc-400 truncate max-w-[180px]">${escapeHtml(item.client?.address || item.client?.phone || '')}</div>
             </td>
             <td class="p-3 text-right font-mono font-extrabold text-zinc-900 dark:text-white">
@@ -14712,6 +15290,7 @@ service cloud.firestore {
       document.getElementById('quote-client-phone').value = client.phone || '+48 ';
       document.getElementById('quote-client-address').value = client.address || '';
       document.getElementById('quote-client-email').value = client.email || '';
+      const sInpEdit = document.getElementById('quote-client-search'); if (sInpEdit) sInpEdit.value = client.name ? (client.name + (client.address ? ' (' + client.address + ')' : '')) : '';
 
       const terms = q.terms || {};
       const elWar2 = document.getElementById('quote-warranty-terms'); if (elWar2) elWar2.value = terms.warranty || '';
@@ -14802,7 +15381,7 @@ service cloud.firestore {
       // Sekcja alternatywnych wariantów mocy
       let powerVariantsHtml = '';
       if (q.includePowerVariants && q.powerVariants && q.powerVariants.length > 0) {
-        const validVariants = q.powerVariants.filter(v => v.price > 0);
+        const validVariants = q.powerVariants.filter(v => v && (v.power || v.note || v.price > 0));
         if (validVariants.length > 0) {
           powerVariantsHtml = `
             <div style="margin-top:12px;margin-bottom:12px;">
@@ -14816,13 +15395,17 @@ service cloud.firestore {
                   </tr>
                 </thead>
                 <tbody>
-                  ${validVariants.map(v => `
+                  ${validVariants.map(v => {
+                    const priceNum = parseFloat(v.price) || 0;
+                    const priceFormatted = priceNum > 0 ? `${priceNum.toFixed(2)} zł` : 'Wycena indyw. / w cenie';
+                    return `
                     <tr>
-                      <td style="border:1px solid #cbd5e1;padding:5px 8px;font-weight:800;color:#0f172a;">${escapeHtml(v.power)}</td>
+                      <td style="border:1px solid #cbd5e1;padding:5px 8px;font-weight:800;color:#0f172a;">${escapeHtml(v.power || '—')}</td>
                       <td style="border:1px solid #cbd5e1;padding:5px 8px;color:#475569;">${escapeHtml(v.note || '—')}</td>
-                      <td style="border:1px solid #cbd5e1;padding:5px 8px;text-align:right;font-family:monospace;font-weight:900;color:#059669;">${parseFloat(v.price).toFixed(2)} zł</td>
+                      <td style="border:1px solid #cbd5e1;padding:5px 8px;text-align:right;font-family:monospace;font-weight:900;color:#059669;">${priceFormatted}</td>
                     </tr>
-                  `).join('')}
+                    `;
+                  }).join('')}
                 </tbody>
               </table>
             </div>
@@ -15029,13 +15612,23 @@ service cloud.firestore {
           const pEl = document.getElementById(`pv-power-${i}`);
           const prEl = document.getElementById(`pv-price-${i}`);
           const nEl = document.getElementById(`pv-note-${i}`);
-          if (pEl && prEl) {
+          if (pEl) {
             const pVal = pEl.value.trim();
-            const prVal = parseFloat(prEl.value) || 0;
-            if (pVal && prVal > 0) {
-              powerVariants.push({ power: pVal, price: prVal, note: nEl ? nEl.value.trim() : '' });
+            const prVal = parseFloat(prEl?.value) || 0;
+            const nVal = nEl ? nEl.value.trim() : '';
+            if (pVal || nVal || prVal > 0) {
+              powerVariants.push({ power: pVal || `Wariant ${i + 1}`, price: prVal, note: nVal });
             }
           }
+        }
+        if (powerVariants.length === 0) {
+          powerVariants.push(
+            { power: '4 kW', price: 0, note: '70-90 m²' },
+            { power: '6 kW', price: 0, note: '90-110 m²' },
+            { power: '8 kW', price: 0, note: '110-150 m²' },
+            { power: '10 kW', price: 0, note: '150-180 m²' },
+            { power: '12 kW', price: 0, note: '180-250 m²' }
+          );
         }
       }
 
